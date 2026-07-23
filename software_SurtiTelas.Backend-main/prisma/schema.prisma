@@ -1,0 +1,733 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------- Enums globales -------------
+enum Role {
+  ADMIN
+  ASESOR
+  DOMICILIARIO
+  CLIENTE
+  ALMACEN
+  PRODUCCION
+  REPORTES
+}
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+}
+enum ProductStatus {
+  ACTIVO
+  INACTIVO
+}
+enum StockStatus {
+  OK
+  BAJO_STOCK
+  AGOTADO
+}
+enum OrderStatus {
+  NUEVO
+  EN_PRODUCCION
+  LISTO
+  DESPACHADO
+  EN_CAMINO
+  ENTREGADO
+  CANCELADO
+}
+enum OrderPriority {
+  ESTANDAR
+  PRIORITARIO
+}
+enum ProductionStatus {
+  PENDIENTE
+  EN_PROCESO
+  TERMINADO
+}
+enum MovementType {
+  ENTRADA
+  SALIDA
+  AJUSTE
+}
+enum SupplierStatus {
+  ACTIVO
+  INACTIVO
+}
+enum WorkshopStatus {
+  ACTIVO
+  INACTIVO
+}
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+  DANGER
+}
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  OTHER
+}
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+enum AlertState {
+  PENDIENTE
+  LEIDA
+  RESUELTA
+  CANCELADA
+}
+enum AlertPriority {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+enum ControlPrendaEtapa {
+  CORTE
+  CONFECCION
+  ACABADO
+  CONTROL_CALIDAD
+  EMPAQUE
+}
+enum ControlPrendaEstado {
+  PROCESO
+  APROBADO
+  RECHAZADO
+}
+
+// ------------- Auth / RBAC -------------
+model User {
+  id                    String      @id @default(cuid())
+  email                 String      @unique
+  passwordHash          String      @map("password_hash")
+  nombre                String
+  telefono              String?
+  direccion             String?
+  role                  Role
+  estado                EstadoUsuario  @default(ACTIVO)
+  refreshToken          String?     @map("refresh_token")
+  twoFactorEnabled      Boolean     @default(false) @map("two_factor_enabled")
+  twoFactorSecret       String?     @map("two_factor_secret")
+  resetPasswordToken    String?     @map("reset_password_token")
+  resetPasswordExpires  DateTime?   @map("reset_password_expires")
+  failedLoginAttempts   Int         @default(0) @map("failed_login_attempts")
+  lockedUntil           DateTime?   @map("locked_until")
+  googleId              String?     @unique @map("google_id")
+  customers             Customer[]  @relation("AsesorClientes")
+  orders                Order[]     @relation("AsesorOrders")
+  productions           ProductionOrder[] @relation("OperarioProductions")
+  movements             InventoryMovement[] @relation("UsuarioMovements")
+  notifications         Notification[]
+  payments              Payment[]   @relation("AsesorPayments")
+  commissions           Commission[] @relation("AsesorCommissions")
+  alertsLeidas          Alert[]     @relation("AlertLeidaPor")
+  alertsResueltas       Alert[]     @relation("AlertResueltaPor")
+  controlPrendasCreadas ControlPrenda[] @relation("ControlPrendaCreadoPor")
+  controlPrendasRevisadas ControlPrenda[] @relation("ControlPrendaRevisadoPor")
+  auditLogs             AuditLog[]  @relation("AuditLogUsuario")
+  domiciliarioDeliveries Delivery[]  @relation("DomiciliarioDeliveries")
+  clientConversations    Conversation[] @relation("ClientConversations")
+  advisorConversations   Conversation[] @relation("AdvisorConversations")
+  sentMessages           Message[]
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  deletedAt              DateTime?   @map("deleted_at")
+
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Permission {
+  id          String         @id @default(cuid())
+  code        String         @unique
+  description String
+  module      String
+  estado      String         @default("ACTIVO")
+  roles       RolePermission[]
+  createdAt   DateTime       @default(now())
+  @@map("permissions")
+}
+
+model RolePermission {
+  role         Role       @map("role")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+  @@id([role, permissionId])
+  @@map("role_permissions")
+}
+
+model RoleConfig {
+  id          String   @id @default(cuid())
+  role        Role     @unique
+  estado      String   @default("ACTIVO")
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("role_configs")
+}
+
+// ------------- Catálogo -------------
+model Category {
+  id        String    @id @default(cuid())
+  nombre    String
+  slug      String    @unique
+  parentId  String?   @map("parent_id")
+  parent    Category? @relation("Subcategorias", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Category[] @relation("Subcategorias")
+  products  Product[]
+  createdAt DateTime  @default(now())
+  @@map("categories")
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  ref              String        @unique
+  codigo           String?
+  nombre           String
+  descripcion      String?
+  descripcionCorta String?      @map("descripcion_corta")
+  categoriaId      String?       @map("categoria_id")
+  categoria        Category?     @relation(fields: [categoriaId], references: [id])
+  subcategoria     String?
+  marca            String?
+  precio           Decimal       @db.Decimal(12, 2)
+  precioAnterior   Decimal?      @map("precio_anterior") @db.Decimal(12, 2)
+  descuento        Int           @default(0)
+  cantidadStock    Int           @map("cantidad_stock") @default(0)
+  stockStatus      StockStatus   @map("stock_status") @default(OK)
+  estado           ProductStatus @default(ACTIVO)
+  publicado        Boolean       @default(false)
+  fechaPublicacion DateTime?    @map("fecha_publicacion")
+  destacado        Boolean       @default(false)
+  oferta           Boolean       @default(false)
+  nuevo            Boolean       @default(false)
+  masVendido       Boolean       @map("mas_vendido") @default(false)
+  tela             String
+  colores          String[]
+  tallas           String[]
+  imagenPrincipal  String?       @map("imagen_principal")
+  imagenes         String[]      @default([])
+  orderItems       OrderItem[]
+  movements        InventoryMovement[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?     @map("deleted_at")
+
+  @@index([categoriaId, deletedAt])
+  @@index([publicado, estado])
+  @@index([stockStatus])
+  @@index([stockStatus, publicado])
+  @@index([deletedAt])
+  @@map("products")
+}
+
+// ------------- Clientes -------------
+model Customer {
+  id                String      @id @default(cuid())
+  nombre            String
+  ciudad            String?
+  telefono          String?     @map("telefono")
+  nit               String?
+  asesorId          String?     @map("asesor_id")
+  asesor            User?       @relation("AsesorClientes", fields: [asesorId], references: [id])
+  cupoTotal         Decimal     @map("cupo_total") @default(0) @db.Decimal(12, 2)
+  cupoUsado         Decimal     @map("cupo_usado") @default(0) @db.Decimal(12, 2)
+  deudaVencida      Decimal     @map("deuda_vencida") @default(0) @db.Decimal(12, 2)
+  isTrustedCustomer Boolean    @map("is_trusted_customer") @default(false)
+  estado            EstadoUsuario @default(ACTIVO)
+  orders            Order[]
+  payments          Payment[]
+  receipts          Receipt[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?  @map("deleted_at")
+
+  @@index([asesorId])
+  @@index([asesorId, estado])
+  @@index([deletedAt])
+  @@map("customers")
+}
+
+// ------------- Pedidos -------------
+model Order {
+  id            String       @id @default(cuid())
+  numero        String       @unique
+  clienteId     String       @map("cliente_id")
+  cliente       Customer     @relation(fields: [clienteId], references: [id])
+  clienteNombre String       @map("cliente_nombre")
+  asesorId      String       @map("asesor_id")
+  asesor        User         @relation("AsesorOrders", fields: [asesorId], references: [id])
+  asesorNombre  String       @map("asesor_nombre")
+  fecha         DateTime     @default(now())
+  total         Decimal      @db.Decimal(12, 2)
+  itemsCount    Int          @map("items_count") @default(0)
+  estado        OrderStatus  @default(NUEVO)
+  prioridad     OrderPriority @default(ESTANDAR)
+  observaciones String?
+  items         OrderItem[]
+  production    ProductionOrder?
+  commissions   Commission[]
+  payments      Payment[]
+  receipts      Receipt[]
+  deliveries    Delivery[]
+  returns       Return[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?    @map("deleted_at")
+
+  @@index([clienteId, deletedAt])
+  @@index([asesorId])
+  @@index([estado, fecha])
+  @@index([estado, fecha, asesorId])
+  @@index([deletedAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String   @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?  @map("product_id")
+  product   Product? @relation(fields: [productId], references: [id])
+  nombre    String
+  precio    Decimal  @db.Decimal(12, 2)
+  cantidad  Int
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ------------- Stock -------------
+model Supplier {
+  id               String         @id @default(cuid())
+  nombre           String
+  nit              String         @unique
+  telefono         String?
+  email            String?
+  direccion        String?
+  ciudad           String?
+  materiales       String[]       @default([])
+  estado           SupplierStatus @default(ACTIVO)
+  calificacion     Float          @default(0)
+  pedidosRealizados Int           @map("pedidos_realizados") @default(0)
+  ultimoPedido     DateTime?      @map("ultimo_pedido")
+  rawMaterials     RawMaterial[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?      @map("deleted_at")
+  @@index([deletedAt])
+  @@map("suppliers")
+}
+
+model RawMaterial {
+  id            String    @id @default(cuid())
+  nombre        String
+  categoria     String?
+  unidadMedida  String    @map("unidad_medida")
+  stockActual   Int       @map("stock_actual") @default(0)
+  stockMinimo   Int       @map("stock_minimo") @default(0)
+  proveedorId   String?   @map("proveedor_id")
+  proveedor     Supplier? @relation(fields: [proveedorId], references: [id])
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(12, 2)
+  movements     InventoryMovement[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? @map("deleted_at")
+  @@index([proveedorId])
+  @@index([stockActual])
+  @@map("raw_materials")
+}
+
+model InventoryMovement {
+  id           String       @id @default(cuid())
+  tipo         MovementType
+  productId    String?      @map("product_id")
+  product      Product?     @relation(fields: [productId], references: [id])
+  rawMaterialId String?     @map("raw_material_id")
+  rawMaterial  RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  cantidad     Int
+  ajuste       Int?
+  motivo       String
+  usuarioId    String       @map("usuario_id")
+  usuario      User         @relation("UsuarioMovements", fields: [usuarioId], references: [id])
+  fecha        DateTime     @default(now())
+  deletedAt    DateTime?    @map("deleted_at")
+  @@index([productId, fecha])
+  @@index([rawMaterialId, fecha])
+  @@index([deletedAt])
+  @@map("inventory_movements")
+}
+
+// ------------- Producción -------------
+model Workshop {
+  id          String         @id @default(cuid())
+  nombre      String
+  encargadoId String?        @map("encargado_id")
+  direccion   String?
+  ciudad      String?
+  estado      WorkshopStatus @default(ACTIVO)
+  capacidad   Int?
+  productions ProductionOrder[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?      @map("deleted_at")
+  @@map("workshops")
+}
+
+model ProductionOrder {
+  id            String          @id @default(cuid())
+  pedidoId      String?         @map("pedido_id") @unique
+  pedido        Order?          @relation(fields: [pedidoId], references: [id])
+  operarioId    String?         @map("operario_id")
+  operario      User?           @relation("OperarioProductions", fields: [operarioId], references: [id])
+  tallerId      String?         @map("taller_id")
+  taller        Workshop?       @relation(fields: [tallerId], references: [id])
+  referencia    String
+  cantidad      Int
+  fechaInicio   DateTime        @map("fecha_inicio") @default(now())
+  fechaEstimada DateTime        @map("fecha_estimada")
+  avance        Int             @default(0)
+  estado        ProductionStatus @default(PENDIENTE)
+  tela          String?
+  colores       String[]
+  curvaTallas   Json?           @map("curva_tallas")
+  notasTecnicas String?         @map("notas_tecnicas")
+  controlPrendas ControlPrenda[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?       @map("deleted_at")
+  @@index([pedidoId])
+  @@index([estado])
+  @@index([deletedAt])
+  @@map("production_orders")
+}
+
+// ------------- Transversal: Notificaciones -------------
+model Notification {
+  id        String          @id @default(cuid())
+  tipo      NotificationType
+  titulo    String
+  mensaje   String
+  leida     Boolean         @default(false)
+  usuarioId String?         @map("usuario_id")
+  usuario   User?           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  deletedAt DateTime?       @map("deleted_at")
+  @@index([usuarioId, leida])
+  @@index([deletedAt])
+  @@map("notifications")
+}
+
+// ------------- Webhooks -------------
+model WebhookSubscription {
+  id        String   @id @default(cuid())
+  url       String
+  secret    String?
+  events    String[] @default([])
+  active    Boolean  @default(true)
+  usuarioId String?  @map("usuario_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+  @@index([usuarioId])
+  @@index([active])
+  @@index([deletedAt])
+  @@map("webhook_subscriptions")
+}
+
+// ------------- Pagos -------------
+model Payment {
+  id         String        @id @default(cuid())
+  orderId    String        @map("order_id")
+  order      Order         @relation(fields: [orderId], references: [id])
+  customerId String        @map("customer_id")
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  asesorId   String?       @map("asesor_id")
+  asesor     User?         @relation("AsesorPayments", fields: [asesorId], references: [id])
+  amount     Decimal       @db.Decimal(12, 2)
+  method     PaymentMethod
+  status     PaymentStatus @default(PENDING)
+  reference  String?
+  notes      String?
+  paidAt     DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?     @map("deleted_at")
+  @@index([orderId])
+  @@index([customerId])
+  @@index([asesorId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("payments")
+}
+
+// ------------- Recibos -------------
+model Receipt {
+  id         String    @id @default(cuid())
+  orderId    String?   @map("order_id")
+  order      Order?    @relation(fields: [orderId], references: [id])
+  customerId String    @map("customer_id")
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  numero     String    @unique
+  total      Decimal   @db.Decimal(12, 2)
+  concepto   String
+  notas       String?
+  emitidoPor String?
+  emitidoAt  DateTime  @default(now()) @map("emitido_at")
+  estado     String    @default("BORRADOR")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime? @map("deleted_at")
+  @@index([customerId])
+  @@index([orderId])
+  @@index([estado])
+  @@index([deletedAt])
+  @@map("receipts")
+}
+
+// ------------- Comisiones -------------
+model Commission {
+  id         String    @id @default(cuid())
+  asesorId   String    @map("asesor_id")
+  asesor     User      @relation("AsesorCommissions", fields: [asesorId], references: [id])
+  orderId    String?   @map("order_id")
+  order      Order?    @relation(fields: [orderId], references: [id])
+  monto      Decimal   @db.Decimal(12, 2)
+  porcentaje Decimal   @db.Decimal(5, 2)
+  estado     String    @default("pendiente")
+  notas      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime? @map("deleted_at")
+  @@index([asesorId])
+  @@index([orderId])
+  @@index([deletedAt])
+  @@map("commissions")
+}
+
+// ------------- Configuración de empresa -------------
+model CompanyConfig {
+  id        String   @id @default("company")
+  nombre    String   @default("SurtiTelas")
+  nit       String?
+  telefono  String?
+  email     String?
+  direccion String?
+  ciudad    String?
+  logo      String?
+  moneda    String   @default("COP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("company_config")
+}
+
+// ------------- CMS -------------
+model CmsPage {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  titulo      String
+  contenido   String?
+  publicado   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? @map("deleted_at")
+  @@index([slug])
+  @@index([publicado])
+  @@index([deletedAt])
+  @@map("cms_pages")
+}
+
+// ------------- Contacto -------------
+model ContactMessage {
+  id            String    @id @default(cuid())
+  nombre        String
+  email         String
+  telefono      String?
+  asunto        String
+  mensaje       String
+  leida         Boolean   @default(false)
+  respondida    Boolean   @default(false)
+  respuesta     String?
+  respondidoPor String?   @map("respondido_por")
+  respondidoEn  DateTime? @map("respondido_en")
+  estado        String    @default("NUEVO")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? @map("deleted_at")
+  @@index([leida])
+  @@index([estado])
+  @@index([deletedAt])
+  @@map("contact_messages")
+}
+
+// ------------- Alertas -------------
+model Alert {
+  id            String        @id @default(cuid())
+  tipo          String
+  modulo        String
+  referenciaId  String?       @map("referencia_id")
+  mensaje       String
+  estado        AlertState    @default(PENDIENTE)
+  prioridad     AlertPriority @default(MEDIA)
+  leida         Boolean       @default(false)
+  leidaPorId    String?       @map("leida_por_id")
+  leidaPor      User?         @relation("AlertLeidaPor", fields: [leidaPorId], references: [id])
+  resueltaPorId String?       @map("resuelta_por_id")
+  resueltaPor   User?         @relation("AlertResueltaPor", fields: [resueltaPorId], references: [id])
+  resueltaEn    DateTime?
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?     @map("deleted_at")
+  @@index([estado])
+  @@index([prioridad])
+  @@index([modulo])
+  @@index([leida])
+  @@index([deletedAt])
+  @@map("alerts")
+}
+
+// ------------- Auditoría -------------
+model AuditLog {
+  id           String   @id @default(cuid())
+  usuarioId    String?  @map("usuario_id")
+  usuario      User?    @relation("AuditLogUsuario", fields: [usuarioId], references: [id])
+  accion       String
+  modulo       String
+  referenciaId String?  @map("referencia_id")
+  ip           String?
+  userAgent    String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  @@index([usuarioId])
+  @@index([modulo])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ------------- Control de prendas -------------
+model ControlPrenda {
+  id                String              @id @default(cuid())
+  produccionId      String              @map("produccion_id")
+  produccion        ProductionOrder     @relation(fields: [produccionId], references: [id])
+  etapa             ControlPrendaEtapa
+  estado            ControlPrendaEstado @default(PROCESO)
+  cantidadTotal     Int
+  cantidadRevisada  Int
+  cantidadAprobada  Int
+  cantidadRechazada Int
+  observaciones     String?
+  revisadoPorId     String?             @map("revisado_por_id")
+  revisadoPor       User?               @relation("ControlPrendaRevisadoPor", fields: [revisadoPorId], references: [id])
+  creadoPorId       String              @map("creado_por_id")
+  creadoPor         User                @relation("ControlPrendaCreadoPor", fields: [creadoPorId], references: [id])
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?           @map("deleted_at")
+  @@index([produccionId])
+  @@index([estado])
+  @@index([etapa])
+  @@index([deletedAt])
+  @@map("control_prendas")
+}
+
+// ------------- Entregas / Domicilios -------------
+model Delivery {
+  id             String    @id @default(cuid())
+  orderId        String    @unique @map("order_id")
+  order          Order     @relation(fields: [orderId], references: [id])
+  domiciliarioId String?   @map("domiciliario_id")
+  domiciliario   User?     @relation("DomiciliarioDeliveries", fields: [domiciliarioId], references: [id])
+  estado         String    @default("ASIGNADO")
+  direccion      String
+  ciudad         String?
+  telefono       String?
+  notas          String?
+  asignadoEn     DateTime?
+  entregadoEn    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime? @map("deleted_at")
+  @@index([domiciliarioId])
+  @@index([deletedAt])
+  @@map("deliveries")
+}
+
+// ------------- Devoluciones -------------
+model Return {
+  id                    String    @id @default(cuid())
+  numeroDevolucion      String    @unique @map("numero_devolucion")
+  orderId               String    @map("order_id")
+  order                 Order     @relation(fields: [orderId], references: [id])
+  prenda                String
+  referencia            String
+  motivo                String
+  cantidad              Int
+  cantidadInspeccionada Int       @default(0) @map("cantidad_inspeccionada")
+  fechaDevolucion       DateTime  @default(now()) @map("fecha_devolucion")
+  estado                String    @default("RECIBIDO")
+  destino               String?
+  cliente               String?
+  responsable           String?
+  observaciones         String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime? @map("deleted_at")
+  @@index([orderId])
+  @@index([deletedAt])
+  @@map("returns")
+}
+
+// ------------- Chat -------------
+model Conversation {
+  id        String   @id @default(cuid())
+  clientId  String   @map("client_id")
+  advisorId String?  @map("advisor_id")
+  status    String   @default("OPEN")
+  subject   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  client  User    @relation("ClientConversations", fields: [clientId], references: [id])
+  advisor User?   @relation("AdvisorConversations", fields: [advisorId], references: [id])
+  messages Message[]
+
+  @@index([clientId])
+  @@index([advisorId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  senderId       String   @map("sender_id")
+  content        String
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime? @map("deleted_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User          @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("messages")
+}
+

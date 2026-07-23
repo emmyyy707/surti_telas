@@ -1,0 +1,40 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create backup
+        run: |
+          mkdir -p backups
+          pg_dump -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME }} -f backups/backup_$(date +%Y%m%d_%H%M%S).sql
+
+      - name: Upload backup to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ github.run_number }}
+          path: backups/*.sql
+          retention-days: 30
+
+      - name: Upload backup to S3 (optional)
+        if: secrets.AWS_S3_BUCKET != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-s3-${{ github.run_number }}
+          path: backups/*.sql
+          retention-days: 30

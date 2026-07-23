@@ -1,0 +1,196 @@
+Archivo,Confianza,Motivo,Evidencia
+src/app/components/admin/InventarioModule.tsx,100,Duplicado de features/admin/InventarioModule.tsx no importado,App.tsx lazy import apunta a @/app/features/admin/InventarioModule
+src/app/components/admin/VentasModule.tsx,100,Duplicado de features/admin/VentasModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/ClientesModule.tsx,100,Duplicado de features/admin/ClientesModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/DomiciliosModule.tsx,100,Duplicado de features/admin/DomiciliosModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/HistorialPagosModule.tsx,100,Duplicado de features/admin/HistorialPagosModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/InsumosModule.tsx,100,Duplicado de features/admin/InsumosModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/ProduccionModule.tsx,100,Duplicado de features/admin/ProduccionModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/DevolucionesModule.tsx,100,Duplicado de features/admin/DevolucionesModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/ConfiguracionModule.tsx,100,Duplicado de features/admin/ConfiguracionModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/ReportesModule.tsx,100,Duplicado de features/admin/ReportesModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/SimpleLoginPage.tsx,100,Duplicado de features/admin/SimpleLoginPage.tsx no importado,Ninguna ruta lo usa
+src/app/components/admin/NotificationsDropdown.tsx,100,Duplicado de features/admin/NotificationsDropdown.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/admin/UsuariosModule.tsx,100,Duplicado de features/admin/UsuariosModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/common/AdvisorPanelSidebar.tsx,100,Duplicado de features/common/AdvisorPanelSidebar.tsx no importado,Ninguna ruta ni importacion directa
+src/app/components/common/ClientDashboardNew.tsx,100,Duplicado de features/common/ClientDashboardNew.tsx no importado,Ninguna ruta ni importacion directa
+src/app/components/common/ClientDashboard.tsx,100,Duplicado de features/common/ClientDashboard.tsx no importado,Ninguna ruta ni importacion directa
+src/app/components/common/UserDashboard.tsx,100,Duplicado de features/common/UserDashboard.tsx no importado,Ninguna ruta ni importacion directa
+src/app/components/common/ProfilePage.tsx,100,Duplicado de features/common/ProfilePage.tsx no importado,Ninguna ruta ni importacion directa
+src/app/components/common/ClientManagement.tsx,100,Duplicado de features/common/ClientManagement.tsx no importado,Ninguna ruta ni importacion directa
+src/app/components/common/CatalogPage.tsx,100,Duplicado de features/common/CatalogPage.tsx no importado,App.tsx importa features/common/CatalogPage
+src/app/components/common/CartPage.tsx,100,Duplicado de features/common/CartPage.tsx no importado,App.tsx importa features/common/CartPage
+src/app/components/common/HomePage.tsx,100,Duplicado de features/common/HomePage.tsx no importado,App.tsx importa presentation/pages/public/HomePage
+src/app/components/common/ProductsPage.tsx,100,Duplicado no importado,Ninguna ruta
+src/app/components/common/ProductsPageNew.tsx,100,Duplicado no importado,Ninguna ruta
+src/app/components/common/ShoppingCart.tsx,100,Duplicado no importado,Ninguna ruta
+src/app/components/common/NavigationBar.tsx,100,Duplicado no importado,Ninguna ruta
+src/app/components/common/Footer.tsx,100,Duplicado no importado,Ninguna ruta
+src/app/components/domiciliario/EntregasModule.tsx,100,Duplicado de features/domiciliario/EntregasModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/domiciliario/RutasModule.tsx,100,Duplicado de features/domiciliario/RutasModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/asesor/MisClientesModule.tsx,100,Duplicado de features/asesor/MisClientesModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/components/asesor/ComisionesModule.tsx,100,Duplicado de features/asesor/ComisionesModule.tsx no importado,Importado solo por components/AdminDashboard muerto
+src/app/features/admin/AdminDashboard.tsx,100,Duplicado de components/AdminDashboard.tsx no importado,App.tsx lazy import apunta a components/AdminDashboard
+src/app/features/common/AdvisorPanelSidebar.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/ClientDashboardNew.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/UserDashboard.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/ProfilePage.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/ClientManagement.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/ProductsPage.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/ProductsPageNew.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/ShoppingCart.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/NavigationBar.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/Footer.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/common/HomePage.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/features/shared/AdvisorPanelSidebar.tsx,100,Duplicado zombie,Ninguna ruta ni importacion directa
+src/app/App.tsx,100,App paralela no importada por main.tsx,main.tsx importa presentation/pages/App.tsx
+src/app/pages/SurtitelasLanding.tsx,100,Landing duplicado no importado,main.tsx no lo importa
+src/app/MODO_EXPORTACION.tsx,100,Script no importado,Ninguna referencia
+src/app/contexts/ThemeContext.tsx,100,Duplicado de presentation/contexts/ThemeContext.tsx,Ninguna ruta lo importa
+src/app/shared/ui/index.ts,100,Barrel export zombie,Ninguna ruta lo importa
+src/app/shared/types/index.ts,100,Barrel export zombie,Ninguna ruta lo importa
+src/app/shared/types/dashboard.ts,100,Tipo no importado,Ninguna referencia
+src/app/types/dashboard.ts,100,Tipo no importado,Ninguna referencia
+src/app/utils/recharts-fix.ts,100,Utilidad no importada,Ninguna referencia
+src/app/components/ActivityTimeline.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/AdvisorAssistant.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/AdvisorMetrics.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/AdvisorRatingSection.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/AdvisorRatingsManagement.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/BottomNavigation.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/CartSidebar.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/CatalogPage.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ClientDashboard.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ClientDashboardNew.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ClientManagement.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ClientNotes.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ContactPage.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/DashboardOverview.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/FigmaExportView.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/GlobalSearch.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/HomePage.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/InventoryAlerts.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/NavigationBar.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/NotificationCenter.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ProductCard.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ProductsPage.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ProductsPageNew.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ProfilePage.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/QuickActions.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/RatingsAndMessagesSection.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/ShoppingCart.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/SmartRecommendations.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/UserDashboard.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/WhatsAppButton.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/components/figma/ImageWithFallback.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ActivityTimeline.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/AdvancedMetrics.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/AdvisorAssistant.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/AdvisorMetrics.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/AdvisorRatingSection.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/AdvisorRatingsManagement.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/BottomNavigation.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/CartSidebar.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/DashboardOverview.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/FigmaExportView.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/GlobalSearch.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/InventoryAlerts.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/NotificationCenter.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ProductCard.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ProductFilters.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/QuickActions.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/RatingsAndMessagesSection.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ScrollingImages.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ServicesPage.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/SmartRecommendations.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/VideoCarousel.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/WhatsAppButton.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/figma/ImageWithFallback.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ProductModal.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ProductDetailModal.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ProductFilters.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ImageWithFallback.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/FilterDrawer.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/CartDrawer.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/CartItem.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/CartSummary.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/CheckoutModal.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ScrollToTop.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/TelaList.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/ProductCard.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/NavigationBar.tsx,100,Componente zombie no importado,Ninguna ruta
+src/app/features/common/Footer.tsx,100,Componente zombie no importado,Ninguna ruta
+src/domain/entities/Tela.ts,100,Entidad Clean Architecture huérfana,Solo importado por TelaRepository
+src/domain/repositories/ITelaRepository.ts,100,Repositorio Clean Architecture huérfano,Solo importado por TelaRepository
+src/domain/useCases/GetTelasUseCase.ts,100,Caso de uso Clean Architecture huérfano,Ninguna referencia
+src/application/services/TelaService.ts,100,Servicio Clean Architecture huérfano,Ninguna referencia
+src/infrastructure/repositories/TelaRepository.ts,100,Repositorio Clean Architecture huérfano,Solo importado por domain/entities/Tela.ts
+src/infrastructure/http/apiClient.ts,100,HTTP client huérfano,Ninguna referencia
+src/infrastructure/config/firebase.ts,100,Firebase config huérfano,Ninguna referencia
+src/config/firebase.ts,100,Firebase config huérfano,Ninguna referencia
+src/hooks/usePagination.ts,100,Hook no importado,Ninguna referencia
+src/types/auth.types.ts,100,Tipo no importado,Ninguna referencia
+src/types/theme.css,100,CSS no importado,Ninguna referencia
+src/types/dashboard.ts,100,Tipo no importado,Ninguna referencia
+src/shared/auth.types.ts,100,Tipo no importado,Ninguna referencia
+src/components/layout/DashboardLayout.tsx,100,Layout no importado,Ninguna referencia
+src/components/layout/Sidebar.tsx,100,Layout no importado,Ninguna referencia
+src/components/layout/Header.tsx,100,Layout no importado,Ninguna referencia
+src/presentation/hooks/useTelas.ts,100,Hook no importado,Ninguna referencia
+src/presentation/components/CheckoutModal.tsx,100,Componente no importado,Ninguna referencia
+src/presentation/components/TelaList.tsx,100,Componente no importado,Ninguna referencia
+src/app/features/admin/index.ts,95,Barrel export posiblemente usado por tooling,No importado en codigo vivo detectado
+src/app/features/asesor/index.ts,95,Barrel export posiblemente usado por tooling,No importado en codigo vivo detectado
+src/app/features/domiciliario/index.ts,95,Barrel export posiblemente usado por tooling,No importado en codigo vivo detectado
+src/app/features/cliente/index.ts,95,Barrel export posiblemente usado por tooling,No importado en codigo vivo detectado
+src/app/features/common/CatalogPage.tsx,0,VIVO,App.tsx linea 23
+src/app/features/common/CartPage.tsx,0,VIVO,App.tsx linea 24
+src/app/features/common/ContactPage.tsx,0,VIVO,App.tsx linea 25
+src/app/components/AdminDashboard.tsx,0,VIVO,App.tsx linea 33 lazy
+src/app/features/admin/DashboardGeneral.tsx,0,VIVO,AdminDashboard.tsx linea 66
+src/app/features/admin/ConfiguracionModule.tsx,0,VIVO,AdminDashboard.tsx linea 67
+src/app/features/admin/UsuariosModule.tsx,0,VIVO,AdminDashboard.tsx linea 68
+src/app/features/admin/InventarioModule.tsx,0,VIVO,AdminDashboard.tsx linea 69
+src/app/features/admin/ProduccionModule.tsx,0,VIVO,AdminDashboard.tsx linea 70
+src/app/features/admin/VentasModule.tsx,0,VIVO,AdminDashboard.tsx linea 71
+src/app/features/admin/DevolucionesModule.tsx,0,VIVO,AdminDashboard.tsx linea 72
+src/app/features/admin/ReportesModule.tsx,0,VIVO,AdminDashboard.tsx linea 73
+src/app/features/admin/HistorialPagosModule.tsx,0,VIVO,AdminDashboard.tsx linea 74
+src/app/features/admin/InsumosModule.tsx,0,VIVO,AdminDashboard.tsx linea 75
+src/app/features/admin/ClientesModule.tsx,0,VIVO,AdminDashboard.tsx linea 76
+src/app/features/admin/DomiciliosModule.tsx,0,VIVO,AdminDashboard.tsx linea 77
+src/app/features/admin/NotificationsDropdown.tsx,0,VIVO,AdminDashboard.tsx linea 78
+src/app/features/asesor/MisClientesModule.tsx,0,VIVO,AdminDashboard.tsx linea 79
+src/app/features/asesor/ComisionesModule.tsx,0,VIVO,AdminDashboard.tsx linea 80
+src/app/features/domiciliario/EntregasModule.tsx,0,VIVO,AdminDashboard.tsx linea 81
+src/app/features/domiciliario/RutasModule.tsx,0,VIVO,AdminDashboard.tsx linea 82
+src/app/features/cliente/ResumenCliente.tsx,0,VIVO,AdminDashboard.tsx linea 83
+src/app/features/cliente/MisPedidosCliente.tsx,0,VIVO,AdminDashboard.tsx linea 84
+src/app/features/cliente/DireccionesCliente.tsx,0,VIVO,AdminDashboard.tsx linea 85
+src/app/features/cliente/MetodosPagoCliente.tsx,0,VIVO,AdminDashboard.tsx linea 86
+src/app/features/cliente/MiPerfilCliente.tsx,0,VIVO,AdminDashboard.tsx linea 87
+src/app/features/cliente/CatalogoCliente.tsx,0,VIVO,AdminDashboard.tsx linea 88
+src/app/config/menuConfig.ts,0,VIVO,AdminDashboard.tsx linea 89
+src/presentation/pages/public/HomePage.tsx,0,VIVO,App.tsx linea 22
+src/presentation/pages/public/AboutPage.tsx,0,VIVO,App.tsx linea 26
+src/presentation/pages/auth/LoginPage.tsx,0,VIVO,App.tsx linea 29
+src/presentation/pages/auth/RegisterPage.tsx,0,VIVO,App.tsx linea 30
+src/presentation/pages/features/CatalogPage.tsx,0,VIVO,App.tsx linea 23
+src/presentation/pages/features/CartPage.tsx,0,VIVO,App.tsx linea 24
+src/presentation/pages/features/ContactPage.tsx,0,VIVO,App.tsx linea 25
+src/presentation/contexts/AuthContext.tsx,0,VIVO,App.tsx linea 9
+src/presentation/contexts/CartContext.tsx,0,VIVO,App.tsx linea 10
+src/presentation/contexts/CartDrawerContext.tsx,0,VIVO,App.tsx linea 11
+src/presentation/contexts/ThemeContext.tsx,0,VIVO,App.tsx linea 12
+src/presentation/routes/ProtectedRoute.tsx,0,VIVO,App.tsx linea 13
+src/presentation/pages/components/Navbar.tsx,0,VIVO,App.tsx linea 14
+src/presentation/pages/components/footer.tsx,0,VIVO,App.tsx linea 15
+src/presentation/components/ScrollToTop.tsx,0,VIVO,App.tsx linea 16
+src/presentation/components/CartDrawer.tsx,0,VIVO,App.tsx linea 17
+src/presentation/components/CartItem.tsx,0,VIVO,CartDrawer.tsx linea 1
+src/presentation/components/CartSummary.tsx,0,VIVO,CartDrawer.tsx linea 1
+src/shared/ui/Spinner.tsx,0,VIVO,App.tsx linea 18
+src/app/components/ErrorBoundary.tsx,0,VIVO,App.tsx linea 19
+src/app/features/common/CatalogPage.tsx,0,VIVO,App.tsx linea 23
+src/app/features/common/CartPage.tsx,0,VIVO,App.tsx linea 24
+src/app/features/common/ContactPage.tsx,0,VIVO,App.tsx linea 25

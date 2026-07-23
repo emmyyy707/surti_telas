@@ -1,0 +1,613 @@
+.pageTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 8px 0; }
+.pageSubtitle { font-size: 0.9rem; color: var(--color-text-muted); margin: 0; }
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 24px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.periodoSelect {
+  position: relative;
+  min-width: 160px;
+}
+
+.select {
+  width: 100%;
+  height: 36px;
+  padding: 0 36px 0 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: var(--transition);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: var(--color-accent);
+  background: var(--color-bg-surface);
+}
+
+.select option {
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+}
+
+.selectIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.statsRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-width: 180px;
+  flex: 1;
+}
+
+.statCardSuccess {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.statCardWarning {
+  background: rgba(244, 162, 97, 0.08);
+  border-color: rgba(244, 162, 97, 0.3);
+}
+
+.statCardDanger {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.statIcon {
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+.statIconSuccess {
+  color: var(--color-success);
+  opacity: 0.9;
+}
+
+.statIconWarning {
+  color: var(--color-warning);
+  opacity: 0.9;
+}
+
+.statIconDanger {
+  color: var(--color-error);
+  opacity: 0.9;
+}
+
+.statValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.chartCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.chartTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 16px 0;
+}
+
+.barChart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.barLabel {
+  display: flex;
+  flex-direction: column;
+  min-width: 130px;
+  max-width: 130px;
+}
+
+.barName {
+  font-size: 0.78rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barAmount {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.barTrack {
+  flex: 1;
+  height: 20px;
+  background: var(--color-bg-elevated);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.barFillPrimary {
+  background: var(--color-accent);
+  opacity: 0.9;
+}
+
+.barFillAccent {
+  background: var(--color-accent);
+  opacity: 0.7;
+}
+
+.barFillDefault {
+  background: var(--color-accent);
+  opacity: 0.5;
+}
+
+.barPercent {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 32px;
+  text-align: right;
+}
+
+.rotacionChart {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.rotacionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rotacionDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rotacionDotAlta {
+  background: var(--color-success);
+}
+
+.rotacionDotMedia {
+  background: var(--color-warning);
+}
+
+.rotacionDotBaja {
+  background: var(--color-error);
+}
+
+.rotacionData {
+  display: flex;
+  flex-direction: column;
+}
+
+.rotacionValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.rotacionLabel {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.rotacionBars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.rotacionBarRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rotacionBarLabel {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  min-width: 50px;
+}
+
+.rotacionBarTrack {
+  flex: 1;
+  height: 10px;
+  background: var(--color-bg-elevated);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.rotacionBarFillAlta {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.rotacionBarFillMedia {
+  height: 100%;
+  background: var(--color-warning);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.rotacionBarFillBaja {
+  height: 100%;
+  background: var(--color-error);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.rotacionBarPercent {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 32px;
+  text-align: right;
+}
+
+.tableSection {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.tableHeader {
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tableTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.tableFilters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 6px 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filterBtn:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.filterBtnActive {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-border);
+  font-weight: 500;
+}
+
+.searchBox {
+  position: relative;
+  min-width: 180px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.searchInput {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px 0 32px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: var(--transition);
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.searchInput:focus {
+  border-color: var(--color-accent);
+  background: var(--color-bg-surface);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.table thead tr {
+  background: var(--color-bg-elevated);
+}
+
+.table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: var(--color-bg-elevated);
+}
+
+.rowWarning {
+  background: rgba(244, 162, 97, 0.04);
+}
+
+.rowWarning:hover {
+  background: rgba(244, 162, 97, 0.1);
+}
+
+.rowDanger {
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.rowDanger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.tdPrimary {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.tdMuted {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.tdRight {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.tdBold {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.tdCenter {
+  text-align: center;
+}
+
+.stockCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stockValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.stockBar {
+  width: 70px;
+  height: 4px;
+  background: var(--color-bg-elevated);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stockFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.stockFillSuccess {
+  background: var(--color-success);
+}
+
+.stockFillWarning {
+  background: var(--color-warning);
+}
+
+.stockFillDanger {
+  background: var(--color-error);
+}
+
+.emptyRow {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actionBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.actionBtn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+@media (max-width: 1024px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .periodoSelect {
+    width: 100%;
+  }
+  .statsRow {
+    flex-direction: column;
+  }
+  .statCard {
+    min-width: auto;
+  }
+  .tableHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tableFilters {
+    width: 100%;
+    flex-direction: column;
+  }
+  .filterGroup {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+  .searchBox {
+    max-width: none;
+    width: 100%;
+  }
+}

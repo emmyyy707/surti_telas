@@ -1,0 +1,686 @@
+﻿/* ===== ROOT SCOPE ===== */
+.page-nosotros {
+  font-family: 'Inter', sans-serif;
+  background: #FAFAFA;
+  color: #1A1A1A;
+}
+
+/* RESET CONTROLADO */
+.page-nosotros * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== CONTENEDOR ===== */
+.page-nosotros .about-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 80px 24px;
+}
+
+/* ===== HEADER ===== */
+.page-nosotros .modules-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.page-nosotros .top-badge {
+  display: inline-block;
+  background: #E8E3D8;
+  color: #3D3D3D;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.page-nosotros .modules-header h2 {
+  font-size: 40px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+.page-nosotros .modules-header p {
+  color: #6B6B6B;
+  max-width: 520px;
+  margin: auto;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ===== CARDS ===== */
+.page-nosotros .roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.page-nosotros .role-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 30px;
+  border: 1px solid #000000;
+  transition: all 0.3s ease;
+}
+
+.page-nosotros .role-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.page-nosotros .role-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  color: white;
+}
+
+/* Tonos neutros en iconos */
+.page-nosotros .role-card:nth-child(1) .role-icon {
+  background: #000000;
+}
+
+.page-nosotros .role-card:nth-child(2) .role-icon {
+  background: #3D3D3D;
+}
+
+.page-nosotros .role-card:nth-child(3) .role-icon {
+  background: #8B8173;
+}
+
+.page-nosotros .role-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.page-nosotros .role-features {
+  list-style: none;
+  color: #6B6B6B;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ===== SECCIÓN MOBILE ===== */
+.page-nosotros .about-mobile-section-dark {
+  background: linear-gradient(135deg, #000000, #1A1A1A);
+  color: #FFFFFF;
+}
+
+/* Layout */
+.page-nosotros .mobile-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 50px;
+  flex-wrap: wrap;
+}
+
+/* TEXTO */
+.page-nosotros .mobile-text-column {
+  flex: 1;
+  min-width: 300px;
+}
+
+.page-nosotros .experience-badge {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #CCCCCC;
+}
+
+.page-nosotros .mobile-text-column h1 {
+  font-size: 42px;
+  font-weight: 600;
+  margin: 20px 0;
+}
+
+.page-nosotros .mobile-description {
+  color: #999999;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+/* FEATURES */
+.page-nosotros .mobile-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-nosotros .mobile-feature-item {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.page-nosotros .mobile-icon-box {
+  background: #3D3D3D;
+  padding: 12px;
+  border-radius: 12px;
+  color: white;
+}
+
+.page-nosotros .mobile-feature-text h3 {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.page-nosotros .mobile-feature-text p {
+  font-size: 13px;
+  color: #999999;
+}
+
+/* ===== MOCKUP ===== */
+.page-nosotros .mobile-mockup-column {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.page-nosotros .phone-mockup {
+  width: 270px;
+  height: 520px;
+  background: #000000;
+  border-radius: 32px;
+  padding: 10px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.page-nosotros .video-aspect-ratio {
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #000;
+}
+
+.page-nosotros .youtube-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .page-nosotros .mobile-flex {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .page-nosotros .mobile-text-column h1 {
+    font-size: 30px;
+  }
+
+  .page-nosotros .modules-header h2 {
+    font-size: 30px;
+  }
+}
+
+/* --- SECCIÓN EQUIPO (PERSONALIZADA) --- */
+.team-section {
+    padding: 100px 0;
+    background-color: #f8fafc; 
+}
+
+.team-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.team-header h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 15px;
+}
+
+.team-header p {
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+/* --- GRID DE EQUIPO --- */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+}
+
+.team-card {
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- ASIGNACIÓN DE COLORES DINÁMICOS POR CARD --- */
+
+/* Card 1 - Carlos (Púrpura como Misión) */
+.team-card:nth-child(1) .team-icon-wrapper { background-color: #A855F7; }
+.team-card:nth-child(1):hover { border-color: #A855F7; }
+
+/* Card 2 - María (Azul como Visión) */
+.team-card:nth-child(2) .team-icon-wrapper { background-color: #3B82F6; }
+.team-card:nth-child(2):hover { border-color: #3B82F6; }
+
+/* Card 3 - Juan (Verde como Valores) */
+.team-card:nth-child(3) .team-icon-wrapper { background-color: #22C55E; }
+.team-card:nth-child(3):hover { border-color: #22C55E; }
+
+/* Card 4 - Ana (Color neutro o secundario) */
+.team-card:nth-child(4) .team-icon-wrapper { background-color: #1e293b; }
+.team-card:nth-child(4):hover { border-color: #1e293b; }
+
+.team-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+}
+
+/* --- ICONOS --- */
+.team-icon-wrapper {
+    min-width: 64px;
+    height: 64px;
+    color: #ffffff;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover .team-icon-wrapper {
+    transform: rotate(-5deg) scale(1.1);
+}
+
+/* --- TEXTOS --- */
+.team-info h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.team-role {
+    display: block;
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.team-info p {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .team-grid { grid-template-columns: 1fr; }
+    .team-card { padding: 24px; }
+}
+
+@media (max-width: 480px) {
+    .team-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* --- SECCIÓN CTA (CALL TO ACTION) --- */
+.cta-section {
+    padding: 120px 0;
+    background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%); /* Mezcla sutil de azul y púrpura */
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+/* Adorno visual de fondo */
+.cta-section::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    top: -200px;
+    right: -100px;
+}
+
+.cta-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+    position: relative;
+}
+
+/* Badge Superior */
+.cta-badge {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 8px 20px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.cta-badge svg {
+    color: #A855F7; /* Tu Púrpura de Misión */
+}
+
+/* Título */
+.cta-section h2 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    max-width: 800px;
+}
+
+/* Descripción */
+.cta-section p {
+    color: #64748b;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin-bottom: 45px;
+    line-height: 1.6;
+}
+
+/* Botón "Contáctanos Ahora" (ESTILO PREMIUM) */
+.cta-button {
+    background: #22C55E; /* Tu Verde de Valores */
+    color: white;
+    border: none;
+    padding: 20px 45px;
+    border-radius: 100px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+}
+
+.cta-button:hover {
+    transform: scale(1.05) translateY(-3px);
+    box-shadow: 0 20px 40px rgba(34, 197, 94, 0.4);
+    background: #16a34a; /* Un verde un poco más oscuro al presionar */
+}
+
+.cta-button:active {
+    transform: scale(0.98);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .cta-section {
+        padding: 80px 24px;
+    }
+    .cta-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ==========================================
+  IDENTIDAD / MISIÓN / VISIÓN / VALORES
+========================================== */
+
+.page-nosotros .roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-top: 20px;
+}
+
+/* CARD PREMIUM */
+.page-nosotros .role-card {
+  position: relative;
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.88) 0%,
+      rgba(255,255,255,0.72) 100%
+    );
+
+  backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(139, 129, 115, 0.18);
+
+  border-radius: 30px;
+
+  padding: 38px 34px;
+
+  min-height: 360px;
+
+  transition:
+    transform .45s cubic-bezier(.16,1,.3,1),
+    box-shadow .45s ease,
+    border-color .45s ease;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.03),
+    0 2px 8px rgba(0,0,0,0.02);
+}
+
+/* EFECTO SUPERIOR */
+.page-nosotros .role-card::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 5px;
+
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-beige-dark),
+    var(--color-brand-beige),
+    var(--color-brand-cream)
+  );
+
+  opacity: 0;
+
+  transition: opacity .4s ease;
+}
+
+/* HOVER */
+.page-nosotros .role-card:hover {
+  transform: translateY(-10px);
+
+  border-color: rgb(240, 240, 240);
+
+  box-shadow:
+    0 25px 60px rgba(0,0,0,0.08),
+    0 8px 20px rgba(0,0,0,0.04);
+}
+
+.page-nosotros .role-card:hover::before {
+  opacity: 1;
+}
+
+/* ICONOS */
+.page-nosotros .role-icon {
+  width: 72px;
+  height: 72px;
+
+  border-radius: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 28px;
+
+  color: var(--color-brand-white);
+
+  box-shadow:
+    0 12px 30px rgba(0,0,0,0.12);
+
+  transition:
+    transform .4s ease,
+    box-shadow .4s ease;
+}
+
+.page-nosotros .role-card:hover .role-icon {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+/* PALETA ELEGANTE */
+.page-nosotros .role-card:nth-child(1) .role-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #7c4dff,
+      #7c4dff
+    );
+}
+
+.page-nosotros .role-card:nth-child(2) .role-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #00c853,
+      #00c853
+    );
+}
+
+.page-nosotros .role-card:nth-child(3) .role-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #062584,
+      #062584
+    );
+}
+
+/* TITULOS */
+.page-nosotros .role-card h3 {
+  font-size: 2rem;
+
+  font-weight: 700;
+
+  letter-spacing: -0.5px;
+
+  color: var(--color-brand-charcoal);
+
+  margin-bottom: 18px;
+}
+
+/* TEXTO */
+.page-nosotros .role-features {
+  list-style: none;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+
+  color: var(--color-brand-medium-gray);
+
+  font-size: 1.08rem;
+
+  line-height: 1.9;
+}
+
+/* ITEMS */
+.page-nosotros .role-features li {
+  position: relative;
+
+  padding-left: 22px;
+
+  transition: color .3s ease;
+}
+
+/* BULLET PREMIUM */
+.page-nosotros .role-features li::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 12px;
+
+  width: 8px;
+  height: 8px;
+
+  border-radius: 999px;
+
+  background: var(--color-brand-beige-dark);
+
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.12);
+}
+
+/* TEXTO HOVER */
+.page-nosotros .role-card:hover .role-features li {
+  color: var(--color-brand-dark-gray);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+
+  .page-nosotros .roles-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .page-nosotros .role-card {
+    padding: 30px 24px;
+    min-height: auto;
+    border-radius: 24px;
+  }
+
+  .page-nosotros .role-card h3 {
+    font-size: 1.7rem;
+  }
+
+  .page-nosotros .role-features {
+    font-size: 1rem;
+  }
+
+  .page-nosotros .role-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+  }
+}
+
+

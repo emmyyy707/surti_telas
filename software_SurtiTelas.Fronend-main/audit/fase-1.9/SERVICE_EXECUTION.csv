@@ -1,0 +1,4 @@
+SERVICE_FILE,CONSUMER_FILE,CALL_TYPE,EVIDENCE
+src/presentation/pages/auth/RegisterPage.tsx,src/presentation/pages/auth/RegisterPage.tsx,DIRECT_CALL,firebase pattern found in src/presentation/pages/auth/RegisterPage.tsx
+src/presentation/contexts/AuthContext.tsx,src/presentation/contexts/AuthContext.tsx,DIRECT_CALL,firebase pattern found in src/presentation/contexts/AuthContext.tsx
+src/presentation/pages/auth/LoginPage.tsx,src/presentation/pages/auth/LoginPage.tsx,DIRECT_CALL,firebase pattern found in src/presentation/pages/auth/LoginPage.tsx

@@ -1,0 +1,211 @@
+Archivo,CadenaDesdeMain,Alcanzable,Profundidad
+src/main.tsx,main.tsx,SI,0
+src/presentation/pages/App.tsx,main.tsx → App.tsx,SI,1
+src/presentation/contexts/AuthContext.tsx,main.tsx → App.tsx:9 → AuthContext.tsx,SI,2
+src/presentation/contexts/CartContext.tsx,main.tsx → App.tsx:10 → CartContext.tsx,SI,2
+src/presentation/contexts/CartDrawerContext.tsx,main.tsx → App.tsx:11 → CartDrawerContext.tsx,SI,2
+src/presentation/contexts/ThemeContext.tsx,main.tsx → App.tsx:12 → ThemeContext.tsx,SI,2
+src/presentation/routes/ProtectedRoute.tsx,main.tsx → App.tsx:13 → ProtectedRoute.tsx,SI,2
+src/presentation/pages/components/Navbar.tsx,main.tsx → App.tsx:14 → Navbar.tsx,SI,2
+src/presentation/pages/components/footer.tsx,main.tsx → App.tsx:15 → footer.tsx,SI,2
+src/presentation/components/ScrollToTop.tsx,main.tsx → App.tsx:16 → ScrollToTop.tsx,SI,2
+src/presentation/components/CartDrawer.tsx,main.tsx → App.tsx:17 → CartDrawer.tsx,SI,2
+src/presentation/components/CartItem.tsx,main.tsx → App.tsx:17 → CartDrawer.tsx:1 → CartItem.tsx,SI,3
+src/presentation/components/CartSummary.tsx,main.tsx → App.tsx:17 → CartDrawer.tsx:1 → CartSummary.tsx,SI,3
+src/shared/ui/index.ts,main.tsx → App.tsx:18 → shared/ui/index.ts,SI,2
+src/shared/ui/Spinner.tsx,main.tsx → App.tsx:18 → shared/ui/Spinner.tsx,SI,2
+src/app/components/ErrorBoundary.tsx,main.tsx → App.tsx:19 → ErrorBoundary.tsx,SI,2
+src/app/components/AdminDashboard.tsx,main.tsx → App.tsx:33 (lazy) → AdminDashboard.tsx,SI,2
+src/app/features/admin/DashboardGeneral.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:66 → DashboardGeneral.tsx,SI,3
+src/app/features/admin/ConfiguracionModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:67 → ConfiguracionModule.tsx,SI,3
+src/app/features/admin/UsuariosModule.tsx,main.tsx → App.tsx:34 (lazy) → UsuariosModule.tsx,SI,2
+src/app/features/admin/InventarioModule.tsx,main.tsx → App.tsx:35 (lazy) → InventarioModule.tsx,SI,2
+src/app/features/admin/ProduccionModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:70 → ProduccionModule.tsx,SI,3
+src/app/features/admin/VentasModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:71 → VentasModule.tsx,SI,3
+src/app/features/admin/DevolucionesModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:72 → DevolucionesModule.tsx,SI,3
+src/app/features/admin/ReportesModule.tsx,main.tsx → App.tsx:39 (lazy) → ReportesModule.tsx,SI,2
+src/app/features/admin/HistorialPagosModule.tsx,main.tsx → App.tsx:36 (lazy) → HistorialPagosModule.tsx,SI,2
+src/app/features/admin/InsumosModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:75 → InsumosModule.tsx,SI,3
+src/app/features/admin/ClientesModule.tsx,main.tsx → App.tsx:37 (lazy) → ClientesModule.tsx,SI,2
+src/app/features/admin/DomiciliosModule.tsx,main.tsx → App.tsx:38 (lazy) → DomiciliosModule.tsx,SI,2
+src/app/features/admin/NotificationsDropdown.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:78 → NotificationsDropdown.tsx,SI,3
+src/app/features/asesor/MisClientesModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:79 → MisClientesModule.tsx,SI,3
+src/app/features/asesor/ComisionesModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:80 → ComisionesModule.tsx,SI,3
+src/app/features/domiciliario/EntregasModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:81 → EntregasModule.tsx,SI,3
+src/app/features/domiciliario/RutasModule.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:82 → RutasModule.tsx,SI,3
+src/app/features/cliente/ResumenCliente.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:83 → ResumenCliente.tsx,SI,3
+src/app/features/cliente/MisPedidosCliente.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:84 → MisPedidosCliente.tsx,SI,3
+src/app/features/cliente/DireccionesCliente.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:85 → DireccionesCliente.tsx,SI,3
+src/app/features/cliente/MetodosPagoCliente.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:86 → MetodosPagoCliente.tsx,SI,3
+src/app/features/cliente/MiPerfilCliente.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:87 → MiPerfilCliente.tsx,SI,3
+src/app/features/cliente/CatalogoCliente.tsx,main.tsx → App.tsx:33 → AdminDashboard.tsx:88 → CatalogoCliente.tsx,SI,3
+src/app/config/menuConfig.ts,main.tsx → App.tsx:33 → AdminDashboard.tsx:89 → menuConfig.ts,SI,3
+src/presentation/pages/features/CatalogPage.tsx,main.tsx → App.tsx:23 → CatalogPage.tsx,SI,2
+src/presentation/pages/features/CartPage.tsx,main.tsx → App.tsx:24 → CartPage.tsx,SI,2
+src/presentation/pages/features/ContactPage.tsx,main.tsx → App.tsx:25 → ContactPage.tsx,SI,2
+src/presentation/pages/public/HomePage.tsx,main.tsx → App.tsx:22 → HomePage.tsx,SI,2
+src/presentation/pages/public/AboutPage.tsx,main.tsx → App.tsx:26 → AboutPage.tsx,SI,2
+src/presentation/pages/auth/LoginPage.tsx,main.tsx → App.tsx:29 → LoginPage.tsx,SI,2
+src/presentation/pages/auth/RegisterPage.tsx,main.tsx → App.tsx:30 → RegisterPage.tsx,SI,2
+src/presentation/components/ProductModal.tsx,main.tsx → App.tsx:22 → HomePage.tsx → ProductModal.tsx,SI,3
+src/presentation/components/common/ImageWithFallback.tsx,main.tsx → App.tsx:22 → HomePage.tsx → ProductModal.tsx → ImageWithFallback.tsx,SI,4
+src/app/features/common/CatalogPage.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/CartPage.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ContactPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/AdminDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/AdminDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/InventarioModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/InventarioModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/VentasModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/VentasModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/ClientesModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/ClientesModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/DomiciliosModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/DomiciliosModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/HistorialPagosModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/HistorialPagosModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/InsumosModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/InsumosModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/ProduccionModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/ProduccionModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/DevolucionesModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/DevolucionesModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/ConfiguracionModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/ConfiguracionModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/ReportesModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/ReportesModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/SimpleLoginPage.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/SimpleLoginPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/NotificationsDropdown.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/NotificationsDropdown.tsx,NO ALCANZABLE,NO,-
+src/app/components/admin/UsuariosModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/admin/UsuariosModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/AdvisorPanelSidebar.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/AdvisorPanelSidebar.tsx,NO ALCANZABLE,NO,-
+src/app/features/shared/AdvisorPanelSidebar.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ClientDashboardNew.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ClientDashboardNew.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ClientDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ClientDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/UserDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/UserDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ProfilePage.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProfilePage.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ClientManagement.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ClientManagement.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ProductsPage.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductsPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ProductsPageNew.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductsPageNew.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ShoppingCart.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ShoppingCart.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/NavigationBar.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/NavigationBar.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/Footer.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/Footer.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/HomePage.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/HomePage.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/CatalogPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/CartPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/common/ContactPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/domiciliario/EntregasModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/domiciliario/EntregasModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/domiciliario/RutasModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/domiciliario/RutasModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/asesor/MisClientesModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/asesor/MisClientesModule.tsx,NO ALCANZABLE,NO,-
+src/app/components/asesor/ComisionesModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/asesor/ComisionesModule.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ActivityTimeline.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/AdvancedMetrics.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/AdvisorAssistant.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/AdvisorMetrics.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/AdvisorRatingSection.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/AdvisorRatingsManagement.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/BottomNavigation.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/CartSidebar.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/DashboardOverview.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/FigmaExportView.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/GlobalSearch.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/InventoryAlerts.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/NotificationCenter.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductCard.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductFilters.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/QuickActions.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/RatingsAndMessagesSection.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ScrollingImages.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ServicesPage.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/SmartRecommendations.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/VideoCarousel.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/WhatsAppButton.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductModal.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductDetailModal.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductFilters.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ImageWithFallback.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/FilterDrawer.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/CartDrawer.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/CartItem.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/CartSummary.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/CheckoutModal.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ScrollToTop.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/TelaList.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/ProductCard.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/NavigationBar.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/Footer.tsx,NO ALCANZABLE,NO,-
+src/app/features/common/HomePage.tsx,NO ALCANZABLE,NO,-
+src/app/features/figma/ImageWithFallback.tsx,NO ALCANZABLE,NO,-
+src/app/components/AdvisorAssistant.tsx,NO ALCANZABLE,NO,-
+src/app/components/AdvisorMetrics.tsx,NO ALCANZABLE,NO,-
+src/app/components/AdvisorRatingSection.tsx,NO ALCANZABLE,NO,-
+src/app/components/AdvisorRatingsManagement.tsx,NO ALCANZABLE,NO,-
+src/app/components/BottomNavigation.tsx,NO ALCANZABLE,NO,-
+src/app/components/CartSidebar.tsx,NO ALCANZABLE,NO,-
+src/app/components/CatalogPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/ClientDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/components/ClientDashboardNew.tsx,NO ALCANZABLE,NO,-
+src/app/components/ClientManagement.tsx,NO ALCANZABLE,NO,-
+src/app/components/ClientNotes.tsx,NO ALCANZABLE,NO,-
+src/app/components/ContactPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/DashboardOverview.tsx,NO ALCANZABLE,NO,-
+src/app/components/FigmaExportView.tsx,NO ALCANZABLE,NO,-
+src/app/components/GlobalSearch.tsx,NO ALCANZABLE,NO,-
+src/app/components/HomePage.tsx,NO ALCANZABLE,NO,-
+src/app/components/InventoryAlerts.tsx,NO ALCANZABLE,NO,-
+src/app/components/NavigationBar.tsx,NO ALCANZABLE,NO,-
+src/app/components/NotificationCenter.tsx,NO ALCANZABLE,NO,-
+src/app/components/ProductCard.tsx,NO ALCANZABLE,NO,-
+src/app/components/ProductsPage.tsx,NO ALCANZABLE,NO,-
+src/app/components/ProductsPageNew.tsx,NO ALCANZABLE,NO,-
+src/app/components/ProfilePage.tsx,NO ALCANZABLE,NO,-
+src/app/components/QuickActions.tsx,NO ALCANZABLE,NO,-
+src/app/components/RatingsAndMessagesSection.tsx,NO ALCANZABLE,NO,-
+src/app/components/ShoppingCart.tsx,NO ALCANZABLE,NO,-
+src/app/components/SmartRecommendations.tsx,NO ALCANZABLE,NO,-
+src/app/components/UserDashboard.tsx,NO ALCANZABLE,NO,-
+src/app/components/WhatsAppButton.tsx,NO ALCANZABLE,NO,-
+src/app/components/figma/ImageWithFallback.tsx,NO ALCANZABLE,NO,-
+src/app/App.tsx,NO ALCANZABLE,NO,-
+src/app/pages/SurtitelasLanding.tsx,NO ALCANZABLE,NO,-
+src/app/MODO_EXPORTACION.tsx,NO ALCANZABLE,NO,-
+src/app/contexts/ThemeContext.tsx,NO ALCANZABLE,NO,-
+src/app/shared/ui/index.ts,NO ALCANZABLE,NO,-
+src/app/shared/types/index.ts,NO ALCANZABLE,NO,-
+src/app/shared/types/dashboard.ts,NO ALCANZABLE,NO,-
+src/app/types/dashboard.ts,NO ALCANZABLE,NO,-
+src/app/utils/recharts-fix.ts,NO ALCANZABLE,NO,-
+src/domain/entities/Tela.ts,NO ALCANZABLE,NO,-
+src/domain/repositories/ITelaRepository.ts,NO ALCANZABLE,NO,-
+src/domain/useCases/GetTelasUseCase.ts,NO ALCANZABLE,NO,-
+src/application/services/TelaService.ts,NO ALCANZABLE,NO,-
+src/infrastructure/repositories/TelaRepository.ts,NO ALCANZABLE,NO,-
+src/infrastructure/http/apiClient.ts,NO ALCANZABLE,NO,-
+src/infrastructure/config/firebase.ts,NO ALCANZABLE,NO,-
+src/config/firebase.ts,NO ALCANZABLE,NO,-
+src/hooks/usePagination.ts,NO ALCANZABLE,NO,-
+src/types/auth.types.ts,NO ALCANZABLE,NO,-
+src/types/theme.css,NO ALCANZABLE,NO,-
+src/types/dashboard.ts,NO ALCANZABLE,NO,-
+src/shared/auth.types.ts,NO ALCANZABLE,NO,-
+src/presentation/hooks/useTelas.ts,NO ALCANZABLE,NO,-
+src/presentation/components/CheckoutModal.tsx,NO ALCANZABLE,NO,-
+src/presentation/components/TelaList.tsx,NO ALCANZABLE,NO,-

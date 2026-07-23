@@ -1,0 +1,228 @@
+/* ================================================================
+   Modal · Premium Enterprise System
+   Shared overlay, shell, header, body and footer styles.
+   Colors use theme variables so the modal adapts to dark mode
+   (the modal is portaled to <body>, which inherits the
+   [data-theme="dark"] custom properties from <html>).
+   ================================================================ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(12px);
+  animation: modalOverlayFade 0.22s var(--ease-out);
+  cursor: default;
+}
+
+.overlay--form {
+  align-items: flex-start;
+  padding-top: 48px;
+}
+
+.overlay--premium {
+  align-items: center;
+}
+
+@keyframes modalOverlayFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  width: 100%;
+  max-height: min(92vh, 980px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--modal-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  box-shadow: var(--shadow-modal);
+  animation: modalShellIn 0.26s var(--ease-out);
+}
+
+.modal--sm {
+  max-width: 420px;
+}
+
+.modal--md {
+  max-width: 640px;
+}
+
+.modal--lg {
+  max-width: 860px;
+}
+
+.modal--xl {
+  max-width: 1120px;
+}
+
+.modal--2xl {
+  max-width: 1360px;
+}
+
+.modal--full {
+  max-width: 95vw;
+}
+
+@keyframes modalShellIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalHeader {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--modal-bg);
+}
+
+.modalHeader::after {
+  content: '';
+  position: absolute;
+  inset: auto 28px 0 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.headerContent {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.headerIcon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.modalTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(1.05rem, 1.8vw, 1.45rem);
+  line-height: 1.2;
+  font-weight: 760;
+  letter-spacing: -0.03em;
+}
+
+.headerBadge {
+  display: inline-flex;
+  align-items: center;
+}
+
+.modalDescription {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.metaSeparator {
+  margin: 0 7px;
+  color: var(--color-text-muted);
+}
+
+.headerActions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.closeButton {
+  color: var(--color-text-muted);
+}
+
+.closeButton:hover {
+  color: var(--color-text-primary);
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 26px 28px;
+  color: var(--color-text-primary);
+  background: var(--modal-bg);
+}
+
+.modalFooter {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 28px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: 94vh;
+    border-radius: 24px;
+  }
+
+  .modalHeader,
+  .modalBody,
+  .modalFooter {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .headerContent {
+    align-items: flex-start;
+  }
+
+  .headerIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+}

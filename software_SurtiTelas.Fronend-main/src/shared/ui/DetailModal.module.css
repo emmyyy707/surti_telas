@@ -1,0 +1,356 @@
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detailChildren {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.kpiSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.kpiCard {
+  position: relative;
+  min-height: 104px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s ease-out, border-color 0.18s ease-out, box-shadow 0.18s ease-out;
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.kpiCard--success {
+  border-color: #bbf7d0;
+}
+
+.kpiCard--warning {
+  border-color: #fed7aa;
+}
+
+.kpiCard--danger {
+  border-color: #fecaca;
+}
+
+.kpiCard--info {
+  border-color: #bfdbfe;
+}
+
+.kpiCard--primary {
+  border-color: #e5e7eb;
+}
+
+.kpiTop,
+.fieldLabel,
+.sectionTitleWrap,
+.observationHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kpiTop {
+  justify-content: space-between;
+}
+
+.kpiLabel,
+.fieldLabel,
+.sectionTitle {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kpiIcon,
+.fieldIcon,
+.sectionIcon {
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpiValue {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text-primary);
+  font-size: clamp(1.45rem, 3vw, 2.15rem);
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.kpiHelper,
+.fieldHelper {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.sectionsStack,
+.observationsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.sectionsStack,
+.observationsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sectionFull,
+.fieldFull,
+.fieldsGridFull {
+  grid-column: 1 / -1;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sectionTitleWrap {
+  min-width: 0;
+}
+
+.sectionIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: var(--color-bg-elevated);
+}
+
+.sectionDescription {
+  max-width: 520px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fieldCard {
+  position: relative;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-elevated);
+  transition: transform 0.18s ease-out, border-color 0.18s ease-out, background 0.18s ease-out;
+}
+
+.fieldCard:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+}
+
+.fieldCard--success {
+  border-color: #bbf7d0;
+}
+
+.fieldCard--warning {
+  border-color: #fed7aa;
+}
+
+.fieldCard--danger {
+  border-color: #fecaca;
+}
+
+.fieldCard--info {
+  border-color: #bfdbfe;
+}
+
+.fieldCard--primary {
+  border-color: #e5e7eb;
+}
+
+.fieldValue {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 720;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.observationBlock {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.observationBlock--success {
+  border-color: #bbf7d0;
+}
+
+.observationBlock--warning {
+  border-color: #fed7aa;
+}
+
+.observationBlock--danger {
+  border-color: #fecaca;
+}
+
+.observationBlock--info {
+  border-color: #bfdbfe;
+}
+
+.observationBlock--primary {
+  border-color: #e5e7eb;
+}
+
+.observationHeader {
+  margin-bottom: 10px;
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.observationBody {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.observationBody p {
+  margin: 0 0 8px;
+}
+
+.observationBody p:last-child {
+  margin-bottom: 0;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailRow:last-child {
+  border-bottom: 0;
+}
+
+.detailLabel,
+.detailItemLabel {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detailValue,
+.detailItemValue {
+  color: var(--color-text-primary);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-bg-elevated);
+}
+
+.monoValue {
+  font-family: ui-monospace, 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 1100px) {
+  .kpiGrid,
+  .fieldsGrid,
+  .detailGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kpiGrid,
+  .fieldsGrid,
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .section,
+  .fieldCard,
+  .observationBlock {
+    border-radius: 18px;
+  }
+}

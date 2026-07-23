@@ -1,0 +1,74 @@
+import { z } from 'zod';
+import { OptionalPhoneSchema, OptionalDocumentNumberSchema, PaginationSchema } from '../../../../shared/presentation/validators';
+
+export const LoginSchema = z.object({
+  email: z.string().email('Correo inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres').max(100),
+});
+
+export const RegisterSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  email: z.string().email('Correo inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),
+  telefono: OptionalPhoneSchema,
+  documentNumber: OptionalDocumentNumberSchema,
+});
+
+export const RefreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token requerido'),
+});
+
+export const VerifyTwoFactorSchema = z.object({
+  tempToken: z.string().min(1, 'Token temporal requerido'),
+  code: z.string().min(6, 'Código 2FA inválido'),
+});
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email('Correo inválido'),
+});
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token requerido'),
+  newPassword: z.string().min(8, 'Mínimo 8 caracteres').max(100),
+});
+
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Contraseña actual requerida'),
+  newPassword: z.string().min(8, 'Mínimo 8 caracteres').max(100),
+});
+
+export const UpdateProfileSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio').optional(),
+  telefono: OptionalPhoneSchema,
+});
+
+export const CreateUserSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  email: z.string().email('Correo inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),
+  telefono: OptionalPhoneSchema,
+  documentNumber: OptionalDocumentNumberSchema,
+});
+
+export const UpdateUserStatusSchema = z.object({
+  estado: z.enum(['ACTIVO', 'INACTIVO']),
+});
+
+export const UpdateRoleStatusSchema = z.object({
+  estado: z.enum(['Activo', 'Inactivo']),
+});
+
+export const UserFiltersSchema = z.object({
+  search: z.string().optional(),
+  role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']).optional(),
+  estado: z.enum(['ACTIVO', 'INACTIVO']).optional(),
+  ...PaginationSchema.shape,
+  sort: z.enum(['nombre', 'email', 'createdAt']).optional(),
+  order: z.enum(['asc', 'desc']).optional(),
+});
+
+export const GoogleTokenSchema = z.object({
+  idToken: z.string().min(1, 'Token de Google requerido'),
+});

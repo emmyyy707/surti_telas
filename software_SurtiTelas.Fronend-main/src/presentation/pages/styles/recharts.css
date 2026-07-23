@@ -1,0 +1,25 @@
+﻿/* Recharts SVG fix - ensures proper rendering of SVG elements */
+.recharts-surface {
+  overflow: visible;
+}
+
+.recharts-layer {
+  pointer-events: none;
+}
+
+.recharts-layer > * {
+  pointer-events: auto;
+}
+
+/* Fix for <g> element warnings */
+.recharts-pie {
+  transform-origin: center center;
+}
+
+/* Ensure charts are responsive */
+@media (max-width: 640px) {
+  .recharts-surface {
+    font-size: 10px;
+  }
+}
+

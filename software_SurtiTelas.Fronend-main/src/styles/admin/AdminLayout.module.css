@@ -1,0 +1,62 @@
+/* ============================================================
+   AdminLayout.module.css
+   Contenedor principal que sincroniza el contenido
+   con el estado del Sidebar (expandido / colapsado).
+   ============================================================ */
+
+.appLayout {
+  --sidebar-width: var(--sb-width, 280px);
+  --sidebar-collapsed-width: var(--sb-collapsed-width, 80px);
+  --header-height: 64px;
+
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ------------------------------------------------------------------
+   Contenido principal
+   Se ajusta automáticamente al estado del sidebar
+   mediante el selector de hermano (.sidebarCollapsed)
+   ------------------------------------------------------------------ */
+.mainContent {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estado colapsado del layout.
+   El AdminLayout pone la clase 'collapsed' en el contenedor,
+   así que el contenido se desplaza sin depender de selectores imposibles. */
+.appLayout.collapsed .mainContent {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+/* ------------------------------------------------------------------
+   Responsive: móvil
+   El sidebar se comporta como drawer (overlay),
+   así que el contenido no necesita margin-left
+   ------------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Página (área donde se renderiza el Outlet)
+   ------------------------------------------------------------------ */
+.pageContent {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .pageContent {
+    padding: 16px;
+  }
+}

@@ -1,0 +1,35 @@
+# Git attributes to force UTF-8 encoding and normalize line endings
+* text=auto eol=lf
+* text encoding=utf-8
+
+# Prevent Git from messing with binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.ico binary
+*.mp4 binary
+*.mp3 binary
+*.wav binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.obj binary
+*.lib binary
+
+# Specific text files that must be UTF-8
+*.tsx diff=utf8
+*.ts diff=utf8
+*.jsx diff=utf8
+*.js diff=utf8
+*.css diff=utf8
+*.html diff=utf8
+*.json diff=utf8
+*.md diff=utf8

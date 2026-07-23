@@ -1,0 +1,76 @@
+FILE,STATUS,PROOF_TYPE,PROOF_SOURCE,PROOF_LINE,PROOF_TEXT
+src/app/components/AdminDashboard.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/AdminDashboard.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ErrorBoundary.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ErrorBoundary.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/app/components/ui/badge.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/badge.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/button.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/button.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/card.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/card.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/dialog.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/dialog.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/app/components/ui/input.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/input.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/label.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/label.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/scroll-area.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/scroll-area.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/app/components/ui/select.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/select.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/app/components/ui/switch.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/switch.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/table-pagination.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/table-pagination.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/table.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/table.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/tabs.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/tabs.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/components/ui/textarea.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/components/ui/textarea.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/ClientesModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/ClientesModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/ConfiguracionModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/ConfiguracionModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/DashboardGeneral.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/DashboardGeneral.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/DevolucionesModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/DevolucionesModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/DomiciliosModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/DomiciliosModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/HistorialPagosModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/HistorialPagosModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/InsumosModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/InsumosModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/InventarioModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/InventarioModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/NotificationsDropdown.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/NotificationsDropdown.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/ProduccionModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/ProduccionModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/ReportesModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/ReportesModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/UsuariosModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/UsuariosModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/admin/VentasModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/admin/VentasModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/asesor/ComisionesModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/asesor/ComisionesModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/asesor/MisClientesModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/asesor/MisClientesModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/cliente/CatalogoCliente.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/cliente/CatalogoCliente.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/cliente/DireccionesCliente.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/cliente/DireccionesCliente.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/cliente/MetodosPagoCliente.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/cliente/MetodosPagoCliente.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/cliente/MiPerfilCliente.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/cliente/MiPerfilCliente.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/cliente/MisPedidosCliente.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/cliente/MisPedidosCliente.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/cliente/ResumenCliente.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/cliente/ResumenCliente.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/domiciliario/EntregasModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/domiciliario/EntregasModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/domiciliario/RutasModule.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/app/features/domiciliario/RutasModule.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/app/features/figma/ImageWithFallback.tsx,EXECUTED,JSX,src/app/features/figma/ImageWithFallback.tsx,6,<HTMLImageElement
+src/main.tsx,EXECUTED,JSX,src/main.tsx,18,<React
+src/presentation/components/CartDrawer.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/components/CartDrawer.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/components/CheckoutModal.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/components/CheckoutModal.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/components/ProductDetailModal.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/components/ProductDetailModal.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/components/ScrollToTop.tsx,EXECUTED,HOOK_CALL,src/presentation/components/ScrollToTop.tsx,5,useLocation(
+src/presentation/components/common/ImageWithFallback.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/components/common/ImageWithFallback.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/contexts/AuthContext.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/contexts/AuthContext.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/presentation/contexts/CartContext.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/contexts/CartContext.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/presentation/contexts/CartDrawerContext.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/contexts/CartDrawerContext.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/presentation/contexts/ThemeContext.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/contexts/ThemeContext.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/presentation/pages/App.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/App.tsx | SUSPENSE_RENDER | Contains JSX return or element prop |
+src/presentation/pages/auth/LoginPage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/auth/LoginPage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/auth/RegisterPage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/auth/RegisterPage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/components/FilterDrawer.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/components/FilterDrawer.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/components/Navbar.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/components/Navbar.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/components/footer.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/components/footer.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/features/CartPage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/features/CartPage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/features/CatalogPage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/features/CatalogPage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/features/ContactPage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/features/ContactPage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/public/AboutPage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/public/AboutPage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/pages/public/HomePage.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/pages/public/HomePage.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/presentation/routes/ProtectedRoute.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/presentation/routes/ProtectedRoute.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/shared/ui/Button.tsx,EXECUTED,JSX,src/shared/ui/Button.tsx,34,<HTMLButtonElement
+src/shared/ui/Card.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Card.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/shared/ui/Drawer.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Drawer.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/shared/ui/DropdownMenu.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/DropdownMenu.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/ui/Input.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Input.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/ui/Modal.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Modal.tsx | CONDITIONAL_RENDER | Contains JSX return or element prop |
+src/shared/ui/Pagination.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Pagination.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/ui/Select.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Select.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/ui/Skeleton.tsx,EXECUTED,JSX,src/shared/ui/Skeleton.tsx,14,<Skeleton
+src/shared/ui/Spinner.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Spinner.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/ui/StatsCard.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/StatsCard.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/ui/Tabs.tsx,EXECUTED,RENDER_TREE,audit\fase-1.9\RENDER_TREE.md,,| src/shared/ui/Tabs.tsx | DIRECT_RENDER | Contains JSX return or element prop |
+src/shared/utils/image-utils.ts,EXECUTED,JSX,src/shared/utils/image-utils.ts,61,<HTMLImageElement
+src/shared/utils/index.ts,EXECUTED,JSX,src/shared/utils/index.ts,24,<T

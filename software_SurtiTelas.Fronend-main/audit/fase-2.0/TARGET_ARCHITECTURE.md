@@ -1,0 +1,117 @@
+# Target Architecture — Fase 2.0
+
+## Arquitectura Objetivo: Feature Based Architecture
+
+```
+src/
+├── main.tsx                          # Entry point único
+├── app/
+│   ├── providers/
+│   │   └── AppProviders.tsx          # Proveedores globales
+│   └── router/
+│       └── routes.tsx                # Definición de rutas
+├── shared/                           # Código compartido global
+│   ├── ui/                           # Componentes UI universales
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Table.tsx
+│   │   └── index.ts
+│   ├── hooks/
+│   │   └── useTelas.ts
+│   ├── utils/
+│   │   ├── image-utils.ts
+│   │   └── index.ts
+│   ├── types/
+│   │   ├── auth.types.ts
+│   │   └── index.ts
+│   └── constants/
+│       └── menuConfig.ts
+├── features/                         # Módulos de negocio (por rol)
+│   ├── admin/
+│   │   ├── components/
+│   │   │   ├── AdminDashboard.tsx
+│   │   │   ├── ClientesModule.tsx
+│   │   │   ├── ConfiguracionModule.tsx
+│   │   │   ├── DevolucionesModule.tsx
+│   │   │   ├── DomiciliosModule.tsx
+│   │   │   ├── HistorialPagosModule.tsx
+│   │   │   ├── InsumosModule.tsx
+│   │   │   ├── InventarioModule.tsx
+│   │   │   ├── NotificationsDropdown.tsx
+│   │   │   ├── ProduccionModule.tsx
+│   │   │   ├── ReportesModule.tsx
+│   │   │   ├── UsuariosModule.tsx
+│   │   │   └── VentasModule.tsx
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   └── index.ts
+│   ├── asesor/
+│   │   ├── components/
+│   │   │   ├── ComisionesModule.tsx
+│   │   │   └── MisClientesModule.tsx
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   └── index.ts
+│   ├── domiciliario/
+│   │   ├── components/
+│   │   │   ├── EntregasModule.tsx
+│   │   │   └── RutasModule.tsx
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   └── index.ts
+│   └── cliente/
+│       ├── components/
+│       │   ├── CatalogoCliente.tsx
+│       │   ├── DireccionesCliente.tsx
+│       │   ├── MetodosPagoCliente.tsx
+│       │   ├── MiPerfilCliente.tsx
+│       │   ├── MisPedidosCliente.tsx
+│       │   └── ResumenCliente.tsx
+│       ├── hooks/
+│       ├── services/
+│       └── index.ts
+├── domain/                           # Entidades y reglas de negocio
+│   ├── entities/
+│   │   ├── Tela.ts
+│   │   └── index.ts
+│   └── repositories/
+│       ├── ITelaRepository.ts
+│       └── index.ts
+├── infrastructure/                   # Implementaciones técnicas
+│   ├── api/
+│   │   ├── apiClient.ts
+│   │   └── index.ts
+│   ├── repositories/
+│   │   ├── TelaRepository.ts
+│   │   └── index.ts
+│   └── config/
+│       └── firebase.ts
+└── assets/                           # Imágenes estáticas
+    ├── images/
+    │   ├── logos/
+    │   └── placeholders/
+    └── icons/
+```
+
+## Reglas de Dependencia
+
+### Permitido
+
+```
+app/          → shared/, features/, infrastructure/
+features/     → shared/, domain/
+infrastructure/ → domain/, shared/
+domain/       → shared/
+```
+
+### Prohibido
+
+```
+shared/       → features/, app/, domain/, infrastructure/
+domain/       → app/, features/, infrastructure/
+features/     → features/ (entre sí)
+infrastructure/ → app/
+```
+
