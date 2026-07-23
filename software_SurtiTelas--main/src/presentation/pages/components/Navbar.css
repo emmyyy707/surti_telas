@@ -1,0 +1,104 @@
+﻿/* =========================================================
+   SURTICAMISETAS  —  INTEGRATED BRAND STYLE (V4)
+   Basado en la tipografía de image_75e80f.jpg
+========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Tipografía extraída de la imagen */
+  --font-primary: 'Plus Jakarta Sans', sans-serif;
+  
+  --text-main: #121212;
+  --text-muted: #666666;
+  --nav-height: 70px;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-family: var(--font-primary);
+}
+
+.header-container {
+  max-width: 1440px;
+  height: var(--nav-height);
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =========================
+   NAV - Estilo image_75e80f.jpg
+   ========================= */
+.site-nav {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.site-nav a {
+  text-decoration: none;
+  /* Aplicamos el estilo exacto de tu menú */
+  font-size: 0.85rem; 
+  font-weight: 700; /* Bold para que resalte como en tu diseño */
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-main);
+  transition: opacity 0.3s ease;
+}
+
+.site-nav a:hover {
+  opacity: 0.6; /* Efecto sutil para no perder la elegancia */
+}
+
+/* =========================
+   ACTIONS - Iconos Limpios
+   ========================= */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.icon-btn, .cart-wrapper-pro {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.icon-btn:hover, .cart-wrapper-pro:hover {
+  transform: scale(1.1);
+}
+
+/* Badge del carrito alineado a tu paleta */
+.cart-badge-dynamic {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #E63946; /* Rojo de alerta sutil */
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  border: 2px solid #fff;
+}
+
+

@@ -1,0 +1,938 @@
+﻿/* =========================================
+   SURTITELA PREMIUM UI SYSTEM
+   NUEVA COLORIMETRÍA CORPORATIVA
+========================================= */
+
+:root {
+
+  /* =========================================
+     PALETA CORPORATIVA
+  ========================================= */
+
+  --color-brand-black: #000000;
+  --color-brand-charcoal: #1A1A1A;
+  --color-brand-dark-gray: #3D3D3D;
+  --color-brand-medium-gray: #6B6B6B;
+  --color-brand-gray: #999999;
+  --color-brand-light-gray: #CCCCCC;
+  --color-brand-soft-gray: #E5E5E5;
+
+  --color-brand-beige-dark: #8B8173;
+  --color-brand-beige: #B5ADA1;
+  --color-brand-beige-light: #D4CFC4;
+  --color-brand-cream: #E8E3D8;
+
+  --color-brand-off-white: #F5F5F5;
+  --color-brand-white: #FAFAFA;
+
+  /* =========================================
+     VARIABLES DEL SISTEMA
+  ========================================= */
+
+  --primary: var(--color-brand-beige);
+  --primary-light: var(--color-brand-beige-light);
+  --primary-dark: var(--color-brand-beige-dark);
+
+  --secondary: var(--color-brand-charcoal);
+  --secondary-light: var(--color-brand-dark-gray);
+
+  --accent: var(--color-brand-medium-gray);
+  --accent-light: var(--color-brand-light-gray);
+
+  --success: #4f8a5b;
+  --warning: #b08b57;
+
+  --background: var(--color-brand-off-white);
+
+  --surface: rgba(250, 250, 250, 0.82);
+
+  --text-primary: var(--color-brand-charcoal);
+  --text-secondary: var(--color-brand-medium-gray);
+  --text-muted: var(--color-brand-gray);
+
+  --border: rgba(61, 61, 61, 0.08);
+
+  /* =========================================
+     SOMBRAS
+  ========================================= */
+
+  --shadow-sm:
+    0 4px 12px rgba(0, 0, 0, 0.05);
+
+  --shadow-md:
+    0 12px 28px rgba(0, 0, 0, 0.08);
+
+  --shadow-lg:
+    0 25px 60px rgba(0, 0, 0, 0.18);
+
+  /* =========================================
+     RADIOS
+  ========================================= */
+
+  --radius-sm: 16px;
+  --radius-md: 24px;
+  --radius-lg: 32px;
+
+  --transition: all 0.35s ease;
+}
+
+/* =========================================
+   GLOBAL
+========================================= */
+
+.landing-page {
+  width: 100%;
+  overflow: hidden;
+
+  background: var(--background);
+
+  color: var(--text-primary);
+}
+
+.container {
+  width: 100%;
+  max-width: 1320px;
+
+  margin: 0 auto;
+
+  padding: 0 28px;
+}
+
+/* =========================================
+   HERO CONTACT
+========================================= */
+
+.hero-contact {
+  position: relative;
+
+  padding: 130px 0 90px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(181, 173, 161, 0.18),
+      transparent 35%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(139, 129, 115, 0.16),
+      transparent 35%
+    ),
+
+    linear-gradient(
+      180deg,
+      var(--color-brand-white) 0%,
+      var(--color-brand-off-white) 100%
+    );
+}
+
+/* Glow corporativo */
+
+.hero-contact::before {
+  content: "";
+
+  position: absolute;
+
+  top: -120px;
+  left: -120px;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(181, 173, 161, 0.16);
+
+  filter: blur(100px);
+}
+
+.hero-contact::after {
+  content: "";
+
+  position: absolute;
+
+  right: -140px;
+  bottom: -140px;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(139, 129, 115, 0.12);
+
+  filter: blur(120px);
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.hero-header {
+  position: relative;
+  z-index: 2;
+
+  text-align: center;
+
+  margin-bottom: 70px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 20px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(181, 173, 161, 0.12);
+
+  border:
+    1px solid rgba(181, 173, 161, 0.18);
+
+  color: var(--primary-dark);
+
+  font-weight: 700;
+  font-size: 0.9rem;
+
+  margin-bottom: 28px;
+
+  backdrop-filter: blur(10px);
+}
+
+.hero-header h1 {
+  font-size: clamp(3rem, 6vw, 5.5rem);
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  margin-bottom: 24px;
+
+  letter-spacing: -2px;
+
+  color: var(--text-primary);
+}
+
+.hero-header h1 span {
+  background:
+    linear-gradient(
+      90deg,
+      var(--primary-dark),
+      var(--primary)
+    );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-header p {
+  max-width: 760px;
+
+  margin: 0 auto;
+
+  font-size: 1.15rem;
+  line-height: 1.9;
+
+  color: var(--text-secondary);
+}
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
+.contact-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 20px;
+
+  margin-bottom: 70px;
+}
+
+.contact-btn {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 18px 28px;
+
+  border: none;
+  border-radius: 22px;
+
+  font-weight: 700;
+  font-size: 0.95rem;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition: var(--transition);
+
+  color: white;
+
+  box-shadow: var(--shadow-md);
+}
+
+.contact-btn::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,0.14),
+      transparent
+    );
+
+  opacity: 0;
+
+  transition: var(--transition);
+}
+
+.contact-btn:hover::before {
+  opacity: 1;
+}
+
+.contact-btn:hover {
+  transform:
+    translateY(-6px)
+    scale(1.02);
+}
+
+.contact-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================
+   BOTONES CORPORATIVOS
+========================================= */
+
+.btn-email {
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand-charcoal),
+      var(--color-brand-black)
+    );
+}
+
+.btn-whatsapp {
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-brand-beige-dark),
+      var(--color-brand-dark-gray)
+    );
+}
+
+.btn-location {
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--primary-dark)
+    );
+}
+
+/* =========================================
+   CARDS
+========================================= */
+
+.contact-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(280px, 1fr));
+
+  gap: 26px;
+}
+
+.contact-card {
+  position: relative;
+
+  padding: 34px;
+
+  border-radius: var(--radius-md);
+
+  overflow: hidden;
+
+  transition: var(--transition);
+
+  border: 1px solid var(--border);
+
+  backdrop-filter: blur(16px);
+}
+
+.contact-card:hover {
+  transform: translateY(-10px);
+
+  box-shadow: var(--shadow-lg);
+}
+
+.card-light {
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.card-dark {
+  background:
+    linear-gradient(
+      145deg,
+      var(--secondary),
+      var(--secondary-light)
+    );
+
+  color: white;
+
+  border:
+    1px solid rgba(255,255,255,0.05);
+
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* =========================================
+   ICONOS
+========================================= */
+
+.contact-card-icon {
+  width: 68px;
+  height: 68px;
+
+  border-radius: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 26px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(181, 173, 161, 0.18),
+      rgba(212, 207, 196, 0.14)
+    );
+
+  color: var(--primary-dark);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.card-dark .contact-card-icon {
+  background:
+    rgba(255,255,255,0.08);
+
+  color: var(--color-brand-cream);
+}
+
+/* =========================================
+   TEXTOS
+========================================= */
+
+.contact-card-content h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+
+  margin-bottom: 14px;
+}
+
+.contact-card-body {
+  line-height: 1.8;
+
+  color: inherit;
+}
+
+.card-light .contact-card-body {
+  color: var(--text-secondary);
+}
+
+/* =========================================
+   SCHEDULE
+========================================= */
+
+.schedule-row {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  font-weight: 700;
+}
+
+.schedule-notice {
+  margin-top: 14px;
+
+  color:
+    rgba(255,255,255,0.7);
+
+  font-size: 0.92rem;
+}
+
+/* =========================================
+   DIGITAL SECTION
+========================================= */
+
+.digital-section {
+  position: relative;
+
+  padding: 130px 0;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-brand-beige) 0%,
+      var(--color-brand-black) 100%
+    );
+}
+
+/* Glow */
+
+.digital-section::before {
+  content: "";
+
+  position: absolute;
+
+  top: -160px;
+  left: -160px;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(181, 173, 161, 0.24);
+
+  filter: blur(120px);
+}
+
+.digital-section::after {
+  content: "";
+
+  position: absolute;
+
+  right: -160px;
+  bottom: -160px;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(245, 245, 245, 0.12);
+
+  filter: blur(120px);
+}
+
+.digital-container {
+  position: relative;
+  z-index: 2;
+
+  text-align: center;
+}
+
+.digital-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 20px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  color: var(--color-brand-cream);
+
+  margin-bottom: 30px;
+}
+
+.digital-container h2 {
+  font-size: clamp(3rem, 6vw, 5rem);
+
+  line-height: 1.05;
+
+  font-weight: 900;
+
+  color: white;
+
+  margin-bottom: 28px;
+}
+
+.digital-container h2 span {
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-brand-cream),
+      var(--primary-light)
+    );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.digital-container p {
+  max-width: 760px;
+
+  margin: 0 auto 45px;
+
+  color:
+    rgba(255,255,255,0.82);
+
+  line-height: 1.9;
+
+  font-size: 1.08rem;
+}
+
+/* =========================================
+   CTA BUTTONS
+========================================= */
+
+.digital-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 20px;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 18px 30px;
+
+  border-radius: 22px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: var(--transition);
+
+  border: none;
+}
+
+.btn-primary {
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary-dark),
+      var(--primary)
+    );
+
+  color: white;
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.28);
+}
+
+.btn-secondary {
+  background:
+    rgba(255,255,255,0.08);
+
+  color: white;
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform:
+    translateY(-6px)
+    scale(1.02);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .hero-contact,
+  .digital-section {
+    padding: 90px 0;
+  }
+
+  .contact-actions {
+    flex-direction: column;
+  }
+
+  .contact-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .schedule-row {
+    flex-direction: column;
+  }
+
+  .hero-header h1 {
+    letter-spacing: -1px;
+  }
+}
+
+:root {
+
+  /* =========================================
+     PALETA CORPORATIVA PREMIUM
+  ========================================= */
+
+  --color-brand-black: #000000;
+  --color-brand-charcoal: #1A1A1A;
+  --color-brand-dark-gray: #3D3D3D;
+  --color-brand-medium-gray: #6B6B6B;
+  --color-brand-gray: #999999;
+  --color-brand-light-gray: #CCCCCC;
+  --color-brand-soft-gray: #E5E5E5;
+
+  --color-brand-beige-dark: #8B8173;
+  --color-brand-beige: #B5ADA1;
+  --color-brand-beige-light: #D4CFC4;
+  --color-brand-cream: #E8E3D8;
+
+  --color-brand-off-white: #F5F5F5;
+  --color-brand-white: #FAFAFA;
+
+  /* =========================================
+     VARIABLES UI PREMIUM
+  ========================================= */
+
+  --primary: var(--color-brand-beige);
+  --primary-light: var(--color-brand-beige-light);
+  --primary-dark: var(--color-brand-beige-dark);
+
+  --secondary: var(--color-brand-charcoal);
+  --secondary-light: var(--color-brand-dark-gray);
+
+  --accent: #d6c4aa;
+  --accent-light: #efe5d6;
+
+  --background: #f7f5f2;
+
+  --surface: rgba(255, 255, 255, 0.72);
+
+  --surface-dark: rgba(26, 26, 26, 0.92);
+
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #8d8d8d;
+
+  --border: rgba(181, 173, 161, 0.18);
+
+  --shadow-sm:
+    0 8px 20px rgba(0,0,0,0.05);
+
+  --shadow-md:
+    0 15px 40px rgba(0,0,0,0.08);
+
+  --shadow-lg:
+    0 30px 80px rgba(0,0,0,0.14);
+
+  --shadow-premium:
+    0 20px 60px rgba(181,173,161,0.18);
+
+  --radius-sm: 18px;
+  --radius-md: 28px;
+  --radius-lg: 38px;
+
+  --transition:
+    all 0.4s cubic-bezier(.16,.84,.44,1);
+}
+
+/* =========================================
+   BOTONES HERO ALEGRES PREMIUM
+========================================= */
+
+.contact-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 24px;
+
+  margin-top: 40px;
+}
+
+/* BASE */
+
+.contact-btn {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 20px 34px;
+
+  border: none;
+  border-radius: 24px;
+
+  font-size: 1rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    filter 0.35s ease;
+
+  color: white;
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.12);
+}
+
+/* EFECTO SHINE */
+
+.contact-btn::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 80%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,0.35),
+      transparent
+    );
+
+  transition: 0.8s ease;
+}
+
+.contact-btn:hover::before {
+  left: 130%;
+}
+
+/* HOVER */
+
+.contact-btn:hover {
+  transform:
+    translateY(-8px)
+    scale(1.04);
+
+  filter: brightness(1.05);
+}
+
+/* =========================================
+   EMAIL
+========================================= */
+
+.btn-email {
+  background:
+    linear-gradient(
+      135deg,
+      #7c4dff,
+      #7c4dff
+    );
+
+  box-shadow:
+    0 20px 40px rgba(151, 90, 211, 0.35);
+}
+
+.btn-email:hover {
+  box-shadow:
+    0 28px 55px rgba(152, 115, 240, 0.45);
+}
+
+/* =========================================
+   WHATSAPP
+========================================= */
+
+.btn-whatsapp {
+  background:
+    linear-gradient(
+      135deg,
+      #00c853,
+      #00c853
+    );
+
+  box-shadow:
+    0 20px 40px rgba(0,200,83,0.35);
+}
+
+.btn-whatsapp:hover {
+  box-shadow:
+    0 28px 55px rgba(0,200,83,0.45);
+}
+
+/* =========================================
+   UBICACIÓN
+========================================= */
+
+.btn-location {
+  background:
+    linear-gradient(
+      135deg,
+      #062584,
+      #062584
+    );
+
+  box-shadow:
+    0 20px 40px rgba(124,77,255,0.35);
+}
+
+.btn-location:hover {
+  box-shadow:
+    0 28px 55px rgba(124,77,255,0.45);
+}
+
+/* ICONOS */
+
+.contact-btn svg {
+  width: 22px;
+  height: 22px;
+
+  stroke-width: 2.4;
+}
+
+/* TEXTO */
+
+.contact-btn span {
+  letter-spacing: 0.2px;
+}
+
+
