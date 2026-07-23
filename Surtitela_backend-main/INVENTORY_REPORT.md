@@ -1,0 +1,456 @@
+# INVENTARIO DEL PROYECTO
+
+## Evidencia
+- Compilaci?n verificada con `npm run build` (Prisma generate + TypeScript).
+- Rutas activas detectadas desde [src/shared/app.ts](src/shared/app.ts).
+- Archivos de m?dulo sin importadores y sin ruta montada se consideran no activos.
+
+## Inventario por archivo
+
+- generated/prisma/browser.ts ? Responsable: Project support file; L?neas: 134; Funciones: 0; Clases: 0; Imports: 1; Estado: Parcialmente usado
+  - Dependencias: ./internal/prismaNamespaceBrowser.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/client.ts ? Responsable: Project support file; L?neas: 158; Funciones: 0; Clases: 0; Imports: 7; Estado: Parcialmente usado
+  - Dependencias: node:process, node:path, node:url, @prisma/client/runtime/client, ./enums.js, ./internal/class.js, ./internal/prismaNamespace.js
+  - Referencias: src/config/prisma.ts
+- generated/prisma/commonInputTypes.ts ? Responsable: Project support file; L?neas: 514; Funciones: 0; Clases: 0; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ./enums.js, ./internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/enums.ts ? Responsable: Project support file; L?neas: 15; Funciones: 0; Clases: 0; Imports: 0; Estado: Parcialmente usado
+  - Referencias: generated/prisma/client.ts, generated/prisma/commonInputTypes.ts, generated/prisma/models/customers.ts, generated/prisma/models/deliveries.ts, generated/prisma/models/documents_type.ts, generated/prisma/models/employees.ts, generated/prisma/models/orders.ts, generated/prisma/models/orders_details.ts
+- generated/prisma/internal/class.ts ? Responsable: Project support file; L?neas: 424; Funciones: 2; Clases: 1; Imports: 2; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ./prismaNamespace.js
+  - Referencias: generated/prisma/client.ts, generated/prisma/internal/prismaNamespace.ts
+- generated/prisma/internal/prismaNamespace.ts ? Responsable: Project support file; L?neas: 2740; Funciones: 0; Clases: 0; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../models.js, ./class.js
+  - Referencias: generated/prisma/client.ts, generated/prisma/commonInputTypes.ts, generated/prisma/internal/class.ts, generated/prisma/models/customers.ts, generated/prisma/models/deliveries.ts, generated/prisma/models/documents_type.ts, generated/prisma/models/employees.ts, generated/prisma/models/orders.ts
+- generated/prisma/internal/prismaNamespaceBrowser.ts ? Responsable: Project support file; L?neas: 386; Funciones: 0; Clases: 0; Imports: 1; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/index-browser
+  - Referencias: generated/prisma/browser.ts
+- generated/prisma/models/customers.ts ? Responsable: Project support file; L?neas: 1667; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: generated/prisma/models.ts
+- generated/prisma/models/deliveries.ts ? Responsable: Project support file; L?neas: 1854; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/documents_type.ts ? Responsable: Project support file; L?neas: 1276; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/employees.ts ? Responsable: Project support file; L?neas: 1501; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/orders.ts ? Responsable: Project support file; L?neas: 2194; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/orders_details.ts ? Responsable: Project support file; L?neas: 1611; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/payments.ts ? Responsable: Project support file; L?neas: 1427; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/permissions.ts ? Responsable: Project support file; L?neas: 1336; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/production_details.ts ? Responsable: Project support file; L?neas: 1491; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/productions.ts ? Responsable: Project support file; L?neas: 1648; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/products.ts ? Responsable: Project support file; L?neas: 2243; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/products_category.ts ? Responsable: Project support file; L?neas: 1446; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/purchases.ts ? Responsable: Project support file; L?neas: 1552; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/purchasing_details.ts ? Responsable: Project support file; L?neas: 1611; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/returns.ts ? Responsable: Project support file; L?neas: 1546; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/returns_details.ts ? Responsable: Project support file; L?neas: 1564; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/roles.ts ? Responsable: Project support file; L?neas: 1546; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/sales.ts ? Responsable: Project support file; L?neas: 1948; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/sales_details.ts ? Responsable: Project support file; L?neas: 1611; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/suppliers.ts ? Responsable: Project support file; L?neas: 1400; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/supplies.ts ? Responsable: Project support file; L?neas: 1415; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/users.ts ? Responsable: Project support file; L?neas: 2010; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models/workshops.ts ? Responsable: Project support file; L?neas: 1368; Funciones: 0; Clases: 1; Imports: 3; Estado: Parcialmente usado
+  - Dependencias: @prisma/client/runtime/client, ../enums.js, ../internal/prismaNamespace.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- generated/prisma/models.ts ? Responsable: Project support file; L?neas: 34; Funciones: 0; Clases: 0; Imports: 1; Estado: Parcialmente usado
+  - Dependencias: ./models/customers.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- package-lock.json ? Responsable: Project support file; L?neas: 4030; Funciones: 0; Clases: 0; Imports: 0; Estado: Parcialmente usado
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- package.json ? Responsable: Project support file; L?neas: 38; Funciones: 0; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- prisma/schema.prisma ? Responsable: Prisma schema or migration; L?neas: 265; Funciones: 0; Clases: 0; Imports: 0; Estado: Parcialmente usado
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- prisma.config.ts ? Responsable: Project support file; L?neas: 14; Funciones: 0; Clases: 0; Imports: 1; Estado: Activo
+  - Dependencias: prisma/config
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- scripts/extract_postman_endpoints.cjs ? Responsable: Support script; L?neas: 16; Funciones: 0; Clases: 0; Imports: 2; Estado: Duplicado
+  - Dependencias: fs, path
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- scripts/extract_postman_endpoints.js ? Responsable: Support script; L?neas: 16; Funciones: 0; Clases: 0; Imports: 2; Estado: Duplicado
+  - Dependencias: fs, path
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- scripts/generate_postman_collection.py ? Responsable: Support script; L?neas: 163; Funciones: 0; Clases: 0; Imports: 0; Estado: Nunca utilizado
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/app.ts ? Responsable: Project support file; L?neas: 1; Funciones: 0; Clases: 0; Imports: 0; Estado: Parcialmente usado
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/config/env.ts ? Responsable: Configuration loader; L?neas: 10; Funciones: 1; Clases: 0; Imports: 2; Estado: Activo
+  - Dependencias: fs, dotenv
+  - Referencias: src/config/prisma.ts, src/server.ts, src/shared/server.ts
+- src/config/prisma.ts ? Responsable: Configuration loader; L?neas: 13; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: ../../generated/prisma/client.js, @prisma/adapter-pg, ./env.js
+  - Referencias: src/infra/prisma/prisma-auth.repository.ts, src/infra/prisma/prisma-order.repository.ts, src/infra/prisma/prisma-product.repository.ts, src/modules/asesores/service/asesores.service.ts, src/modules/auth/service/auth.service.ts, src/modules/checkout/service/checkout.service.ts, src/modules/customers/service/customers.service.ts, src/modules/deliveries/service/deliveries.service.ts
+- src/core/domain/order.ts ? Responsable: Domain model or interface definition; L?neas: 33; Funciones: 0; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: src/core/interfaces/order.repository.ts, src/infra/prisma/prisma-order.repository.ts, src/usecases/order/order.usecase.ts
+- src/core/domain/product.ts ? Responsable: Domain model or interface definition; L?neas: 27; Funciones: 0; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: src/core/interfaces/product.repository.ts, src/infra/prisma/prisma-product.repository.ts, src/usecases/product/product.usecase.ts
+- src/core/domain/user.ts ? Responsable: Domain model or interface definition; L?neas: 15; Funciones: 0; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: src/core/interfaces/auth.repository.ts, src/infra/prisma/prisma-auth.repository.ts
+- src/core/interfaces/auth.repository.ts ? Responsable: Domain model or interface definition; L?neas: 13; Funciones: 0; Clases: 0; Imports: 1; Estado: Activo
+  - Dependencias: ../domain/user.js
+  - Referencias: src/infra/prisma/prisma-auth.repository.ts, src/usecases/auth/auth.usecase.ts
+- src/core/interfaces/order.repository.ts ? Responsable: Domain model or interface definition; L?neas: 11; Funciones: 0; Clases: 0; Imports: 1; Estado: Activo
+  - Dependencias: ../domain/order.js
+  - Referencias: src/infra/prisma/prisma-order.repository.ts, src/usecases/order/order.usecase.ts
+- src/core/interfaces/product.repository.ts ? Responsable: Domain model or interface definition; L?neas: 13; Funciones: 0; Clases: 0; Imports: 1; Estado: Activo
+  - Dependencias: ../domain/product.js
+  - Referencias: src/infra/prisma/prisma-product.repository.ts, src/usecases/product/product.usecase.ts
+- src/infra/prisma/prisma-auth.repository.ts ? Responsable: Prisma-backed repository adapter; L?neas: 43; Funciones: 0; Clases: 1; Imports: 3; Estado: Activo
+  - Dependencias: ../../config/prisma.js, ../../core/interfaces/auth.repository.js, ../../core/domain/user.js
+  - Referencias: src/shared/dependencies.ts
+- src/infra/prisma/prisma-order.repository.ts ? Responsable: Prisma-backed repository adapter; L?neas: 105; Funciones: 1; Clases: 1; Imports: 3; Estado: Activo
+  - Dependencias: ../../config/prisma.js, ../../core/interfaces/order.repository.js, ../../core/domain/order.js
+  - Referencias: src/shared/dependencies.ts
+- src/infra/prisma/prisma-product.repository.ts ? Responsable: Prisma-backed repository adapter; L?neas: 94; Funciones: 1; Clases: 1; Imports: 3; Estado: Activo
+  - Dependencias: ../../config/prisma.js, ../../core/interfaces/product.repository.js, ../../core/domain/product.js
+  - Referencias: src/shared/dependencies.ts
+- src/modules/asesores/controller/asesores.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 69; Funciones: 5; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/asesores.service.js
+  - Referencias: src/modules/asesores/routes/asesores.routes.ts
+- src/modules/asesores/routes/asesores.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 17; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/asesores.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/asesores/service/asesores.service.ts ? Responsable: Service layer for the domain module; L?neas: 64; Funciones: 6; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/asesores/controller/asesores.controller.ts
+- src/modules/auth/controller/auth.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 72; Funciones: 5; Clases: 0; Imports: 4; Estado: Activo
+  - Dependencias: express, ../../../shared/dependencies.js, ../../../shared/validation.js, ../../../shared/http.js
+  - Referencias: src/modules/auth/routes/auth.routes.ts
+- src/modules/auth/routes/auth.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 13; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../controller/auth.controller.js, ../../../shared/auth.js
+  - Referencias: src/shared/app.ts
+- src/modules/auth/service/auth.service.ts ? Responsable: Service layer for the domain module; L?neas: 140; Funciones: 8; Clases: 0; Imports: 4; Estado: Duplicado
+  - Dependencias: bcrypt, jsonwebtoken, ../../../config/prisma.js, ../../../modules/users/service/users.service.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/checkout/controller/checkout.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 53; Funciones: 2; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../../../shared/http.js, ../service/checkout.service.js
+  - Referencias: src/modules/checkout/routes/checkout.routes.ts
+- src/modules/checkout/routes/checkout.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../controller/checkout.controller.js, ../../../shared/auth.js
+  - Referencias: src/shared/app.ts
+- src/modules/checkout/service/checkout.service.ts ? Responsable: Service layer for the domain module; L?neas: 39; Funciones: 1; Clases: 0; Imports: 2; Estado: Activo
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/checkout/controller/checkout.controller.ts
+- src/modules/customers/controller/customers.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 80; Funciones: 5; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../../../shared/http.js, ../service/customers.service.js
+  - Referencias: src/modules/customers/routes/customers.routes.ts
+- src/modules/customers/routes/customers.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 14; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../controller/customers.controller.js, ../../../shared/auth.js
+  - Referencias: src/shared/app.ts
+- src/modules/customers/service/customers.service.ts ? Responsable: Service layer for the domain module; L?neas: 112; Funciones: 7; Clases: 0; Imports: 2; Estado: Activo
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/customers/controller/customers.controller.ts
+- src/modules/deliveries/controller/deliveries.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 49; Funciones: 3; Clases: 0; Imports: 4; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/validation.js, ../service/deliveries.service.js
+  - Referencias: src/modules/deliveries/routes/deliveries.routes.ts
+- src/modules/deliveries/routes/deliveries.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/deliveries.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/deliveries/service/deliveries.service.ts ? Responsable: Service layer for the domain module; L?neas: 38; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/deliveries/controller/deliveries.controller.ts
+- src/modules/documents_type/controller/documents_type.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 44; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/documents_type.service.js
+  - Referencias: src/modules/documents_type/routes/documents_type.routes.ts
+- src/modules/documents_type/routes/documents_type.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 10; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/documents_type.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/documents_type/service/documents_type.service.ts ? Responsable: Service layer for the domain module; L?neas: 30; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/documents_type/controller/documents_type.controller.ts
+- src/modules/domiciliarios/controller/domiciliarios.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 97; Funciones: 5; Clases: 0; Imports: 4; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/validation.js, ../service/domiciliarios.service.js
+  - Referencias: src/modules/domiciliarios/routes/domiciliarios.routes.ts
+- src/modules/domiciliarios/routes/domiciliarios.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 17; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/domiciliarios.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/domiciliarios/service/domiciliarios.service.ts ? Responsable: Service layer for the domain module; L?neas: 76; Funciones: 6; Clases: 0; Imports: 3; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js, ../../users/service/users.service.js
+  - Referencias: src/modules/domiciliarios/controller/domiciliarios.controller.ts
+- src/modules/domicilios/controller/domicilios.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 128; Funciones: 8; Clases: 0; Imports: 4; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/validation.js, ../service/domicilios.service.js
+  - Referencias: src/modules/domicilios/routes/domicilios.routes.ts
+- src/modules/domicilios/routes/domicilios.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 23; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/domicilios.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/domicilios/service/domicilios.service.ts ? Responsable: Service layer for the domain module; L?neas: 79; Funciones: 9; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/domicilios/controller/domicilios.controller.ts
+- src/modules/employees/controller/employees.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 40; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/employees.service.js
+  - Referencias: src/modules/employees/routes/employees.routes.ts
+- src/modules/employees/routes/employees.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/employees.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/employees/service/employees.service.ts ? Responsable: Service layer for the domain module; L?neas: 39; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/employees/controller/employees.controller.ts
+- src/modules/orders/controller/orders.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 111; Funciones: 7; Clases: 0; Imports: 4; Estado: Activo
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/auth.js, ../../../shared/dependencies.js
+  - Referencias: src/modules/orders/routes/orders.routes.ts
+- src/modules/orders/routes/orders.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 15; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../controller/orders.controller.js, ../../../shared/auth.js
+  - Referencias: src/shared/app.ts
+- src/modules/orders/service/orders.service.ts ? Responsable: Service layer for the domain module; L?neas: 173; Funciones: 8; Clases: 0; Imports: 2; Estado: Activo
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/orders_details/controller/orders_details.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 40; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/orders_details.service.js
+  - Referencias: src/modules/orders_details/routes/orders_details.routes.ts
+- src/modules/orders_details/routes/orders_details.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/orders_details.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/orders_details/service/orders_details.service.ts ? Responsable: Service layer for the domain module; L?neas: 36; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/orders_details/controller/orders_details.controller.ts
+- src/modules/payments/controller/payments.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 51; Funciones: 4; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/payments.service.js
+  - Referencias: src/modules/payments/routes/payments.routes.ts
+- src/modules/payments/routes/payments.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 12; Funciones: 0; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, multer, ../controller/payments.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/payments/service/payments.service.ts ? Responsable: Service layer for the domain module; L?neas: 39; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/payments/controller/payments.controller.ts
+- src/modules/permissions/controller/permissions.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/permissions.service.js
+  - Referencias: src/modules/permissions/routes/permissions.routes.ts
+- src/modules/permissions/routes/permissions.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/permissions.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/permissions/service/permissions.service.ts ? Responsable: Service layer for the domain module; L?neas: 31; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/permissions/controller/permissions.controller.ts
+- src/modules/production_details/controller/production_details.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 40; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/production_details.service.js
+  - Referencias: src/modules/production_details/routes/production_details.routes.ts
+- src/modules/production_details/routes/production_details.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/production_details.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/production_details/service/production_details.service.ts ? Responsable: Service layer for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/production_details/controller/production_details.controller.ts
+- src/modules/productions/controller/productions.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 40; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/productions.service.js
+  - Referencias: src/modules/productions/routes/productions.routes.ts
+- src/modules/productions/routes/productions.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/productions.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/productions/service/productions.service.ts ? Responsable: Service layer for the domain module; L?neas: 31; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/productions/controller/productions.controller.ts
+- src/modules/products/controller/products.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 189; Funciones: 10; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/dependencies.js
+  - Referencias: src/modules/products/routes/products.routes.ts, src/shared/app.ts
+- src/modules/products/routes/products.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 45; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../controller/products.controller.js, ../../../shared/auth.js
+  - Referencias: src/shared/app.ts
+- src/modules/products/service/products.service.ts ? Responsable: Service layer for the domain module; L?neas: 120; Funciones: 9; Clases: 0; Imports: 2; Estado: Duplicado
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/products_category/controller/products_category.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/products_category.service.js
+  - Referencias: src/modules/products_category/routes/products_category.routes.ts
+- src/modules/products_category/routes/products_category.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/products_category.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/products_category/service/products_category.service.ts ? Responsable: Service layer for the domain module; L?neas: 31; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/products_category/controller/products_category.controller.ts
+- src/modules/profile/controller/profile.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 50; Funciones: 2; Clases: 0; Imports: 5; Estado: Activo
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/validation.js, ../../../shared/auth.js, ../../users/service/users.service.js
+  - Referencias: src/modules/profile/routes/profile.routes.ts
+- src/modules/profile/routes/profile.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 10; Funciones: 0; Clases: 0; Imports: 3; Estado: Activo
+  - Dependencias: express, ../controller/profile.controller.js, ../../../shared/auth.js
+  - Referencias: src/shared/app.ts
+- src/modules/purchases/controller/purchases.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/purchases.service.js
+  - Referencias: src/modules/purchases/routes/purchases.routes.ts
+- src/modules/purchases/routes/purchases.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/purchases.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/purchases/service/purchases.service.ts ? Responsable: Service layer for the domain module; L?neas: 39; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/purchases/controller/purchases.controller.ts
+- src/modules/purchasing_details/controller/purchasing_details.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/purchasing_details.service.js
+  - Referencias: src/modules/purchasing_details/routes/purchasing_details.routes.ts
+- src/modules/purchasing_details/routes/purchasing_details.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/purchasing_details.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/purchasing_details/service/purchasing_details.service.ts ? Responsable: Service layer for the domain module; L?neas: 36; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/purchasing_details/controller/purchasing_details.controller.ts
+- src/modules/reportes/controller/reportes.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 81; Funciones: 7; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/reportes.service.js
+  - Referencias: src/modules/reportes/routes/reportes.routes.ts
+- src/modules/reportes/routes/reportes.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 21; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/reportes.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/reportes/service/reportes.service.ts ? Responsable: Service layer for the domain module; L?neas: 67; Funciones: 7; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/reportes/controller/reportes.controller.ts
+- src/modules/returns/controller/returns.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/returns.service.js
+  - Referencias: src/modules/returns/routes/returns.routes.ts
+- src/modules/returns/routes/returns.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/returns.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/returns/service/returns.service.ts ? Responsable: Service layer for the domain module; L?neas: 36; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/returns/controller/returns.controller.ts
+- src/modules/returns_details/controller/returns_details.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/returns_details.service.js
+  - Referencias: src/modules/returns_details/routes/returns_details.routes.ts
+- src/modules/returns_details/routes/returns_details.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/returns_details.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/returns_details/service/returns_details.service.ts ? Responsable: Service layer for the domain module; L?neas: 35; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/returns_details/controller/returns_details.controller.ts
+- src/modules/roles/controller/roles.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/roles.service.js
+  - Referencias: src/modules/roles/routes/roles.routes.ts
+- src/modules/roles/routes/roles.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/roles.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/roles/service/roles.service.ts ? Responsable: Service layer for the domain module; L?neas: 32; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/roles/controller/roles.controller.ts
+- src/modules/sales/controller/sales.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 40; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/sales.service.js
+  - Referencias: src/modules/sales/routes/sales.routes.ts
+- src/modules/sales/routes/sales.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/sales.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/sales/service/sales.service.ts ? Responsable: Service layer for the domain module; L?neas: 44; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/sales/controller/sales.controller.ts
+- src/modules/sales_details/controller/sales_details.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 40; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/sales_details.service.js
+  - Referencias: src/modules/sales_details/routes/sales_details.routes.ts
+- src/modules/sales_details/routes/sales_details.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/sales_details.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/sales_details/service/sales_details.service.ts ? Responsable: Service layer for the domain module; L?neas: 36; Funciones: 3; Clases: 0; Imports: 2; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js, ../../../shared/prisma-utils.js
+  - Referencias: src/modules/sales_details/controller/sales_details.controller.ts
+- src/modules/suppliers/controller/suppliers.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 50; Funciones: 3; Clases: 0; Imports: 4; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/validation.js, ../service/suppliers.service.js
+  - Referencias: src/modules/suppliers/routes/suppliers.routes.ts
+- src/modules/suppliers/routes/suppliers.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/suppliers.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/suppliers/service/suppliers.service.ts ? Responsable: Service layer for the domain module; L?neas: 33; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/suppliers/controller/suppliers.controller.ts
+- src/modules/supplies/controller/supplies.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/supplies.service.js
+  - Referencias: src/modules/supplies/routes/supplies.routes.ts
+- src/modules/supplies/routes/supplies.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/supplies.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/supplies/service/supplies.service.ts ? Responsable: Service layer for the domain module; L?neas: 32; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/supplies/controller/supplies.controller.ts
+- src/modules/uploads/controller/uploads.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 17; Funciones: 1; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js
+  - Referencias: src/modules/uploads/routes/uploads.routes.ts
+- src/modules/uploads/routes/uploads.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 10; Funciones: 0; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, multer, ../controller/uploads.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/users/controller/users.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 135; Funciones: 7; Clases: 0; Imports: 4; Estado: Activo
+  - Dependencias: express, ../../../shared/http.js, ../../../shared/validation.js, ../service/users.service.js
+  - Referencias: src/modules/users/routes/users.routes.ts
+- src/modules/users/routes/users.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 14; Funciones: 0; Clases: 0; Imports: 2; Estado: Activo
+  - Dependencias: express, ../controller/users.controller.js
+  - Referencias: src/shared/app.ts
+- src/modules/users/service/users.service.ts ? Responsable: Service layer for the domain module; L?neas: 255; Funciones: 13; Clases: 1; Imports: 2; Estado: Activo
+  - Dependencias: bcrypt, ../../../config/prisma.js
+  - Referencias: src/modules/auth/service/auth.service.ts, src/modules/domiciliarios/service/domiciliarios.service.ts, src/modules/profile/controller/profile.controller.ts, src/modules/users/controller/users.controller.ts, src/shared/server.ts
+- src/modules/workshops/controller/workshops.controller.ts ? Responsable: HTTP controller for the domain module; L?neas: 41; Funciones: 3; Clases: 0; Imports: 3; Estado: Nunca utilizado
+  - Dependencias: express, ../../../shared/http.js, ../service/workshops.service.js
+  - Referencias: src/modules/workshops/routes/workshops.routes.ts
+- src/modules/workshops/routes/workshops.routes.ts ? Responsable: HTTP routes for the domain module; L?neas: 9; Funciones: 0; Clases: 0; Imports: 2; Estado: Nunca utilizado
+  - Dependencias: express, ../controller/workshops.controller.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/modules/workshops/service/workshops.service.ts ? Responsable: Service layer for the domain module; L?neas: 32; Funciones: 3; Clases: 0; Imports: 1; Estado: Obsoleto
+  - Dependencias: ../../../config/prisma.js
+  - Referencias: src/modules/workshops/controller/workshops.controller.ts
+- src/server.ts ? Responsable: Project support file; L?neas: 9; Funciones: 0; Clases: 0; Imports: 1; Estado: Activo
+  - Dependencias: ./config/env.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/shared/app.ts ? Responsable: Shared infrastructure helper; L?neas: 70; Funciones: 1; Clases: 0; Imports: 11; Estado: Activo
+  - Dependencias: express, ./auth.js, ./http.js, ../modules/auth/routes/auth.routes.js, ../modules/users/routes/users.routes.js, ../modules/products/routes/products.routes.js, ../modules/orders/routes/orders.routes.js, ../modules/customers/routes/customers.routes.js
+  - Referencias: src/shared/server.ts
+- src/shared/auth.ts ? Responsable: Shared infrastructure helper; L?neas: 99; Funciones: 2; Clases: 0; Imports: 4; Estado: Activo
+  - Dependencias: express, jsonwebtoken, ../config/prisma.js, ./http.js
+  - Referencias: src/modules/auth/routes/auth.routes.ts, src/modules/checkout/routes/checkout.routes.ts, src/modules/customers/routes/customers.routes.ts, src/modules/orders/controller/orders.controller.ts, src/modules/orders/routes/orders.routes.ts, src/modules/products/routes/products.routes.ts, src/modules/profile/controller/profile.controller.ts, src/modules/profile/routes/profile.routes.ts
+- src/shared/dependencies.ts ? Responsable: Shared infrastructure helper; L?neas: 10; Funciones: 0; Clases: 0; Imports: 6; Estado: Activo
+  - Dependencias: ../infra/prisma/prisma-auth.repository.js, ../infra/prisma/prisma-product.repository.js, ../infra/prisma/prisma-order.repository.js, ../usecases/auth/auth.usecase.js, ../usecases/product/product.usecase.js, ../usecases/order/order.usecase.js
+  - Referencias: src/modules/auth/controller/auth.controller.ts, src/modules/orders/controller/orders.controller.ts, src/modules/products/controller/products.controller.ts
+- src/shared/http.ts ? Responsable: Shared infrastructure helper; L?neas: 62; Funciones: 9; Clases: 0; Imports: 1; Estado: Activo
+  - Dependencias: express
+  - Referencias: src/modules/asesores/controller/asesores.controller.ts, src/modules/auth/controller/auth.controller.ts, src/modules/checkout/controller/checkout.controller.ts, src/modules/customers/controller/customers.controller.ts, src/modules/deliveries/controller/deliveries.controller.ts, src/modules/documents_type/controller/documents_type.controller.ts, src/modules/domiciliarios/controller/domiciliarios.controller.ts, src/modules/domicilios/controller/domicilios.controller.ts
+- src/shared/prisma-utils.ts ? Responsable: Shared infrastructure helper; L?neas: 14; Funciones: 2; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: src/modules/asesores/service/asesores.service.ts, src/modules/checkout/service/checkout.service.ts, src/modules/customers/service/customers.service.ts, src/modules/deliveries/service/deliveries.service.ts, src/modules/domiciliarios/service/domiciliarios.service.ts, src/modules/domicilios/service/domicilios.service.ts, src/modules/employees/service/employees.service.ts, src/modules/orders/service/orders.service.ts
+- src/shared/server.ts ? Responsable: Shared infrastructure helper; L?neas: 70; Funciones: 1; Clases: 0; Imports: 6; Estado: Activo
+  - Dependencias: fs, https, ./app.js, ../config/prisma.js, ../modules/users/service/users.service.js, ../config/env.js
+  - Referencias: ninguna detectada desde otros archivos del proyecto
+- src/shared/validation.ts ? Responsable: Shared infrastructure helper; L?neas: 56; Funciones: 2; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: src/modules/auth/controller/auth.controller.ts, src/modules/deliveries/controller/deliveries.controller.ts, src/modules/domiciliarios/controller/domiciliarios.controller.ts, src/modules/domicilios/controller/domicilios.controller.ts, src/modules/profile/controller/profile.controller.ts, src/modules/suppliers/controller/suppliers.controller.ts, src/modules/users/controller/users.controller.ts
+- src/usecases/auth/auth.usecase.ts ? Responsable: Use case orchestration; L?neas: 119; Funciones: 4; Clases: 1; Imports: 3; Estado: Activo
+  - Dependencias: ../../core/interfaces/auth.repository.js, bcrypt, jsonwebtoken
+  - Referencias: src/shared/dependencies.ts
+- src/usecases/order/order.usecase.ts ? Responsable: Use case orchestration; L?neas: 34; Funciones: 0; Clases: 1; Imports: 2; Estado: Activo
+  - Dependencias: ../../core/interfaces/order.repository.js, ../../core/domain/order.js
+  - Referencias: src/shared/dependencies.ts
+- src/usecases/product/product.usecase.ts ? Responsable: Use case orchestration; L?neas: 42; Funciones: 0; Clases: 1; Imports: 2; Estado: Activo
+  - Dependencias: ../../core/interfaces/product.repository.js, ../../core/domain/product.js
+  - Referencias: src/shared/dependencies.ts
+- tsconfig.json ? Responsable: Project support file; L?neas: 16; Funciones: 0; Clases: 0; Imports: 0; Estado: Activo
+  - Referencias: ninguna detectada desde otros archivos del proyecto

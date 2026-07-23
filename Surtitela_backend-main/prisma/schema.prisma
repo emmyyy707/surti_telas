@@ -1,0 +1,367 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // La URL de conexión ya se gestiona desde `prisma.config.ts` (Prisma v7+).
+  // Mantenemos la línea comentada para evitar la validación de esquema.
+  // url      = env("DATABASE_URL")
+}
+
+// Enums añadidos para estados más expresivos
+enum OrderStatus {
+  Nuevo
+  EnProduccion
+  Listo
+  Despachado
+  EnCamino
+  Entregado
+  Cancelado
+}
+
+enum ProductStatus {
+  Publicado
+  Borrador
+}
+
+model customers {
+  id_customer Int          @id @default(autoincrement())
+  status      Boolean?     @default(true)
+  id_user     Int?         @unique
+  users       users?       @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_customers_user")
+  deliveries  deliveries[]
+  orders      orders[]
+  sales       sales[]
+  addresses   addresses[]
+}
+
+model deliveries {
+  id_delivery Int        @id @default(autoincrement())
+  total       Decimal?   @db.Decimal(10, 2)
+  address     String?    @db.VarChar(150)
+  city        String?    @db.VarChar(100)
+  phone       String?    @db.VarChar(20)
+  id_customer Int?
+  id_employee Int?
+  id_order    Int?
+  customers   customers? @relation(fields: [id_customer], references: [id_customer], onDelete: Cascade, onUpdate: NoAction, map: "fk_deliveries_customer")
+  employees   employees? @relation(fields: [id_employee], references: [id_employee], onDelete: Cascade, onUpdate: NoAction, map: "fk_deliveries_employee")
+  orders      orders?    @relation(fields: [id_order], references: [id_order], onDelete: Cascade, onUpdate: NoAction, map: "fk_deliveries_order")
+
+  @@index([id_customer])
+  @@index([id_employee])
+  @@index([id_order])
+}
+
+model documents_type {
+  id_document_type Int     @id @default(autoincrement())
+  document_type    String  @db.VarChar(50)
+  users            users[]
+}
+
+model employees {
+  id_employee Int          @id @default(autoincrement())
+  hire_date   DateTime?    @db.Date
+  salary      Decimal?     @db.Decimal(10, 2)
+  status      Boolean?     @default(true)
+  id_user     Int?         @unique
+  deliveries  deliveries[]
+  users       users?       @relation(fields: [id_user], references: [id_user], onDelete: Cascade, onUpdate: NoAction, map: "fk_employees_user")
+}
+
+model orders {
+  id_order       Int              @id @default(autoincrement())
+  order_date     DateTime?        @db.Date
+  quantity       Int?
+  subtotal       Decimal?         @db.Decimal(10, 2)
+  total          Decimal?         @db.Decimal(10, 2)
+  status         Boolean?         @default(true)
+  status_enum    OrderStatus?     @default(Nuevo)
+  id_customer    Int?
+  deliveries     deliveries[]
+  customers      customers?       @relation(fields: [id_customer], references: [id_customer], onDelete: Cascade, onUpdate: NoAction, map: "fk_orders_customer")
+  orders_details orders_details[]
+  payments       payments[]
+  returns        returns[]
+  sales          sales[]
+
+  @@index([id_customer])
+}
+
+model orders_details {
+  id_order_detail Int       @id @default(autoincrement())
+  id_order        Int?
+  id_product      Int?
+  quantity        Int?
+  unit_value      Decimal?  @db.Decimal(10, 2)
+  subtotal        Decimal?  @db.Decimal(10, 2)
+  orders          orders?   @relation(fields: [id_order], references: [id_order], onDelete: Cascade, onUpdate: NoAction, map: "fk_order_detail_order")
+  products        products? @relation(fields: [id_product], references: [id_product], onDelete: Cascade, onUpdate: NoAction, map: "fk_order_detail_product")
+
+  @@index([id_order])
+  @@index([id_product])
+}
+
+model payments {
+  id_payment   Int      @id @default(autoincrement())
+  payment_date DateTime @db.Date
+  amount       Decimal  @db.Decimal(10, 2)
+  status       Boolean? @default(true)
+  id_order     Int?
+  orders       orders?  @relation(fields: [id_order], references: [id_order], onDelete: Cascade, onUpdate: NoAction, map: "fk_payments_order")
+
+  @@index([id_order])
+}
+
+model permissions {
+  id_permission Int      @id @default(autoincrement())
+  name          String   @db.VarChar(100)
+  description   String?  @db.VarChar(255)
+  status        Boolean? @default(true)
+  roles         roles[]
+}
+
+model production_details {
+  id_production_detail Int          @id @default(autoincrement())
+  quantity_delivered   Int?
+  amount_received      Int?
+  date_received        DateTime?    @db.Date
+  delivery_date        DateTime?    @db.Date
+  status               Boolean?     @default(true)
+  id_production        Int?
+  productions          productions? @relation(fields: [id_production], references: [id_production], onDelete: Cascade, onUpdate: NoAction, map: "fk_production_detail_production")
+
+  @@index([id_production])
+}
+
+model productions {
+  id_production      Int                  @id @default(autoincrement())
+  status             Boolean?             @default(true)
+  id_workshop        Int?
+  id_product         Int?
+  production_details production_details[]
+  products           products?            @relation(fields: [id_product], references: [id_product], onDelete: Cascade, onUpdate: NoAction, map: "fk_production_product")
+  workshops          workshops?           @relation(fields: [id_workshop], references: [id_workshop], onDelete: Cascade, onUpdate: NoAction, map: "fk_production_workshop")
+
+  @@index([id_product])
+  @@index([id_workshop])
+}
+
+model products {
+  id_product          Int                  @id @default(autoincrement())
+  name                String               @db.VarChar(100)
+  price               Decimal              @db.Decimal(10, 2)
+  description         String?              @db.VarChar(255)
+  imagen              String?              @db.Text
+  stock               Int?                 @default(0)
+  status              Boolean?             @default(true)
+  status_enum         ProductStatus?       @default(Publicado)
+  id_product_category Int?
+  orders_details      orders_details[]
+  productions         productions[]
+  products_category   products_category?   @relation(fields: [id_product_category], references: [id_product_category], onDelete: Cascade, onUpdate: NoAction, map: "fk_products_category")
+  purchasing_details  purchasing_details[]
+  returns_details     returns_details[]
+  sales_details       sales_details[]
+
+  @@index([id_product_category])
+}
+
+model products_category {
+  id_product_category Int        @id @default(autoincrement())
+  name                String     @db.VarChar(100)
+  description         String?    @db.VarChar(255)
+  status              Boolean?   @default(true)
+  products            products[]
+  supplies            supplies[]
+}
+
+model purchases {
+  id_purchase        Int                  @id @default(autoincrement())
+  purchase_date      DateTime             @db.Date
+  total              Decimal?             @db.Decimal(10, 2)
+  status             Boolean?             @default(true)
+  id_supplier        Int?
+  suppliers          suppliers?           @relation(fields: [id_supplier], references: [id_supplier], onDelete: NoAction, onUpdate: NoAction, map: "fk_purchases_supplier")
+  purchasing_details purchasing_details[]
+
+  @@index([id_supplier])
+}
+
+model purchasing_details {
+  id_purchase_detail Int        @id @default(autoincrement())
+  quantity           Int
+  unit_value         Decimal    @db.Decimal(10, 2)
+  subtotal           Decimal?   @db.Decimal(10, 2)
+  id_purchase        Int?
+  id_product         Int?
+  products           products?  @relation(fields: [id_product], references: [id_product], onDelete: Cascade, onUpdate: NoAction, map: "fk_purchase_detail_product")
+  purchases          purchases? @relation(fields: [id_purchase], references: [id_purchase], onDelete: Cascade, onUpdate: NoAction, map: "fk_purchase_detail_purchase")
+
+  @@index([id_purchase])
+  @@index([id_product])
+}
+
+model returns {
+  id_return       Int               @id @default(autoincrement())
+  return_date     DateTime          @db.Date
+  reason          String?           @db.VarChar(255)
+  status          Boolean?          @default(true)
+  id_order        Int?
+  orders          orders?           @relation(fields: [id_order], references: [id_order], onDelete: Cascade, onUpdate: NoAction, map: "fk_returns_order")
+  returns_details returns_details[]
+}
+
+model returns_details {
+  id_return_detail Int       @id @default(autoincrement())
+  quantity         Int
+  subtotal         Decimal?  @db.Decimal(10, 2)
+  id_return        Int?
+  id_product       Int?
+  products         products? @relation(fields: [id_product], references: [id_product], onDelete: Cascade, onUpdate: NoAction, map: "fk_return_detail_product")
+  returns          returns?  @relation(fields: [id_return], references: [id_return], onDelete: Cascade, onUpdate: NoAction, map: "fk_return_detail_return")
+
+  @@index([id_return])
+  @@index([id_product])
+}
+
+model roles {
+  id_role       Int          @id @default(autoincrement())
+  name          String       @db.VarChar(50)
+  description   String?      @db.VarChar(255)
+  status        Boolean?     @default(true)
+  id_permission Int?
+  permissions   permissions? @relation(fields: [id_permission], references: [id_permission], onDelete: NoAction, onUpdate: NoAction, map: "fk_roles_permission")
+  users         users[]
+}
+
+model sales {
+  id_sale        Int             @id @default(autoincrement())
+  sale_date      DateTime?       @db.Date
+  quantity       Int?
+  unit_value     Decimal?        @db.Decimal(10, 2)
+  vat_value      Decimal?        @db.Decimal(10, 2)
+  discount_value Decimal?        @db.Decimal(10, 2)
+  total_value    Decimal?        @db.Decimal(10, 2)
+  status         Boolean?        @default(true)
+  id_customer    Int?
+  id_order       Int?
+  customers      customers?      @relation(fields: [id_customer], references: [id_customer], onDelete: Cascade, onUpdate: NoAction, map: "fk_sales_customer")
+  orders         orders?         @relation(fields: [id_order], references: [id_order], onDelete: Cascade, onUpdate: NoAction, map: "fk_sales_order")
+  sales_details  sales_details[]
+
+  @@index([id_customer])
+  @@index([id_order])
+}
+
+model sales_details {
+  id_sale_detail Int       @id @default(autoincrement())
+  id_sale        Int?
+  id_product     Int?
+  quantity       Int?
+  unit_value     Decimal?  @db.Decimal(10, 2)
+  subtotal       Decimal?  @db.Decimal(10, 2)
+  products       products? @relation(fields: [id_product], references: [id_product], onDelete: Cascade, onUpdate: NoAction, map: "fk_sales_detail_product")
+  sales          sales?    @relation(fields: [id_sale], references: [id_sale], onDelete: Cascade, onUpdate: NoAction, map: "fk_sales_detail_sale")
+
+  @@index([id_sale])
+  @@index([id_product])
+}
+
+model suppliers {
+  id_supplier Int         @id @default(autoincrement())
+  name        String      @db.VarChar(100)
+  phone       String?     @db.VarChar(20)
+  email       String?     @db.VarChar(100)
+  address     String?     @db.VarChar(150)
+  status      Boolean?    @default(true)
+  purchases   purchases[]
+}
+
+model supplies {
+  id_supply           Int                @id @default(autoincrement())
+  name                String             @db.VarChar(100)
+  stock               Int?               @default(0)
+  status              Boolean?           @default(true)
+  id_product_category Int?
+  products_category   products_category? @relation(fields: [id_product_category], references: [id_product_category], onDelete: Cascade, onUpdate: NoAction, map: "fk_supplies_category")
+
+  @@index([id_product_category])
+}
+
+model users {
+  id_user                  Int       @id @default(autoincrement())
+  name                     String    @db.VarChar(100)
+  last_name                String    @db.VarChar(100)
+  phone                    String?   @db.VarChar(20)
+  email                    String    @unique @db.VarChar(100)
+  password                 String?   @db.VarChar(255)
+  address                  String?   @db.VarChar(150)
+  company                  String?   @db.VarChar(100)
+  googleId                 String?   @unique
+  provider                 String?   @db.VarChar(50)
+  avatar                   String?   @db.Text
+  document_type            String?   @db.VarChar(50)
+  document_number          String?   @db.VarChar(50)
+  status                   Boolean?  @default(true)
+  email_verified           Boolean?  @default(false)
+  email_verification_token String?   @db.VarChar(255)
+  password_reset_token     String?   @db.VarChar(255)
+  password_reset_expires   DateTime? @db.Timestamp(6)
+  id_document_type         Int?
+  id_role                  Int?
+  customers                customers?
+  employees                employees?
+  documents_type           documents_type? @relation(fields: [id_document_type], references: [id_document_type], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_document_type")
+  roles                    roles?    @relation(fields: [id_role], references: [id_role], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_role")
+  notifications            notifications[]
+}
+
+model workshops {
+  id_workshop Int           @id @default(autoincrement())
+  name        String        @db.VarChar(100)
+  phone       String?       @db.VarChar(20)
+  address     String?       @db.VarChar(150)
+  status      Boolean?      @default(true)
+  productions productions[]
+}
+
+// Nuevos modelos añadidos: direcciones y notificaciones
+model addresses {
+  id_address  Int        @id @default(autoincrement())
+  street      String     @db.VarChar(150)
+  city        String?    @db.VarChar(100)
+  phone       String?    @db.VarChar(20)
+  id_customer Int?
+  customers   customers? @relation(fields: [id_customer], references: [id_customer], onDelete: Cascade, onUpdate: NoAction, map: "fk_addresses_customer")
+
+  @@index([id_customer])
+}
+
+model notifications {
+  id_notification Int       @id @default(autoincrement())
+  title           String    @db.VarChar(255)
+  body            String?   @db.Text
+  read            Boolean?  @default(false)
+  id_user         Int?
+  users           users?    @relation(fields: [id_user], references: [id_user], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_user")
+  created_at      DateTime? @db.Timestamp(6)
+
+  @@index([id_user])
+}
+
+model Image {
+  id            String    @id @default(cuid())
+  originalName  String
+  fileName      String
+  url           String
+  publicId      String
+  mimeType      String
+  size          Int
+  width         Int?
+  height        Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

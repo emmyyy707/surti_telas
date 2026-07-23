@@ -1,0 +1,54 @@
+# DEAD CODE REPORT
+
+## Resumen
+- Se consideran muertos los archivos sin importadores que no son puntos de entrada del servidor.
+- Tambi?n se marcan funciones expuestas en archivos inactivos como potencialmente muertas.
+
+- src/modules/asesores/routes/asesores.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/deliveries/routes/deliveries.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/documents_type/routes/documents_type.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/domiciliarios/routes/domiciliarios.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/domicilios/routes/domicilios.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/employees/routes/employees.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/orders_details/routes/orders_details.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/payments/routes/payments.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/permissions/routes/permissions.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/production_details/routes/production_details.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/productions/routes/productions.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/products_category/routes/products_category.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/purchases/routes/purchases.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/purchasing_details/routes/purchasing_details.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/reportes/routes/reportes.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/returns/routes/returns.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/returns_details/routes/returns_details.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/roles/routes/roles.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/sales/routes/sales.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/sales_details/routes/sales_details.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/suppliers/routes/suppliers.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/supplies/routes/supplies.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/uploads/routes/uploads.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto
+- src/modules/workshops/routes/workshops.routes.ts: sin referencias detectadas; estado: Nunca utilizado / potencialmente muerto
+  - Evidencia: no aparece en importaciones desde otros archivos del proyecto

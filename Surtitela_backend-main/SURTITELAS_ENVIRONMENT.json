@@ -1,0 +1,137 @@
+{
+  "id": "surtitelas-env",
+  "name": "SURTITELAS ENVIRONMENT",
+  "values": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "enabled": true
+    },
+    {
+      "key": "TOKEN",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "ADMIN_TOKEN",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "EMPLOYEE_TOKEN",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "CUSTOMER_TOKEN",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "USER_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "CUSTOMER_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "EMPLOYEE_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "PRODUCT_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "CATEGORY_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "ORDER_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "ORDER_DETAIL_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "ADDRESS_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "PAYMENT_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "NOTIFICATION_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "PRODUCTION_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "PRODUCTION_DETAIL_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "DELIVERY_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "REPORT_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "SUPPLIER_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "ROLE_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "PERMISSION_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "DOCUMENT_TYPE_ID",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "PRODUCT_REF",
+      "value": "SKU-001",
+      "enabled": true
+    },
+    {
+      "key": "ROLE",
+      "value": "admin",
+      "enabled": true
+    },
+    {
+      "key": "EMAIL",
+      "value": "admin@surtitelas.com",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
