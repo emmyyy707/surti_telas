@@ -41,11 +41,12 @@ export const AdminReportesProduccion: React.FC = () => {
   }, []);
 
   type TallerNormalizado = { taller: string; ordenes: number };
-  const talleresSource = report?.porTaller ?? report?.ordersByWorkshop ?? [];
-  const talleres: TallerNormalizado[] = talleresSource.map((t: any) => ({
-    taller: t.taller ?? t.nombre ?? '',
-    ordenes: t.ordenes ?? t.cantidad ?? 0,
-  }));
+  const porTaller = (report?.porTaller ?? []) as { nombre: string | null; ordenes: number }[];
+  const porTallerLegacy = (report?.ordersByWorkshop ?? []) as { taller: string; cantidad: number }[];
+  const talleres: TallerNormalizado[] = [
+    ...porTaller.map(t => ({ taller: t.nombre ?? '', ordenes: t.ordenes })),
+    ...porTallerLegacy.map(t => ({ taller: t.taller, ordenes: t.cantidad })),
+  ];
 
   const estados = report?.ordersByStatus ?? report?.ordersByEstado ?? [];
 

@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { Tooltip } from '@/shared/components/Tooltip';
-import { Edit2, Plus } from 'lucide-react';
+import { Edit2, Plus, AlertCircle } from 'lucide-react';
 import { authApi } from '@/infrastructure/api/authApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { isValidPhone } from '@/shared/utils/phone';
@@ -49,6 +49,7 @@ export const PerfilCliente: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [direcciones, setDirecciones] = useState<Direccion[]>([]);
   const [direccionModal, setDireccionModal] = useState<{ open: boolean; mode: 'crear' | 'editar'; direccion?: Direccion }>({ open: false, mode: 'crear' });
   const [direccionDraft, setDireccionDraft] = useState<Omit<Direccion, 'id'>>(emptyDireccion);
@@ -60,6 +61,7 @@ export const PerfilCliente: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const profile = await authApi.me();
         setNombre(profile.nombre);
@@ -69,6 +71,7 @@ export const PerfilCliente: React.FC = () => {
         setNumeroDocumento(profile.numeroDocumento ?? '');
         setEmail(profile.email);
       } catch {
+        setLoadError('No se pudo cargar el perfil. Intenta nuevamente.');
         toast.error('No se pudo cargar el perfil');
       } finally {
         setLoading(false);
@@ -194,6 +197,19 @@ export const PerfilCliente: React.FC = () => {
 
   if (loading) {
     return <div className={s.pageTitle}>Cargando perfil...</div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className={s.pageContainer}>
+        <div className={s.pageTitle}>Mi perfil</div>
+        <div className={s.errorState}>
+          <AlertCircle size={28} />
+          <span>{loadError}</span>
+          <Button variant="secondary" onClick={() => window.location.reload()}>Reintentar</Button>
+        </div>
+      </div>
+    );
   }
 
   return (

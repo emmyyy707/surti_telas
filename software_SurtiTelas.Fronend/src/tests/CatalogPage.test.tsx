@@ -11,7 +11,7 @@ vi.mock('@/infrastructure/api/catalogApi', () => ({
 }));
 
 vi.mock('@/presentation/components/ProductDetailModal', () => ({
-  ProductDetailModal: ({ product, isOpen, onClose }: any) =>
+  ProductDetailModal: ({ product, isOpen, onClose }: { product?: { nombre?: string }; isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div data-testid="product-modal">
         <p>{product?.nombre}</p>
@@ -21,7 +21,7 @@ vi.mock('@/presentation/components/ProductDetailModal', () => ({
 }));
 
 vi.mock('@/presentation/pages/components/FilterDrawer', () => ({
-  FilterDrawer: ({ isOpen, onClose }: any) =>
+  FilterDrawer: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div data-testid="filter-drawer">
         <button onClick={onClose}>Cerrar filtros</button>

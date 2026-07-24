@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Edit2, Check, Image as ImageIcon, User } from 'lucide-react';
+import { Edit2, Check, Image as ImageIcon, User, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './PerfilDomiciliario.module.css';
 import { Badge } from '@/shared/ui/Badge';
@@ -17,6 +17,7 @@ export const DomiciliarioPerfil: React.FC = () => {
   const [email, setEmail] = useState('');
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [avatarName, setAvatarName] = useState('');
@@ -25,6 +26,7 @@ export const DomiciliarioPerfil: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const profile = await authApi.me();
         setNombre(profile.nombre);
@@ -32,6 +34,7 @@ export const DomiciliarioPerfil: React.FC = () => {
         setEmail(profile.email);
         setAvatarName(profile.nombre);
       } catch {
+        setLoadError('No se pudo cargar el perfil. Intenta nuevamente.');
         toast.error('No se pudo cargar el perfil');
       } finally {
         setLoading(false);
@@ -71,6 +74,20 @@ export const DomiciliarioPerfil: React.FC = () => {
 
   if (loading) {
     return <div className={s.pageTitle}>Cargando perfil...</div>;
+  }
+
+  if (loadError) {
+    return (
+      <div>
+        <h1 className={s.pageTitle}>Mi Perfil</h1>
+        <p className={s.pageSubtitle}>Datos personales y configuración de cuenta</p>
+        <div className={s.errorState}>
+          <AlertCircle size={28} />
+          <span>{loadError}</span>
+          <Button variant="secondary" onClick={() => window.location.reload()}>Reintentar</Button>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -7,7 +7,7 @@ import { Button } from '../../../shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '../../../shared/ui/DataTable';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
-import { ROL_LABELS, ESTADOS_GENERALES } from '@/shared/constants/options';
+import { ESTADOS_GENERALES } from '@/shared/constants/options';
 
 interface Asesor {
   id: string;
@@ -18,8 +18,6 @@ interface Asesor {
   comisiones: string | null;
   estado: 'Activo' | 'Inactivo';
 }
-
-const roleMap = ROL_LABELS;
 
 const toAsesor = (u: BackendAuthUser): Asesor => ({
   id: u.id,

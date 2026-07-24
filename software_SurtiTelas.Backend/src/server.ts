@@ -10,10 +10,12 @@ const app = createApp();
 import { eventBus } from './shared/infrastructure/eventBus';
 import { logger } from './shared/infrastructure/logger';
 import { notificationSubscriber } from './modules/notifications/infrastructure/container/notificationContainer';
+import { OrderReceiptPaymentSubscriber } from './modules/orders/application/use-cases/OrderReceiptPaymentSubscriber';
 import { PrismaWebhookSubscriptionRepository } from './modules/webhooks/infrastructure/repositories/PrismaWebhookSubscriptionRepository';
 import { WebhookDispatcher } from './modules/webhooks/application/WebhookDispatcher';
 
 notificationSubscriber.register(eventBus);
+new OrderReceiptPaymentSubscriber(eventBus);
 
 const webhookRepo = new PrismaWebhookSubscriptionRepository(prisma);
 const webhookDispatcher = new WebhookDispatcher(webhookRepo);

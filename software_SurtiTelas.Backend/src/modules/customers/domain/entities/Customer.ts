@@ -14,6 +14,7 @@ export interface CustomerData {
   isTrustedCustomer: boolean;
   estado: CustomerStatus;
   pedidos: number;
+  rol: 'CLIENTE';
 }
 
 export class Customer {
@@ -30,6 +31,7 @@ export class Customer {
   readonly isTrustedCustomer: boolean;
   readonly estado: CustomerStatus;
   readonly pedidos: number;
+  readonly rol: 'CLIENTE';
 
   constructor(data: CustomerData) {
     Customer.validate(data);
@@ -46,6 +48,7 @@ export class Customer {
     this.isTrustedCustomer = data.isTrustedCustomer;
     this.estado = data.estado;
     this.pedidos = data.pedidos;
+    this.rol = data.rol;
   }
 
   static validate(data: CustomerData): void {

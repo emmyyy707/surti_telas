@@ -3,7 +3,7 @@ import { Search, Bell, Moon, Download, Sun, Package, ShoppingCart, AlertTriangle
 import s from './TopHeader.module.css';
 import { cn } from '@/shared/utils';
 import { Tooltip } from '@/shared/components/Tooltip';
-import { alertsApi, type Alert } from '@/infrastructure/api/alertsApi';
+import { notificationsApi } from '@/infrastructure/api/notificationsApi';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
 
 interface Notification {
@@ -31,25 +31,6 @@ interface TopHeaderProps {
   notifications?: Notification[];
   darkMode?: boolean;
 }
-
-const mapAlertToNotification = (alert: Alert): Notification => {
-  const typeMap: Record<string, Notification['type']> = {
-    STOCK: 'stock',
-    PEDIDO: 'order',
-    MENSAJE: 'message',
-    PEDIDO_NUEVO: 'order',
-    STOCK_BAJO: 'stock',
-  };
-  return {
-    id: alert.id,
-    title: alert.tipo.replace(/_/g, ' '),
-    message: alert.mensaje,
-    time: new Date(alert.createdAt).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }),
-    type: typeMap[alert.tipo] ?? 'info',
-    read: alert.leida,
-    path: alert.modulo ? `/admin/${alert.modulo.toLowerCase()}` : '/admin/alertas-stock',
-  };
-};
 
 const getNotificationIcon = (type: Notification['type']) => {
   switch (type) {
@@ -94,12 +75,21 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
       setLoadingNotifications(true);
       setNotificationsError(null);
       try {
-        const unread = await alertsApi.list({ leida: false });
+        const data = await notificationsApi.list();
         if (!active) return;
-        setFetchedNotifications(unread.map(mapAlertToNotification));
+        const mapped: Notification[] = data.map(n => ({
+          id: n.id,
+          title: n.titulo,
+          message: n.mensaje,
+          time: new Date(n.createdAt).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }),
+          type: n.tipo === 'success' ? 'order' : n.tipo === 'danger' ? 'stock' : n.tipo === 'warning' ? 'message' : 'info',
+          read: n.leida,
+          path: '/admin/notificaciones',
+        }));
+        setFetchedNotifications(mapped);
       } catch (err) {
         if (!active) return;
-        setNotificationsError(err instanceof Error ? err.message : 'No se pudieron cargar las alertas');
+        setNotificationsError(err instanceof Error ? err.message : 'No se pudieron cargar las notificaciones');
       } finally {
         if (active) setLoadingNotifications(false);
       }

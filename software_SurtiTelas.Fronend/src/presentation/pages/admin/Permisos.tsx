@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Shield, Loader2, AlertCircle, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, AlertCircle, EyeOff } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTable';
-import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { useDelegatedTooltips } from '@/shared/components/Tooltip';
 import { cn } from '@/shared/utils';
@@ -17,7 +16,7 @@ interface Permiso extends PermissionDTO {
   modulo: string;
 }
 
-const mapPermissionToPermiso = (p: PermissionDTO, index: number): Permiso => {
+const mapPermissionToPermiso = (p: PermissionDTO, _index: number): Permiso => {
   return {
     ...p,
     modulo: p.module,

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Shield, AlertTriangle, Clock, User, Globe, Plus, Edit, Trash2 } from 'lucide-react';
+import { Shield, AlertTriangle, Clock, User, Globe, Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './SeguridadUsuarios.module.css';
-import { Badge } from '../../../shared/ui/Badge';
-import { Button } from '../../../shared/ui/Button';
-import { Modal } from '../../../shared/ui/Modal';
-import f from '@/styles/Form.module.css';
-import { auditApi, type AuditLog } from '../../../infrastructure/api/auditApi';
+import { Badge } from '@/shared/ui/Badge';
+import { Button } from '@/shared/ui/Button';
+import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '@/shared/ui/DataTable';
+import { SearchInput } from '@/shared/ui/SearchInput';
+import { Modal } from '@/shared/ui/Modal';
+import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { auditApi, type AuditLog } from '@/infrastructure/api/auditApi';
 import { ESTADOS_AUDITORIA } from '@/shared/constants/options';
+import f from '@/styles/Form.module.css';
 
 type EstadoAuditoria = (typeof ESTADOS_AUDITORIA)[number];
 
@@ -81,8 +84,8 @@ export const AdminSeguridadUsuarios: React.FC = () => {
     return auditorias.filter(a =>
       (filtro === 'Todos' || a.estado === filtro) &&
       (a.usuario.toLowerCase().includes(q) ||
-       a.accion.toLowerCase().includes(q) ||
-       a.modulo.toLowerCase().includes(q))
+        a.accion.toLowerCase().includes(q) ||
+        a.modulo.toLowerCase().includes(q))
     );
   }, [auditorias, filtro, search]);
 
@@ -146,6 +149,64 @@ export const AdminSeguridadUsuarios: React.FC = () => {
     }
   };
 
+  const columns: DataTableColumn<Auditoria>[] = [
+    { key: 'id', header: 'ID', sortable: true },
+    { key: 'usuario', header: 'Usuario', sortable: true, render: (a) => (
+      <div className={s.usuarioCell}>
+        <User size={14} />
+        <span className={s.tdPrimary}>{a.usuario}</span>
+      </div>
+    ) },
+    { key: 'accion', header: 'Acción', sortable: true },
+    { key: 'modulo', header: 'Módulo', sortable: true },
+    { key: 'ip', header: 'IP', sortable: true, render: (a) => (
+      <div className={s.ipCell}>
+        <Globe size={14} />
+        {a.ip}
+      </div>
+    ) },
+    { key: 'fecha', header: 'Fecha', sortable: true },
+    { key: 'hora', header: 'Hora', sortable: true },
+    { key: 'estado', header: 'Estado', sortable: true, render: (a) => (
+      <Badge variant={a.estado === 'Éxito' ? 'success' : a.estado === 'Fallido' ? 'default' : 'warning'}>
+        {a.estado}
+      </Badge>
+    ) },
+  ];
+
+  const detailPanel: DataTableDetailPanel<Auditoria> = {
+    title: (a) => `Detalle de auditoría - ${a.id}`,
+    size: 'lg',
+    header: (a) => ({
+      icon: <Shield size={18} />,
+      title: 'Registro de auditoría',
+      code: a.id,
+      subtitle: `${a.modulo} · ${a.fecha}`,
+      status: a.estado,
+      badgeVariant: a.estado === 'Éxito' ? 'success' : a.estado === 'Fallido' ? 'default' : 'warning',
+    }),
+    kpis: (a) => [
+      { label: 'Módulo', value: a.modulo, icon: <Shield size={16} />, tone: 'primary' },
+      { label: 'IP', value: a.ip, icon: <Globe size={16} />, tone: 'default' },
+      { label: 'Fecha', value: `${a.fecha} ${a.hora}`, icon: <Clock size={16} />, tone: 'default' },
+    ],
+    render: (a) => (
+      <div className={s.detailPanel}>
+        <div className={s.detailRow}><span>Usuario:</span> {a.usuario}</div>
+        <div className={s.detailRow}><span>Acción:</span> {a.accion}</div>
+        <div className={s.detailRow}><span>Módulo:</span> {a.modulo}</div>
+        <div className={s.detailRow}><span>IP:</span> {a.ip}</div>
+        <div className={s.detailRow}><span>Fecha:</span> {a.fecha}</div>
+        <div className={s.detailRow}><span>Hora:</span> {a.hora}</div>
+      </div>
+    ),
+  };
+
+  const actions: DataTableAction<Auditoria>[] = [
+    { label: 'Editar', icon: <Edit size={14} />, onClick: (a) => handleEdit(a) },
+    { label: 'Eliminar', icon: <Trash2 size={14} />, danger: true, onClick: (a) => setDeleteId(a.id) },
+  ];
+
   return (
     <div className={s.pageContainer}>
       <div className={s.header}>
@@ -194,100 +255,41 @@ export const AdminSeguridadUsuarios: React.FC = () => {
       <div className={s.filters}>
         <div className={s.filterPanel}>
           <div className={s.filterGroup}>
-          {['Todos', ...ESTADOS_AUDITORIA].map(f => (
-            <button
-              key={f}
-              className={`${s.filterBtn} ${filtro === f ? s.filterBtnActive : ''}`}
-              onClick={() => setFiltro(f as typeof filtro)}
-            >
-              {f}
-            </button>
-          ))}
+            {['Todos', ...ESTADOS_AUDITORIA].map(f => (
+              <button
+                key={f}
+                className={`${s.filterBtn} ${filtro === f ? s.filterBtnActive : ''}`}
+                onClick={() => setFiltro(f as typeof filtro)}
+              >
+                {f}
+              </button>
+            ))}
           </div>
-          <div className={s.searchBox}>
-            <Search size={16} className={s.searchIcon} />
-            <input
-              type="text"
-              placeholder="Buscar en auditoría..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className={s.searchInput}
-            />
-          </div>
+          <SearchInput
+            placeholder="Buscar en auditoría..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onSearch={(value) => setSearch(value)}
+            debounceMs={100}
+            minChars={0}
+          />
         </div>
       </div>
 
       <div className={s.tableWrapper}>
-        <div className={s.tableScroll}>
-          <table className={s.table}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Usuario</th>
-              <th>Acción</th>
-              <th>Módulo</th>
-              <th>IP</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={9} className={s.loadingBox}>Cargando auditoría...</td>
-              </tr>
-            ) : filteredAuditorias.length === 0 ? (
-              <tr>
-                <td colSpan={9} className={s.loadingBox}>
-                  {error ? error : 'No se encontraron registros de auditoría'}
-                </td>
-              </tr>
-            ) : (
-              filteredAuditorias.map(auditoria => (
-                <tr key={auditoria.id}>
-                  <td className={s.tdMono}>{auditoria.id}</td>
-                  <td className={s.tdPrimary}>
-                    <div className={s.usuarioCell}>
-                      <User size={14} />
-                      {auditoria.usuario}
-                    </div>
-                  </td>
-                  <td>{auditoria.accion}</td>
-                  <td>{auditoria.modulo}</td>
-                  <td>
-                    <div className={s.ipCell}>
-                      <Globe size={14} />
-                      {auditoria.ip}
-                    </div>
-                  </td>
-                  <td>{auditoria.fecha}</td>
-                  <td>{auditoria.hora}</td>
-                  <td>
-                    <Badge variant={
-                      auditoria.estado === 'Éxito' ? 'success' :
-                      auditoria.estado === 'Fallido' ? 'default' : 'warning'
-                    }>
-                      {auditoria.estado}
-                    </Badge>
-                  </td>
-                  <td>
-                    <div className={s.actionsCell}>
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(auditoria)}>
-                        <Edit size={14} />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteId(auditoria.id)}>
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        </div>
+        <DataTable
+          data={filteredAuditorias}
+          columns={columns}
+          detailPanel={detailPanel}
+          actions={actions}
+          enableColumnFilters={false}
+          enableExport={false}
+          enableRowSelection={false}
+          enableSorting={true}
+          toolbarLeft={null}
+          maxVisibleColumns={5}
+          emptyMessage={loading ? 'Cargando auditoría...' : error ? error : 'No se encontraron registros de auditoría'}
+        />
       </div>
 
       <Modal
@@ -358,22 +360,15 @@ export const AdminSeguridadUsuarios: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal
+      <ConfirmationModal
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
         title="Eliminar registro"
         description="Esta acción no se puede deshacer."
-        size="sm"
-      >
-        <div className={f.formActions}>
-          <Button variant="secondary" onClick={() => setDeleteId(null)} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={saving}>
-            {saving ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </div>
-      </Modal>
+        confirmLabel="Eliminar"
+        variant="danger"
+      />
     </div>
   );
 };

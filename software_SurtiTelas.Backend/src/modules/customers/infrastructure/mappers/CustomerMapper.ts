@@ -31,6 +31,7 @@ export function toCustomerData(row: CustomerRow): CustomerData {
     isTrustedCustomer: row.isTrustedCustomer,
     estado: row.estado === 'ACTIVO' ? 'Activo' : 'Inactivo',
     pedidos: row._count.orders,
+    rol: 'CLIENTE',
   };
 }
 

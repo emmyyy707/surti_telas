@@ -131,6 +131,7 @@ export const AdminReportesVentas: React.FC = () => {
       x: chartPadding.left + (trend.length > 1 ? (i / (trend.length - 1)) * (400 - chartPadding.left - chartPadding.right) : 0),
       y: chartPadding.top + (1 - (d.ventas || 0) / Math.max(maxVentas, 1)) * (chartHeight - chartPadding.top - chartPadding.bottom),
     }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reporte, maxVentas]);
 
   const pathD = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');

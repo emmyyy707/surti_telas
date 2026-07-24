@@ -6,6 +6,8 @@ export interface CreateOrderInput {
   itemsList?: OrderItem[];
   prioridad?: OrderPriority;
   observaciones?: string;
+  paymentMethod?: string;
+  installments?: number;
   fecha?: string;
 }
 

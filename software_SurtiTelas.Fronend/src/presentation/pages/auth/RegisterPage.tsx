@@ -1,10 +1,9 @@
-﻿import React, { useState, useCallback } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Eye, EyeOff, Phone, MapPin, ArrowLeft } from 'lucide-react';
+import { User, Mail, Eye, EyeOff, MapPin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import partnerLogo from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 import { authApi } from '@/infrastructure/api/authApi';
-import { tokenStorage } from '@/infrastructure/api/tokenStorage';
 import { useAuthStore } from '@/core/stores/authStore';
 import { appContent } from '@/shared/config/appContent';
 import { isValidPhone } from '@/shared/utils/phone';
@@ -69,7 +68,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       const nombre = `${firstName.trim()} ${lastName.trim()}`.trim();
-      const result = await authApi.createUser({
+      await authApi.createUser({
         nombre,
         email: email.trim(),
         password,

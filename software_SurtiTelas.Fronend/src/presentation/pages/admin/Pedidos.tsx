@@ -11,7 +11,6 @@ import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import { useAuthStore } from '@/core/stores/authStore';
 import { ESTADOS_PEDIDO, ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import type { Pedido, PedidoItem } from '@/core/types';
 import { useServerPagination } from '@/hooks/useServerPagination';
@@ -29,7 +28,6 @@ const formatoCOP = (valor: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(valor);
 
 export const AdminPedidos: React.FC = () => {
-  const user = useAuthStore((s) => s.user);
   const [pageData, setPageData] = useState<Pedido[]>([]);
   const [clientes, setClientes] = useState<BackendAuthUser[]>([]);
   const [asesores, setAsesores] = useState<BackendAuthUser[]>([]);
@@ -89,6 +87,7 @@ export const AdminPedidos: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asesorId, pagination.page, pagination.limit, search, pagination.setTotalRecords]);
 
   useEffect(() => {

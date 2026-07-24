@@ -11,7 +11,6 @@ import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import { receiptsApi, type Receipt } from '@/infrastructure/api/receiptsApi';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import type { PedidoItem } from '@/core/types';
 
 interface Recibo {
   id: string;
@@ -111,9 +110,7 @@ export const AdminRecibos: React.FC = () => {
   };
 
   useEffect(() => {
-    let active = true;
     loadRecibos();
-    return () => { active = false; };
   }, []);
 
   const filteredRecibos = useMemo(() => {
@@ -267,12 +264,6 @@ export const AdminRecibos: React.FC = () => {
       toast.error('No se pudo eliminar el recibo');
     }
   };
-
-  const detailRecibo = useMemo(() => {
-    const id = statusConfirm?.id || deleteConfirm?.id;
-    if (!id) return null;
-    return recibos.find(r => r.id === id) ?? null;
-  }, [recibos, statusConfirm, deleteConfirm]);
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {

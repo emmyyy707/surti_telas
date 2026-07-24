@@ -52,8 +52,9 @@ export const AdminReportesInventario: React.FC = () => {
   }, []);
 
   type CategoriaNormalizada = { nombre: string; productos: number };
+  type CategoriaApi = { categoriaId?: string | null; nombre?: string | null; categoria?: string; cantidad?: number; productos?: number };
   const categoriasSource = report?.categories ?? report?.stockByCategory ?? [];
-  const categoriasReporte: CategoriaNormalizada[] = categoriasSource.map((c: any) => ({
+  const categoriasReporte: CategoriaNormalizada[] = categoriasSource.map((c: CategoriaApi) => ({
     nombre: c.nombre ?? c.categoria ?? '',
     productos: c.productos ?? c.cantidad ?? 0,
   }));

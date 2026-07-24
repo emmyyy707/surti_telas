@@ -5,7 +5,7 @@ import s from './Webhooks.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
-import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTable';
+import { DataTable, DataTableColumn } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { webhooksApi, type Webhook } from '@/infrastructure/api/webhooksApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
@@ -29,7 +29,6 @@ export const AdminWebhooks: React.FC = () => {
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
   const [showSecret, setShowSecret] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Webhook | null>(null);
 
   const [formUrl, setFormUrl] = useState('');
@@ -57,6 +56,7 @@ export const AdminWebhooks: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, pagination.limit, search, pagination.setTotalRecords]);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export const AdminWebhooks: React.FC = () => {
     }
   };
 
-  const handleCopySecret = async (webhook: Webhook) => {
+  const handleCopySecret = async (_webhook: Webhook) => {
     toast.error('Este webhook no tiene secret configurado');
   };
 

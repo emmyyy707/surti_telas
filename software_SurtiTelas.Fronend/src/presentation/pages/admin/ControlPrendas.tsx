@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { controlPrendaApi, type ControlPrenda } from '@/infrastructure/api/controlPrendaApi';
+import { productionApi } from '@/infrastructure/api/productionApi';
 import { ETAPAS_CONTROL, ESTADOS_CONTROL } from '@/shared/constants/options';
 
 type Etapa = ControlPrenda['etapa'];
@@ -26,11 +27,30 @@ export const AdminControlPrendas: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [produccionId, setProduccionId] = useState('');
+  const [produccionError, setProduccionError] = useState<string | null>(null);
+  const [ordenesProduccion, setOrdenesProduccion] = useState<{ id: string; numero?: string; cliente?: string }[]>([]);
   const [etapa, setEtapa] = useState<Etapa>('Control de Calidad');
   const [cantidadTotal, setCantidadTotal] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadOrdenes = async () => {
+      try {
+      const data = await productionApi.list();
+      const ordenes = data.map((o: { id: string; numero?: string; clienteNombre?: string }) => ({
+        id: o.id,
+        numero: o.numero,
+        cliente: o.clienteNombre,
+      }));
+      setOrdenesProduccion(ordenes);
+      } catch {
+        // Si falla la carga de órdenes, igual se permite escribir el ID manualmente
+      }
+    };
+    void loadOrdenes();
+  }, []);
 
   const fetchRegistros = useCallback(async () => {
     setLoading(true);
@@ -141,8 +161,27 @@ export const AdminControlPrendas: React.FC = () => {
     }
   };
 
+  const validateProduccionId = useCallback((id: string) => {
+    const trimmed = id.trim();
+    if (!trimmed) {
+      setProduccionError('El ID de producción es obligatorio');
+      return false;
+    }
+    const existe = ordenesProduccion.some(o => o.id === trimmed);
+    if (!existe) {
+      setProduccionError('El ID de producción no existe. Creá primero una orden de producción.');
+      return false;
+    }
+    setProduccionError(null);
+    return true;
+  }, [ordenesProduccion]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateProduccionId(produccionId)) {
+      toast.error(produccionError || 'ID de producción inválido');
+      return;
+    }
     setSaving(true);
     try {
       const creado = await controlPrendaApi.create({
@@ -154,6 +193,7 @@ export const AdminControlPrendas: React.FC = () => {
       setRegistros(prev => [creado, ...prev]);
       setModalOpen(false);
       setProduccionId('');
+      setProduccionError(null);
       setEtapa('Control de Calidad');
       setCantidadTotal('');
       setObservaciones('');
@@ -371,11 +411,12 @@ export const AdminControlPrendas: React.FC = () => {
                 type="text"
                 className={s.input}
                 value={produccionId}
-                onChange={e => setProduccionId(e.target.value)}
+                onChange={e => { setProduccionId(e.target.value); setProduccionError(null); }}
                 placeholder="Ej: cmr..."
                 required
                 readOnly={!!editingId}
               />
+              {produccionError && <span className={s.fieldError}>{produccionError}</span>}
             </div>
             <div className={s.field}>
               <label className={s.label}>Etapa</label>
@@ -384,7 +425,7 @@ export const AdminControlPrendas: React.FC = () => {
                 value={etapa}
                 onChange={e => setEtapa(e.target.value as Etapa)}
               >
-                {ETAPAS.filter(e => e !== 'Todos' as any).map(e => (
+                {ETAPAS.map(e => (
                   <option key={e} value={e}>{e}</option>
                 ))}
               </select>

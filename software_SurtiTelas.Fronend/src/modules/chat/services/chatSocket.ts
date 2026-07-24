@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
 
-const SOCKET_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3002/api/v1')
+const SOCKET_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1')
   .replace(/\/$/, '')
   .replace(/\/api\/v1$/, '');
 

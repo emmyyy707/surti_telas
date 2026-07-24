@@ -10,7 +10,7 @@ import { tokenStorage } from './tokenStorage';
 
 export const API_BASE_URL: string =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ??
-   'http://localhost:3002/api/v1';
+    'http://localhost:3000/api/v1';
 
 export interface ApiEnvelope<T> {
   success: boolean;

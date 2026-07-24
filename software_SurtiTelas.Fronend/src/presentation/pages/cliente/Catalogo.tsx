@@ -113,7 +113,7 @@ export const CatalogoCliente: React.FC = () => {
         clienteId,
         asesorId: myClient?.asesor || undefined,
         itemsList: [],
-        prioridad: pedidoData.urgencia === 'Prioritario' ? 'ALTA' : 'MEDIA',
+        prioridad: pedidoData.urgencia === 'Prioritario' ? 'Prioritario' : 'Estándar',
         observaciones: pedidoData.detalle,
       });
 

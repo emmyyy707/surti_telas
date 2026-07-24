@@ -57,6 +57,8 @@ export function toOrderData(row: OrderRow): OrderData {
     numero: row.numero,
     cliente: row.clienteNombre || row.cliente?.nombre || '',
     asesor: row.asesorNombre || row.asesor?.nombre || '',
+    clienteId: row.clienteId,
+    asesorId: row.asesorId,
     fecha: row.fecha.toISOString(),
     items: row.itemsCount,
     total: Number(row.total.toNumber()),

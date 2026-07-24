@@ -33,7 +33,7 @@ const ForgotPasswordPage: React.FC = () => {
 
     try {
       const result = await authApi.forgotPassword({ email });
-      const resetUrl = (result as any).resetUrl || null;
+      const resetUrl = result.resetUrl || null;
       setDevResetUrl(resetUrl);
       setSuccess(true);
       toast.success('Correo de recuperación enviado');

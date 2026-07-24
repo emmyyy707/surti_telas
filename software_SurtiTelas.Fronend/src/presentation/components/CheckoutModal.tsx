@@ -1,7 +1,9 @@
 ﻿import React, { useMemo, useRef, useState } from 'react'
-import { X, Upload, CreditCard, BadgePercent, ShieldCheck, BadgeCheck } from 'lucide-react'
+import { X, Upload, CreditCard, BadgePercent, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart, useAuth } from '@/app/providers/AppProviders'
+import { useClientes } from '@/core/stores'
+import { ordersApi } from '@/infrastructure/api/ordersApi'
 import { AuthRequiredModal } from './AuthRequiredModal'
 import { appContent } from '@/shared/config/appContent'
 import './CheckoutModal.css'
@@ -19,7 +21,8 @@ const installmentOptions = appContent.checkout.installmentOptions
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
   const { subtotal, discount, tax, shipping, total, clearCart, items } = useCart()
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { clientes } = useClientes();
   const [selectedBank, setSelectedBank] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [paymentType, setPaymentType] = useState<PaymentType>('immediate')
@@ -27,6 +30,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const clienteActual = useMemo(() => {
+    if (!user?.email) return null;
+    return clientes.find(c => c.nombre === user.name || c.nombre === user.email) || null;
+  }, [user?.email, user?.name, clientes]);
+
+  const isTrustedCustomer = clienteActual?.isTrustedCustomer ?? false;
+
+  const handlePaymentTypeChange = (type: PaymentType) => {
+    if (type === 'installments' && !isTrustedCustomer) return;
+    setPaymentType(type);
+  }
 
   const taxesLabel = useMemo(() => `IVA 19%`, [])
 
@@ -71,6 +86,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       return
     }
 
+    if (!clienteActual?.id) {
+      toast.error('No se pudo identificar tu perfil de cliente. Contacta con el asesor.');
+      return;
+    }
+
     if (!proofFile) {
       toast.error('Adjunta el comprobante de pago.')
       return
@@ -83,11 +103,47 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
     }
 
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 850))
-    clearCart()
-    setIsSubmitting(false)
-    toast.success('Pago registrado. Tu pedido será confirmado en breve.')
-    onClose()
+    try {
+      const methodMap: Record<string, 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER'> = {
+        'CASH': 'CASH',
+        'TRANSFER': 'TRANSFER',
+        'CARD': 'CARD',
+        'OTHER': 'OTHER',
+      };
+
+      const itemsList = items.map((item) => ({
+        nombre: item.nombre,
+        precio: item.precio,
+        cantidad: item.quantity,
+      }));
+
+      const observaciones = [
+        `Banco: ${selectedBank}`,
+        paymentType === 'installments' ? `Pago por abonos: ${installments} cuotas` : 'Pago inmediato',
+        clienteActual?.asesorId ? `Asesor: ${clienteActual.asesorId}` : null,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
+      await ordersApi.create({
+        clienteId: clienteActual.id,
+        asesorId: clienteActual.asesorId,
+        itemsList,
+        prioridad: 'Estándar',
+        observaciones,
+        comprobantePago: proofFile ?? undefined,
+        paymentMethod: methodMap[selectedBank] || 'OTHER',
+        installments: paymentType === 'installments' ? installments : undefined,
+      });
+
+      clearCart();
+      toast.success('Pago registrado. Tu pedido será confirmado en breve.');
+      onClose();
+    } catch {
+      toast.error('No se pudo registrar el pedido. Intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!isOpen) return null
@@ -191,47 +247,48 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
               </select>
             </div>
 
-            {/* Payment type selector */}
-            <div className="ch-field">
-              <div className="ch-payment-label">
-                <CreditCard size={16} strokeWidth={2.2} />
-                Forma de pago *
-              </div>
-              <div className="ch-payment-grid">
-                {/* Immediate payment card */}
-                <button
-                  type="button"
-                  className={`ch-pay-card ${paymentType === 'immediate' ? 'active' : ''}`}
-                  onClick={() => setPaymentType('immediate')}
-                >
-                  <span className="ch-pay-badge">Pago inmediato</span>
-                  <p className="ch-pay-text">
-                    Pago completo de tu pedido en una sola transacción.
-                  </p>
-                  <span className="ch-pay-total">
-                    {total.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
-                  </span>
-                </button>
+             {/* Payment type selector */}
+             <div className="ch-field">
+               <div className="ch-payment-label">
+                 <CreditCard size={16} strokeWidth={2.2} />
+                 Forma de pago *
+               </div>
+               <div className="ch-payment-grid">
+                 {/* Immediate payment card */}
+                 <button
+                   type="button"
+                   className={`ch-pay-card ${paymentType === 'immediate' ? 'active' : ''}`}
+                   onClick={() => handlePaymentTypeChange('immediate')}
+                 >
+                   <span className="ch-pay-badge">Pago inmediato</span>
+                   <p className="ch-pay-text">
+                     Pago completo de tu pedido en una sola transacción.
+                   </p>
+                   <span className="ch-pay-total">
+                     {total.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+                   </span>
+                 </button>
 
-                {/* Installments card */}
-                <button
-                  type="button"
-                  className={`ch-pay-card ${paymentType === 'installments' ? 'active' : ''}`}
-                  onClick={() => setPaymentType('installments')}
-                >
-                  <span className="ch-pay-badge accent">
-                    <BadgePercent size={13} /> Pago por abonos
-                  </span>
-                  <p className="ch-pay-text">
-                    Divide el pago en cuotas cómodas adaptadas a tu presupuesto.
-                  </p>
-                  <span className="ch-pay-total accent">
-                    desde {Math.round((total / 12) * 100) / 100}
-                    <span className="ch-pay-total-sub"> /cuota</span>
-                  </span>
-                </button>
-              </div>
-            </div>
+                 {isTrustedCustomer && (
+                   <button
+                     type="button"
+                     className={`ch-pay-card ${paymentType === 'installments' ? 'active' : ''}`}
+                     onClick={() => handlePaymentTypeChange('installments')}
+                   >
+                     <span className="ch-pay-badge accent">
+                       <BadgePercent size={13} /> Pago por abonos
+                     </span>
+                     <p className="ch-pay-text">
+                       Divide el pago en cuotas cómodas adaptadas a tu presupuesto.
+                     </p>
+                     <span className="ch-pay-total accent">
+                       desde {Math.round((total / 12) * 100) / 100}
+                       <span className="ch-pay-total-sub"> /cuota</span>
+                     </span>
+                   </button>
+                 )}
+               </div>
+             </div>
 
             {/* Installments block  —  conditional */}
             {paymentType === 'installments' && (

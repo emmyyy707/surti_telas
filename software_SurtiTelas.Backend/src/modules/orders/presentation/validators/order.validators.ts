@@ -16,6 +16,8 @@ export const CreateOrderSchema = z.object({
     .optional(),
   prioridad: z.enum(['Estándar', 'Prioritario']).optional(),
   observaciones: z.string().optional(),
+  paymentMethod: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER']).optional(),
+  installments: z.coerce.number().int().positive().max(12).optional(),
 });
 
 export const UpdateOrderStatusSchema = z.object({

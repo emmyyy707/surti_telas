@@ -84,6 +84,7 @@ export const AdminReportes: React.FC = () => {
       { label: reportsContent.stats.newCustomers, value: sales.totalCustomers.toLocaleString('es-CO'), trend: '', trendUp: true, Icon: PieChart, color: 'info' as const },
       { label: reportsContent.stats.averageTicket, value: formatCurrency(sales.averageTicket), trend: '', trendUp: false, Icon: LineChart, color: 'warning' as const },
     ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sales]);
 
   const ventasPorCategoria = useMemo(

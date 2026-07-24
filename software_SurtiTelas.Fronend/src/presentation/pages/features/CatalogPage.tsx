@@ -6,7 +6,7 @@ import { ProductDetailModal } from '@presentation/components/ProductDetailModal'
 import { toast } from 'sonner';
 import '../styles/CatalogPage.css';
 import { Tooltip } from '@/shared/components/Tooltip';
-import { catalogApi, type ProductsListResult } from '@/infrastructure/api/catalogApi';
+import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import type { Producto as ProductoCore } from '@/core/types';
 
@@ -104,6 +104,7 @@ const CatalogPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, pagination.limit, searchTerm, categoriaActiva, marcaActiva, pagination.setTotalRecords]);
 
   useEffect(() => {

@@ -41,7 +41,7 @@ const CheckoutPage: React.FC = () => {
 
   const clienteActual = useMemo(() => {
     if (!user?.email) return null;
-    return clientes.find(c => c.nombre === user.name) || clientes[0] || null;
+    return clientes.find(c => c.nombre === user.name || c.nombre === user.email) || null;
   }, [user?.email, user?.name, clientes]);
 
   const isTrustedCustomer = clienteActual?.isTrustedCustomer ?? false;
@@ -123,9 +123,14 @@ const CheckoutPage: React.FC = () => {
         .filter(Boolean)
         .join(' | ');
 
+      if (!clienteActual?.id) {
+        toast.error('No se pudo identificar tu perfil de cliente. Contacta con el asesor.');
+        return;
+      }
+
       await ordersApi.create({
-        clienteId: clienteActual?.id ?? user?.email ?? 'cliente',
-        asesorId: clienteActual?.asesorId,
+        clienteId: clienteActual.id,
+        asesorId: clienteActual.asesorId,
         itemsList,
         observaciones,
         comprobantePago: proofFile ?? undefined,
