@@ -1,6 +1,14 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+
+if (nodeEnv === 'production') {
+  import('dotenv').then((dotenv) => {
+    dotenv.config({ path: '.env.production' });
+  }).catch(() => {});
+}
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
@@ -15,7 +23,7 @@ const schema = z.object({
   EVENT_BUS: z.enum(['memory', 'redis']).default('memory'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   METRICS_ALLOWED_IPS: z.string().default('127.0.0.1,::1'),
-  METRICS_SECRET: z.string().optional(),
+  METRICS_SECRET: z.string().min(16),
   SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_SECURE: z.coerce.boolean().default(true),

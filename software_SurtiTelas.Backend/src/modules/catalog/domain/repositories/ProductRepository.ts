@@ -33,7 +33,7 @@ export interface ProductRepository {
 }
 
 export interface CategoryRepository {
-  list(): Promise<CategoryData[]>;
+  list(filters?: { page?: number; limit?: number }): Promise<{ data: CategoryData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   create(input: { nombre: string; slug: string; parentId?: string | null }): Promise<CategoryData>;
   findBySlug(slug: string): Promise<CategoryData | null>;
 }

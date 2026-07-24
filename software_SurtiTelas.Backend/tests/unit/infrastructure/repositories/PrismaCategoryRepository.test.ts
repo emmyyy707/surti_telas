@@ -6,7 +6,9 @@ const mockPrisma = {
     findMany: vi.fn(),
     findUnique: vi.fn(),
     create: vi.fn(),
+    count: vi.fn(),
   },
+  $transaction: vi.fn(),
 } as any;
 
 const repo = new PrismaCategoryRepository(mockPrisma as any);
@@ -21,11 +23,12 @@ const row = (overrides = {}) => ({
 
 describe('PrismaCategoryRepository', () => {
   it('lists categories ordered by nombre', async () => {
-    mockPrisma.category.findMany.mockResolvedValue([row()]);
+    mockPrisma.$transaction.mockResolvedValue([[row()], 1]);
     const result = await repo.list();
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ id: 'c-1', nombre: 'Camisetas', slug: 'camisetas', parentId: null });
-    expect(mockPrisma.category.findMany).toHaveBeenCalledWith({ orderBy: { nombre: 'asc' } });
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({ id: 'c-1', nombre: 'Camisetas', slug: 'camisetas', parentId: null });
+    expect(result.meta.total).toBe(1);
+    expect(mockPrisma.category.findMany).toHaveBeenCalledWith({ orderBy: { nombre: 'asc' }, skip: 0, take: 50 });
   });
 
   it('creates a category', async () => {

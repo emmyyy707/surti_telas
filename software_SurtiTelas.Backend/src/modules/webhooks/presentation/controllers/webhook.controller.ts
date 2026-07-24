@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
-import { buildHateoasLinks, buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { webhookUseCases } from '../../infrastructure/container/webhookContainer';
 import type { WebhookSubscription, WebhookSubscriptionData } from '../../domain/entities/WebhookSubscription';
@@ -22,15 +22,14 @@ export const listWebhooks = async (req: Request, res: Response) => {
   const result = await webhookUseCases.listWebhooks.execute(filters);
   const sanitized = result.data.map(sanitize);
   const page = result.meta.page ?? 1;
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    sanitized,
     result.meta.total,
     page,
     result.meta.limit,
-    req.originalUrl,
-    { usuarioId: filters.usuarioId, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { data: sanitized, meta });
+  return ok(res, response);
 };
 
 export const getWebhook = async (req: Request, res: Response) => {

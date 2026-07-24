@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
-import { buildHateoasLinks, buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { clearCache } from '../../../../modules/shared/presentation/middlewares/cache';
 import { deliveriesUseCases } from '../../infrastructure/container/deliveriesContainer';
@@ -18,15 +18,14 @@ export const listDeliveries = async (req: Request, res: Response) => {
     filters.domiciliarioId = req.user.id;
   }
   const result = await deliveriesUseCases.listDeliveries.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page,
     result.meta.limit,
-    req.originalUrl,
-    { estado: filters.estado, domiciliarioId: filters.domiciliarioId },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getDelivery = async (req: Request, res: Response) => {

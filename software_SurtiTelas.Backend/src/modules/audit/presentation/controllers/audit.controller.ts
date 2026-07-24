@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, noContent } from '../../../../shared/presentation/http/HttpResponse';
-import { buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { auditUseCases } from '../../infrastructure/container/auditContainer';
 import { AuditLogFiltersSchema, CreateAuditLogSchema, UpdateAuditLogSchema } from '../validators/audit.validators';
@@ -8,15 +8,14 @@ import { AuditLogFiltersSchema, CreateAuditLogSchema, UpdateAuditLogSchema } fro
 export const listAuditLogs = async (req: Request, res: Response) => {
   const filters = parseDto(AuditLogFiltersSchema, req.query);
   const result = await auditUseCases.listAuditLogs.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { usuarioId: filters.usuarioId, modulo: filters.modulo, accion: filters.accion, dateFrom: filters.dateFrom, dateTo: filters.dateTo, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const createAuditLog = async (req: Request, res: Response) => {

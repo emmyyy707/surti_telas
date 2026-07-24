@@ -5,14 +5,17 @@ import { Prisma, PrismaClient } from '@prisma/client';
 export class PrismaPaymentRepository implements PaymentRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async list(filters: { customerId?: string; asesorId?: string; status?: string }): Promise<Payment[]> {
+  async list(filters: { customerId?: string; asesorId?: string; status?: string }): Promise<{ data: Payment[]; total: number }> {
     const where: Record<string, unknown> = { deletedAt: null };
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.asesorId) where.asesorId = filters.asesorId;
     if (filters.status) where.status = filters.status;
 
-    const rows = await this.prisma.payment.findMany({ where, orderBy: { createdAt: 'desc' } });
-    return rows.map(PaymentMapper.toDomain);
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.payment.findMany({ where, orderBy: { createdAt: 'desc' } }),
+      this.prisma.payment.count({ where }),
+    ]);
+    return { data: rows.map(PaymentMapper.toDomain), total };
   }
 
   async getById(id: string): Promise<Payment | null> {

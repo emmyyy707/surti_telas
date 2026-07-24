@@ -144,7 +144,7 @@ returnRouter.patch(
 /**
  * @openapi
  * /api/v1/returns/{id}/status:
- *   post:
+ *   patch:
  *     summary: Cambiar estado de devolución
  *     tags: [Returns]
  *     security: [{ bearerAuth: [] }]
@@ -167,7 +167,7 @@ returnRouter.patch(
  *             schema: { $ref: '#/components/schemas/Return' }
  *       404: { description: No encontrada }
  */
-returnRouter.post(
+returnRouter.patch(
   '/:id/status',
   requirePermission('orders:update'),
   sensitiveUserRateLimiter,

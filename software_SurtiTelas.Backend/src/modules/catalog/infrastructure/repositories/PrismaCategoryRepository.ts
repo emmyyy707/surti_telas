@@ -5,9 +5,17 @@ import type { CategoryData } from '../../domain/entities/Category';
 export class PrismaCategoryRepository implements CategoryRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async list(): Promise<CategoryData[]> {
-    const rows = await this.prisma.category.findMany({ orderBy: { nombre: 'asc' } });
-    return rows.map((r) => ({ id: r.id, nombre: r.nombre, slug: r.slug, parentId: r.parentId }));
+  async list(filters?: { page?: number; limit?: number }): Promise<{ data: CategoryData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.category.findMany({ orderBy: { nombre: 'asc' }, skip: (page - 1) * limit, take: limit }),
+      this.prisma.category.count(),
+    ]);
+    return {
+      data: rows.map((r) => ({ id: r.id, nombre: r.nombre, slug: r.slug, parentId: r.parentId })),
+      meta: { total, page, limit },
+    };
   }
 
   async create(input: { nombre: string; slug: string; parentId?: string | null }): Promise<CategoryData> {

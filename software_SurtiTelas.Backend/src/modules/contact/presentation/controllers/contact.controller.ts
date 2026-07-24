@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { PrismaContactMessageRepository } from '../../infrastructure/repositories/PrismaContactMessageRepository';
 import { PrismaClient } from '@prisma/client';
@@ -17,8 +18,15 @@ export const createContactMessage = async (req: Request, res: Response) => {
 
 export const listContactMessages = async (req: Request, res: Response) => {
   const filters = parseDto(ListContactSchema, req.query);
-  const messages = await contactRepository.list(filters);
-  return ok(res, messages);
+  const result = await contactRepository.list(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
 };
 
 export const markAsRead = async (req: Request, res: Response) => {

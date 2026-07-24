@@ -8,6 +8,7 @@ describe('validateProductionSecrets', () => {
         NODE_ENV: 'development',
         JWT_ACCESS_SECRET: 'short',
         JWT_REFRESH_SECRET: 'short',
+        METRICS_SECRET: 'short',
       })
     ).not.toThrow();
   });
@@ -18,6 +19,7 @@ describe('validateProductionSecrets', () => {
         NODE_ENV: 'production',
         JWT_ACCESS_SECRET: 'short',
         JWT_REFRESH_SECRET: 'short',
+        METRICS_SECRET: 'short',
       })
     ).toThrow('min 32 chars');
   });
@@ -28,6 +30,7 @@ describe('validateProductionSecrets', () => {
         NODE_ENV: 'production',
         JWT_ACCESS_SECRET: 'surtitelas123',
         JWT_REFRESH_SECRET: 'surtitelas123',
+        METRICS_SECRET: 'cambia-este-secret-de-metrics',
       })
     ).toThrow('known default');
   });
@@ -38,6 +41,7 @@ describe('validateProductionSecrets', () => {
         NODE_ENV: 'production',
         JWT_ACCESS_SECRET: 'a'.repeat(32),
         JWT_REFRESH_SECRET: 'a'.repeat(32),
+        METRICS_SECRET: 'c'.repeat(32),
       })
     ).toThrow('must be different');
   });
@@ -48,6 +52,7 @@ describe('validateProductionSecrets', () => {
         NODE_ENV: 'production',
         JWT_ACCESS_SECRET: 'a'.repeat(32),
         JWT_REFRESH_SECRET: 'b'.repeat(32),
+        METRICS_SECRET: 'c'.repeat(32),
       })
     ).not.toThrow();
   });

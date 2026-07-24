@@ -34,21 +34,23 @@ describe('Integration Tests', () => {
         .get('/api/v1/catalog/products')
         .query({ page: 1, limit: 10 });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data.items).toBeDefined();
-      expect(Array.isArray(response.body.data.items)).toBe(true);
-      expect(response.body.data.meta).toBeDefined();
-    });
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toBeDefined();
+    expect(response.body.data.items).toBeDefined();
+    expect(Array.isArray(response.body.data.items)).toBe(true);
+    expect(response.body.data.totalRecords).toBeDefined();
+  });
 
-    it('should list categories', async () => {
-      const response = await request(app).get('/api/v1/catalog/categories');
+  it('should list categories', async () => {
+    const response = await request(app).get('/api/v1/catalog/categories');
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-    });
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toBeDefined();
+    expect(Array.isArray(response.body.data.items)).toBe(true);
+    expect(response.body.data.totalRecords).toBeDefined();
+  });
   });
 
   describe('Auth - Public endpoints', () => {

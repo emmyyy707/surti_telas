@@ -118,7 +118,10 @@ describe('catalog.controller', () => {
     const req = mockReq();
     const res = mockRes();
     const { catalogUseCases } = await import('@/modules/catalog/infrastructure/container/catalogContainer');
-    (catalogUseCases.getCategories.execute as any).mockResolvedValue([{ id: '1', nombre: 'Camisetas' }]);
+    (catalogUseCases.getCategories.execute as any).mockResolvedValue({
+      data: [{ id: '1', nombre: 'Camisetas' }],
+      meta: { total: 1, page: 1, limit: 50 },
+    });
 
     await listCategories(req, res);
 

@@ -9,8 +9,8 @@ export class CreateCategory {
 
 export class GetCategories {
   constructor(private readonly repo: CategoryRepository) {}
-  execute() {
-    return this.repo.list();
+  execute(filters?: { page?: number; limit?: number }) {
+    return this.repo.list(filters);
   }
 }
 

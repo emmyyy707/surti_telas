@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
-import { buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { stockUseCases } from '../../infrastructure/container/stockContainer';
 import {
@@ -17,15 +17,14 @@ import {
 export const listSuppliers = async (req: Request, res: Response) => {
   const filters = parseDto(SupplierFiltersSchema, req.query);
   const result = await stockUseCases.getSuppliers.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, estado: filters.estado, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const createSupplier = async (req: Request, res: Response) => {
@@ -56,15 +55,14 @@ export const deleteSupplier = async (req: Request, res: Response) => {
 export const listRawMaterials = async (req: Request, res: Response) => {
   const filters = parseDto(RawMaterialFiltersSchema, req.query);
   const result = await stockUseCases.getRawMaterials.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, proveedorId: filters.proveedorId, necesitaReposicion: String(filters.necesitaReposicion), sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const createRawMaterial = async (req: Request, res: Response) => {
@@ -94,27 +92,25 @@ export const registerMovement = async (req: Request, res: Response) => {
 export const listMovements = async (req: Request, res: Response) => {
   const filters = parseDto(MovementFiltersSchema, req.query);
   const result = await stockUseCases.getMovements.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { tipo: filters.tipo, rawMaterialId: filters.rawMaterialId, usuarioId: filters.usuarioId, desde: filters.desde, hasta: filters.hasta, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getStockAlerts = async (req: Request, res: Response) => {
   const filters = parseDto(RawMaterialFiltersSchema, req.query);
   const result = await stockUseCases.getStockAlerts.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, proveedorId: filters.proveedorId, necesitaReposicion: String(filters.necesitaReposicion), sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };

@@ -16,10 +16,12 @@ export interface UpdateCmsInput {
 
 export interface CmsFilters {
   slug?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface CmsPageRepository {
-  list(filters: CmsFilters): Promise<CmsPage[]>;
+  list(filters: CmsFilters): Promise<{ data: CmsPage[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   getById(id: string): Promise<CmsPage | null>;
   getBySlug(slug: string): Promise<CmsPage | null>;
   create(input: CreateCmsInput): Promise<CmsPage>;

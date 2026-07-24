@@ -141,17 +141,23 @@ export class PrismaAuthRepository implements AuthRepository {
     };
   }
 
-  async findAllPermissions(): Promise<PermissionData[]> {
-    const permissions = await this.prisma.permission.findMany({
-      orderBy: { module: 'asc' },
-    });
-    return permissions.map((p) => ({
-      id: p.id,
-      code: p.code,
-      description: p.description,
-      module: p.module,
-      estado: p.estado as 'ACTIVO' | 'INACTIVO',
-    }));
+  async listPermissions(filters?: { page?: number; limit?: number }): Promise<{ data: PermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
+    const [permissions, total] = await this.prisma.$transaction([
+      this.prisma.permission.findMany({ orderBy: { module: 'asc' }, skip: (page - 1) * limit, take: limit }),
+      this.prisma.permission.count(),
+    ]);
+    return {
+      data: permissions.map((p) => ({
+        id: p.id,
+        code: p.code,
+        description: p.description,
+        module: p.module,
+        estado: p.estado as 'ACTIVO' | 'INACTIVO',
+      })),
+      meta: { total, page, limit },
+    };
   }
 
   async createPermission(code: string, description: string, module: string): Promise<PermissionData> {
@@ -205,22 +211,28 @@ export class PrismaAuthRepository implements AuthRepository {
     return { id: permission.id, code: permission.code, description: permission.description, module: permission.module, estado: permission.estado as 'ACTIVO' | 'INACTIVO' };
   }
 
-  async findRolePermissions(role: Role): Promise<RolePermissionData[]> {
-    const rows = await this.prisma.rolePermission.findMany({
-      where: { role },
-      include: { permission: true },
-    });
-    return rows.map((r) => ({
-      role,
-      permissionId: r.permissionId,
-      permission: {
-        id: r.permission.id,
-        code: r.permission.code,
-        description: r.permission.description,
-        module: r.permission.module,
-        estado: r.permission.estado as 'ACTIVO' | 'INACTIVO',
-      },
-    }));
+  async listRolePermissions(role: Role, filters?: { page?: number; limit?: number }): Promise<{ data: RolePermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
+    const where: Prisma.RolePermissionWhereInput = { role };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.rolePermission.findMany({ where, include: { permission: true }, skip: (page - 1) * limit, take: limit }),
+      this.prisma.rolePermission.count({ where }),
+    ]);
+    return {
+      data: rows.map((r) => ({
+        role,
+        permissionId: r.permissionId,
+        permission: {
+          id: r.permission.id,
+          code: r.permission.code,
+          description: r.permission.description,
+          module: r.permission.module,
+          estado: r.permission.estado as 'ACTIVO' | 'INACTIVO',
+        },
+      })),
+      meta: { total, page, limit },
+    };
   }
 
   async assignPermissionToRole(role: Role, permissionId: string): Promise<void> {
@@ -235,7 +247,7 @@ export class PrismaAuthRepository implements AuthRepository {
     });
   }
 
-  async listRoles(): Promise<RoleData[]> {
+  async listRoles(filters?: { page?: number; limit?: number }): Promise<{ data: RoleData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
     const roles = Object.values(Role);
     const counts = await this.prisma.user.groupBy({
       by: ['role'],
@@ -267,7 +279,7 @@ export class PrismaAuthRepository implements AuthRepository {
       if (rc.descripcion) descripcionMap.set(rc.role, rc.descripcion);
     }
 
-    return roles.map((name) => ({
+    const allRoles = roles.map((name) => ({
       id: `R-${name}`,
       nombre: name,
       descripcion: descripcionMap.get(name) ?? defaultDescriptions[name] ?? name,
@@ -275,6 +287,14 @@ export class PrismaAuthRepository implements AuthRepository {
       usuarios: countMap.get(name) ?? 0,
       estado: estadoMap.get(name) ?? 'Activo',
     }));
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
+    const total = allRoles.length;
+    const start = (page - 1) * limit;
+    const paginated = allRoles.slice(start, start + limit);
+
+    return { data: paginated, meta: { total, page, limit } };
   }
 
   async getRole(id: string): Promise<RoleData | null> {

@@ -10,10 +10,12 @@ export interface CreateContactInput {
 
 export interface ContactFilters {
   leida?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export interface ContactMessageRepository {
-  list(filters: ContactFilters): Promise<ContactMessage[]>;
+  list(filters: ContactFilters): Promise<{ data: ContactMessage[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   getById(id: string): Promise<ContactMessage | null>;
   create(input: CreateContactInput): Promise<ContactMessage>;
   markAsRead(id: string): Promise<ContactMessage>;

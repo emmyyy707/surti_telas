@@ -7,30 +7,23 @@ let cachedToken: string | null = null;
 export async function ensureAdminExists() {
   const email = 'admin@surtitelas.com';
   const password = 'SurtiTelas2025*';
+  const passwordHash = await bcrypt.hash(password, 10);
 
-  const existing = await prisma.user.findFirst({ where: { email, deletedAt: null } });
-  if (!existing) {
-    const passwordHash = await bcrypt.hash(password, 10);
-    await prisma.user.create({
-      data: {
-        email,
-        nombre: 'Admin SurtiTelas',
-        passwordHash,
-        role: 'ADMIN',
-        estado: 'ACTIVO',
-      },
-    });
-  } else {
-    const passwordHash = await bcrypt.hash(password, 10);
-    await prisma.user.update({
-      where: { id: existing.id },
-      data: {
-        passwordHash,
-        failedLoginAttempts: 0,
-        lockedUntil: null,
-      },
-    });
-  }
+  await prisma.user.upsert({
+    where: { email },
+    update: {
+      passwordHash,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
+    create: {
+      email,
+      nombre: 'Admin SurtiTelas',
+      passwordHash,
+      role: 'ADMIN',
+      estado: 'ACTIVO',
+    },
+  });
 }
 
 export async function getAuthToken(app: Express): Promise<string> {

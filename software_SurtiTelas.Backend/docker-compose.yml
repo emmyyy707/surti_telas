@@ -4,22 +4,30 @@ services:
   db:
     image: postgres:16-alpine
     restart: always
-    environment:
-      POSTGRES_USER: surtitelas
-      POSTGRES_PASSWORD: surtitelas123
-      POSTGRES_DB: surtitelas
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: surtitelas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: surtitelas
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U surtitelas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build: .
@@ -27,30 +35,55 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://surtitelas:surtitelas123@db:5432/surtitelas
+      DATABASE_URL: postgresql://surtitelas:${POSTGRES_PASSWORD}@db:5432/surtitelas
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
       PORT: 3000
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-cambia-este-secreto-de-32-bytes-minimo}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-otro-secreto-distinto-de-32-bytes-minimo}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
-      METRICS_SECRET: ${METRICS_SECRET:-cambia-este-secret-de-metrics}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://frontend:5173}
+      METRICS_SECRET: ${METRICS_SECRET:?Set METRICS_SECRET}
     depends_on:
-      - db
-      - redis
-      - jaeger
-    command: sh -c "npx prisma migrate deploy && node dist/server.js"
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"(async()=>{const r=require('http').get('http://localhost:3000/health',(res)=>{process.exit(res.statusCode===200?0:1)});r.on('error',()=>process.exit(1));r.setTimeout(2000);})()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ../software_SurtiTelas.Fronend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
 
   prometheus:
     image: prom/prometheus:latest
     restart: always
     ports:
       - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   grafana:
     image: grafana/grafana:latest
@@ -58,18 +91,24 @@ services:
     ports:
       - "3001:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
 
   jaeger:
     image: jaegertracing/all-in-one:latest
     restart: always
     ports:
-      - "4318:4318"
       - "16686:16686"
+      - "4318:4318"
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
       COLLECTOR_HTTP_PORT: "4318"

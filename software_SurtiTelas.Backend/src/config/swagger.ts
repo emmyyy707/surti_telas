@@ -109,19 +109,15 @@ const options: swaggerJsdoc.Options = {
         Paginated: {
           type: 'object',
           properties: {
-            data: {
+            items: {
               type: 'array',
               items: {},
             },
-            meta: {
-              type: 'object',
-              properties: {
-                total: { type: 'number', example: 50 },
-                page: { type: 'number', example: 1 },
-                limit: { type: 'number', example: 10 },
-                nextCursor: { type: 'string', example: 'cursorABC' },
-              },
-            },
+            totalRecords: { type: 'number', example: 50 },
+            page: { type: 'number', example: 1 },
+            limit: { type: 'number', example: 10 },
+            totalPages: { type: 'number', example: 5 },
+            nextCursor: { type: 'string', nullable: true, example: 'cursorABC' },
           },
         },
         Error: {

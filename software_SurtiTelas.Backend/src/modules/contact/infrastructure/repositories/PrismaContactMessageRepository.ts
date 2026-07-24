@@ -24,15 +24,16 @@ const toContactMessage = (row: Prisma.ContactMessageGetPayload<object>) => ({
 export class PrismaContactMessageRepository implements ContactMessageRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async list(filters: ContactFilters): Promise<ContactMessage[]> {
+  async list(filters: ContactFilters): Promise<{ data: ContactMessage[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
     const where: Prisma.ContactMessageWhereInput = { deletedAt: null };
     if (filters.leida !== undefined) where.leida = filters.leida;
-
-    const rows = await this.prisma.contactMessage.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
-    return rows.map((row) => new ContactMessage(toContactMessage(row)));
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 50;
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.contactMessage.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      this.prisma.contactMessage.count({ where }),
+    ]);
+    return { data: rows.map((row) => new ContactMessage(toContactMessage(row))), meta: { total, page, limit } };
   }
 
   async getById(id: string): Promise<ContactMessage | null> {

@@ -11,8 +11,9 @@ const mockPrisma = {
     update: vi.fn(),
     count: vi.fn(),
   },
-  rolePermission: { findMany: vi.fn().mockResolvedValue([]), create: vi.fn(), delete: vi.fn() },
-  permission: { findMany: vi.fn(), create: vi.fn() },
+  rolePermission: { findMany: vi.fn().mockResolvedValue([]), create: vi.fn(), delete: vi.fn(), count: vi.fn() },
+  permission: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
+  roleConfig: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), update: vi.fn() },
   $transaction: vi.fn(),
 } as any;
 
@@ -84,9 +85,10 @@ describe('PrismaAuthRepository', () => {
   });
 
   it('lists all permissions', async () => {
-    mockPrisma.permission.findMany.mockResolvedValue([{ id: '1', code: 'a:b', description: 'd', module: 'm' }]);
-    const perms = await repo.findAllPermissions();
-    expect(perms[0]).toMatchObject({ code: 'a:b', module: 'm' });
+    mockPrisma.$transaction.mockResolvedValue([[{ id: '1', code: 'a:b', description: 'd', module: 'm', estado: 'ACTIVO' }], 1]);
+    const perms = await repo.listPermissions();
+    expect(perms.data[0]).toMatchObject({ code: 'a:b', module: 'm' });
+    expect(perms.meta.total).toBe(1);
   });
 
   it('creates a permission', async () => {
@@ -96,11 +98,12 @@ describe('PrismaAuthRepository', () => {
   });
 
   it('lists role permissions', async () => {
-    mockPrisma.rolePermission.findMany.mockResolvedValue([
-      { permissionId: 'p1', permission: { id: 'p1', code: 'a:b', description: 'd', module: 'm' } },
-    ]);
-    const rp = await repo.findRolePermissions('ADMIN');
-    expect(rp[0]).toMatchObject({ role: 'ADMIN', permissionId: 'p1', permission: { code: 'a:b' } });
+    mockPrisma.$transaction.mockResolvedValue([[
+      { role: 'ADMIN', permissionId: 'p1', permission: { id: 'p1', code: 'a:b', description: 'd', module: 'm', estado: 'ACTIVO' } },
+    ], 1]);
+    const rp = await repo.listRolePermissions('ADMIN');
+    expect(rp.data[0]).toMatchObject({ role: 'ADMIN', permissionId: 'p1', permission: { code: 'a:b' } });
+    expect(rp.meta.total).toBe(1);
   });
 
   it('assigns permission to role', async () => {

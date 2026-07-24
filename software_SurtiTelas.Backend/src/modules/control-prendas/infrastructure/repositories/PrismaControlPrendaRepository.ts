@@ -90,7 +90,7 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
 
     return {
       data: rows.map((r) => new ControlPrenda(toControlPrendaData(r))),
-      meta: { total, page, limit },
+      meta: { total, page, limit, nextCursor: undefined },
     };
   }
 

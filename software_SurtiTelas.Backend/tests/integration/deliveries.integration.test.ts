@@ -22,7 +22,7 @@ describe('Deliveries Integration', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data.items)).toBe(true);
-    expect(res.body.data.meta).toBeDefined();
+    expect(res.body.data.totalRecords).toBeDefined();
   });
 
   it('should create, get, update status and delete a delivery', async () => {
@@ -64,7 +64,7 @@ describe('Deliveries Integration', () => {
     expect(getRes.body.data.id).toBe(id);
 
     const statusRes = await request(app)
-      .post(`/api/v1/deliveries/${id}/status`)
+      .patch(`/api/v1/deliveries/${id}/status`)
       .set('Authorization', `Bearer ${token}`)
       .send({ estado: 'EN_RUTA' });
     expect(statusRes.status).toBe(200);

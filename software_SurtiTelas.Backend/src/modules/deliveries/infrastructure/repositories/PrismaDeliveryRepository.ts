@@ -100,6 +100,6 @@ export class PrismaDeliveryRepository implements DeliveryRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.$executeRaw`UPDATE deliveries SET "deleted_at" = NOW() WHERE id = ${id}`;
+    await this.prisma.delivery.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 }

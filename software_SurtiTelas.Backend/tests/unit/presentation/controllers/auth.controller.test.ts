@@ -10,9 +10,9 @@ vi.mock('@/modules/auth/infrastructure/container/authContainer', () => ({
     logout: { execute: vi.fn() },
     getProfile: { execute: vi.fn() },
     listUsers: { execute: vi.fn() },
-    getPermissions: { execute: vi.fn() },
+    listPermissions: { execute: vi.fn() },
     createPermission: { execute: vi.fn() },
-    getRolePermissions: { execute: vi.fn() },
+    listRolePermissions: { execute: vi.fn() },
     assignPermissionToRole: { execute: vi.fn() },
     removePermissionFromRole: { execute: vi.fn() },
     enableTwoFactor: { execute: vi.fn() },
@@ -121,11 +121,11 @@ describe('auth.controller', () => {
     const req = mockReq();
     const res = mockRes();
     const { authUseCases } = await import('@/modules/auth/infrastructure/container/authContainer');
-    (authUseCases.getPermissions.execute as any).mockResolvedValue([{ id: '1', code: 'catalog:read' }]);
+    (authUseCases.listPermissions.execute as any).mockResolvedValue({ data: [{ id: '1', code: 'catalog:read' }], meta: { total: 1, page: 1, limit: 50 } });
 
     await listPermissions(req, res);
 
-    expect(authUseCases.getPermissions.execute).toHaveBeenCalled();
+    expect(authUseCases.listPermissions.execute).toHaveBeenCalled();
     expect(res.json).toHaveBeenCalled();
   });
 
@@ -145,11 +145,11 @@ describe('auth.controller', () => {
     const req = mockReq({ params: { role: 'ADMIN' } });
     const res = mockRes();
     const { authUseCases } = await import('@/modules/auth/infrastructure/container/authContainer');
-    (authUseCases.getRolePermissions.execute as any).mockResolvedValue([{ id: '1', code: 'catalog:read' }]);
+    (authUseCases.listRolePermissions.execute as any).mockResolvedValue({ data: [{ id: '1', code: 'catalog:read' }], meta: { total: 1, page: 1, limit: 50 } });
 
     await listRolePermissions(req, res);
 
-    expect(authUseCases.getRolePermissions.execute).toHaveBeenCalledWith('ADMIN');
+    expect(authUseCases.listRolePermissions.execute).toHaveBeenCalledWith('ADMIN', {});
     expect(res.json).toHaveBeenCalled();
   });
 

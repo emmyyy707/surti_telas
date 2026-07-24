@@ -39,7 +39,7 @@ describe('Customers Integration', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.items).toBeDefined();
     expect(Array.isArray(response.body.data.items)).toBe(true);
-    expect(response.body.data.meta).toBeDefined();
+    expect(response.body.data.totalRecords).toBeDefined();
   });
 
   it('should assign asesor to customer', async () => {

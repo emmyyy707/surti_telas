@@ -16,11 +16,21 @@ export interface PaginationMeta {
   limit: number;
   totalPages: number;
   links: PaginationLinks;
+  nextCursor?: string | null;
 }
 
 export interface PaginatedResponse<T> {
   data: T[];
   meta: PaginationMeta;
+}
+
+export interface PaginatedApiResponse<T> {
+  items: T[];
+  totalRecords: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  nextCursor: string | null;
 }
 
 export function buildHateoasLinks(basePath: string, id?: string): ResourceLink {
@@ -76,5 +86,26 @@ export function buildPaginationMeta(
     limit,
     totalPages,
     links,
+    nextCursor: nextCursor ?? null,
+  };
+}
+
+export function buildApiPaginatedResponse<T>(
+  items: T[],
+  totalRecords: number,
+  page: number,
+  limit: number,
+  nextCursor?: string | null
+): PaginatedApiResponse<T> {
+  const totalPages = Math.max(1, Math.ceil(totalRecords / limit));
+  const safePage = Math.min(page, totalPages);
+
+  return {
+    items,
+    totalRecords,
+    page: safePage,
+    limit,
+    totalPages,
+    nextCursor: nextCursor ?? null,
   };
 }

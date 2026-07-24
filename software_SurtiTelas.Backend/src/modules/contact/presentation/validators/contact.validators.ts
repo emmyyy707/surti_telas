@@ -11,4 +11,6 @@ export const CreateContactSchema = z.object({
 
 export const ListContactSchema = z.object({
   leida: z.boolean().optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
 });

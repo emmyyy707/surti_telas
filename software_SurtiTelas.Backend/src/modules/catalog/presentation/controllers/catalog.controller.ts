@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
-import { buildHateoasLinks, buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { clearCache } from '../../../../modules/shared/presentation/middlewares/cache';
 import { catalogUseCases } from '../../infrastructure/container/catalogContainer';
 import {
   CategorySchema,
+  CategoryFiltersSchema,
   ProductFiltersSchema,
   ProductSchema,
   ProductUpdateSchema,
@@ -14,15 +15,14 @@ import {
 export const listProducts = async (req: Request, res: Response) => {
   const filters = parseDto(ProductFiltersSchema, req.query);
   const result = await catalogUseCases.getProducts.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, categoriaId: filters.categoriaId, publicado: String(filters.publicado), destacado: String(filters.destacado), sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getProduct = async (req: Request, res: Response) => {
@@ -63,9 +63,17 @@ export const unpublishProduct = async (req: Request, res: Response) => {
   return ok(res, product, 'Producto despublicado');
 };
 
-export const listCategories = async (_req: Request, res: Response) => {
-  const categories = await catalogUseCases.getCategories.execute();
-  return ok(res, categories);
+export const listCategories = async (req: Request, res: Response) => {
+  const filters = parseDto(CategoryFiltersSchema, req.query);
+  const result = await catalogUseCases.getCategories.execute(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
 };
 
 export const createCategory = async (req: Request, res: Response) => {

@@ -1,10 +1,10 @@
 import type { AuthRepository, PermissionData } from '../../domain/repositories/AuthRepository';
 import { Role } from '@prisma/client';
 
-export class GetPermissions {
+export class ListPermissions {
   constructor(private readonly repo: AuthRepository) {}
-  execute() {
-    return this.repo.findAllPermissions();
+  execute(filters?: { page?: number; limit?: number }) {
+    return this.repo.listPermissions(filters);
   }
 }
 
@@ -43,10 +43,10 @@ export class UpdatePermissionStatus {
   }
 }
 
-export class GetRolePermissions {
+export class ListRolePermissions {
   constructor(private readonly repo: AuthRepository) {}
-  execute(role: Role) {
-    return this.repo.findRolePermissions(role);
+  execute(role: Role, filters?: { page?: number; limit?: number }) {
+    return this.repo.listRolePermissions(role, filters);
   }
 }
 
@@ -66,8 +66,8 @@ export class RemovePermissionFromRole {
 
 export class ListRoles {
   constructor(private readonly repo: AuthRepository) {}
-  execute() {
-    return this.repo.listRoles();
+  execute(filters?: { page?: number; limit?: number }) {
+    return this.repo.listRoles(filters);
   }
 }
 

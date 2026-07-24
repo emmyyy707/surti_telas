@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { ReceiptFiltersSchema, CreateReceiptSchema, UpdateReceiptSchema, UpdateReceiptStatusSchema } from '../validators/receipt.validators';
 import { PrismaClient } from '@prisma/client';
@@ -8,44 +9,50 @@ import type { Receipt } from '../../domain/entities/Receipt';
 const prisma = new PrismaClient();
 
 const receiptRepo = {
-  async list(filters: { customerId?: string; orderId?: string }): Promise<Receipt[]> {
+  async list(filters: { customerId?: string; orderId?: string }): Promise<{ data: Receipt[]; total: number }> {
     const where: Record<string, string | null> = { deletedAt: null };
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.orderId) where.orderId = filters.orderId;
 
-    const rows = await prisma.receipt.findMany({
-      where,
-      select: {
-        id: true,
-        orderId: true,
-        customerId: true,
-        numero: true,
-        total: true,
-        concepto: true,
-        notas: true,
-        emitidoPor: true,
-        emitidoAt: true,
-        estado: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { emitidoAt: 'desc' },
-    });
+    const [rows, total] = await Promise.all([
+      prisma.receipt.findMany({
+        where,
+        select: {
+          id: true,
+          orderId: true,
+          customerId: true,
+          numero: true,
+          total: true,
+          concepto: true,
+          notas: true,
+          emitidoPor: true,
+          emitidoAt: true,
+          estado: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { emitidoAt: 'desc' },
+      }),
+      prisma.receipt.count({ where }),
+    ]);
 
-    return rows.map((row) => ({
-      id: row.id,
-      orderId: row.orderId ?? undefined,
-      customerId: row.customerId,
-      numero: row.numero,
-      total: Number(row.total),
-      concepto: row.concepto,
-      notas: row.notas ?? undefined,
-      emitidoPor: row.emitidoPor ?? undefined,
-      emitidoAt: row.emitidoAt,
-      estado: row.estado,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    })) as unknown as Receipt[];
+    return {
+      data: rows.map((row) => ({
+        id: row.id,
+        orderId: row.orderId ?? undefined,
+        customerId: row.customerId,
+        numero: row.numero,
+        total: Number(row.total),
+        concepto: row.concepto,
+        notas: row.notas ?? undefined,
+        emitidoPor: row.emitidoPor ?? undefined,
+        emitidoAt: row.emitidoAt,
+        estado: row.estado,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      })) as unknown as Receipt[],
+      total,
+    };
   },
 
   async getById(id: string): Promise<Receipt | null> {
@@ -173,7 +180,7 @@ const receiptRepo = {
 
 class ListReceipts {
   constructor(private repo: typeof receiptRepo) {}
-  async execute(filters: { customerId?: string; orderId?: string }): Promise<Receipt[]> {
+  async execute(filters: { customerId?: string; orderId?: string }): Promise<{ data: Receipt[]; total: number }> {
     return this.repo.list(filters);
   }
 }
@@ -226,15 +233,29 @@ export const listReceipts = async (req: Request, res: Response) => {
   if (req.user?.role === 'CLIENTE') {
     filters.customerId = req.user.id;
   }
-  const data = await receiptUseCases.listReceipts.execute(filters);
-  return ok(res, { items: data, meta: { totalRecords: data.length, page: 1, limit: data.length, totalPages: 1 } });
+  const result = await receiptUseCases.listReceipts.execute(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.total,
+    1,
+    result.data.length,
+    null
+  );
+  return ok(res, response);
 };
 
 export const listMyReceipts = async (req: Request, res: Response) => {
   const filters = parseDto(ReceiptFiltersSchema, req.query);
   filters.customerId = req.user!.id;
-  const data = await receiptUseCases.listReceipts.execute(filters);
-  return ok(res, { items: data, meta: { totalRecords: data.length, page: 1, limit: data.length, totalPages: 1 } });
+  const result = await receiptUseCases.listReceipts.execute(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.total,
+    1,
+    result.data.length,
+    null
+  );
+  return ok(res, response);
 };
 
 export const getReceipt = async (req: Request, res: Response) => {

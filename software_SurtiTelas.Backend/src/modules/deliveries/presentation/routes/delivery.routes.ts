@@ -149,7 +149,7 @@ deliveryRouter.patch(
 /**
  * @openapi
  * /api/v1/deliveries/{id}/status:
- *   post:
+ *   patch:
  *     summary: Cambiar estado de entrega
  *     tags: [Deliveries]
  *     security: [{ bearerAuth: [] }]
@@ -172,7 +172,7 @@ deliveryRouter.patch(
  *             schema: { $ref: '#/components/schemas/Delivery' }
  *       404: { description: No encontrada }
  */
-deliveryRouter.post(
+deliveryRouter.patch(
   '/:id/status',
   requirePermission('orders:update'),
   sensitiveUserRateLimiter,

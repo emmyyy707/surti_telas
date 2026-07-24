@@ -51,16 +51,16 @@ export interface AuthRepository {
   findPermissionsByRole(role: Role): Promise<string[]>;
   listUsers(filters?: UserFilters): Promise<{ data: UserRecord[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
 
-  findAllPermissions(): Promise<PermissionData[]>;
+  listPermissions(filters?: { page?: number; limit?: number }): Promise<{ data: PermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   createPermission(code: string, description: string, module: string): Promise<PermissionData>;
   findPermissionById(id: string): Promise<PermissionData | null>;
   updatePermission(id: string, data: { code?: string; description?: string; module?: string }): Promise<PermissionData>;
   updatePermissionStatus(id: string, estado: 'ACTIVO' | 'INACTIVO'): Promise<PermissionData>;
   deletePermission(id: string): Promise<void>;
-  findRolePermissions(role: Role): Promise<RolePermissionData[]>;
+  listRolePermissions(role: Role, filters?: { page?: number; limit?: number }): Promise<{ data: RolePermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   assignPermissionToRole(role: Role, permissionId: string): Promise<void>;
   removePermissionFromRole(role: Role, permissionId: string): Promise<void>;
-  listRoles(): Promise<RoleData[]>;
+  listRoles(filters?: { page?: number; limit?: number }): Promise<{ data: RoleData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   getRole(id: string): Promise<RoleData | null>;
   findRoleByName(name: string): Promise<RoleData | null>;
   createRole(name: string, description?: string): Promise<RoleData>;

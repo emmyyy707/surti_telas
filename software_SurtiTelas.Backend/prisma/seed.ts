@@ -60,8 +60,23 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
   CLIENTE: ['catalog:read', 'orders:read', 'orders:create'],
 };
 
+function generatePassword(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+  let password = '';
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < array.length; i++) {
+    password += chars[array[i] % chars.length];
+  }
+  return password;
+}
+
 async function main() {
   console.log('🌱 Sembrando base de datos SurtiTelas…');
+
+  const adminPassword = process.env.ADMIN_PASSWORD || generatePassword();
+  const asesorPassword = process.env.ASESOR_PASSWORD || generatePassword();
+  const domiciliarioPassword = process.env.DOMICILIARIO_PASSWORD || generatePassword();
 
   for (const p of PERMISSIONS) {
     await prisma.permission.upsert({
@@ -89,7 +104,7 @@ async function main() {
   const adminEmail = 'admin@surtitelas.com';
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash('SurtiTelas2025*', 12);
+    const passwordHash = await bcrypt.hash(adminPassword, 12);
     await prisma.user.create({
       data: {
         email: adminEmail,
@@ -98,7 +113,7 @@ async function main() {
         role: Role.ADMIN,
       },
     });
-    console.log('✓ Usuario admin creado (admin@surtitelas.com / SurtiTelas2025*)');
+    console.log(`✓ Usuario admin creado (${adminEmail} / ${adminPassword})`);
   }
 
   const categories = [
@@ -203,11 +218,11 @@ async function main() {
         data: {
           email: asesorEmail,
           nombre: 'Asesor Demo',
-          passwordHash: await bcrypt.hash('SurtiTelas2025*', 12),
+          passwordHash: await bcrypt.hash(asesorPassword, 12),
           role: Role.ASESOR,
         },
       });
-      console.log('✓ Asesor demo asegurado (asesor@surtitelas.com)');
+      console.log(`✓ Asesor demo asegurado (${asesorEmail} / ${asesorPassword})`);
     }
   }
 
@@ -252,11 +267,11 @@ async function main() {
         data: {
           email: domiciliarioEmail,
           nombre: 'Domiciliario Demo',
-          passwordHash: await bcrypt.hash('SurtiTelas2025*', 12),
+          passwordHash: await bcrypt.hash(domiciliarioPassword, 12),
           role: Role.DOMICILIARIO,
         },
       });
-      console.log('✓ Domiciliario demo asegurado (domiciliario@surtitelas.com)');
+      console.log(`✓ Domiciliario demo asegurado (${domiciliarioEmail} / ${domiciliarioPassword})`);
     }
 
     // Tablas deliveries/returns no existen en la BD actual; se habilitan cuando se agreguen las migraciones correspondientes.

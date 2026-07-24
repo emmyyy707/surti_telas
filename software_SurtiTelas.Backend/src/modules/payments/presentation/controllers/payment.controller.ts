@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { PaymentFiltersSchema, CreatePaymentSchema, UpdatePaymentStatusSchema, UpdatePaymentSchema } from '../validators/payment.validators';
 import { paymentUseCases } from '../../infrastructure/container/paymentContainer';
@@ -12,8 +13,15 @@ export const listPayments = async (req: Request, res: Response) => {
   } else if (req.user?.role === 'CLIENTE') {
     filters.customerId = req.user.id;
   }
-  const data = await paymentUseCases.listPayments.execute(filters as { customerId?: string; asesorId?: string; status?: PaymentStatus });
-  return ok(res, { items: data, meta: { totalRecords: data.length, page: 1, limit: data.length, totalPages: 1 } });
+  const result = await paymentUseCases.listPayments.execute(filters as { customerId?: string; asesorId?: string; status?: PaymentStatus });
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.total,
+    1,
+    result.data.length,
+    null
+  );
+  return ok(res, response);
 };
 
 export const getPayment = async (req: Request, res: Response) => {

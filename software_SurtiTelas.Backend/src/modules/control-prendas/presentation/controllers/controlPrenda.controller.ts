@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
-import { buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { controlPrendaUseCases } from '../../infrastructure/container/controlPrendaContainer';
 import {
@@ -13,15 +13,14 @@ import {
 export const listControlPrendas = async (req: Request, res: Response) => {
   const filters = parseDto(ControlPrendaFiltersSchema, req.query);
   const result = await controlPrendaUseCases.listControlPrendas.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { produccionId: filters.produccionId, etapa: filters.etapa, estado: filters.estado, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getControlPrenda = async (req: Request, res: Response) => {

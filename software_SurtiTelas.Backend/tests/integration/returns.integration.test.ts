@@ -22,7 +22,7 @@ describe('Returns Integration', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.items).toBeDefined();
     expect(Array.isArray(res.body.data.items)).toBe(true);
-    expect(res.body.data.meta).toBeDefined();
+    expect(res.body.data.totalRecords).toBeDefined();
   });
 
   it('should create, get, update status and delete a return', async () => {
@@ -57,7 +57,7 @@ describe('Returns Integration', () => {
     expect(getRes.body.data.id).toBe(id);
 
     const statusRes = await request(app)
-      .post(`/api/v1/returns/${id}/status`)
+      .patch(`/api/v1/returns/${id}/status`)
       .set('Authorization', `Bearer ${token}`)
       .send({ estado: 'EN_INSPECCION' });
     expect(statusRes.status).toBe(200);

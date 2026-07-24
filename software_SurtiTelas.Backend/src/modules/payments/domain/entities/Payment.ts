@@ -47,7 +47,7 @@ export class Payment {
 }
 
 export interface PaymentRepository {
-  list(filters: { customerId?: string; asesorId?: string; status?: PaymentStatus }): Promise<Payment[]>;
+  list(filters: { customerId?: string; asesorId?: string; status?: PaymentStatus }): Promise<{ data: Payment[]; total: number }>;
   getById(id: string): Promise<Payment | null>;
   create(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: PaymentMethod; reference?: string; notes?: string }): Promise<Payment>;
   updateStatus(id: string, status: PaymentStatus, paidAt?: string): Promise<Payment>;

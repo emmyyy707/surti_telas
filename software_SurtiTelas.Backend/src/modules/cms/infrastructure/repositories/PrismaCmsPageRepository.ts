@@ -21,17 +21,18 @@ const toCmsPage = (row: Prisma.CmsPageGetPayload<object>): CmsPage => ({
 export class PrismaCmsPageRepository implements CmsPageRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async list(filters: CmsFilters): Promise<CmsPage[]> {
+  async list(filters: CmsFilters): Promise<{ data: CmsPage[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
     const where: Prisma.CmsPageWhereInput = {
       ...(filters.slug ? { slug: { equals: filters.slug, mode: 'insensitive' } } : {}),
       deletedAt: null,
     };
-
-    const rows = await this.prisma.cmsPage.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
-    return rows.map(toCmsPage);
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 50;
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.cmsPage.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      this.prisma.cmsPage.count({ where }),
+    ]);
+    return { data: rows.map(toCmsPage), meta: { total, page, limit } };
   }
 
   async getById(id: string): Promise<CmsPage | null> {

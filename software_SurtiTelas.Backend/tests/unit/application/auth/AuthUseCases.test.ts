@@ -3,8 +3,8 @@ import { ListUsers } from '@/modules/auth/application/use-cases/ListUsers';
 import {
   AssignPermissionToRole,
   CreatePermission,
-  GetPermissions,
-  GetRolePermissions,
+  ListPermissions,
+  ListRolePermissions,
   RemovePermissionFromRole,
 } from '@/modules/auth/application/use-cases/ManagePermissions';
 import { GetProfile, Logout } from '@/modules/auth/application/use-cases/ProfileUseCases';
@@ -28,9 +28,9 @@ const repo = {
   listUsers: vi.fn(),
   findById: vi.fn(),
   updateRefreshToken: vi.fn(),
-  findAllPermissions: vi.fn(),
+  listPermissions: vi.fn(),
   createPermission: vi.fn(),
-  findRolePermissions: vi.fn(),
+  listRolePermissions: vi.fn(),
   assignPermissionToRole: vi.fn(),
   removePermissionFromRole: vi.fn(),
 } as any;
@@ -53,9 +53,9 @@ describe('ListUsers', () => {
 });
 
 describe('ManagePermissions', () => {
-  it('GetPermissions lists all permissions', () => {
-    repo.findAllPermissions.mockReturnValue([{ code: 'a:b' }]);
-    expect(new GetPermissions(repo).execute()).toEqual([{ code: 'a:b' }]);
+  it('ListPermissions lists all permissions', () => {
+    repo.listPermissions.mockReturnValue({ data: [{ code: 'a:b' }], meta: { total: 1, page: 1, limit: 50 } });
+    expect(new ListPermissions(repo).execute()).toEqual({ data: [{ code: 'a:b' }], meta: { total: 1, page: 1, limit: 50 } });
   });
 
   it('CreatePermission delegates to repo', () => {
@@ -64,9 +64,9 @@ describe('ManagePermissions', () => {
     expect(repo.createPermission).toHaveBeenCalledWith('a:b', 'd', 'm');
   });
 
-  it('GetRolePermissions delegates to repo', () => {
-    repo.findRolePermissions.mockReturnValue([{ permissionId: 'p1' }]);
-    expect(new GetRolePermissions(repo).execute('ADMIN')).toEqual([{ permissionId: 'p1' }]);
+  it('ListRolePermissions delegates to repo', () => {
+    repo.listRolePermissions.mockReturnValue({ data: [{ permissionId: 'p1' }], meta: { total: 1, page: 1, limit: 50 } });
+    expect(new ListRolePermissions(repo).execute('ADMIN')).toEqual({ data: [{ permissionId: 'p1' }], meta: { total: 1, page: 1, limit: 50 } });
   });
 
   it('AssignPermissionToRole delegates to repo', () => {

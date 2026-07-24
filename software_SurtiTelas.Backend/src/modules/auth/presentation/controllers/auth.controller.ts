@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
-import { buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { authUseCases } from '../../infrastructure/container/authContainer';
 import { LoginSchema, RegisterSchema, UserFiltersSchema, VerifyTwoFactorSchema, ForgotPasswordSchema, ResetPasswordSchema, ChangePasswordSchema, UpdateProfileSchema, GoogleTokenSchema, CreateUserSchema, UpdateUserStatusSchema, UpdateRoleStatusSchema } from '../validators/auth.validators';
-import { AssignPermissionSchema, CreatePermissionSchema, UpdatePermissionStatusSchema } from '../validators/permission.validators';
+import { AssignPermissionSchema, CreatePermissionSchema, PermissionFiltersSchema, RolePermissionFiltersSchema, RoleFiltersSchema, UpdatePermissionStatusSchema } from '../validators/permission.validators';
 import { ConflictError, UnauthorizedError } from '../../../../shared/domain/errors';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
 import {
@@ -138,20 +138,27 @@ export const updateProfile = async (req: Request, res: Response) => {
 export const listUsers = async (req: Request, res: Response) => {
   const filters = parseDto(UserFiltersSchema, req.query);
   const result = await authUseCases.listUsers.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, role: filters.role, estado: filters.estado, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
-export const listPermissions = async (_req: Request, res: Response) => {
-  const permissions = await authUseCases.getPermissions.execute();
-  return ok(res, permissions);
+export const listPermissions = async (req: Request, res: Response) => {
+  const filters = parseDto(PermissionFiltersSchema, req.query);
+  const result = await authUseCases.listPermissions.execute(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
 };
 
 export const getPermission = async (req: Request, res: Response) => {
@@ -180,8 +187,16 @@ export const deletePermission = async (req: Request, res: Response) => {
 
 export const listRolePermissions = async (req: Request, res: Response) => {
   const role = req.params.role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE';
-  const permissions = await authUseCases.getRolePermissions.execute(role);
-  return ok(res, permissions);
+  const filters = parseDto(RolePermissionFiltersSchema, req.query);
+  const result = await authUseCases.listRolePermissions.execute(role, filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
 };
 
 export const assignPermissionToRole = async (req: Request, res: Response) => {
@@ -198,9 +213,17 @@ export const removePermissionFromRole = async (req: Request, res: Response) => {
   return noContent(res);
 };
 
-export const listRoles = async (_req: Request, res: Response) => {
-  const roles = await authUseCases.listRoles.execute();
-  return ok(res, roles);
+export const listRoles = async (req: Request, res: Response) => {
+  const filters = parseDto(RoleFiltersSchema, req.query);
+  const result = await authUseCases.listRoles.execute(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
 };
 
 export const getRole = async (req: Request, res: Response) => {

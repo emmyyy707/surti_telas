@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BadRequestError, ForbiddenError } from '../../../../shared/domain/errors';
 import { created, ok } from '../../../../shared/presentation/http/HttpResponse';
-import { buildHateoasLinks, buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { orderUseCases } from '../../infrastructure/container/orderContainer';
 import { canView, canUpdateStatus } from '../../application/policies/orderPolicy';
@@ -16,15 +16,14 @@ export const getOrders = async (req: Request, res: Response) => {
   }
   const result = await orderUseCases.getOrders.execute(filters);
   const page = result.meta.page ?? 1;
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     page,
     result.meta.limit,
-    req.originalUrl,
-    { estado: filters.estado, clienteId: filters.clienteId, asesorId: filters.asesorId, desde: filters.desde, hasta: filters.hasta, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-   return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getOrdersMe = async (req: Request, res: Response) => {
@@ -32,15 +31,14 @@ export const getOrdersMe = async (req: Request, res: Response) => {
   filters.clienteId = req.user!.id;
   const result = await orderUseCases.getOrders.execute(filters);
   const page = result.meta.page ?? 1;
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     page,
     result.meta.limit,
-    req.originalUrl,
-    { estado: filters.estado, clienteId: filters.clienteId, asesorId: filters.asesorId, desde: filters.desde, hasta: filters.hasta, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-   return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getOrderById = async (req: Request, res: Response) => {

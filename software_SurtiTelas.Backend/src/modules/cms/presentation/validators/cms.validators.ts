@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 export const CmsFiltersSchema = z.object({
   slug: z.string().optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
 });
 
 export const CreateCmsSchema = z.object({

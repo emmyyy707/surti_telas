@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
-import { buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { alertUseCases } from '../../infrastructure/container/alertContainer';
 import { AlertFiltersSchema, CreateAlertSchema } from '../validators/alert.validators';
@@ -9,15 +9,14 @@ export const listAlerts = async (req: Request, res: Response) => {
   const filters = parseDto(AlertFiltersSchema, req.query);
   const result = await alertUseCases.listAlerts.execute(filters);
   const page = result.meta.page ?? 1;
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     page,
     result.meta.limit,
-    req.originalUrl,
-    { estado: filters.estado, modulo: filters.modulo, prioridad: filters.prioridad, leida: String(filters.leida), sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getAlert = async (req: Request, res: Response) => {

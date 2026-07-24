@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
-import { buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { productionUseCases } from '../../infrastructure/container/productionContainer';
 import {
@@ -21,15 +21,14 @@ import {
 export const listWorkshops = async (req: Request, res: Response) => {
   const filters = parseDto(WorkshopFiltersSchema, req.query);
   const result = await productionUseCases.getWorkshops.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, estado: filters.estado, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const createWorkshop = async (req: Request, res: Response) => {
@@ -52,15 +51,14 @@ export const deleteWorkshop = async (req: Request, res: Response) => {
 export const listProductionOrders = async (req: Request, res: Response) => {
   const filters = parseDto(ProductionOrderFiltersSchema, req.query);
   const result = await productionUseCases.getProductionOrders.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { estado: filters.estado, tallerId: filters.tallerId, operarioId: filters.operarioId, pedidoId: filters.pedidoId, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const createProductionOrder = async (req: Request, res: Response) => {
@@ -133,15 +131,14 @@ export const listControlPrendas = async (req: Request, res: Response) => {
     estado: req.query.estado as string | undefined,
   };
   const result = await productionUseCases.listControlPrendas.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     1,
     50,
-    req.originalUrl,
-    filters,
-    undefined
+    null
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const updateControlPrenda = async (req: Request, res: Response) => {

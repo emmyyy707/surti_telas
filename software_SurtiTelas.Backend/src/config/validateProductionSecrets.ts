@@ -2,6 +2,7 @@ export function validateProductionSecrets(env: {
   NODE_ENV: string;
   JWT_ACCESS_SECRET: string;
   JWT_REFRESH_SECRET: string;
+  METRICS_SECRET: string;
 }): void {
   if (env.NODE_ENV !== 'production') return;
 
@@ -15,6 +16,7 @@ export function validateProductionSecrets(env: {
     '123456',
     'abcdefghijklmnop',
     'qwertyuiopasdfgh',
+    'cambia-este-secret-de-metrics',
   ]);
 
   const validate = (name: string, value: string) => {
@@ -28,6 +30,7 @@ export function validateProductionSecrets(env: {
 
   validate('JWT_ACCESS_SECRET', env.JWT_ACCESS_SECRET);
   validate('JWT_REFRESH_SECRET', env.JWT_REFRESH_SECRET);
+  validate('METRICS_SECRET', env.METRICS_SECRET);
 
   if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
     throw new Error('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different in production');

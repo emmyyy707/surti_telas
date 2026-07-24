@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
-import { buildHateoasLinks, buildPaginationMeta } from '../../../../shared/presentation/http/PaginatedResponse';
+import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { customerUseCases } from '../../infrastructure/container/customerContainer';
 import {
@@ -14,15 +14,14 @@ import {
 export const listCustomers = async (req: Request, res: Response) => {
   const filters = parseDto(CustomerFiltersSchema, req.query);
   const result = await customerUseCases.getCustomers.execute(filters);
-  const meta = buildPaginationMeta(
+  const response = buildApiPaginatedResponse(
+    result.data,
     result.meta.total,
     result.meta.page || 1,
     result.meta.limit,
-    req.originalUrl,
-    { search: filters.search, asesorId: filters.asesorId, estado: filters.estado, sort: filters.sort, order: filters.order, cursor: filters.cursor },
     result.meta.nextCursor
   );
-  return ok(res, { items: result.data, meta });
+  return ok(res, response);
 };
 
 export const getCustomer = async (req: Request, res: Response) => {

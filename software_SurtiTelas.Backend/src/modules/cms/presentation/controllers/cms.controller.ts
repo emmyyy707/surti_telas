@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { PrismaCmsPageRepository } from '../../infrastructure/repositories/PrismaCmsPageRepository';
 import { CmsFiltersSchema, CreateCmsSchema, UpdateCmsSchema } from '../validators/cms.validators';
@@ -10,8 +11,15 @@ const cmsPageRepository = new PrismaCmsPageRepository(prisma);
 
 export const listCmsPages = async (req: Request, res: Response) => {
   const filters = parseDto(CmsFiltersSchema, req.query);
-  const pages = await cmsPageRepository.list(filters);
-  return ok(res, pages);
+  const result = await cmsPageRepository.list(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
 };
 
 export const getCmsPage = async (req: Request, res: Response) => {

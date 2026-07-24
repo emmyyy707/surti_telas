@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
+import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { CommissionFiltersSchema, CreateCommissionSchema } from '../validators/commission.validators';
 import { PrismaClient } from '@prisma/client';
@@ -8,22 +9,28 @@ import { Commission } from '../../domain/entities/Commission';
 const prisma = new PrismaClient();
 
 const commissionRepo = {
-  async list(filters: { asesorId?: string; orderId?: string }): Promise<Commission[]> {
+  async list(filters: { asesorId?: string; orderId?: string }): Promise<{ data: Commission[]; total: number }> {
     const where: Record<string, unknown> = { deletedAt: null };
     if (filters.asesorId) where.asesorId = filters.asesorId;
     if (filters.orderId) where.orderId = filters.orderId;
-    const rows = await prisma.commission.findMany({ where, orderBy: { createdAt: 'desc' } });
-    return rows.map((row) => new Commission({
-      id: row.id,
-      asesorId: row.asesorId,
-      orderId: row.orderId ?? undefined,
-      monto: Number(row.monto.toNumber()),
-      porcentaje: Number(row.porcentaje.toNumber()),
-      estado: row.estado,
-      notas: row.notas ?? undefined,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    }));
+    const [rows, total] = await prisma.$transaction([
+      prisma.commission.findMany({ where, orderBy: { createdAt: 'desc' } }),
+      prisma.commission.count({ where }),
+    ]);
+    return {
+      data: rows.map((row) => new Commission({
+        id: row.id,
+        asesorId: row.asesorId,
+        orderId: row.orderId ?? undefined,
+        monto: Number(row.monto.toNumber()),
+        porcentaje: Number(row.porcentaje.toNumber()),
+        estado: row.estado,
+        notas: row.notas ?? undefined,
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
+      })),
+      total,
+    };
   },
   async getById(id: string): Promise<Commission | null> {
     const row = await prisma.commission.findFirst({ where: { id, deletedAt: null } });
@@ -66,7 +73,7 @@ const commissionRepo = {
 
 class ListCommissions {
   constructor(private repo: typeof commissionRepo) {}
-  async execute(filters: { asesorId?: string; orderId?: string }): Promise<Commission[]> {
+  async execute(filters: { asesorId?: string; orderId?: string }): Promise<{ data: Commission[]; total: number }> {
     return this.repo.list(filters);
   }
 }
@@ -96,8 +103,15 @@ export const listCommissions = async (req: Request, res: Response) => {
   if (req.user?.role === 'ASESOR') {
     filters.asesorId = req.user.id;
   }
-  const data = await commissionUseCases.listCommissions.execute(filters as { asesorId?: string; orderId?: string });
-  return ok(res, { items: data, meta: { totalRecords: data.length, page: 1, limit: data.length, totalPages: 1 } });
+  const result = await commissionUseCases.listCommissions.execute(filters as { asesorId?: string; orderId?: string });
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.total,
+    1,
+    result.data.length,
+    null
+  );
+  return ok(res, response);
 };
 
 export const getCommission = async (req: Request, res: Response) => {
