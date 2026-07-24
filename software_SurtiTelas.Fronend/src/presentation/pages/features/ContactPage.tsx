@@ -18,6 +18,7 @@ interface ContactAction {
   name: string;
   icon: React.ReactNode;
   className: string;
+  href: string;
 }
 
 interface ContactCard {
@@ -26,24 +27,6 @@ interface ContactCard {
   content: React.ReactNode;
   variant: "light" | "dark";
 }
-
-const contactActions: ContactAction[] = [
-  {
-    name: "Enviar Email",
-    icon: <Mail size={18} strokeWidth={2.2} />,
-    className: "btn-email",
-  },
-  {
-    name: "WhatsApp",
-    icon: <MessageSquare size={18} strokeWidth={2.2} />,
-    className: "btn-whatsapp",
-  },
-  {
-    name: "Ver Ubicación",
-    icon: <MapPin size={18} strokeWidth={2.2} />,
-    className: "btn-location",
-  },
-];
 
 const ContactInfoCard = ({
   card,
@@ -82,6 +65,27 @@ export const SurtitelaLayout: React.FC = () => {
   const telefono = company?.telefono || 'No disponible';
   const email = company?.email || 'No disponible';
   const direccion = [company?.direccion, company?.ciudad].filter(Boolean).join(', ') || 'No disponible';
+
+  const contactActions: ContactAction[] = [
+    {
+      name: "Enviar Email",
+      icon: <Mail size={18} strokeWidth={2.2} />,
+      className: "btn-email",
+      href: `mailto:${email}`,
+    },
+    {
+      name: "WhatsApp",
+      icon: <MessageSquare size={18} strokeWidth={2.2} />,
+      className: "btn-whatsapp",
+      href: `https://wa.me/${(telefono || '').replace(/\D/g, '')}`,
+    },
+    {
+      name: "Ver Ubicación",
+      icon: <MapPin size={18} strokeWidth={2.2} />,
+      className: "btn-location",
+      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`,
+    },
+  ];
 
   const contactCards: ContactCard[] = [
     {
@@ -126,11 +130,11 @@ export const SurtitelaLayout: React.FC = () => {
   }: {
     action: ContactAction;
   }) => (
-    <button className={`contact-btn ${action.className}`}>
+    <a className={`contact-btn ${action.className}`} href={action.href} target="_blank" rel="noopener noreferrer">
       <div className="contact-btn-icon">{action.icon}</div>
 
       <span>{action.name}</span>
-    </button>
+    </a>
   );
 
   return (
