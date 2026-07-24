@@ -12,7 +12,9 @@ export const RegisterSchema = z.object({
   password: z.string().min(8, 'Mínimo 8 caracteres'),
   role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),
   telefono: OptionalPhoneSchema,
-  documentNumber: OptionalDocumentNumberSchema,
+  direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
+  tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
+  numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
 });
 
 export const RefreshSchema = z.object({
@@ -41,6 +43,9 @@ export const ChangePasswordSchema = z.object({
 export const UpdateProfileSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').optional(),
   telefono: OptionalPhoneSchema,
+  direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
+  tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
+  numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
 });
 
 export const CreateUserSchema = z.object({
@@ -49,7 +54,9 @@ export const CreateUserSchema = z.object({
   password: z.string().min(8, 'Mínimo 8 caracteres'),
   role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),
   telefono: OptionalPhoneSchema,
-  documentNumber: OptionalDocumentNumberSchema,
+  direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
+  tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
+  numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
 });
 
 export const UpdateUserStatusSchema = z.object({

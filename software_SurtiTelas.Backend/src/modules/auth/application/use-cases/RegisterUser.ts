@@ -22,6 +22,8 @@ export class RegisterUser {
     role: Role;
     telefono?: string;
     direccion?: string;
+    tipoDocumento?: string;
+    numeroDocumento?: string;
   }): Promise<AuthResult> {
     const existing = await this.repo.findByEmail(input.email);
     if (existing) {
@@ -36,6 +38,8 @@ export class RegisterUser {
       role: input.role,
       telefono: input.telefono,
       direccion: input.direccion,
+      tipoDocumento: input.tipoDocumento,
+      numeroDocumento: input.numeroDocumento,
     });
 
     const permissions = await this.repo.findPermissionsByRole(user.role);

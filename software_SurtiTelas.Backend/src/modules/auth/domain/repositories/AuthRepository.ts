@@ -8,6 +8,8 @@ export interface CreateUserInput {
   role: Role;
   telefono?: string;
   direccion?: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
 }
 
 export interface PermissionData {
@@ -77,7 +79,7 @@ export interface AuthRepository {
   clearResetPasswordToken(id: string): Promise<void>;
   updatePassword(id: string, passwordHash: string): Promise<void>;
 
-  updateProfile(id: string, data: { nombre?: string; telefono?: string | null }): Promise<UserRecord>;
+  updateProfile(id: string, data: { nombre?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }): Promise<UserRecord>;
   updateStatus(id: string, estado: 'ACTIVO' | 'INACTIVO'): Promise<UserRecord>;
 
   incrementFailedLoginAttempts(id: string): Promise<void>;

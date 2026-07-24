@@ -5,6 +5,9 @@ export interface PublicUser {
   email: string;
   nombre: string;
   telefono?: string | null;
+  direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
   role: Role;
   estado: EstadoUsuario;
   createdAt: Date;

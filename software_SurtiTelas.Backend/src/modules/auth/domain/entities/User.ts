@@ -6,6 +6,8 @@ export interface UserRecord {
   nombre: string;
   telefono?: string | null;
   direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
   role: Role;
   estado: EstadoUsuario;
   passwordHash: string;

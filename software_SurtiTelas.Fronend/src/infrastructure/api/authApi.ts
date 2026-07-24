@@ -60,6 +60,8 @@ export interface CreateUserRequest {
   role: BackendRole;
   telefono?: string;
   direccion?: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
 }
 
 export interface CreateUserResponse {

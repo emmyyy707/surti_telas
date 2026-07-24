@@ -35,12 +35,19 @@ export default defineConfig({
     },
   server: {
     port: 5173,
-    host: 'localhost', // Sirve en http://localhost:5173 para evitar problemas de CORS con backend
-    open: true, // Abre el navegador automáticamente
-    strictPort: true, // Fijo en 5173: evita saltos a 5174/5179 que rompen CORS
+    host: 'localhost',
+    open: true,
+    strictPort: true,
     hmr: {
-      overlay: true // Muestra overlay de errores en el navegador
-    }
+      overlay: true
+    },
+    proxy: {
+      '/uploads': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     target: "esnext", // Optimiza para navegadores modernos

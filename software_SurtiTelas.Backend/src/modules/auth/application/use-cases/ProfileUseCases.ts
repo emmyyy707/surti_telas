@@ -22,7 +22,7 @@ export class GetProfile {
 export class UpdateProfile {
   constructor(private readonly repo: AuthRepository) {}
 
-  async execute(userId: string, data: { nombre?: string; telefono?: string | null }): Promise<PublicUser> {
+  async execute(userId: string, data: { nombre?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }): Promise<PublicUser> {
     const user = await this.repo.updateProfile(userId, data);
     const { passwordHash, refreshToken, ...safe } = user;
     void passwordHash;

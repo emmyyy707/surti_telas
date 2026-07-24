@@ -112,7 +112,7 @@ export function createApp(): Express {
   });
 
   app.use(express.json({ limit: '2mb' }));
-  app.use(express.static(path.resolve(process.cwd(), 'uploads')));
+  app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
   app.use(sanitizeInput);
   app.use(idempotency);

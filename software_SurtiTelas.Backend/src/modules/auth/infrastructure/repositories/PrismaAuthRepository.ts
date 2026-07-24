@@ -10,6 +10,8 @@ const toRecord = (u: {
   nombre: string;
   telefono?: string | null;
   direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
   role: Role;
   estado: 'ACTIVO' | 'INACTIVO';
   refreshToken?: string | null;
@@ -27,6 +29,8 @@ const toRecord = (u: {
   nombre: u.nombre,
   telefono: u.telefono,
   direccion: u.direccion,
+  tipoDocumento: u.tipoDocumento,
+  numeroDocumento: u.numeroDocumento,
   role: u.role,
   estado: u.estado,
   passwordHash: u.passwordHash,
@@ -66,6 +70,8 @@ export class PrismaAuthRepository implements AuthRepository {
         role: input.role,
         telefono: input.telefono,
         direccion: input.direccion,
+        tipoDocumento: input.tipoDocumento,
+        numeroDocumento: input.numeroDocumento,
       },
     });
     return toRecord(user);
@@ -80,12 +86,15 @@ export class PrismaAuthRepository implements AuthRepository {
     return toRecord(user);
   }
 
-  async updateProfile(id: string, data: { nombre?: string; telefono?: string | null }): Promise<UserRecord> {
+  async updateProfile(id: string, data: { nombre?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }): Promise<UserRecord> {
     const user = await this.prisma.user.update({
       where: { id },
       data: {
         nombre: data.nombre,
         telefono: data.telefono,
+        direccion: data.direccion,
+        tipoDocumento: data.tipoDocumento,
+        numeroDocumento: data.numeroDocumento,
       },
     });
     return toRecord(user);

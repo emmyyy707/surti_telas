@@ -122,13 +122,13 @@ export const me = async (req: Request, res: Response) => {
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
-  const { nombre, telefono } = parseDto(UpdateProfileSchema, req.body);
-  const user = await authUseCases.updateProfile.execute(req.user!.id, { nombre, telefono });
+  const { nombre, telefono, direccion, tipoDocumento, numeroDocumento } = parseDto(UpdateProfileSchema, req.body);
+  const user = await authUseCases.updateProfile.execute(req.user!.id, { nombre, telefono, direccion, tipoDocumento, numeroDocumento });
   eventBus.publish(
     new UserUpdatedEvent({
       userId: user.id,
       nombre: user.nombre,
-      cambios: { nombre, telefono },
+      cambios: { nombre, telefono, direccion, tipoDocumento, numeroDocumento },
     }),
     req.requestId
   );

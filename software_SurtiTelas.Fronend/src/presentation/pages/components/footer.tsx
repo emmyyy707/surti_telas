@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Tooltip } from "@/shared/components/Tooltip";
 import {
   MessageCircle,
@@ -76,7 +77,9 @@ const Footer: React.FC = () => {
             <Tooltip title="WhatsApp">
               <a
                 className="social-icon-btn"
-                aria-disabled="true"
+                href="https://wa.me/573000000000"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="WhatsApp"
               >
                 <MessageCircle size={22} />
@@ -86,7 +89,9 @@ const Footer: React.FC = () => {
             <Tooltip title="Instagram">
               <a
                 className="social-icon-btn"
-                aria-disabled="true"
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
               >
                 <FaInstagram size={22} />
@@ -96,7 +101,9 @@ const Footer: React.FC = () => {
             <Tooltip title="TikTok">
               <a
                 className="social-icon-btn"
-                aria-disabled="true"
+                href="https://tiktok.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="TikTok"
               >
                 <FaTiktok size={22} />
@@ -111,27 +118,27 @@ const Footer: React.FC = () => {
 
           <ul className="footer-links-list">
             <li>
-              <a href="#inicio">Inicio</a>
+              <Link to="/">Inicio</Link>
             </li>
 
             <li>
-              <a href="#catalogo">Catálogo</a>
+              <Link to="/catalogo">Catálogo</Link>
             </li>
 
             <li>
-              <a href="#nosotros">Nosotros</a>
+              <Link to="/nosotros">Nosotros</Link>
             </li>
 
             <li>
-              <a href="#contacto">Contacto</a>
+              <Link to="/contacto">Contacto</Link>
             </li>
 
             <li>
-              <a href="#login">Iniciar Sesión</a>
+              <Link to="/login">Iniciar Sesión</Link>
             </li>
 
             <li>
-              <a href="#registro">Registrarse</a>
+              <Link to="/registro">Registrarse</Link>
             </li>
           </ul>
         </div>
@@ -189,7 +196,9 @@ const Footer: React.FC = () => {
       <Tooltip title="WhatsApp">
         <a
           className="whatsapp-float-btn"
-          aria-disabled="true"
+          href="https://wa.me/573000000000"
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label="WhatsApp"
         >
           <MessageCircle size={32} fill="currentColor" />

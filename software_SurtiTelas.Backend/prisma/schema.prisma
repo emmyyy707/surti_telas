@@ -112,6 +112,8 @@ model User {
   nombre                String
   telefono              String?
   direccion             String?
+  tipoDocumento         String?     @map("tipo_documento")
+  numeroDocumento       String?     @map("numero_documento")
   role                  Role
   estado                EstadoUsuario  @default(ACTIVO)
   refreshToken          String?     @map("refresh_token")

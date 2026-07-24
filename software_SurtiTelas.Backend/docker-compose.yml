@@ -43,6 +43,8 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://frontend:5173}
       METRICS_SECRET: ${METRICS_SECRET:?Set METRICS_SECRET}
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy

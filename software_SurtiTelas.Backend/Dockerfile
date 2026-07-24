@@ -20,7 +20,7 @@ COPY package.json ./
 COPY src ./src
 COPY docker-entrypoint.sh ./
 
-RUN chmod +x docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh && mkdir -p /app/uploads
 
 EXPOSE 3000
 

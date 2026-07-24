@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Eye, EyeOff, MapPin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ const RegisterPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const submittedRef = useRef(false);
 
   const passwordStrength = (pwd: string): null | 'weak' | 'fair' | 'strong' => {
     if (!pwd) return null;
@@ -64,7 +65,9 @@ const RegisterPage: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittedRef.current) return;
     if (!validateRegister()) return;
+    submittedRef.current = true;
     setLoading(true);
     try {
       const nombre = `${firstName.trim()} ${lastName.trim()}`.trim();
@@ -75,11 +78,12 @@ const RegisterPage: React.FC = () => {
         role: 'CLIENTE',
         telefono: phone.trim() || undefined,
         direccion: address.trim() || undefined,
+        tipoDocumento: documentType,
+        numeroDocumento: documentNumber.trim() || undefined,
       });
       const loginResult = await loginWithCredentials(email.trim(), password);
       if (loginResult.success) {
         setSuccess(true);
-        toast.success('¡Cuenta creada exitosamente!');
         setTimeout(() => navigate('/cliente/inicio', { replace: true }), 1000);
       } else {
         toast.error('No se pudo iniciar sesión automáticamente');
@@ -88,6 +92,7 @@ const RegisterPage: React.FC = () => {
       toast.error('No se pudo crear la cuenta. Revise los datos');
     } finally {
       setLoading(false);
+      submittedRef.current = false;
     }
   };
 

@@ -57,7 +57,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'deliveries:read', 'deliveries:create', 'deliveries:update',
   ],
   DOMICILIARIO: ['orders:read', 'orders:update', 'deliveries:read', 'deliveries:update'],
-  CLIENTE: ['catalog:read', 'orders:read', 'orders:create'],
+  CLIENTE: ['catalog:read', 'orders:read', 'orders:create', 'customers:read'],
 };
 
 function generatePassword(): string {
