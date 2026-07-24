@@ -1027,13 +1027,22 @@
 @media (max-width: 640px) {
 
   .ch-overlay {
+<<<<<<< HEAD
     align-items: stretch;
+=======
+    align-items: flex-end;
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
     padding: 0;
   }
 
   .ch-container {
+<<<<<<< HEAD
     width: 100%;
     max-height: calc(100dvh - 0px);
+=======
+    max-height: 96vh;
+
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
     border-radius:
       28px 28px 0 0;
   }

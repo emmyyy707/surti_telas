@@ -40,16 +40,28 @@ export const ConfirmationModal = ({
 
   return (
     <div
+<<<<<<< HEAD
       className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto bg-[var(--modal-overlay)] p-4 backdrop-blur-md"
       role="presentation"
     >
       <section
         className="w-full max-w-md animate-in fade-in zoom-in-95 slide-in-from-bottom-2 rounded-[24px] border border-[var(--color-border)] bg-[var(--modal-bg)] p-6 shadow-[var(--shadow-modal)] max-[640px]:max-h-[calc(100dvh-24px)] max-[640px]:overflow-y-auto max-[640px]:w-[calc(100vw-24px)] max-[640px]:rounded-[20px] max-[640px]:p-5"
+=======
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-[var(--modal-overlay)] p-4 backdrop-blur-md"
+      role="presentation"
+    >
+      <section
+        className="w-full max-w-md animate-in fade-in zoom-in-95 slide-in-from-bottom-2 rounded-[24px] border border-[var(--color-border)] bg-[var(--modal-bg)] p-6 shadow-[var(--shadow-modal)]"
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
+<<<<<<< HEAD
         <div className="mb-5 flex items-start gap-4 max-[640px]:mb-4 max-[640px]:gap-3">
+=======
+        <div className="mb-5 flex items-start gap-4">
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]">
             <Icon size={20} />
           </div>
@@ -59,8 +71,13 @@ export const ConfirmationModal = ({
           </div>
         </div>
 
+<<<<<<< HEAD
         <div className="flex items-center justify-end gap-3 max-[640px]:flex-col-reverse">
           <Button type="button" variant="secondary" onClick={onClose} className="max-[640px]:w-full">
+=======
+        <div className="flex items-center justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={onClose}>
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
             {cancelLabel}
           </Button>
           <Button
@@ -68,7 +85,10 @@ export const ConfirmationModal = ({
             variant={variant === 'danger' ? 'danger' : variant === 'success' ? 'success' : 'primary'}
             onClick={onConfirm}
             loading={loading}
+<<<<<<< HEAD
             className="max-[640px]:w-full"
+=======
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
           >
             {confirmLabel}
           </Button>

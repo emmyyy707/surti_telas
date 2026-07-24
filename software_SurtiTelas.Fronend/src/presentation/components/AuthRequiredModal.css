@@ -17,8 +17,12 @@
   left: 50%;
   z-index: 13001;
   width: min(460px, calc(100vw - 32px));
+<<<<<<< HEAD
   max-height: min(90vh, calc(100vh - 24px));
   overflow-y: auto;
+=======
+  max-height: 90vh;
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
   margin: 0;
   padding: 28px;
   border: 1px solid #e0e0e0;
@@ -154,8 +158,11 @@
 
 @media (max-width: 420px) {
   .auth-modal-card {
+<<<<<<< HEAD
     width: calc(100vw - 20px);
     max-height: calc(100dvh - 20px);
+=======
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
     padding: 24px 18px;
     border-radius: var(--radius-xl);
   }
@@ -163,11 +170,14 @@
   .auth-modal-title {
     font-size: 1.25rem;
   }
+<<<<<<< HEAD
 
   .auth-modal-benefit {
     padding: 10px 11px;
     font-size: 0.85rem;
   }
+=======
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
 }
 
 @media (prefers-reduced-motion: reduce) {

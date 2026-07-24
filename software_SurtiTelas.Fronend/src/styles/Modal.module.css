@@ -18,7 +18,10 @@
   backdrop-filter: blur(12px);
   animation: modalOverlayFade 0.22s var(--ease-out);
   cursor: default;
+<<<<<<< HEAD
   overflow-y: auto;
+=======
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
 }
 
 .overlay--form {
@@ -40,7 +43,11 @@
 }
 
 .modal {
+<<<<<<< HEAD
   width: min(100%, 100%);
+=======
+  width: 100%;
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
   max-height: min(92vh, 980px);
   display: flex;
   flex-direction: column;
@@ -50,7 +57,10 @@
   border-radius: 28px;
   box-shadow: var(--shadow-modal);
   animation: modalShellIn 0.26s var(--ease-out);
+<<<<<<< HEAD
   min-width: 0;
+=======
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
 }
 
 .modal--sm {
@@ -202,6 +212,7 @@
 
 @media (max-width: 640px) {
   .overlay {
+<<<<<<< HEAD
     align-items: stretch;
     padding: 12px;
   }
@@ -214,6 +225,14 @@
   .modal {
     width: 100%;
     max-height: calc(100dvh - 24px);
+=======
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: 94vh;
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
     border-radius: 24px;
   }
 
@@ -224,6 +243,7 @@
     padding-right: 20px;
   }
 
+<<<<<<< HEAD
   .modalHeader {
     gap: 12px;
     flex-wrap: wrap;
@@ -237,6 +257,10 @@
   .headerActions {
     width: 100%;
     justify-content: flex-end;
+=======
+  .headerContent {
+    align-items: flex-start;
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
   }
 
   .headerIcon {
@@ -244,9 +268,12 @@
     height: 38px;
     border-radius: 14px;
   }
+<<<<<<< HEAD
 
   .modalFooter {
     flex-direction: column-reverse;
     align-items: stretch;
   }
+=======
+>>>>>>> 7649c0896dde9f05d92bc6edafa83251045df68c
 }
