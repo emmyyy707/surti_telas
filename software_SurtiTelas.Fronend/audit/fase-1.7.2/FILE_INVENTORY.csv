@@ -1,0 +1,273 @@
+Archivo,Tipo,Existe,Tamaño,Líneas,ImportadoPor,ImportaA,TieneRuta,ParticipaBundle,Estado
+src/main.tsx,Entrypoint,SI,463,26,Nadie (entrypoint),presentation/pages/App.tsx,NO,SI,VIVO
+src/presentation/pages/App.tsx,App,SI,10486,141,main.tsx,28 archivos,SI,SI,VIVO
+src/presentation/contexts/AuthContext.tsx,Contexto,SI,5008,195,App.tsx (9),ProtectedRoute (5),LoginPage (5),NO,SI,VIVO
+src/presentation/contexts/CartContext.tsx,Contexto,SI,10884,?,App.tsx (10),Navbar (3),CartDrawer (2),NO,SI,VIVO
+src/presentation/contexts/CartDrawerContext.tsx,Contexto,SI,8914,?,App.tsx (11),Nadie,NO,SI,VIVO
+src/presentation/contexts/ThemeContext.tsx,Contexto,SI,4935,?,App.tsx (12),AdminDashboard (90),NO,SI,VIVO
+src/presentation/routes/ProtectedRoute.tsx,Ruta,SI,17915,50,App.tsx (13),AuthContext,NO,SI,VIVO
+src/presentation/pages/components/Navbar.tsx,Componente,SI,8960,?,App.tsx (14),CartContext,NO,SI,VIVO
+src/presentation/pages/components/footer.tsx,Componente,SI,1871,?,App.tsx (15),Nadie,NO,SI,VIVO
+src/presentation/components/ScrollToTop.tsx,Componente,SI,8704,?,App.tsx (16),Nadie,NO,SI,VIVO
+src/presentation/components/CartDrawer.tsx,Componente,SI,5319,?,App.tsx (17),CartItem, CartSummary, CartContext,NO,SI,VIVO
+src/presentation/components/CartItem.tsx,Componente,SI,9605,?,CartDrawer,Nadie,NO,SI,VIVO
+src/presentation/components/CartSummary.tsx,Componente,SI,12165,?,CartDrawer,Nadie,NO,SI,VIVO
+src/shared/ui/index.ts,Barrel,SI,9956,30,App.tsx (18),16 componentes,NO,SI,VIVO
+src/shared/ui/Spinner.tsx,Componente,SI,19267,?,App.tsx (18),shared/ui/index.ts,NO,SI,VIVO
+src/app/components/ErrorBoundary.tsx,Componente,SI,15915,?,App.tsx (19),Nadie,NO,SI,VIVO
+src/app/components/AdminDashboard.tsx,Componente,SI,12467,508,App.tsx (33 lazy),25 módulos,NO,SI,VIVO
+src/app/features/admin/DashboardGeneral.tsx,Componente,SI,70347,?,AdminDashboard (66),Nadie,NO,SI,VIVO
+src/app/features/admin/ConfiguracionModule.tsx,Componente,SI,13805,?,AdminDashboard (67),Nadie,NO,SI,VIVO
+src/app/features/admin/UsuariosModule.tsx,Componente,SI,13750,?,AdminDashboard (68) + App.tsx (34 lazy),Nadie,NO,SI,VIVO
+src/app/features/admin/InventarioModule.tsx,Componente,SI,9957,?,AdminDashboard (69) + App.tsx (35 lazy),Nadie,NO,SI,VIVO
+src/app/features/admin/ProduccionModule.tsx,Componente,SI,3312,?,AdminDashboard (70),Nadie,NO,SI,VIVO
+src/app/features/admin/VentasModule.tsx,Componente,SI,19312,?,AdminDashboard (71),Nadie,NO,SI,VIVO
+src/app/features/admin/DevolucionesModule.tsx,Componente,SI,10492,?,AdminDashboard (72),Nadie,NO,SI,VIVO
+src/app/features/admin/ReportesModule.tsx,Componente,SI,33533,?,AdminDashboard (73) + App.tsx (39 lazy),Nadie,NO,SI,VIVO
+src/app/features/admin/HistorialPagosModule.tsx,Componente,SI,62,?,AdminDashboard (74) + App.tsx (36 lazy),Nadie,NO,SI,VIVO
+src/app/features/admin/InsumosModule.tsx,Componente,SI,57815,?,AdminDashboard (75),Nadie,NO,SI,VIVO
+src/app/features/admin/ClientesModule.tsx,Componente,SI,34690,?,AdminDashboard (76) + App.tsx (37 lazy),Nadie,NO,SI,VIVO
+src/app/features/admin/DomiciliosModule.tsx,Componente,SI,10850,?,AdminDashboard (77) + App.tsx (38 lazy),Nadie,NO,SI,VIVO
+src/app/features/admin/NotificationsDropdown.tsx,Componente,SI,8914,?,AdminDashboard (78),Nadie,NO,SI,VIVO
+src/app/features/asesor/MisClientesModule.tsx,Componente,SI,7398,?,AdminDashboard (79),Nadie,NO,SI,VIVO
+src/app/features/asesor/ComisionesModule.tsx,Componente,SI,4935,?,AdminDashboard (80),Nadie,NO,SI,VIVO
+src/app/features/domiciliario/EntregasModule.tsx,Componente,SI,17915,?,AdminDashboard (81),Nadie,NO,SI,VIVO
+src/app/features/domiciliario/RutasModule.tsx,Componente,SI,8960,?,AdminDashboard (82),Nadie,NO,SI,VIVO
+src/app/features/cliente/ResumenCliente.tsx,Componente,SI,1871,?,AdminDashboard (83),Nadie,NO,SI,VIVO
+src/app/features/cliente/MisPedidosCliente.tsx,Componente,SI,8704,?,AdminDashboard (84),Nadie,NO,SI,VIVO
+src/app/features/cliente/DireccionesCliente.tsx,Componente,SI,5319,?,AdminDashboard (85),Nadie,NO,SI,VIVO
+src/app/features/cliente/MetodosPagoCliente.tsx,Componente,SI,9605,?,AdminDashboard (86),Nadie,NO,SI,VIVO
+src/app/features/cliente/MiPerfilCliente.tsx,Componente,SI,12165,?,AdminDashboard (87),Nadie,NO,SI,VIVO
+src/app/features/cliente/CatalogoCliente.tsx,Componente,SI,9956,?,AdminDashboard (88),Nadie,NO,SI,VIVO
+src/app/config/menuConfig.ts,Config,SI,19267,?,AdminDashboard (89),Nadie,NO,SI,VIVO
+src/presentation/pages/features/CatalogPage.tsx,Componente,SI,15915,?,App.tsx (23),CartItem, ProductDetailModal, CartContext,SI,SI,VIVO
+src/presentation/pages/features/CartPage.tsx,Componente,SI,12467,?,App.tsx (24),CartContext,SI,SI,VIVO
+src/presentation/pages/features/ContactPage.tsx,Componente,SI,70347,?,App.tsx (25),Nadie,SI,SI,VIVO
+src/presentation/pages/public/HomePage.tsx,Componente,SI,13805,?,App.tsx (22),ProductModal, CartContext,SI,SI,VIVO
+src/presentation/pages/public/AboutPage.tsx,Componente,SI,13750,?,App.tsx (26),Nadie,SI,SI,VIVO
+src/presentation/pages/auth/LoginPage.tsx,Componente,SI,9957,?,App.tsx (29),AuthContext,SI,SI,VIVO
+src/presentation/pages/auth/RegisterPage.tsx,Componente,SI,3312,?,App.tsx (30),AuthContext,SI,SI,VIVO
+src/presentation/components/ProductModal.tsx,Componente,SI,19312,?,HomePage,ImageWithFallback,NO,SI,VIVO
+src/presentation/components/common/ImageWithFallback.tsx,Componente,SI,10492,?,ProductModal,Nadie,NO,SI,VIVO
+src/app/features/common/CatalogPage.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CartPage.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ContactPage.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/AdminDashboard.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/AdminDashboard.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/InventarioModule.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/InventarioModule.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/VentasModule.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/VentasModule.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/ClientesModule.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/ClientesModule.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/DomiciliosModule.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/DomiciliosModule.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/HistorialPagosModule.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/HistorialPagosModule.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/InsumosModule.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/InsumosModule.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/ProduccionModule.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/ProduccionModule.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/DevolucionesModule.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/DevolucionesModule.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/ConfiguracionModule.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/ConfiguracionModule.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/ReportesModule.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/ReportesModule.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/SimpleLoginPage.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/SimpleLoginPage.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/NotificationsDropdown.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/NotificationsDropdown.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/admin/UsuariosModule.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/admin/UsuariosModule.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/AdvisorPanelSidebar.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorPanelSidebar.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/shared/AdvisorPanelSidebar.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ClientDashboardNew.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ClientDashboardNew.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ClientDashboard.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ClientDashboard.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/UserDashboard.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/UserDashboard.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ProfilePage.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProfilePage.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ClientManagement.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ClientManagement.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ProductsPage.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductsPage.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ProductsPageNew.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductsPageNew.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ShoppingCart.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ShoppingCart.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/NavigationBar.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/NavigationBar.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/Footer.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/Footer.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/HomePage.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/HomePage.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/CatalogPage.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/CartPage.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/common/ContactPage.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/domiciliario/EntregasModule.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/domiciliario/EntregasModule.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/domiciliario/RutasModule.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/domiciliario/RutasModule.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/asesor/MisClientesModule.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/asesor/MisClientesModule.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/asesor/ComisionesModule.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/asesor/ComisionesModule.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ActivityTimeline.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvancedMetrics.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorAssistant.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorMetrics.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorRatingSection.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorRatingsManagement.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/BottomNavigation.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CartSidebar.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/DashboardOverview.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/FigmaExportView.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/GlobalSearch.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/InventoryAlerts.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/NotificationCenter.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductCard.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductFilters.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/QuickActions.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/RatingsAndMessagesSection.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ScrollingImages.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ServicesPage.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/SmartRecommendations.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/VideoCarousel.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/WhatsAppButton.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductModal.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductDetailModal.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductFilters.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ImageWithFallback.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/FilterDrawer.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CartDrawer.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CartItem.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CartSummary.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CheckoutModal.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ScrollToTop.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/TelaList.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductCard.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/NavigationBar.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/Footer.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/HomePage.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ActivityTimeline.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvancedMetrics.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorAssistant.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorMetrics.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorRatingSection.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/AdvisorRatingsManagement.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/BottomNavigation.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/CartSidebar.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/DashboardOverview.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/GlobalSearch.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/InventoryAlerts.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/NotificationCenter.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductCard.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ProductFilters.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/QuickActions.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/RatingsAndMessagesSection.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ScrollingImages.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ServicesPage.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/SmartRecommendations.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/VideoCarousel.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/WhatsAppButton.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/figma/ImageWithFallback.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/AdvisorAssistant.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/AdvisorMetrics.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/AdvisorRatingSection.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/AdvisorRatingsManagement.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/BottomNavigation.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/CartSidebar.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/CatalogPage.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ClientDashboard.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ClientDashboardNew.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ClientManagement.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ClientNotes.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ContactPage.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/DashboardOverview.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/FigmaExportView.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/GlobalSearch.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/HomePage.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/InventoryAlerts.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/NavigationBar.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/NotificationCenter.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ProductCard.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ProductsPage.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ProductsPageNew.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ProfilePage.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/QuickActions.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/RatingsAndMessagesSection.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/ShoppingCart.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/SmartRecommendations.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/UserDashboard.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/WhatsAppButton.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/components/figma/ImageWithFallback.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/App.tsx,App,SI,33533,120,Nadie,Nadie,NO,NO,MUERTO
+src/app/pages/SurtitelasLanding.tsx,Landing,SI,57815,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/MODO_EXPORTACION.tsx,Script,SI,62,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/contexts/ThemeContext.tsx,Contexto,SI,34690,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/shared/ui/index.ts,Barrel,SI,10850,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/shared/types/index.ts,Barrel,SI,8914,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/shared/types/dashboard.ts,Types,SI,7398,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/types/dashboard.ts,Types,SI,4935,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/utils/recharts-fix.ts,Utilidad,SI,17915,?,Nadie,Nadie,NO,NO,MUERTO
+src/domain/entities/Tela.ts,Entidad,SI,8960,10,TelaRepository,Nadie,NO,NO,MUERTO
+src/domain/repositories/ITelaRepository.ts,Repositorio,SI,1871,12,TelaRepository,Nadie,NO,NO,MUERTO
+src/domain/useCases/GetTelasUseCase.ts,CasoUso,SI,8704,?,Nadie,Nadie,NO,NO,MUERTO
+src/application/services/TelaService.ts,Servicio,SI,5319,?,Nadie,Nadie,NO,NO,MUERTO
+src/infrastructure/repositories/TelaRepository.ts,Repositorio,SI,9605,35,Tela.ts (1),Nadie,NO,NO,MUERTO
+src/infrastructure/http/apiClient.ts,HTTP,SI,12165,?,Nadie,Nadie,NO,NO,MUERTO
+src/infrastructure/config/firebase.ts,Firebase,SI,9956,?,Nadie,Nadie,NO,NO,MUERTO
+src/config/firebase.ts,Firebase,SI,19267,?,Nadie,Nadie,NO,NO,MUERTO
+src/hooks/usePagination.ts,Hook,SI,15915,?,Nadie,Nadie,NO,NO,MUERTO
+src/types/auth.types.ts,Types,SI,12467,?,Nadie,Nadie,NO,NO,MUERTO
+src/types/theme.css,CSS,SI,70347,?,Nadie,Nadie,NO,NO,MUERTO
+src/types/dashboard.ts,Types,SI,13805,?,Nadie,Nadie,NO,NO,MUERTO
+src/shared/auth.types.ts,Types,SI,13750,?,Nadie,Nadie,NO,NO,MUERTO
+src/presentation/hooks/useTelas.ts,Hook,SI,9957,?,Nadie,Nadie,NO,NO,MUERTO
+src/presentation/components/CheckoutModal.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,MUERTO
+src/presentation/components/TelaList.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,MUERTO
+src/app/features/common/ActivityTimeline.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/AdvancedMetrics.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/AdvisorAssistant.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/AdvisorMetrics.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/AdvisorRatingSection.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/AdvisorRatingsManagement.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/BottomNavigation.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/CartSidebar.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/DashboardOverview.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/FigmaExportView.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/GlobalSearch.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/InventoryAlerts.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/NotificationCenter.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/ProductCard.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/ProductFilters.tsx,Componente,SI,9605,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/QuickActions.tsx,Componente,SI,12165,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/RatingsAndMessagesSection.tsx,Componente,SI,9956,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/ScrollingImages.tsx,Componente,SI,19267,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/ServicesPage.tsx,Componente,SI,15915,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/SmartRecommendations.tsx,Componente,SI,12467,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/VideoCarousel.tsx,Componente,SI,70347,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/features/common/WhatsAppButton.tsx,Componente,SI,13805,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/AdvisorPanelSidebar.tsx,Componente,SI,13750,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/UserDashboard.tsx,Componente,SI,9957,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/ClientDashboardNew.tsx,Componente,SI,3312,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/ActivityTimeline.tsx,Componente,SI,19312,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/AdvancedMetrics.tsx,Componente,SI,10492,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/AdvisorAssistant.tsx,Componente,SI,33533,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/AdvisorMetrics.tsx,Componente,SI,57815,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/AdvisorRatingSection.tsx,Componente,SI,62,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/AdvisorRatingsManagement.tsx,Componente,SI,34690,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/BottomNavigation.tsx,Componente,SI,10850,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/CartSidebar.tsx,Componente,SI,8914,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/DashboardOverview.tsx,Componente,SI,7398,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/GlobalSearch.tsx,Componente,SI,4935,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/InventoryAlerts.tsx,Componente,SI,17915,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/NotificationCenter.tsx,Componente,SI,8960,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/ProductCard.tsx,Componente,SI,1871,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/ProductFilters.tsx,Componente,SI,8704,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/QuickActions.tsx,Componente,SI,5319,?,Nadie,Nadie,NO,NO,ZOMBIE
+src/app/components/RatingsAndMessagesSection.tsx,Componente,SI,9605,?,Nadie,Nadia

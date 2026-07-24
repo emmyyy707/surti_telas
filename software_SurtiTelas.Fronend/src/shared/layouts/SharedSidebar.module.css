@@ -1,0 +1,642 @@
+/* ============================================================
+   Sidebar.module.css
+   Nueva arquitectura — Premium SaaS Design (Optimizado)
+   Linear / Stripe / Vercel / Notion inspired
+   ============================================================ */
+
+/* ============================================================
+   VARIABLES (Locales al componente para evitar colisiones)
+   ============================================================ */
+.sidebar {
+  --sb-width: 280px;
+  --sb-collapsed-width: 72px;
+  --sb-header-height: 60px;
+  --sb-radius: 12px;
+  --sb-transition-fluid: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sb-transition-fast: 160ms ease;
+  --sb-item-height: 40px;
+  
+  /* Layout Base */
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 120;
+  width: var(--sb-width);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  transition: width var(--sb-transition-fluid);
+  will-change: width;
+}
+
+/* Estado Colapsado */
+.sidebarCollapsed {
+  width: var(--sb-collapsed-width);
+}
+
+/* ============================================================
+   HEADER & BRAND
+   ============================================================ */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--sb-header-height);
+  padding: 0 14px;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.sidebarCollapsed .header {
+  padding: 0 8px;
+  justify-content: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebarCollapsed .brand {
+  justify-content: center;
+}
+
+.brandLogo {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: cover;
+  transition: all var(--sb-transition-fast);
+}
+
+.sidebarCollapsed .brandLogo {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+  transition: opacity var(--sb-transition-fast), transform var(--sb-transition-fast);
+  transform-origin: left center;
+}
+
+.sidebarCollapsed .brandText {
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+  position: absolute; /* Evita que ocupe espacio invisible */
+}
+
+.brandName {
+  color: var(--sidebar-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.brandLabel {
+  color: var(--sidebar-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ============================================================
+   COLLAPSE BUTTON
+   ============================================================ */
+.collapseBtn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text-secondary);
+  cursor: pointer;
+  transition: all var(--sb-transition-fast);
+  flex-shrink: 0;
+}
+
+.collapseBtn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-accent);
+  border-color: var(--sidebar-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-dim);
+}
+
+.collapseBtn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================
+   NAVIGATION (SCROLL CONTAINER)
+   ============================================================ */
+.navigation {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Un toque más de aire estilo Linear */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Scrollbar premium invisible que aparece al hacer hover */
+.navigation::-webkit-scrollbar { width: 4px; }
+.navigation::-webkit-scrollbar-track { background: transparent; }
+.navigation::-webkit-scrollbar-thumb { border-radius: 10px; background: transparent; }
+.navigation:hover::-webkit-scrollbar-thumb { background: var(--sidebar-border); }
+
+.sidebarCollapsed .navigation {
+  padding: 8px 6px;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================================================
+   NAV ITEMS (Links & Buttons unificados)
+   ============================================================ */
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebarCollapsed .navItem {
+  justify-content: center;
+}
+
+.navLink,
+.navButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: var(--sb-item-height);
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--sb-radius);
+  background: transparent;
+  color: var(--sidebar-text-secondary);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500; /* 500 es más estándar en fuentes web modernas */
+  white-space: nowrap;
+  transition: all var(--sb-transition-fast);
+}
+
+.navLink:hover,
+.navButton:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+}
+
+/* Estado Activo unificado */
+.navLinkActive,
+.navButtonActive {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-text);
+  font-weight: 600;
+}
+
+/* Indicador lateral izquierdo premium */
+.navLinkActive::before,
+.navButtonActive::before {
+  content: '';
+  position: absolute;
+  left: -2px; /* Toque estético: empuja levemente hacia afuera */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  border-radius: 0 4px 4px 0;
+  background: var(--sidebar-accent);
+  box-shadow: 0 0 12px var(--sidebar-accent);
+}
+
+/* Cambios del estado activo cuando el Sidebar está colapsado */
+.sidebarCollapsed :is(.navLinkActive, .navButtonActive) {
+  box-shadow: 0 0 0 1.5px var(--sidebar-accent), inset 0 0 14px var(--color-accent-dim);
+}
+.sidebarCollapsed :is(.navLinkActive, .navButtonActive)::before {
+  display: none;
+}
+
+/* Optimizaciones estructurales de items colapsados */
+.sidebarCollapsed :is(.navLink, .navButton) {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+/* Iconos y Etiquetas */
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity var(--sb-transition-fast);
+}
+
+:is(.navLink:hover, .navButton:hover, .navLinkActive, .navButtonActive) .icon,
+.sidebarCollapsed .icon {
+  opacity: 1;
+}
+
+.navLabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebarCollapsed :is(.navLabel, .badge, .chevron) {
+  display: none !important; /* Forzado limpio en estado colapsado */
+}
+
+/* Badge (Notificaciones) */
+.badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+/* ============================================================
+   ACORDEÓN (SUBMENUS)
+   ============================================================ */
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chevron {
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: auto;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms ease;
+}
+
+.submenuOpen {
+  grid-template-rows: 1fr;
+}
+
+.submenuInner {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 12px; /* Jerarquía visual para sub-items */
+}
+
+.submenu .navLink {
+  min-height: 32px;
+  padding: 6px 12px 6px 24px;
+  font-size: 0.825rem;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   FOOTER & PERFIL
+   ============================================================ */
+.footer {
+  margin-top: auto;
+  padding: 12px 10px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebarCollapsed .footer {
+  padding: 12px 4px;
+  align-items: center;
+}
+
+/* Tarjeta Perfil Expandida */
+.profileCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--sb-radius);
+  background: var(--sidebar-surface-bg);
+  transition: all var(--sb-transition-fast);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.profileCard:hover {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--sidebar-border);
+}
+
+.sidebarCollapsed .profileCard {
+  display: none;
+}
+
+/* Tarjeta Perfil Colapsada */
+.profileCardCollapsed {
+  display: none;
+  justify-content: center;
+  position: relative;
+}
+
+.sidebarCollapsed .profileCardCollapsed {
+  display: flex;
+}
+
+.profileAvatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.profileAvatarCollapsed {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--sidebar-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--sidebar-accent-text);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: all var(--sb-transition-fast);
+  cursor: pointer;
+}
+
+.profileAvatarCollapsed:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.profileInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.profileName {
+  color: var(--sidebar-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.profileRole {
+  color: var(--sidebar-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+/* Acciones Inferiores (Botones de Configuración/Logout) */
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.sidebarCollapsed .actions {
+  flex-direction: column;
+  width: 100%;
+}
+
+.actionButton {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: var(--sb-radius);
+  background: transparent;
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.825rem;
+  font-weight: 500;
+  transition: all var(--sb-transition-fast);
+  white-space: nowrap;
+  position: relative;
+}
+
+.actionButton:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+  border-color: var(--sidebar-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-dim);
+}
+
+.sidebarCollapsed .actionButton {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  flex: none;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   TOOLTIPS (Arquitectura limpia y unificada)
+   ============================================================ */
+.tooltip,
+.tooltipProfile,
+.actionTooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 140;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.tooltipProfile {
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+}
+
+.tooltipProfile strong {
+  color: var(--sidebar-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tooltipProfile span {
+  color: var(--sidebar-text-secondary);
+  font-size: 0.75rem;
+}
+
+/* Flecha de Tooltips optimizada con CSS puro plano */
+:is(.tooltip, .tooltipProfile, .actionTooltip)::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-width: 5px 5px 5px 0;
+  border-style: solid;
+  border-color: transparent var(--sidebar-bg) transparent transparent;
+}
+
+/* ============================================================
+   RESPONSIVE & MOBILE
+   ============================================================ */
+.headerActions {
+  position: fixed;
+  left: var(--sb-width);
+  top: 16px;
+  right: 16px;
+  z-index: 110;
+  transition: left var(--sb-transition-fluid);
+}
+
+.sidebarCollapsed ~ .headerActions {
+  left: var(--sb-collapsed-width);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 115;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(4px);
+  animation: overlayIn 220ms ease;
+}
+
+.mobileTrigger {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 125;
+  width: 38px;
+  height: 38px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--sidebar-surface-bg);
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all var(--sb-transition-fast);
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Media Queries Consistentes */
+@media (max-width: 768px) {
+  .sidebar {
+    width: min(80vw, 300px) !important;
+    transform: translateX(-105%);
+    transition: transform var(--sb-transition-fluid);
+    box-shadow: var(--shadow-2xl);
+  }
+
+  .sidebarMobileOpen {
+    transform: translateX(0);
+  }
+
+  .mobileTrigger {
+    display: inline-flex;
+  }
+
+  .headerActions {
+    display: none;
+  }
+}
+
+/* Respetar configuraciones de accesibilidad del sistema operativo */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .brandText,
+  .chevron,
+  .submenu,
+  .navLink,
+  .navButton {
+    transition: none !important;
+    animation: none !important;
+  }
+}

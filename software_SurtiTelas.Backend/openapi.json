@@ -1,0 +1,3201 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SurtiTelas API",
+    "version": "1.0.0",
+    "description": "Backend API para la plataforma SurtiTelas - Manufactura y comercialización de prendas de vestir",
+    "contact": {
+      "name": "SurtiTelas Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cliente-123"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Juan Pérez"
+          },
+          "ciudad": {
+            "type": "string",
+            "example": "Bogotá"
+          },
+          "tel": {
+            "type": "string",
+            "example": "3001234567"
+          },
+          "nit": {
+            "type": "string",
+            "example": "900123456-7"
+          },
+          "cupoTotal": {
+            "type": "number",
+            "example": 500000
+          },
+          "cupoUsado": {
+            "type": "number",
+            "example": 120000
+          },
+          "deudaVencida": {
+            "type": "number",
+            "example": 0
+          },
+          "isTrustedCustomer": {
+            "type": "boolean",
+            "example": false
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "Activo",
+              "Inactivo"
+            ],
+            "example": "Activo"
+          },
+          "pedidos": {
+            "type": "number",
+            "example": 3
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "prod-123"
+          },
+          "ref": {
+            "type": "string",
+            "example": "REF-001"
+          },
+          "codigo": {
+            "type": "string",
+            "example": "CAM-001"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Camiseta básica"
+          },
+          "descripcion": {
+            "type": "string",
+            "example": "Camiseta 100% algodón"
+          },
+          "descripcionCorta": {
+            "type": "string",
+            "example": "Camiseta básica"
+          },
+          "categoria": {
+            "type": "string",
+            "example": "Camisetas"
+          },
+          "subcategoria": {
+            "type": "string",
+            "example": "Manga corta"
+          },
+          "marca": {
+            "type": "string",
+            "example": "SurtiTelas"
+          },
+          "precio": {
+            "type": "number",
+            "example": 25000
+          },
+          "precioAnterior": {
+            "type": "number",
+            "example": 30000
+          },
+          "descuento": {
+            "type": "number",
+            "example": 17
+          },
+          "cantidadStock": {
+            "type": "number",
+            "example": 100
+          },
+          "stock": {
+            "type": "string",
+            "enum": [
+              "OK",
+              "Bajo stock",
+              "Agotado"
+            ],
+            "example": "OK"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "Activo",
+              "Inactivo"
+            ],
+            "example": "Activo"
+          },
+          "imagenes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "https://cdn.surtitelas.com/img1.jpg"
+            ]
+          },
+          "imagenPrincipal": {
+            "type": "string",
+            "example": "https://cdn.surtitelas.com/img1.jpg"
+          },
+          "publicado": {
+            "type": "boolean",
+            "example": true
+          },
+          "destacado": {
+            "type": "boolean",
+            "example": false
+          },
+          "oferta": {
+            "type": "boolean",
+            "example": true
+          },
+          "nuevo": {
+            "type": "boolean",
+            "example": false
+          },
+          "masVendido": {
+            "type": "boolean",
+            "example": true
+          },
+          "tela": {
+            "type": "string",
+            "example": "Algodón"
+          },
+          "colores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Blanco",
+              "Negro"
+            ]
+          },
+          "tallas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "S",
+              "M",
+              "L"
+            ]
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "order-123"
+          },
+          "numero": {
+            "type": "string",
+            "example": "PED-000001"
+          },
+          "cliente": {
+            "type": "string",
+            "example": "Juan Pérez"
+          },
+          "asesor": {
+            "type": "string",
+            "example": "María Gómez"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-12T00:00:00.000Z"
+          },
+          "total": {
+            "type": "number",
+            "example": 50000
+          },
+          "items": {
+            "type": "number",
+            "example": 2
+          },
+          "estado": {
+            "type": "string",
+            "example": "Nuevo"
+          },
+          "prioridad": {
+            "type": "string",
+            "enum": [
+              "Estándar",
+              "Prioritario"
+            ],
+            "example": "Estándar"
+          },
+          "observaciones": {
+            "type": "string",
+            "example": "Entregar en la mañana"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-12T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-12T00:00:00.000Z"
+          },
+          "itemsList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "example": "prod-123"
+                },
+                "nombre": {
+                  "type": "string",
+                  "example": "Camiseta básica"
+                },
+                "precio": {
+                  "type": "number",
+                  "example": 25000
+                },
+                "cantidad": {
+                  "type": "number",
+                  "example": 2
+                }
+              }
+            },
+            "example": [
+              {
+                "productId": "prod-123",
+                "nombre": "Camiseta básica",
+                "precio": 25000,
+                "cantidad": 2
+              }
+            ]
+          }
+        }
+      },
+      "Paginated": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {}
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "number",
+                "example": 50
+              },
+              "page": {
+                "type": "number",
+                "example": 1
+              },
+              "limit": {
+                "type": "number",
+                "example": 10
+              },
+              "nextCursor": {
+                "type": "string",
+                "example": "cursorABC"
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "not_found"
+          },
+          "message": {
+            "type": "string",
+            "example": "Recurso no encontrado"
+          }
+        }
+      },
+      "Return": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ret-123"
+          },
+          "numeroDevolucion": {
+            "type": "string",
+            "example": "DEV-0001"
+          },
+          "orderId": {
+            "type": "string",
+            "nullable": true,
+            "example": "order-123"
+          },
+          "prenda": {
+            "type": "string",
+            "nullable": true,
+            "example": "Camiseta"
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true,
+            "example": "REF-001"
+          },
+          "motivo": {
+            "type": "string",
+            "nullable": true,
+            "example": "Talla incorrecta"
+          },
+          "cantidad": {
+            "type": "integer",
+            "example": 2
+          },
+          "cantidadInspeccionada": {
+            "type": "integer",
+            "example": 0
+          },
+          "fechaDevolucion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "RECIBIDO",
+              "EN_INSPECCION",
+              "APROBADO",
+              "RECHAZADO",
+              "EN_REPARACION",
+              "REINGRESADO",
+              "DESCARTADO"
+            ],
+            "example": "RECIBIDO"
+          },
+          "destino": {
+            "type": "string",
+            "enum": [
+              "REINGRESO_INVENTARIO",
+              "REPARACION",
+              "DESCARTE",
+              "DEVOLUCION_PROVEEDOR"
+            ],
+            "example": "REINGRESO_INVENTARIO"
+          },
+          "cliente": {
+            "type": "string",
+            "nullable": true,
+            "example": "Juan Pérez"
+          },
+          "responsable": {
+            "type": "string",
+            "nullable": true,
+            "example": "María Gómez"
+          },
+          "observaciones": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Delivery": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "del-123"
+          },
+          "orderId": {
+            "type": "string",
+            "example": "order-123"
+          },
+          "domiciliarioId": {
+            "type": "string",
+            "nullable": true,
+            "example": "user-123"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ASIGNADO",
+              "EN_RUTA",
+              "ENTREGADO",
+              "FALLIDO"
+            ],
+            "example": "ASIGNADO"
+          },
+          "direccion": {
+            "type": "string",
+            "nullable": true,
+            "example": "Calle 123"
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true,
+            "example": "Bogotá"
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true,
+            "example": "3001234567"
+          },
+          "notas": {
+            "type": "string",
+            "nullable": true,
+            "example": "Entregar en la mañana"
+          },
+          "orderNumero": {
+            "type": "string",
+            "nullable": true,
+            "example": "PED-000001"
+          },
+          "clienteNombre": {
+            "type": "string",
+            "nullable": true,
+            "example": "Juan Pérez"
+          },
+          "domiciliarioNombre": {
+            "type": "string",
+            "nullable": true,
+            "example": "Carlos Domiciliario"
+          },
+          "asignadoEn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "entregadoEn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/returns": {
+      "get": {
+        "summary": "Listar devoluciones",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RECIBIDO",
+                "EN_INSPECCION",
+                "APROBADO",
+                "RECHAZADO",
+                "EN_REPARACION",
+                "REINGRESADO",
+                "DESCARTADO"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de devoluciones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Return"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/Paginated"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear devolución",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cantidad"
+                ],
+                "properties": {
+                  "orderId": {
+                    "type": "string"
+                  },
+                  "prenda": {
+                    "type": "string"
+                  },
+                  "referencia": {
+                    "type": "string"
+                  },
+                  "motivo": {
+                    "type": "string"
+                  },
+                  "cantidad": {
+                    "type": "integer"
+                  },
+                  "cantidadInspeccionada": {
+                    "type": "integer"
+                  },
+                  "destino": {
+                    "type": "string",
+                    "enum": [
+                      "REINGRESO_INVENTARIO",
+                      "REPARACION",
+                      "DESCARTE",
+                      "DEVOLUCION_PROVEEDOR"
+                    ]
+                  },
+                  "cliente": {
+                    "type": "string"
+                  },
+                  "responsable": {
+                    "type": "string"
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  },
+                  "fechaDevolucion": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Devolución creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Return"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/returns/{id}": {
+      "get": {
+        "summary": "Obtener devolución por ID",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Devolución encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Return"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Actualizar devolución",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prenda": {
+                    "type": "string"
+                  },
+                  "referencia": {
+                    "type": "string"
+                  },
+                  "motivo": {
+                    "type": "string"
+                  },
+                  "cantidad": {
+                    "type": "integer"
+                  },
+                  "cantidadInspeccionada": {
+                    "type": "integer"
+                  },
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "RECIBIDO",
+                      "EN_INSPECCION",
+                      "APROBADO",
+                      "RECHAZADO",
+                      "EN_REPARACION",
+                      "REINGRESADO",
+                      "DESCARTADO"
+                    ]
+                  },
+                  "destino": {
+                    "type": "string",
+                    "enum": [
+                      "REINGRESO_INVENTARIO",
+                      "REPARACION",
+                      "DESCARTE",
+                      "DEVOLUCION_PROVEEDOR"
+                    ]
+                  },
+                  "cliente": {
+                    "type": "string"
+                  },
+                  "responsable": {
+                    "type": "string"
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Devolución actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Return"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar devolución (soft delete)",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Eliminada"
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/returns/{id}/status": {
+      "post": {
+        "summary": "Cambiar estado de devolución",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estado"
+                ],
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "RECIBIDO",
+                      "EN_INSPECCION",
+                      "APROBADO",
+                      "RECHAZADO",
+                      "EN_REPARACION",
+                      "REINGRESADO",
+                      "DESCARTADO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Return"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      }
+    },
+    "/reports/sales": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Sales report",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sales aggregated report"
+          }
+        }
+      }
+    },
+    "/reports/inventory": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Inventory report",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory aggregated report"
+          }
+        }
+      }
+    },
+    "/reports/production": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Production report",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Production aggregated report"
+          }
+        }
+      }
+    },
+    "/reports/users": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Users report",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users aggregated report"
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "List orders",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "example": "Nuevo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedOrders"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Create order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "clienteId": "cliente-123",
+                "asesorId": "user-456",
+                "prioridad": "Estándar",
+                "observaciones": "Entregar en la mañana",
+                "itemsList": [
+                  {
+                    "nombre": "Camiseta básica",
+                    "precio": 25000,
+                    "cantidad": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Pedido creado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/dashboard": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get dashboard metrics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalOrders": {
+                          "type": "integer"
+                        },
+                        "totalCustomers": {
+                          "type": "integer"
+                        },
+                        "totalSales": {
+                          "type": "number"
+                        },
+                        "ordersByStatus": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "estado": {
+                                "type": "string"
+                              },
+                              "cantidad": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get order by id",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Update order full",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "prioridad": "Prioritario",
+                "observaciones": "Nueva nota"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Pedido actualizado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Delete order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Order deleted"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        }
+      }
+    },
+    "/orders/{id}/status": {
+      "patch": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Update order status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "estado": "En producción"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Estado actualizado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/domiciliario": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Assign delivery person to order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "domiciliarioId": "user-789"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Delivery person assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Domiciliario asignado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "List notifications for current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "leida",
+            "schema": {
+              "type": "boolean",
+              "example": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "notif-123"
+                          },
+                          "tipo": {
+                            "type": "string",
+                            "example": "SUCCESS"
+                          },
+                          "titulo": {
+                            "type": "string",
+                            "example": "Pedido creado"
+                          },
+                          "mensaje": {
+                            "type": "string",
+                            "example": "Pedido PED-000001 ..."
+                          },
+                          "leida": {
+                            "type": "boolean",
+                            "example": false
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark notification as read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Notificación marcada como leída"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/deliveries": {
+      "get": {
+        "summary": "Listar entregas/domicilios",
+        "tags": [
+          "Deliveries"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ASIGNADO",
+                "EN_RUTA",
+                "ENTREGADO",
+                "FALLIDO"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "domiciliarioId",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de entregas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Delivery"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/Paginated"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear entrega/domicilio",
+        "tags": [
+          "Deliveries"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "orderId"
+                ],
+                "properties": {
+                  "orderId": {
+                    "type": "string"
+                  },
+                  "domiciliarioId": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  },
+                  "ciudad": {
+                    "type": "string"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "notas": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Entrega creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Delivery"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/deliveries/{id}": {
+      "get": {
+        "summary": "Obtener entrega por ID",
+        "tags": [
+          "Deliveries"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entrega encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Delivery"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Actualizar entrega",
+        "tags": [
+          "Deliveries"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "domiciliarioId": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  },
+                  "ciudad": {
+                    "type": "string"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "notas": {
+                    "type": "string"
+                  },
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "ASIGNADO",
+                      "EN_RUTA",
+                      "ENTREGADO",
+                      "FALLIDO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entrega actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Delivery"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar entrega (soft delete)",
+        "tags": [
+          "Deliveries"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Eliminada"
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/deliveries/{id}/status": {
+      "post": {
+        "summary": "Cambiar estado de entrega",
+        "tags": [
+          "Deliveries"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estado"
+                ],
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "ASIGNADO",
+                      "EN_RUTA",
+                      "ENTREGADO",
+                      "FALLIDO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Delivery"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      }
+    },
+    "/catalog/products": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "List products with pagination",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string",
+              "example": "Camiseta"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedProducts"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Create product",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              },
+              "example": {
+                "ref": "REF-001",
+                "nombre": "Camiseta básica",
+                "categoria": "Camisetas",
+                "precio": 25000,
+                "cantidadStock": 100,
+                "stock": "OK",
+                "estado": "Activo",
+                "tela": "Algodón",
+                "colores": [
+                  "Blanco"
+                ],
+                "tallas": [
+                  "M"
+                ],
+                "imagenes": [],
+                "publicado": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Producto creado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/products/{ref}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Get product by ref",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Update product",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "nombre": "Camiseta actualizada",
+                "precio": 27000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Producto actualizado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Delete product",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Producto eliminado"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/products/{ref}/publish": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Publish product",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product published",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Producto publicado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/products/{ref}/unpublish": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Unpublish product",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product unpublished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Producto despublicado"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/categories": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "List categories",
+        "responses": {
+          "200": {
+            "description": "Categories list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "cat-1"
+                          },
+                          "nombre": {
+                            "type": "string",
+                            "example": "Camisetas"
+                          },
+                          "slug": {
+                            "type": "string",
+                            "example": "camisetas"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Create category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "nombre": "Camisetas",
+                "slug": "camisetas"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Categoría creada"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "cat-1"
+                        },
+                        "nombre": {
+                          "type": "string",
+                          "example": "Camisetas"
+                        },
+                        "slug": {
+                          "type": "string",
+                          "example": "camisetas"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "admin@surtitelas.com",
+                "password": "SurtiTelas2025*"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Sesión iniciada"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string",
+                          "example": "eyJhbGciOi..."
+                        },
+                        "refreshToken": {
+                          "type": "string",
+                          "example": "eyJhbGciOi..."
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "example": "user-123"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "admin@surtitelas.com"
+                            },
+                            "nombre": {
+                              "type": "string",
+                              "example": "Administrador"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "ADMIN"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "example": [
+                                "catalog:read",
+                                "orders:create"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register new user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "nuevo@surtitelas.com",
+                "password": "Password123!",
+                "nombre": "Nuevo Usuario",
+                "role": "VENDEDOR"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Usuario creado"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "user-456"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "nuevo@surtitelas.com"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "refreshToken": "eyJhbGciOi..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string",
+                          "example": "eyJhbGciOi..."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login with Google",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "idToken": "eyJhbGciOi..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Google login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Autenticado con Google"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string",
+                          "example": "eyJhbGciOi..."
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "example": "cmrgx18p5000ikgwnffq16bul"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "admin@surtitelas.com"
+                            },
+                            "nombre": {
+                              "type": "string",
+                              "example": "Administrador"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "ADMIN"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Sesión cerrada"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "user-123"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "admin@surtitelas.com"
+                        },
+                        "nombre": {
+                          "type": "string",
+                          "example": "Administrador"
+                        },
+                        "role": {
+                          "type": "string",
+                          "example": "ADMIN"
+                        },
+                        "permissions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "catalog:read",
+                            "orders:create"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Update current user profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "example": "Juan Pérez"
+                  },
+                  "telefono": {
+                    "type": "string",
+                    "example": "3001234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "user-123"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "admin@surtitelas.com"
+                        },
+                        "nombre": {
+                          "type": "string",
+                          "example": "Administrador"
+                        },
+                        "role": {
+                          "type": "string",
+                          "example": "ADMIN"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/users": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List users",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "user-123"
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "admin@surtitelas.com"
+                          },
+                          "nombre": {
+                            "type": "string",
+                            "example": "Administrador"
+                          },
+                          "role": {
+                            "type": "string",
+                            "example": "ADMIN"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/permissions": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List permissions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permissions list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "perm-123"
+                          },
+                          "nombre": {
+                            "type": "string",
+                            "example": "catalog:read"
+                          },
+                          "descripcion": {
+                            "type": "string",
+                            "example": "Ver catálogo"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Create permission",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "nombre": "catalog:read",
+                "descripcion": "Ver catálogo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Permission created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Permiso creado"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "perm-123"
+                        },
+                        "nombre": {
+                          "type": "string",
+                          "example": "catalog:read"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/roles/{role}/permissions": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List permissions for role",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "perm-123"
+                          },
+                          "nombre": {
+                            "type": "string",
+                            "example": "catalog:read"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Assign permission to role",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "permissionId": "perm-123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permission assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Permiso asignado"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Remove permission from role",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "permissionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permission removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Permiso removido"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Forgot password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "usuario@surtitelas.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "If the email exists, reset instructions will be sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Si el correo existe",
+                      "recibirás instrucciones para restablecer tu contraseña": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password with token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "token": "abc123",
+                "newPassword": "NuevaPass123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Contraseña restablecida correctamente"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Change password for authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "currentPassword": "OldPass123!",
+                "newPassword": "NewPass123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Contraseña actualizada correctamente"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

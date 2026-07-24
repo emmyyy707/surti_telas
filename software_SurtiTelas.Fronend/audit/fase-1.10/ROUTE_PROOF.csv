@@ -1,0 +1,21 @@
+PATH,COMPONENT,FILE,EXECUTION_CHAIN
+/,PublicLayout,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx
+/catalogo,PublicLayout,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx
+/carrito,PublicLayout,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx
+/contacto,PublicLayout,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx
+/nosotros,PublicLayout,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx
+/login,LoginPage,src/presentation/pages/auth/LoginPage.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/auth/LoginPage.tsx
+/registro,RegisterPage,src/presentation/pages/auth/RegisterPage.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/auth/RegisterPage.tsx
+/unauthorized,div403,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx
+/admin/dashboard,AdminDashboard,src/app/components/AdminDashboard.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx
+/admin/users,UsersPage,src/app/features/admin/UsuariosModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/UsuariosModule.tsx
+/admin/inventario,InventoryPage,src/app/features/admin/InventarioModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/InventarioModule.tsx
+/admin/pedidos,OrdersPage,src/app/features/admin/HistorialPagosModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/HistorialPagosModule.tsx
+/admin/clientes,CustomersPage,src/app/features/admin/ClientesModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/ClientesModule.tsx
+/admin/domiciliarios,DeliveryPage,src/app/features/admin/DomiciliosModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/DomiciliosModule.tsx
+/admin/analytics,AnalyticsPage,src/app/features/admin/ReportesModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/ReportesModule.tsx
+/admin/configuracion,SettingsPage,src/app/features/admin/ConfiguracionModule.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/ConfiguracionModule.tsx
+/asesor/dashboard,AdminDashboard,src/app/components/AdminDashboard.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx
+/domiciliario/dashboard,AdminDashboard,src/app/components/AdminDashboard.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx
+/cliente/dashboard,AdminDashboard,src/app/components/AdminDashboard.tsx,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx
+*,Navigate,src/presentation/pages/App.tsx,src/main.tsx -> src/presentation/pages/App.tsx

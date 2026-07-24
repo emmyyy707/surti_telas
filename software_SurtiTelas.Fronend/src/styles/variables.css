@@ -1,0 +1,336 @@
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --sidebar-width: 260px;
+  --header-height: 64px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  --ease-out:    cubic-bezier(0.0, 0.0, 0.2, 1.0);
+  --ease-in:     cubic-bezier(0.4, 0.0, 1.0, 1.0);
+  --ease-inout:  cubic-bezier(0.4, 0.0, 0.2, 1.0);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1.0);
+
+  --shadow-xs:   0 1px 2px rgba(0,0,0,0.03);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md:   0 3px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg:   0 8px 20px rgba(0,0,0,0.07), 0 3px 8px rgba(0,0,0,0.04);
+  --shadow-xl:   0 16px 32px rgba(0,0,0,0.09), 0 6px 12px rgba(0,0,0,0.05);
+  --shadow-2xl:  0 25px 50px -12px rgba(0,0,0,0.25);
+
+  --bg-canvas:    #ffffff;
+  --bg-base:      #fafafa;
+  --bg-elevated:  #ffffff;
+  --bg-overlay:   #ffffff;
+  --bg-subtle:    #f5f5f5;
+  --bg-muted:     #eeeeee;
+
+  --border-subtle:  #e0e0e0;
+  --border-default: #d0d0d0;
+  --border-strong:  #cccccc;
+
+  --text-primary:    #111111;
+  --text-secondary:  #444444;
+  --text-tertiary:   #666666;
+  --text-quaternary: #888888;
+  --text-inverse:    #ffffff;
+
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #fafafa;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #f5f5f5;
+  --color-bg-card: #ffffff;
+  --color-border: #e0e0e0;
+  --color-border-subtle: #f0f0f0;
+  --color-text-primary: #111111;
+  --color-text-secondary: #444444;
+  --color-text-muted: #666666;
+
+  --color-accent: #000000;
+  --color-accent-hover: #222222;
+  --color-accent-dim: rgba(0, 0, 0, 0.05);
+
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-error: #dc2626;
+  --color-error-hover: #b91c1c;
+
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.65);
+
+  --input-bg: #ffffff;
+  --input-border: #e0e0e0;
+  --input-text: #111111;
+  --input-placeholder: #888888;
+
+  --btn-primary-bg: #000000;
+  --btn-primary-bg-hover: #222222;
+  --btn-primary-text: #ffffff;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-bg-hover: #f5f5f5;
+  --btn-secondary-text: #000000;
+  --btn-secondary-border: #e0e0e0;
+
+  --btn-danger-bg: #dc2626;
+  --btn-danger-bg-hover: #b91c1c;
+  --btn-danger-text: #ffffff;
+
+  --btn-success-bg: #22c55e;
+  --btn-success-bg-hover: #16a34a;
+
+  --btn-transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out), transform 100ms var(--ease-out), opacity 140ms var(--ease-out);
+
+  --shadow-modal: 0 25px 50px -12px rgba(0,0,0,0.25);
+
+  --tooltip-bg: #111111;
+  --tooltip-color: #ffffff;
+  --tooltip-border: rgba(255, 255, 255, 0.08);
+
+  /* Sidebar (light theme defaults) */
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #111827;
+  --sidebar-text-secondary: #6b7280;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-hover-bg: #f5f5f5;
+  --sidebar-active-bg: #f0f0f0;
+  --sidebar-accent: #8b5cf6;
+  --sidebar-accent-text: #ffffff;
+
+  --border-focus: #111111;
+
+  /* Header / Top bar (light defaults) */
+  --header-bg: #ffffff;
+  --header-border: #e5e7eb;
+  --header-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  --header-text: #111827;
+  --header-icon-bg: #ffffff;
+  --header-icon-border: #e5e7eb;
+  --header-icon-color: #4b5563;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --sidebar-width: 260px;
+  --header-height: 64px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-xs:   0 1px 2px rgba(0,0,0,0.2);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:   0 3px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-lg:   0 8px 20px rgba(0,0,0,0.4), 0 3px 8px rgba(0,0,0,0.3);
+  --shadow-xl:   0 16px 32px rgba(0,0,0,0.5), 0 6px 12px rgba(0,0,0,0.35);
+  --shadow-2xl:  0 24px 48px rgba(0,0,0,0.6), 0 8px 16px rgba(0,0,0,0.4);
+  --shadow-card: 0 0 0 1px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-elevated: var(--shadow-xl);
+
+  --bg-canvas:    #0a0a0c;
+  --bg-base:      #0a0a0c;
+  --bg-elevated:  #111114;
+  --bg-overlay:   #17171a;
+  --bg-subtle:    #1a1a1e;
+  --bg-muted:     #222226;
+  --bg-inset:     #1e1e22;
+
+  --border-subtle:  rgba(255,255,255,0.04);
+  --border-default: rgba(255,255,255,0.07);
+  --border-strong:  rgba(255,255,255,0.12);
+  --border-focus:   rgba(255,255,255,0.75);
+
+  --text-primary:    #f4f4f5;
+  --text-secondary:  #a1a1aa;
+  --text-tertiary:   #52525b;
+  --text-quaternary: #3f3f46;
+  --text-inverse:    #ffffff;
+
+  --color-bg-primary: #0a0a0c;
+  --color-bg-secondary: #111114;
+  --color-bg-surface: #17171a;
+  --color-bg-elevated: #222226;
+  --color-bg-card: #17171a;
+  --color-border: #2a2a2e;
+  --color-border-subtle: #1e1e22;
+  --color-text-primary: #f4f4f5;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+
+  --color-accent: #D4A574;
+  --color-accent-hover: #B8956A;
+  --color-accent-dim: rgba(212, 165, 116, 0.12);
+
+  --sidebar-bg: #111114;
+  --sidebar-text: #f4f4f5;
+  --sidebar-text-secondary: #a1a1aa;
+  --sidebar-border: #2a2a2e;
+  --sidebar-hover-bg: #222226;
+  --sidebar-active-bg: #2a2520;
+
+  --color-success: #4ade80;
+  --color-success-hover: #86efac;
+  --color-success-border: rgba(74, 222, 128, 0.3);
+  --color-success-dim: rgba(74, 222, 128, 0.18);
+
+  --color-warning: #fcd34d;
+  --color-warning-hover: #fde04e;
+  --color-warning-border: rgba(252, 211, 77, 0.3);
+  --color-warning-dim: rgba(252, 211, 77, 0.18);
+
+  --color-error: #f87171;
+  --color-error-hover: #fca5a5;
+  --color-error-border: rgba(248, 113, 113, 0.3);
+  --color-error-dim: rgba(248, 113, 113, 0.18);
+
+  --color-info: #60a5fa;
+  --color-info-hover: #93c5fd;
+  --color-info-border: rgba(96, 165, 250, 0.3);
+  --color-info-dim: rgba(96, 165, 250, 0.18);
+
+  --background: #0a0a0c;
+  --foreground: #f4f4f5;
+  --card: #17171a;
+  --card-foreground: #f4f4f5;
+  --popover: #17171a;
+  --popover-foreground: #f4f4f5;
+  --primary: #D4A574;
+  --primary-foreground: #0a0a0c;
+  --secondary: #1f1a16;
+  --secondary-foreground: #e8e3d8;
+  --muted: #222226;
+  --muted-foreground: #a1a1aa;
+  --accent: #2a2520;
+  --accent-foreground: #e8e3d8;
+  --destructive: #f87171;
+  --destructive-foreground: #0a0a0c;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: transparent;
+  --input-background: #17171a;
+  --switch-background: #444444;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #D4A574;
+  --chart-1: #D4A574;
+  --chart-2: #B8956A;
+  --chart-3: #8B7355;
+  --chart-4: #6B5B45;
+  --chart-5: #4a3f35;
+
+  --dropdown-bg: #1a1a1a;
+  --dropdown-border: #2a2a2e;
+  --dropdown-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  --dropdown-item-text: #a1a1aa;
+  --dropdown-item-hover-bg: #222226;
+  --dropdown-item-hover-text: #f4f4f5;
+  --dropdown-item-active-bg: #2a2520;
+  --dropdown-icon-color: #71717a;
+  --dropdown-icon-hover-color: #a1a1aa;
+  --dropdown-shortcut-bg: rgba(255,255,255,0.05);
+  --dropdown-shortcut-border: rgba(255,255,255,0.1);
+  --dropdown-shortcut-text: #71717a;
+  --dropdown-divider: rgba(255,255,255,0.08);
+  --dropdown-danger-text: #f87171;
+  --dropdown-danger-hover-bg: rgba(248,113,113,0.15);
+  --dropdown-danger-hover-text: #fca5a5;
+  --dropdown-danger-icon: #f87171;
+  --dropdown-danger-icon-hover: #fca5a5;
+  --dropdown-danger-shortcut-bg: rgba(248,113,113,0.1);
+  --dropdown-danger-shortcut-border: rgba(248,113,113,0.2);
+  --dropdown-danger-shortcut-text: rgba(248,113,113,0.7);
+
+  --modal-bg: #1a1a1a;
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Header / Top bar - dark overrides */
+  --header-bg: #000000;
+  --header-border: #334155;
+  --header-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --header-text: #e2e8f0;
+  --header-icon-bg: #111111;
+  --header-icon-border: #333333;
+  --header-icon-color: #a1a1aa;
+
+  --input-bg: #1a1a1a;
+  --input-border: #2a2a2e;
+  --input-text: #f4f4f5;
+  --input-placeholder: #71717a;
+
+  --notif-bg: #1a1a1a;
+  --notif-border: #2a2a2e;
+  --notif-item-hover: #222226;
+  --notif-unread-bg: #1f1f22;
+  --notif-text: #f4f4f5;
+  --notif-text-secondary: #a1a1aa;
+  --btn-primary-bg: var(--color-accent);
+  --btn-primary-bg-hover: var(--color-accent-hover);
+  --btn-primary-text: var(--color-bg-primary);
+  --btn-primary-border: var(--color-accent);
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-bg-hover: var(--bg-muted);
+  --btn-secondary-text: var(--text-primary);
+  --btn-secondary-border: var(--border-default);
+
+  --btn-success-bg: var(--color-success);
+  --btn-success-bg-hover: #86efac;
+  --btn-success-text: var(--color-bg-primary);
+
+  --btn-warning-bg: var(--color-warning);
+  --btn-warning-bg-hover: #fde04e;
+  --btn-warning-text: var(--color-bg-primary);
+
+  --btn-danger-bg: var(--color-error);
+  --btn-danger-bg-hover: #fca5a5;
+  --btn-danger-text: var(--color-bg-primary);
+  --btn-danger-bg-outline: transparent;
+  --btn-danger-border: var(--color-error);
+  --btn-danger-text-outline: var(--color-error);
+  --btn-danger-hover-bg: rgba(248, 113, 113, 0.15);
+
+  --btn-outline-bg: transparent;
+  --btn-outline-bg-hover: var(--bg-muted);
+  --btn-outline-text: var(--text-secondary);
+  --btn-outline-border: var(--border-default);
+
+  --btn-ghost-bg: transparent;
+  --btn-ghost-bg-hover: var(--bg-muted);
+  --btn-ghost-text: var(--text-secondary);
+
+  --btn-icon-bg: transparent;
+  --btn-icon-hover-bg: var(--bg-muted);
+  --btn-icon-size: 36px;
+
+  --btn-table-action-bg: transparent;
+  --btn-table-action-hover-bg: var(--bg-muted);
+  --btn-table-action-text: var(--text-tertiary);
+  --btn-table-action-hover-text: var(--text-primary);
+
+  --btn-transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out), transform 100ms var(--ease-out), box-shadow 140ms var(--ease-out), opacity 140ms var(--ease-out);
+
+  --shadow-modal: var(--shadow-xl);
+
+  --tooltip-bg: #f4f4f5;
+  --tooltip-color: #0a0a0c;
+  --tooltip-border: rgba(255, 255, 255, 0.08);
+}

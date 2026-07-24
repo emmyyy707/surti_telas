@@ -1,0 +1,363 @@
+/* ================================================================
+   DropdownMenu · Premium SaaS Menu
+   Design references: Linear · Stripe · Vercel · Notion
+   ================================================================ */
+
+/* ------------------------------------------------------------------ */
+/*  Container / Portal wrapper                                        */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-container {
+  position: fixed;
+  z-index: 9999;
+  width: 240px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--dropdown-border);
+  background: var(--dropdown-bg);
+  box-shadow: var(--dropdown-shadow);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  animation: DropdownMenu-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+  color: var(--dropdown-item-text);
+}
+
+.DropdownMenu-container[data-align='left'] {
+  transform-origin: top left;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Inner (vertical stack)                                            */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Header                                                            */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--dropdown-divider);
+  margin-bottom: 4px;
+}
+
+.DropdownMenu-headerTitle {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dropdown-item-hover-text);
+  margin-bottom: 2px;
+}
+
+.DropdownMenu-headerDesc {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--dropdown-shortcut-text);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Divider (glassmorphism seperator)                                 */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-divider {
+  height: 1px;
+  margin: 5px 10px;
+  background: linear-gradient(90deg, transparent, var(--dropdown-divider), transparent);
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Item                                                              */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--dropdown-item-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 100ms ease,
+    box-shadow 140ms ease;
+  outline: none;
+  position: relative;
+  text-align: left;
+  animation: DropdownMenu-item-enter 180ms ease-out both;
+}
+
+/* stagger animation on open */
+.DropdownMenu-item:nth-child(1),
+.DropdownMenu-item:nth-child(2) {
+  animation-delay: 20ms;
+}
+.DropdownMenu-item:nth-child(3),
+.DropdownMenu-item:nth-child(4) {
+  animation-delay: 40ms;
+}
+.DropdownMenu-item:nth-child(5) {
+  animation-delay: 60ms;
+}
+.DropdownMenu-item:nth-child(6) {
+  animation-delay: 80ms;
+}
+
+.DropdownMenu-item:hover:not(.DropdownMenu-item--disabled) {
+  background: var(--dropdown-item-hover-bg);
+  color: var(--dropdown-item-hover-text);
+  box-shadow: inset 0 0 0 1px var(--dropdown-border);
+}
+
+.DropdownMenu-item:active:not(.DropdownMenu-item--disabled) {
+  background: var(--dropdown-item-active-bg);
+  transform: scale(0.976);
+}
+
+.DropdownMenu-item:focus-visible {
+  box-shadow:
+    inset 0 0 0 1.5px var(--border-focus),
+    0 0 0 3px var(--border-focus);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Disabled state                                                    */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-item--disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Danger variant                                                    */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-item--danger {
+  color: var(--dropdown-danger-text);
+}
+
+.DropdownMenu-item--danger:hover:not(.DropdownMenu-item--disabled) {
+  background: var(--dropdown-danger-hover-bg);
+  color: var(--dropdown-danger-hover-text);
+  box-shadow: inset 0 0 0 1px var(--dropdown-danger-hover-bg);
+}
+
+.DropdownMenu-item--danger:active:not(.DropdownMenu-item--disabled) {
+  background: var(--dropdown-danger-hover-bg);
+  transform: scale(0.976);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Icon                                                              */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--dropdown-icon-color);
+  transition: color 140ms ease;
+}
+
+.DropdownMenu-item:hover .DropdownMenu-icon {
+  color: var(--dropdown-icon-hover-color);
+}
+
+.DropdownMenu-item--danger .DropdownMenu-icon,
+.DropdownMenu-icon--danger {
+  color: var(--dropdown-danger-icon);
+}
+
+.DropdownMenu-item--danger:hover .DropdownMenu-icon {
+  color: var(--dropdown-danger-icon-hover);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Label                                                             */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-label {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shortcut key badge                                                */
+/* ------------------------------------------------------------------ */
+
+.DropdownMenu-shortcut {
+  margin-left: auto;
+  font-size: 11px;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--dropdown-shortcut-border);
+  background: var(--dropdown-shortcut-bg);
+  color: var(--dropdown-shortcut-text);
+  transition: all 140ms ease;
+  line-height: 1;
+}
+
+.DropdownMenu-item:hover .DropdownMenu-shortcut {
+  color: var(--dropdown-icon-hover-color);
+  border-color: var(--dropdown-border);
+  background: var(--dropdown-shortcut-bg);
+}
+
+.DropdownMenu-item--danger .DropdownMenu-shortcut,
+.DropdownMenu-shortcut--danger {
+  color: var(--dropdown-danger-shortcut-text);
+  border-color: var(--dropdown-danger-shortcut-border);
+  background: var(--dropdown-danger-shortcut-bg);
+}
+
+.DropdownMenu-item--danger:hover .DropdownMenu-shortcut {
+  color: var(--dropdown-danger-hover-text);
+  border-color: var(--dropdown-danger-icon-hover);
+  background: var(--dropdown-danger-hover-bg);
+}
+
+/* ------------------------------------------------------------------ */
+/*  External trigger button (three dots)                              */
+/* ------------------------------------------------------------------ */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bodyRow:hover .actionButton,
+.actionButton:focus-visible {
+  opacity: 1;
+}
+
+.actionButton:hover {
+  opacity: 1;
+  border-color: var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.actionButton:active {
+  transform: scale(0.93);
+}
+
+.actionButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Animations: open / item stagger                                   */
+/* ------------------------------------------------------------------ */
+
+@keyframes DropdownMenu-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-4px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes DropdownMenu-item-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Responsive adjustments                                            */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 640px) {
+  .DropdownMenu-container {
+    width: 200px;
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .DropdownMenu-item {
+    padding: 10px 10px;
+    font-size: 13px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+  .DropdownMenu-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reduced motion                                                    */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .DropdownMenu-container {
+    animation: none;
+  }
+  .DropdownMenu-item {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  High contrast mode / forced colors                                */
+/* ------------------------------------------------------------------ */
+
+@media (forced-colors: active) {
+  .DropdownMenu-container {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+  .DropdownMenu-item {
+    color: CanvasText;
+  }
+}

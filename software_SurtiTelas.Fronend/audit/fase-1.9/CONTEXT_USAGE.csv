@@ -1,0 +1,10 @@
+CONTEXT,PROVIDER_FILE,CONSUMER_FILE,EVIDENCE
+AuthContext,src/presentation/contexts/AuthContext.tsx,N/A,const AuthContext = createContext(...) in src/presentation/contexts/AuthContext.tsx
+CartContext,src/presentation/contexts/CartContext.tsx,N/A,const CartContext = createContext(...) in src/presentation/contexts/CartContext.tsx
+CartDrawerContext,src/presentation/contexts/CartDrawerContext.tsx,N/A,const CartDrawerContext = createContext(...) in src/presentation/contexts/CartDrawerContext.tsx
+ThemeContext,src/presentation/contexts/ThemeContext.tsx,N/A,const ThemeContext = createContext(...) in src/presentation/contexts/ThemeContext.tsx
+ThemeContext,src/app/contexts/ThemeContext.tsx,N/A,const ThemeContext = createContext(...) in src/app/contexts/ThemeContext.tsx
+ThemeContext,src/app/contexts/ThemeContext.tsx,src/presentation/contexts/ThemeContext.tsx,useContext(ThemeContext) in src/presentation/contexts/ThemeContext.tsx
+CartDrawerContext,src/presentation/contexts/CartDrawerContext.tsx,src/presentation/contexts/CartDrawerContext.tsx,useContext(CartDrawerContext) in src/presentation/contexts/CartDrawerContext.tsx
+AuthContext,src/presentation/contexts/AuthContext.tsx,src/presentation/contexts/AuthContext.tsx,useContext(AuthContext) in src/presentation/contexts/AuthContext.tsx
+CartContext,src/presentation/contexts/CartContext.tsx,src/presentation/contexts/CartContext.tsx,useContext(CartContext) in src/presentation/contexts/CartContext.tsx

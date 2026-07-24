@@ -1,0 +1,27 @@
+HOOK,DECLARATION_FILE,CONSUMER_FILE,EVIDENCE
+useEffect,react (external),src/app/components/AdminDashboard.tsx,useEffect() call found in src/app/components/AdminDashboard.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/auth/RegisterPage.tsx,useNavigate() called in src/presentation/pages/auth/RegisterPage.tsx
+useLocation,Unknown (custom hook),src/presentation/pages/auth/RegisterPage.tsx,useLocation() called in src/presentation/pages/auth/RegisterPage.tsx
+useEffect,react (external),src/presentation/pages/features/CatalogPage.tsx,useEffect() call found in src/presentation/pages/features/CatalogPage.tsx
+useMemo,react (external),src/presentation/pages/features/CatalogPage.tsx,useMemo() call found in src/presentation/pages/features/CatalogPage.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/features/CatalogPage.tsx,useNavigate() called in src/presentation/pages/features/CatalogPage.tsx
+useCallback,react (external),src/shared/utils/image-utils.ts,useCallback() call found in src/shared/utils/image-utils.ts
+useImage,Unknown (custom hook),src/shared/utils/image-utils.ts,useImage() called in src/shared/utils/image-utils.ts
+useEffect,react (external),src/presentation/contexts/ThemeContext.tsx,useEffect() call found in src/presentation/contexts/ThemeContext.tsx
+useEffect,react (external),src/shared/ui/DropdownMenu.tsx,useEffect() call found in src/shared/ui/DropdownMenu.tsx
+useEffect,react (external),src/presentation/components/ScrollToTop.tsx,useEffect() call found in src/presentation/components/ScrollToTop.tsx
+useLocation,Unknown (custom hook),src/presentation/components/ScrollToTop.tsx,useLocation() called in src/presentation/components/ScrollToTop.tsx
+useEffect,react (external),src/shared/ui/Drawer.tsx,useEffect() call found in src/shared/ui/Drawer.tsx
+useMemo,react (external),src/presentation/components/CheckoutModal.tsx,useMemo() call found in src/presentation/components/CheckoutModal.tsx
+useEffect,react (external),src/presentation/contexts/AuthContext.tsx,useEffect() call found in src/presentation/contexts/AuthContext.tsx
+useEffect,react (external),src/shared/ui/Modal.tsx,useEffect() call found in src/shared/ui/Modal.tsx
+useMemo,react (external),src/presentation/pages/public/AboutPage.tsx,useMemo() call found in src/presentation/pages/public/AboutPage.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/public/AboutPage.tsx,useNavigate() called in src/presentation/pages/public/AboutPage.tsx
+useEffect,react (external),src/presentation/contexts/CartContext.tsx,useEffect() call found in src/presentation/contexts/CartContext.tsx
+useMemo,react (external),src/presentation/contexts/CartContext.tsx,useMemo() call found in src/presentation/contexts/CartContext.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/auth/LoginPage.tsx,useNavigate() called in src/presentation/pages/auth/LoginPage.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/public/HomePage.tsx,useNavigate() called in src/presentation/pages/public/HomePage.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/public/HomePage.tsx,useNavigate() called in src/presentation/pages/public/HomePage.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/components/Navbar.tsx,useNavigate() called in src/presentation/pages/components/Navbar.tsx
+useMemo,react (external),src/presentation/components/ProductDetailModal.tsx,useMemo() call found in src/presentation/components/ProductDetailModal.tsx
+useNavigate,Unknown (custom hook),src/presentation/pages/features/ContactPage.tsx,useNavigate() called in src/presentation/pages/features/ContactPage.tsx

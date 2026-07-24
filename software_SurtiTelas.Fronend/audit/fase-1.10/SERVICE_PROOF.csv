@@ -1,0 +1,4 @@
+SERVICE_FILE,CONSUMER_FILE,EVIDENCE
+src/presentation/contexts/AuthContext.tsx,src/presentation/contexts/AuthContext.tsx,"Uses firebase/auth directly (onAuthStateChanged, signOut)"
+src/presentation/contexts/AuthContext.tsx,src/presentation/pages/auth/LoginPage.tsx,LoginPage imports and uses AuthContext which calls firebase/auth
+src/presentation/contexts/AuthContext.tsx,src/presentation/pages/auth/RegisterPage.tsx,"RegisterPage imports firebase/auth directly (createUserWithEmailAndPassword, signInWithPopup)"

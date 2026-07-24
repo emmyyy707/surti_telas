@@ -1,0 +1,581 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: clamp(2rem, 2.4vw, 2.6rem);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.pageSubtitle {
+  margin: 10px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.96rem;
+  max-width: 640px;
+}
+
+.headerBadgeRow {
+  display: flex;
+  align-items: center;
+}
+
+.perfilLayout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.perfilCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 28px 22px;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+}
+
+.avatar {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--color-text-inverse);
+  margin: 0 auto 18px;
+  position: relative;
+  box-shadow: var(--shadow-xl);
+}
+
+.avatarEditBtn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  transition: var(--transition);
+}
+
+.avatarEditBtn:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.perfilName {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.perfilEmail {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 18px;
+}
+
+.rolTag {
+  display: inline-flex;
+  margin-bottom: 22px;
+}
+
+.cardSummary {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.summaryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  color: var(--color-text-primary);
+}
+
+.summaryItem strong {
+  font-weight: 700;
+}
+
+.perfilStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.perfilStat {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: center;
+}
+
+.perfilStatValue {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.perfilStatLabel {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.asesorSection {
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+}
+
+.asesorSectionTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.asesorMiniCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.asesorMiniAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.asesorMiniName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.asesorMiniRole {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.asesorReadOnlyNote {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.perfilForm {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.perfilSection {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.perfilSectionHeader {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.perfilSectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.sectionNote {
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.perfilSectionBody {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.formGrid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formLabel {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.formInput,
+.textarea {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  padding: 13px 14px;
+  outline: none;
+  transition: var(--transition);
+  width: 100%;
+  font-family: var(--font-sans);
+}
+
+.formInput:focus,
+.textarea:focus {
+  border-color: var(--color-accent);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 3px rgba(244,162,97,0.12);
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 4px 4px;
+}
+
+.formError {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  color: #b91c1c;
+  font-size: 0.92rem;
+}
+
+.emptyState {
+  padding: 24px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-border-subtle);
+  color: var(--color-text-secondary);
+}
+
+.direccionesList {
+  display: grid;
+  gap: 14px;
+}
+
+.direccionCard {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  transition: var(--transition);
+}
+
+.direccionCard:hover {
+  border-color: rgba(244,162,97,0.35);
+}
+
+.direccionInfo {
+  flex: 1;
+}
+
+.direccionLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.direccionText {
+  font-size: 0.96rem;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.direccionMeta {
+  font-size: 0.84rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.direccionActions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .perfilLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .formGrid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .perfilSectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .formActions {
+    justify-content: stretch;
+  }
+}
+
+.perfilSection {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.perfilSectionHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.perfilSectionTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.perfilSectionIcon {
+  color: var(--color-text-muted);
+}
+
+.perfilSectionBody {
+  padding: 20px;
+}
+
+.formGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGrid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formField--full {
+  grid-column: 1 / -1;
+}
+
+.formLabel {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.formInput {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+  padding: 10px 14px;
+  outline: none;
+  transition: var(--transition);
+  font-family: var(--font-sans);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  border-color: var(--color-accent);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 3px rgba(244,162,97,0.1);
+}
+
+.formInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.formInputReadOnly {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  cursor: not-allowed;
+}
+
+.readOnlyHint {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.direccionesSection {
+  padding: 20px;
+}
+
+.direccionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.direccionCard {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  transition: var(--transition);
+}
+
+.direccionCard:hover {
+  border-color: rgba(244,162,97,0.25);
+}
+
+.direccionCard--principal {
+  border-color: rgba(244,162,97,0.3);
+  background: rgba(244,162,97,0.04);
+}
+
+.direccionInfo {
+  flex: 1;
+}
+
+.direccionLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.direccionText {
+  font-size: 0.88rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.direccionMeta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.direccionActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.perfilSectionFooter {
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .perfilLayout {
+    grid-template-columns: 1fr;
+  }
+  
+  .formGrid2,
+  .formGrid3 {
+    grid-template-columns: 1fr;
+  }
+}

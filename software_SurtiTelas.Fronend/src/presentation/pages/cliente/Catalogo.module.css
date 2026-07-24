@@ -1,0 +1,470 @@
+/* --- Contenedor Principal --- */
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: calc(100vh - 100px); /* Ajusta según tu header global */
+  display: flex;
+  flex-direction: column;
+}
+
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* --- Grid Principal --- */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  flex: 1;
+  min-height: 0; /* Importante para que el scroll del chat funcione en flex */
+}
+
+@media (max-width: 900px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- CHAT INTERFACE --- */
+.chatContainer {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.chatHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.asesorProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatarWrapper {
+  width: 40px;
+  height: 40px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+
+.statusDot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #10b981;
+  border: 2px solid var(--color-bg-elevated);
+  border-radius: 50%;
+}
+
+.asesorMeta h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.asesorMeta span {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* --- Area de Mensajes --- */
+.chatBody {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--color-bg-surface);
+}
+
+.messageWrapper {
+  display: flex;
+  width: 100%;
+}
+
+.messageRight {
+  justify-content: flex-end;
+}
+
+.messageLeft {
+  justify-content: flex-start;
+}
+
+.messageBubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  position: relative;
+}
+
+.messageBubble p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.messageTime {
+  display: block;
+  font-size: 0.65rem;
+  margin-top: 6px;
+  text-align: right;
+  opacity: 0.7;
+}
+
+.messageLeft .messageBubble {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-bottom-left-radius: 4px;
+}
+
+.messageRight .messageBubble {
+  background: var(--color-accent);
+  color: white; /* Asumiendo que el accent es oscuro/vibrante */
+  border-bottom-right-radius: 4px;
+}
+
+/* --- Input de Chat --- */
+.chatInputArea {
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attachBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.attachBtn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+.chatInput {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  border-radius: 24px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chatInput:focus {
+  border-color: var(--color-accent);
+}
+
+.sendBtn {
+  border-radius: 50% !important;
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.actionCard, .historyCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.actionCard h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+}
+
+.actionCard p {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.fullWidthBtn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.historyHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.orderItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.orderItem:hover {
+  border-color: var(--color-accent);
+}
+
+.orderIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--color-bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orderInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.orderInfo strong {
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+}
+
+.orderInfo span {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* --- Modales e Inputs (Mismos de antes) --- */
+.form { display: flex; flex-direction: column; gap: 20px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.label { font-weight: 600; font-size: 0.85rem; }
+.textarea, .select { padding: 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg-surface); width: 100%; color: var(--color-text-primary); }
+.textarea { min-height: 100px; resize: vertical; }
+.modalActions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+
+
+/* Añade esto a tu CSS existente o reemplaza la sección del Sidebar */
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr 360px; /* Ensanchado un poco para mejor lectura de widgets */
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* --- SIDEBAR Y WIDGETS --- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto; /* Permite scroll si la pantalla es pequeña */
+  padding-right: 4px;
+}
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 10px; }
+
+.widgetCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.widgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.widgetHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.widgetIcon {
+  color: var(--color-text-muted);
+}
+
+.widgetText {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.textBtn {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  height: auto;
+}
+
+/* --- Stats Grid (Resumen de cuenta) --- */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.statBox {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- Recursos y Documentos --- */
+.resourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resourceItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition: all 0.2s;
+}
+
+.resourceItem:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg-elevated);
+}
+
+.resourceIcon {
+  color: var(--color-accent);
+  display: flex;
+}
+
+.resourceName {
+  font-size: 0.85rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.downloadIcon {
+  color: var(--color-text-muted);
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: all 0.2s;
+}
+
+.resourceItem:hover .downloadIcon {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--color-accent);
+}
+
+/* --- Ajuste extra para el Header del Chat --- */
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerActionBtn {
+  font-size: 0.8rem;
+  gap: 6px;
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,71 @@
+/* ============================================================
+   CHECKOUT BUTTON — Theme-aware
+   ============================================================ */
+
+.checkout-button {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius-xl);
+  color: #ffffff;
+  background: #000000;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.15);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  overflow: hidden;
+  transition: var(--btn-transition);
+}
+
+.checkout-button:hover:not(:disabled) {
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.05);
+}
+
+.checkout-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.checkout-button-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+}
+
+.checkout-button strong {
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.checkout-auth-lock {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 13000;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--text-inverse);
+  background: var(--color-accent);
+  box-shadow: 0 16px 36px rgba(139, 115, 85, 0.24);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .checkout-button {
+    min-height: 52px;
+    border-radius: var(--radius-lg);
+  }
+}

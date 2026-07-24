@@ -1,0 +1,274 @@
+FILE,REACHABLE_FROM_MAIN,PATH_FROM_MAIN
+src/app/App.tsx,NO,
+src/app/MODO_EXPORTACION.tsx,NO,
+src/app/components/AboutPage.tsx,NO,
+src/app/components/ActivityTimeline.tsx,NO,
+src/app/components/AdminDashboard.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx
+src/app/components/AdvisorAssistant.tsx,NO,
+src/app/components/AdvisorMetrics.tsx,NO,
+src/app/components/AdvisorPanelSidebar.tsx,NO,
+src/app/components/AdvisorRatingSection.tsx,NO,
+src/app/components/AdvisorRatingsManagement.tsx,NO,
+src/app/components/BlogPage.tsx,NO,
+src/app/components/BottomNavigation.tsx,NO,
+src/app/components/CartPage.tsx,NO,
+src/app/components/CartSidebar.tsx,NO,
+src/app/components/CatalogPage.tsx,NO,
+src/app/components/ClientDashboard.tsx,NO,
+src/app/components/ClientDashboardNew.tsx,NO,
+src/app/components/ClientManagement.tsx,NO,
+src/app/components/ClientNotes.tsx,NO,
+src/app/components/ContactPage.tsx,NO,
+src/app/components/DashboardOverview.tsx,NO,
+src/app/components/ErrorBoundary.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/ErrorBoundary.tsx
+src/app/components/FigmaExportView.tsx,NO,
+src/app/components/Footer.tsx,NO,
+src/app/components/GlobalSearch.tsx,NO,
+src/app/components/HeroCarousel.tsx,NO,
+src/app/components/HomePage.tsx,NO,
+src/app/components/InventoryAlerts.tsx,NO,
+src/app/components/LoadingScreen.tsx,NO,
+src/app/components/LoginPage.tsx,NO,
+src/app/components/NavigationBar.tsx,NO,
+src/app/components/NotificationCenter.tsx,NO,
+src/app/components/ProductCard.tsx,NO,
+src/app/components/ProductFilters.tsx,NO,
+src/app/components/ProductsPage.tsx,NO,
+src/app/components/ProductsPageNew.tsx,NO,
+src/app/components/ProfilePage.tsx,NO,
+src/app/components/QuickActions.tsx,NO,
+src/app/components/RatingsAndMessagesSection.tsx,NO,
+src/app/components/ScrollingImages.tsx,NO,
+src/app/components/ServicesPage.tsx,NO,
+src/app/components/ShoppingCart.tsx,NO,
+src/app/components/SimpleLoginPage.tsx,NO,
+src/app/components/SmartRecommendations.tsx,NO,
+src/app/components/UserDashboard.tsx,NO,
+src/app/components/VideoCarousel.tsx,NO,
+src/app/components/WhatsAppButton.tsx,NO,
+src/app/components/admin/ClientesModule.tsx,NO,
+src/app/components/admin/ConfiguracionModule.tsx,NO,
+src/app/components/admin/DevolucionesModule.tsx,NO,
+src/app/components/admin/DomiciliosModule.tsx,NO,
+src/app/components/admin/HistorialPagosModule.tsx,NO,
+src/app/components/admin/InsumosModule.tsx,NO,
+src/app/components/admin/InventarioModule.tsx,NO,
+src/app/components/admin/NotificationsDropdown.tsx,NO,
+src/app/components/admin/ProduccionModule.tsx,NO,
+src/app/components/admin/UsuariosModule.tsx,NO,
+src/app/components/admin/VentasModule.tsx,NO,
+src/app/components/asesor/ComisionesModule.tsx,NO,
+src/app/components/asesor/MisClientesModule.tsx,NO,
+src/app/components/cliente-role/CatalogoCliente.tsx,NO,
+src/app/components/cliente-role/DireccionesCliente.tsx,NO,
+src/app/components/cliente-role/MetodosPagoCliente.tsx,NO,
+src/app/components/cliente-role/MiPerfilCliente.tsx,NO,
+src/app/components/cliente-role/MisPedidosCliente.tsx,NO,
+src/app/components/cliente-role/ResumenCliente.tsx,NO,
+src/app/components/cliente/DashboardClientes.tsx,NO,
+src/app/components/domiciliario/EntregasModule.tsx,NO,
+src/app/components/domiciliario/RutasModule.tsx,NO,
+src/app/components/figma/ImageWithFallback.tsx,NO,
+src/app/components/ui/ChartContainer.tsx,NO,
+src/app/components/ui/ChartWrapper.tsx,NO,
+src/app/components/ui/accordion.tsx,NO,
+src/app/components/ui/alert-dialog.tsx,NO,
+src/app/components/ui/alert.tsx,NO,
+src/app/components/ui/aspect-ratio.tsx,NO,
+src/app/components/ui/avatar.tsx,NO,
+src/app/components/ui/badge.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/badge.tsx
+src/app/components/ui/breadcrumb.tsx,NO,
+src/app/components/ui/button.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/ErrorBoundary.tsx -> src/app/components/ui/button.tsx
+src/app/components/ui/calendar.tsx,NO,
+src/app/components/ui/card.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/ErrorBoundary.tsx -> src/app/components/ui/card.tsx
+src/app/components/ui/carousel.tsx,NO,
+src/app/components/ui/chart.tsx,NO,
+src/app/components/ui/checkbox.tsx,NO,
+src/app/components/ui/collapsible.tsx,NO,
+src/app/components/ui/command.tsx,NO,
+src/app/components/ui/context-menu.tsx,NO,
+src/app/components/ui/dialog.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/dialog.tsx
+src/app/components/ui/drawer.tsx,NO,
+src/app/components/ui/dropdown-menu.tsx,NO,
+src/app/components/ui/export-button.tsx,NO,
+src/app/components/ui/form.tsx,NO,
+src/app/components/ui/hover-card.tsx,NO,
+src/app/components/ui/input-otp.tsx,NO,
+src/app/components/ui/input.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/input.tsx
+src/app/components/ui/label.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/label.tsx
+src/app/components/ui/menubar.tsx,NO,
+src/app/components/ui/navigation-menu.tsx,NO,
+src/app/components/ui/pagination.tsx,NO,
+src/app/components/ui/popover.tsx,NO,
+src/app/components/ui/progress.tsx,NO,
+src/app/components/ui/radio-group.tsx,NO,
+src/app/components/ui/resizable.tsx,NO,
+src/app/components/ui/responsive-table.tsx,NO,
+src/app/components/ui/scroll-area.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/scroll-area.tsx
+src/app/components/ui/select.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/select.tsx
+src/app/components/ui/separator.tsx,NO,
+src/app/components/ui/sheet.tsx,NO,
+src/app/components/ui/sidebar.tsx,NO,
+src/app/components/ui/skeleton.tsx,NO,
+src/app/components/ui/slider.tsx,NO,
+src/app/components/ui/sonner.tsx,NO,
+src/app/components/ui/switch.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/UsuariosModule.tsx -> src/app/components/ui/switch.tsx
+src/app/components/ui/table-pagination.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/UsuariosModule.tsx -> src/app/components/ui/table-pagination.tsx
+src/app/components/ui/table.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/table.tsx
+src/app/components/ui/tabs.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/tabs.tsx
+src/app/components/ui/textarea.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/components/ui/textarea.tsx
+src/app/components/ui/toggle-group.tsx,NO,
+src/app/components/ui/toggle.tsx,NO,
+src/app/components/ui/tooltip.tsx,NO,
+src/app/components/ui/use-mobile.ts,NO,
+src/app/components/ui/utils.ts,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/ErrorBoundary.tsx -> src/app/components/ui/button.tsx -> src/app/components/ui/utils.ts
+src/app/components/utils/exportUtils.ts,NO,
+src/app/config/menuConfig.ts,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/config/menuConfig.ts
+src/app/contexts/ThemeContext.tsx,NO,
+src/app/features/admin/AdminDashboard.tsx,NO,
+src/app/features/admin/ClientesModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/ClientesModule.tsx
+src/app/features/admin/ConfiguracionModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/ConfiguracionModule.tsx
+src/app/features/admin/DashboardGeneral.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/admin/DashboardGeneral.tsx
+src/app/features/admin/DevolucionesModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/admin/DevolucionesModule.tsx
+src/app/features/admin/DomiciliosModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/DomiciliosModule.tsx
+src/app/features/admin/HistorialPagosModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/HistorialPagosModule.tsx
+src/app/features/admin/InsumosModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/admin/InsumosModule.tsx
+src/app/features/admin/InventarioModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/InventarioModule.tsx
+src/app/features/admin/NotificationsDropdown.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/admin/NotificationsDropdown.tsx
+src/app/features/admin/ProduccionModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/admin/ProduccionModule.tsx
+src/app/features/admin/ReportesModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/ReportesModule.tsx
+src/app/features/admin/SimpleLoginPage.tsx,NO,
+src/app/features/admin/UsuariosModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/features/admin/UsuariosModule.tsx
+src/app/features/admin/VentasModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/admin/VentasModule.tsx
+src/app/features/admin/figma/ImageWithFallback.tsx,NO,
+src/app/features/admin/index.ts,NO,
+src/app/features/admin/utils/exportUtils.ts,NO,
+src/app/features/asesor/ComisionesModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/asesor/ComisionesModule.tsx
+src/app/features/asesor/MisClientesModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/asesor/MisClientesModule.tsx
+src/app/features/asesor/index.ts,NO,
+src/app/features/cliente/CatalogoCliente.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/CatalogoCliente.tsx
+src/app/features/cliente/DireccionesCliente.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/DireccionesCliente.tsx
+src/app/features/cliente/MetodosPagoCliente.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/MetodosPagoCliente.tsx
+src/app/features/cliente/MiPerfilCliente.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/MiPerfilCliente.tsx
+src/app/features/cliente/MisPedidosCliente.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/MisPedidosCliente.tsx
+src/app/features/cliente/ResumenCliente.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/ResumenCliente.tsx
+src/app/features/cliente/index.ts,NO,
+src/app/features/common/AboutPage.tsx,NO,
+src/app/features/common/ActivityTimeline.tsx,NO,
+src/app/features/common/AdvancedMetrics.tsx,NO,
+src/app/features/common/AdvisorAssistant.tsx,NO,
+src/app/features/common/AdvisorMetrics.tsx,NO,
+src/app/features/common/AdvisorPanelSidebar.tsx,NO,
+src/app/features/common/AdvisorRatingSection.tsx,NO,
+src/app/features/common/AdvisorRatingsManagement.tsx,NO,
+src/app/features/common/BlogPage.tsx,NO,
+src/app/features/common/BottomNavigation.tsx,NO,
+src/app/features/common/CartPage.tsx,NO,
+src/app/features/common/CartSidebar.tsx,NO,
+src/app/features/common/CatalogPage.tsx,NO,
+src/app/features/common/ClientDashboard.tsx,NO,
+src/app/features/common/ClientDashboardNew.tsx,NO,
+src/app/features/common/ClientManagement.tsx,NO,
+src/app/features/common/ClientNotes.tsx,NO,
+src/app/features/common/ContactPage.tsx,NO,
+src/app/features/common/DashboardOverview.tsx,NO,
+src/app/features/common/FigmaExportView.tsx,NO,
+src/app/features/common/Footer.tsx,NO,
+src/app/features/common/GlobalSearch.tsx,NO,
+src/app/features/common/HeroCarousel.tsx,NO,
+src/app/features/common/HomePage.tsx,NO,
+src/app/features/common/InventoryAlerts.tsx,NO,
+src/app/features/common/LoadingScreen.tsx,NO,
+src/app/features/common/LoginPage.tsx,NO,
+src/app/features/common/NavigationBar.tsx,NO,
+src/app/features/common/NotificationCenter.tsx,NO,
+src/app/features/common/ProductCard.tsx,NO,
+src/app/features/common/ProductFilters.tsx,NO,
+src/app/features/common/ProductsPage.tsx,NO,
+src/app/features/common/ProductsPageNew.tsx,NO,
+src/app/features/common/ProfilePage.tsx,NO,
+src/app/features/common/QuickActions.tsx,NO,
+src/app/features/common/RatingsAndMessagesSection.tsx,NO,
+src/app/features/common/ScrollingImages.tsx,NO,
+src/app/features/common/ServicesPage.tsx,NO,
+src/app/features/common/ShoppingCart.tsx,NO,
+src/app/features/common/SmartRecommendations.tsx,NO,
+src/app/features/common/UserDashboard.tsx,NO,
+src/app/features/common/VideoCarousel.tsx,NO,
+src/app/features/common/WhatsAppButton.tsx,NO,
+src/app/features/domiciliario/EntregasModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/domiciliario/EntregasModule.tsx
+src/app/features/domiciliario/RutasModule.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/domiciliario/RutasModule.tsx
+src/app/features/domiciliario/index.ts,NO,
+src/app/features/figma/ImageWithFallback.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/app/components/AdminDashboard.tsx -> src/app/features/cliente/CatalogoCliente.tsx -> src/app/features/figma/ImageWithFallback.tsx
+src/app/features/shared/AdvisorPanelSidebar.tsx,NO,
+src/app/features/shared/utils/exportUtils.ts,NO,
+src/app/pages/SurtitelasLanding.tsx,NO,
+src/app/shared/types/dashboard.ts,NO,
+src/app/shared/types/index.ts,NO,
+src/app/shared/ui/index.ts,NO,
+src/app/types/dashboard.ts,NO,
+src/app/utils/recharts-fix.ts,NO,
+src/application/services/TelaService.ts,NO,
+src/components/layout/DashboardLayout.tsx,NO,
+src/components/layout/Header.tsx,NO,
+src/components/layout/Sidebar.tsx,NO,
+src/config/firebase.ts,NO,
+src/domain/entities/Tela.ts,NO,
+src/domain/repositories/ITelaRepository.ts,NO,
+src/domain/useCases/GetTelasUseCase.ts,NO,
+src/hooks/usePagination.ts,NO,
+src/infrastructure/config/firebase.ts,NO,
+src/infrastructure/http/apiClient.ts,NO,
+src/infrastructure/repositories/TelaRepository.ts,NO,
+src/main.tsx,YES,src/main.tsx
+src/presentation/components/CartDrawer.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/components/CartDrawer.tsx
+src/presentation/components/CartItem.tsx,NO,
+src/presentation/components/CartSummary.tsx,NO,
+src/presentation/components/CheckoutModal.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/CartPage.tsx -> src/presentation/components/CheckoutModal.tsx
+src/presentation/components/ProductDetailModal.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/CatalogPage.tsx -> src/presentation/components/ProductDetailModal.tsx
+src/presentation/components/ProductModal.tsx,NO,
+src/presentation/components/ScrollToTop.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/components/ScrollToTop.tsx
+src/presentation/components/TelaList.tsx,NO,
+src/presentation/components/common/ImageWithFallback.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Button.tsx -> src/shared/utils/index.ts -> src/presentation/components/common/ImageWithFallback.tsx
+src/presentation/contexts/AuthContext.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/contexts/AuthContext.tsx
+src/presentation/contexts/CartContext.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/contexts/CartContext.tsx
+src/presentation/contexts/CartDrawerContext.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/contexts/CartDrawerContext.tsx
+src/presentation/contexts/ThemeContext.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/contexts/ThemeContext.tsx
+src/presentation/hooks/useTelas.ts,NO,
+src/presentation/pages/App.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx
+src/presentation/pages/auth/LoginPage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/auth/LoginPage.tsx
+src/presentation/pages/auth/RegisterPage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/auth/RegisterPage.tsx
+src/presentation/pages/components/FilterDrawer.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/CatalogPage.tsx -> src/presentation/pages/components/FilterDrawer.tsx
+src/presentation/pages/components/Navbar.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/components/Navbar.tsx
+src/presentation/pages/components/footer.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/components/footer.tsx
+src/presentation/pages/features/CartPage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/CartPage.tsx
+src/presentation/pages/features/CatalogPage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/CatalogPage.tsx
+src/presentation/pages/features/ContactPage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/ContactPage.tsx
+src/presentation/pages/layouts/Layout.tsx,NO,
+src/presentation/pages/public/AboutPage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/public/AboutPage.tsx
+src/presentation/pages/public/HomePage.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/public/HomePage.tsx
+src/presentation/routes/ProtectedRoute.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/routes/ProtectedRoute.tsx
+src/shared/auth.types.ts,NO,
+src/shared/ui/Alert.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Alert.tsx
+src/shared/ui/Avatar.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Avatar.tsx
+src/shared/ui/Badge.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Badge.tsx
+src/shared/ui/Button.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Button.tsx
+src/shared/ui/Card.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Card.tsx
+src/shared/ui/Drawer.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Drawer.tsx
+src/shared/ui/DropdownMenu.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/DropdownMenu.tsx
+src/shared/ui/EmptyState.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/EmptyState.tsx
+src/shared/ui/Input.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Input.tsx
+src/shared/ui/Modal.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Modal.tsx
+src/shared/ui/Pagination.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Pagination.tsx
+src/shared/ui/Select.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Select.tsx
+src/shared/ui/Skeleton.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Skeleton.tsx
+src/shared/ui/Spinner.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Spinner.tsx
+src/shared/ui/StatsCard.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/StatsCard.tsx
+src/shared/ui/Table.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Table.tsx
+src/shared/ui/Tabs.tsx,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Tabs.tsx
+src/shared/ui/index.ts,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts
+src/shared/utils/image-utils.ts,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/presentation/pages/features/CatalogPage.tsx -> src/presentation/components/ProductDetailModal.tsx -> src/shared/utils/image-utils.ts
+src/shared/utils/index.ts,YES,src/main.tsx -> src/presentation/pages/App.tsx -> src/shared/ui/index.ts -> src/shared/ui/Button.tsx -> src/shared/utils/index.ts
+src/types/auth.types.ts,NO,
+src/types/dashboard.ts,NO,
+src/vite-env.d.ts,NO,
