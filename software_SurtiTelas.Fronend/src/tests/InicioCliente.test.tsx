@@ -34,7 +34,7 @@ const mockOrders = [
 ];
 
 vi.mock('@/presentation/pages/admin/StatCard', () => ({
-  StatCard: ({ label, value }: any) => (
+  StatCard: ({ label, value }: { label: string; value: string }) => (
     <div>
       <div>{label}</div>
       <div>{value}</div>
@@ -43,11 +43,11 @@ vi.mock('@/presentation/pages/admin/StatCard', () => ({
 }));
 
 vi.mock('@/shared/ui/Badge', () => ({
-  Badge: ({ children, variant }: any) => <span data-testid="badge">{children}</span>,
+  Badge: ({ children, variant: _variant }: { children: React.ReactNode; variant?: string }) => <span data-testid="badge">{children}</span>,
 }));
 
 vi.mock('@/shared/ui/DetailModal', () => ({
-  DetailModal: ({ pedido, isOpen, onClose }: any) =>
+  DetailModal: ({ pedido, isOpen, onClose }: { pedido?: { id?: string }; isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div data-testid="detail-modal">
         <p>{pedido?.id}</p>
@@ -57,7 +57,7 @@ vi.mock('@/shared/ui/DetailModal', () => ({
 }));
 
 vi.mock('@/shared/ui/Modal', () => ({
-  Modal: ({ open, onClose, children }: any) =>
+  Modal: ({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) =>
     open ? (
       <div data-testid="modal">
         {children}
@@ -67,7 +67,7 @@ vi.mock('@/shared/ui/Modal', () => ({
 }));
 
 vi.mock('@/shared/ui/Button', () => ({
-  Button: ({ children, onClick, variant, size, className, ...props }: any) => (
+  Button: ({ children, onClick, variant, size, className, ...props }: { children: React.ReactNode; onClick?: () => void; variant?: string; size?: string; className?: string }) => (
     <button onClick={onClick} data-variant={variant} data-size={size} className={className} {...props}>
       {children}
     </button>

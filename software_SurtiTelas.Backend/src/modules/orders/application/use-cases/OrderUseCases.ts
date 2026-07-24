@@ -81,11 +81,11 @@ export class CreateOrder {
       return order;
     });
 
-    this.emitEvents(result, total, stockItems, requestId);
+    this.emitEvents(result, total, stockItems, input.paymentMethod, input.installments, requestId);
     return result;
   }
 
-  private emitEvents(order: Order, total: number, stockItems: { productId: string; productRef: string; cantidad: number }[], requestId?: string) {
+  private emitEvents(order: Order, total: number, stockItems: { productId: string; productRef: string; cantidad: number }[], paymentMethod?: string, installments?: number, requestId?: string) {
     if (!this.eventBus) return;
     this.eventBus.publish(
       new StockReservedEvent({
@@ -97,12 +97,14 @@ export class CreateOrder {
       new OrderCreatedEvent({
         orderId: order.id,
         orderNumero: order.numero || order.id,
-        clienteId: order.cliente,
+        clienteId: order.clienteId,
         clienteNombre: order.cliente,
-        asesorId: order.asesor,
+        asesorId: order.asesorId,
         asesorNombre: order.asesor,
         total,
         itemsCount: order.items,
+        paymentMethod: paymentMethod || 'OTHER',
+        installments,
       }, requestId)
     );
   }
@@ -144,9 +146,9 @@ export class UpdateOrderStatus {
           orderNumero: updated.numero || updated.id,
           previousStatus,
           newStatus: updated.estado,
-          clienteId: updated.cliente,
+          clienteId: updated.clienteId,
           clienteNombre: updated.cliente,
-          asesorId: updated.asesor,
+          asesorId: updated.asesorId,
           asesorNombre: updated.asesor,
         }, requestId)
       );
@@ -155,7 +157,7 @@ export class UpdateOrderStatus {
         this.eventBus.publish(
           new OrderDeliveredEvent({
             orderId: updated.id,
-            clienteId: updated.cliente,
+            clienteId: updated.clienteId,
             clienteNombre: updated.cliente,
             total: Number(updated.total),
           }, requestId)
@@ -171,7 +173,7 @@ export class UpdateOrderStatus {
         this.eventBus.publish(
           new OrderCanceledEvent({
             orderId: updated.id,
-            clienteId: updated.cliente,
+            clienteId: updated.clienteId,
             clienteNombre: updated.cliente,
             total: Number(updated.total),
             items,

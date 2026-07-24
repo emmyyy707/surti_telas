@@ -42,11 +42,7 @@ export const AtencionCliente: React.FC = () => {
     }
   }, [clienteActualId, clienteInicial]);
 
-  const [mensajes, setMensajes] = useState<Mensaje[]>([
-    { id: 1, texto: '¡Hola! Tengo una duda sobre los tiempos de entrega para un pedido de 50 metros de lino.', remitente: 'cliente', hora: '09:05 AM' },
-    { id: 2, texto: '¡Hola! Claro que sí. Los pedidos estándar toman de 3 a 5 días hábiles. Si lo marco como prioritario en el sistema, lo despachamos en 48 horas.', remitente: 'asesor', hora: '09:06 AM' },
-    { id: 3, texto: 'Perfecto, ¿me ayudas generando la solicitud de una vez?', remitente: 'cliente', hora: '09:08 AM' },
-  ]);
+  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
 
   const mensajesEndRef = useRef<HTMLDivElement>(null);
 

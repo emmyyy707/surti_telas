@@ -8,11 +8,9 @@ import {
   ScanSearch,
   Crown,
   Palette,
-  Settings2,
   Users,
   Cpu,
   PenTool,
-  Headphones,
   Sparkles,
   ArrowRight,
 } from 'lucide-react';

@@ -9,7 +9,7 @@ import { DataTable } from '../../../shared/ui/DataTable';
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
-import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
+import { authApi } from '@/infrastructure/api/authApi';
 
 interface Factura {
   id: string;
@@ -98,12 +98,10 @@ export const AdminPagos: React.FC = () => {
   const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'Pendiente' | 'Parcial' | 'Pagado' | 'Vencido' | 'En Mora'>('Todos');
   const [filtroMetodo, setFiltroMetodo] = useState<string>('Todos');
   const [modalAbonoOpen, setModalAbonoOpen] = useState(false);
-  const [modalDetalleOpen, setModalDetalleOpen] = useState(false);
   const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null);
   const [nuevoAbono, setNuevoAbono] = useState({ valor: '', metodo: 'Transferencia', concepto: '', fecha: '' });
   const [showFilters, setShowFilters] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [clientes, setClientes] = useState<BackendAuthUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -123,7 +121,6 @@ export const AdminPagos: React.FC = () => {
     try {
       const clientesResult = await authApi.listUsers({ limit: 100, role: 'CLIENTE' });
       const clientesIds = new Set((clientesResult.data ?? []).map(c => c.id));
-      setClientes(clientesResult.data ?? []);
 
       const data = await paymentsApi.list();
       const pagosFiltrados = data.filter(p => clientesIds.has(p.customerId));
@@ -190,7 +187,6 @@ export const AdminPagos: React.FC = () => {
 
   const _handleVerDetalle = (factura: Factura) => {
     setSelectedFactura(factura);
-    setModalDetalleOpen(true);
   };
 
   const handleRegistrarAbono = (factura: Factura) => {

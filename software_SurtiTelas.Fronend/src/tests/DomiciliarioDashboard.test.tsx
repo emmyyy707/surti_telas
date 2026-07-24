@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { DomiciliarioDashboard } from '@/presentation/pages/domiciliario/Dashboard';
@@ -39,7 +38,7 @@ const mockCustomers = [
 ];
 
 vi.mock('@/presentation/pages/admin/StatCard', () => ({
-  StatCard: ({ label, value }: any) => (
+  StatCard: ({ label, value }: { label: string; value: string }) => (
     <div>
       <div>{label}</div>
       <div>{value}</div>
@@ -48,11 +47,11 @@ vi.mock('@/presentation/pages/admin/StatCard', () => ({
 }));
 
 vi.mock('@/shared/ui/Badge', () => ({
-  Badge: ({ children, variant }: any) => <span data-testid="badge">{children}</span>,
+  Badge: ({ children, variant: _variant }: { children: React.ReactNode; variant?: string }) => <span data-testid="badge">{children}</span>,
 }));
 
 vi.mock('@/shared/ui/DetailModal', () => ({
-  DetailModal: ({ entrega, isOpen, onClose }: any) =>
+  DetailModal: ({ entrega, isOpen, onClose }: { entrega?: { id?: string }; isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div data-testid="detail-modal">
         <p>{entrega?.id}</p>

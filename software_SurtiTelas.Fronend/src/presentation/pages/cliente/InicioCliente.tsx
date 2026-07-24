@@ -5,12 +5,12 @@ import { StatCard } from '../admin/StatCard';
 import { ShoppingBag, Clock, CheckCircle2, DollarSign, ArrowRight, Package, User, MapPin, MessageCircle, Archive, Loader2, AlertCircle } from 'lucide-react';
 import s from './InicioCliente.module.css';
 import { Badge } from '@/shared/ui/Badge';
-import { useAppStore } from '@/core/stores';
 import { DetailModal } from '@/shared/ui/DetailModal';
 import { Modal } from '@/shared/ui/Modal';
 import { Button } from '@/shared/ui/Button';
 import type { Pedido } from '@/core/types';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { notificationsApi } from '@/infrastructure/api/notificationsApi';
 import { useAuthStore } from '@/core/stores/authStore';
 
 const statusVariant = (estado: Pedido['estado']) => {
@@ -29,7 +29,7 @@ export const InicioCliente: React.FC = () => {
   const [pedidoActivoState, setPedidoActivoState] = useState<Pedido | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
-  const addNotificacion = useAppStore(s => s.addNotificacion);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -78,19 +78,26 @@ export const InicioCliente: React.FC = () => {
 
   const ultimosPedidos = pedidos.slice(0, 5);
 
-  const enviarMensaje = () => {
+  const enviarMensaje = async () => {
     if (!chatMessage.trim()) {
       toast.error('Escribe un mensaje para tu asesor');
       return;
     }
-    addNotificacion({
-      tipo: 'info',
-      titulo: 'Mensaje a asesor',
-      mensaje: chatMessage,
-    });
-    toast.success('Mensaje enviado a tu asesor');
-    setChatMessage('');
-    setChatOpen(false);
+    setSendingMessage(true);
+    try {
+      await notificationsApi.create({
+        titulo: `Mensaje de ${user?.name || 'cliente'}`,
+        mensaje: chatMessage,
+        tipo: 'INFO',
+      });
+      toast.success('Mensaje enviado a tu asesor');
+      setChatMessage('');
+      setChatOpen(false);
+    } catch {
+      toast.error('No fue posible enviar el mensaje');
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const openPedido = (pedido: Pedido) => setPedidoActivoState(pedido);
@@ -321,8 +328,8 @@ export const InicioCliente: React.FC = () => {
         <div className="grid gap-4">
           <textarea className="min-h-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" placeholder="Escribe tu consulta..." value={chatMessage} onChange={e => setChatMessage(e.target.value)} />
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setChatOpen(false)}>Cancelar</Button>
-            <Button onClick={enviarMensaje}><MessageCircle size={14} /> Enviar mensaje</Button>
+            <Button variant="secondary" onClick={() => setChatOpen(false)} disabled={sendingMessage}>Cancelar</Button>
+            <Button onClick={enviarMensaje} loading={sendingMessage}><MessageCircle size={14} /> Enviar mensaje</Button>
           </div>
         </div>
       </Modal>

@@ -280,7 +280,8 @@ export function DataTable<T extends { id?: string | number }>({
     ? (externalPage ?? 1)
     : Math.min(currentPage, totalPages);
   const start = serverMode ? 0 : (safePage - 1) * pageSize;
-  const pageData = serverMode ? processedData : useMemo(() => processedData.slice(start, start + pageSize), [processedData, start, pageSize]);
+  const memoizedPageData = useMemo(() => processedData.slice(start, start + pageSize), [processedData, start, pageSize]);
+  const pageData = serverMode ? processedData : memoizedPageData;
 
   const from = serverMode
     ? (externalTotalItems ? (safePage - 1) * pageSize + 1 : 0)

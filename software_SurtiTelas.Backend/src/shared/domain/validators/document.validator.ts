@@ -2,7 +2,7 @@ export function isValidNit(nit: string | null | undefined): boolean {
   if (!nit || !nit.trim()) return false;
   const cleaned = nit.replace(/\s+/g, '').replace(/-/g, '');
   if (!/^\d+$/.test(cleaned)) return false;
-  if (cleaned.length < 9 || cleaned.length > 12) return false;
+  if (cleaned.length < 9 || cleaned.length > 10) return false;
   return true;
 }
 
@@ -26,7 +26,7 @@ export function isValidDocumentNumber(value: string | null | undefined, type: st
   const upperType = type?.toUpperCase();
 
   if (upperType === 'CC' || upperType === 'CE') {
-    return /^\d{5,12}$/.test(cleaned);
+    return /^\d{5,10}$/.test(cleaned);
   }
   if (upperType === 'NIE') {
     return /^[A-Z]\d{7,8}[A-Z0-9]$/i.test(cleaned);

@@ -6,7 +6,6 @@ import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
-import f from '@/styles/Form.module.css';
 import { productionApi } from '@/infrastructure/api/productionApi';
 import { workshopsApi } from '@/infrastructure/api/workshopsApi';
 import { ESTADOS_PRODUCCION } from '@/shared/constants/options';
@@ -156,12 +155,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
     setSaving(true);
     try {
       if (editingId) {
-        const estadoDb = formEstado === 'Pendiente' ? 'PENDIENTE' : formEstado === 'Asignada' ? 'ASIGNADA' : formEstado === 'En produccion' ? 'EN_PROCESO' : 'TERMINADO';
         const updated = await productionApi.update(editingId, {
           referencia: formReferencia,
           cantidad: Number(formCantidad),
           fechaEstimada: formFecha,
-          estado: estadoDb as any,
+          estado: formEstado,
           notasTecnicas: formNotas || undefined,
         });
         setOrdenes(prev => prev.map(o => o.id === editingId ? {
@@ -173,12 +171,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
         } : o));
         toast.success('Orden actualizada');
       } else {
-        const estadoDb = formEstado === 'Pendiente' ? 'PENDIENTE' : formEstado === 'Asignada' ? 'ASIGNADA' : formEstado === 'En produccion' ? 'EN_PROCESO' : 'TERMINADO';
         const created = await productionApi.create({
           referencia: formReferencia,
           cantidad: Number(formCantidad),
           fechaEstimada: formFecha,
-          estado: estadoDb as any,
+          estado: formEstado,
           notasTecnicas: formNotas || undefined,
         });
         setOrdenes(prev => [{
@@ -460,7 +457,7 @@ export const AdminAsignacionProduccion: React.FC = () => {
             </div>
             <div className={s.field}>
               <label className={s.label}>Estado</label>
-              <select className={s.select} value={formEstado} onChange={e => setFormEstado(e.target.value as any)}>
+              <select className={s.select} value={formEstado} onChange={e => setFormEstado(e.target.value as 'Pendiente' | 'Asignada' | 'En produccion' | 'Completada')}>
                 <option value="Pendiente">Pendiente</option>
                 <option value="Asignada">Asignada</option>
                 <option value="En produccion">En producción</option>

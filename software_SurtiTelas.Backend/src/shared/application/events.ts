@@ -16,6 +16,8 @@ export class OrderCreatedEvent implements DomainEvent {
       asesorNombre: string;
       total: number;
       itemsCount: number;
+      paymentMethod: string;
+      installments?: number;
     },
     public readonly requestId?: string
   ) {}

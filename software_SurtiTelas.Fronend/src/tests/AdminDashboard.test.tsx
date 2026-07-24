@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../presentation/pages/admin/StatCard', () => ({
-  StatCard: ({ label, value }: any) => (
+  StatCard: ({ label, value }: { label: string; value: string }) => (
     <div>
       <div>{label}</div>
       <div>{value}</div>
@@ -13,14 +13,14 @@ vi.mock('../presentation/pages/admin/StatCard', () => ({
 }));
 
 vi.mock('../presentation/pages/admin/Chart', () => ({
-  BarChart: ({ title }: any) => <div data-testid="bar-chart">{title}</div>,
-  LineChart: ({ title }: any) => <div data-testid="line-chart">{title}</div>,
-  PieChart: ({ title }: any) => <div data-testid="pie-chart">{title}</div>,
-  TopProducts: ({ title }: any) => <div data-testid="top-products">{title}</div>,
+  BarChart: ({ title }: { title?: string }) => <div data-testid="bar-chart">{title}</div>,
+  LineChart: ({ title }: { title?: string }) => <div data-testid="line-chart">{title}</div>,
+  PieChart: ({ title }: { title?: string }) => <div data-testid="pie-chart">{title}</div>,
+  TopProducts: ({ title }: { title?: string }) => <div data-testid="top-products">{title}</div>,
 }));
 
 vi.mock('../shared/ui/Badge', () => ({
-  Badge: ({ children, variant }: any) => <span data-testid="badge">{children}</span>,
+  Badge: ({ children, variant: _variant }: { children: React.ReactNode; variant?: string }) => <span data-testid="badge">{children}</span>,
 }));
 
 vi.mock('../infrastructure/api/httpClient', () => ({

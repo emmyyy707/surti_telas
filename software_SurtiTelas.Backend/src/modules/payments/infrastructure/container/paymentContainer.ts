@@ -1,9 +1,8 @@
 import { PaymentRepository } from '../../domain/repositories/PaymentRepository';
 import { PrismaPaymentRepository } from '../repositories/PrismaPaymentRepository';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../../config/database';
 import type { PaymentStatus, PaymentMethod } from '../../domain/entities/Payment';
 
-const prisma = new PrismaClient();
 const repository = new PrismaPaymentRepository(prisma);
 
 export class ListPayments {

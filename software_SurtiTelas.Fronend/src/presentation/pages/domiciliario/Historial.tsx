@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Eye, MapPin, Clock, Package } from 'lucide-react';
+import { Eye, MapPin, Clock, Package, AlertCircle } from 'lucide-react';
 import s from './Historial.module.css';
 import { Badge } from '@/shared/ui/Badge';
+import { Button } from '@/shared/ui/Button';
 import { DetailModal } from '@/shared/ui/DetailModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { useAuthStore } from '@/core/stores/authStore';
@@ -25,10 +26,12 @@ export const DomiciliarioHistorial: React.FC = () => {
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setError(null);
       try {
         const result = await ordersApi.list({ asesorId: user?.uid });
         const mapped: Entrega[] = result.pedidos
@@ -45,6 +48,7 @@ export const DomiciliarioHistorial: React.FC = () => {
           }));
         setEntregas(mapped);
       } catch {
+        setError('No se pudo cargar el historial. Intenta nuevamente.');
         toast.error('No se pudo cargar el historial');
       } finally {
         setLoading(false);
@@ -96,6 +100,20 @@ export const DomiciliarioHistorial: React.FC = () => {
       <div>
         <h1 className={s.pageTitle}>Historial</h1>
         <p className={s.pageSubtitle}>Cargando...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h1 className={s.pageTitle}>Historial</h1>
+        <p className={s.pageSubtitle}>Registro de todas tus entregas</p>
+        <div className={s.errorState}>
+          <AlertCircle size={28} />
+          <span>{error}</span>
+          <Button variant="secondary" onClick={() => window.location.reload()}>Reintentar</Button>
+        </div>
       </div>
     );
   }

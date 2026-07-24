@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Star, Phone, MapPin, Package } from 'lucide-react';
 import s from './Proveedores.module.css';
@@ -46,6 +46,7 @@ export const AdminProveedores: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, pagination.limit, search, pagination.setTotalRecords]);
 
   useEffect(() => {
@@ -138,7 +139,7 @@ export const AdminProveedores: React.FC = () => {
 
     try {
       if (selectedProveedor) {
-        const actualizado = await stockApi.suppliers.update(selectedProveedor.id, data);
+        await stockApi.suppliers.update(selectedProveedor.id, data);
         setError(null);
         toast.success('Proveedor actualizado');
         if (pagination.page === 1) {
@@ -147,7 +148,7 @@ export const AdminProveedores: React.FC = () => {
           pagination.setPage(1);
         }
       } else {
-          const nuevo = await stockApi.suppliers.create(data);
+        await stockApi.suppliers.create(data);
         setError(null);
         toast.success('Proveedor creado');
         pagination.setPage(1);

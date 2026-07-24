@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Search, Trash2, AlertTriangle, Package, Calendar, Bell, CheckCircle, BarChart3, FileText } from 'lucide-react';
+import { Search, Trash2, AlertTriangle, Package, Bell, CheckCircle, BarChart3 } from 'lucide-react';
 import s from './AlertasStock.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';

@@ -16,7 +16,7 @@ import { useProductos, useAppStore } from '@/core/stores';
 import { useAuth } from '@/core/stores/authStore';
 import { productService } from '@/services/productService';
 import type { Producto, PublicationStatus } from '@/core/types';
-import { MARCA_DEFECTO, ETIQUETAS_PRODUCTO } from '@/shared/constants/options';
+import { ETIQUETAS_PRODUCTO } from '@/shared/constants/options';
 
 const publishStatus = (p: Producto): PublicationStatus => {
   if (!p.publicado) return p.estado === 'Inactivo' ? 'Oculto' : 'Borrador';

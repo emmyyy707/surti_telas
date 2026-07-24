@@ -28,6 +28,8 @@ export interface CreateOrderInput {
   prioridad?: Pedido['prioridad'];
   observaciones?: string;
   comprobantePago?: File;
+  paymentMethod?: 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER';
+  installments?: number;
 }
 
 function formatCurrency(value: number): string {
@@ -104,24 +106,19 @@ export const ordersApi = {
   },
 
   async create(input: CreateOrderInput): Promise<{ pedido: Pedido; id: string }> {
-    if (input.comprobantePago) {
-      const form = new FormData();
-      form.append('clienteId', input.clienteId);
-      if (input.asesorId) form.append('asesorId', input.asesorId);
-      form.append('itemsList', JSON.stringify(input.itemsList));
-      if (input.prioridad) form.append('prioridad', input.prioridad);
-      if (input.observaciones) form.append('observaciones', input.observaciones);
-      form.append('comprobantePago', input.comprobantePago);
-      const dto = await api.postForm<OrderDTO>('/orders', form);
-      return { pedido: toPedido(dto), id: dto.id };
-    }
+    const observaciones = [
+      input.observaciones,
+      input.comprobantePago ? `Comprobante: ${input.comprobantePago.name}` : null,
+    ].filter(Boolean).join(' ');
 
     const dto = await api.post<OrderDTO>('/orders', {
       clienteId: input.clienteId,
       asesorId: input.asesorId,
       itemsList: input.itemsList,
       prioridad: input.prioridad,
-      observaciones: input.observaciones,
+      observaciones: observaciones || undefined,
+      paymentMethod: input.paymentMethod,
+      installments: input.installments,
     } as unknown);
     return { pedido: toPedido(dto), id: dto.id };
   },

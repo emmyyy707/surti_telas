@@ -29,8 +29,11 @@ services:
     environment:
       DATABASE_URL: postgresql://surtitelas:surtitelas123@db:5432/surtitelas
       REDIS_URL: redis://redis:6379
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 3000
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-cambia-este-secreto-de-32-bytes-minimo}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-otro-secreto-distinto-de-32-bytes-minimo}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
       METRICS_SECRET: ${METRICS_SECRET:-cambia-este-secret-de-metrics}
     depends_on:
       - db
@@ -43,8 +46,6 @@ services:
     restart: always
     ports:
       - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'

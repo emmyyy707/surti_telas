@@ -1,5 +1,4 @@
 import { api } from './httpClient';
-import type { PaginatedResponse } from './pagination';
 
 export interface CommissionDTO {
   id: string;

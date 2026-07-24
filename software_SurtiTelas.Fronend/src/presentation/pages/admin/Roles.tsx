@@ -6,7 +6,6 @@ import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTable';
-import { Modal } from '@/shared/ui/Modal';
 import { useDelegatedTooltips } from '@/shared/components/Tooltip';
 import { cn } from '@/shared/utils';
 import { rolesApi, type Rol } from '@/infrastructure/api/rolesApi';

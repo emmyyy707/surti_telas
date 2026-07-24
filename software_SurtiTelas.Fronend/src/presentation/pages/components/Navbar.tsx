@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ShoppingCart, User } from "lucide-react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { ShoppingCart, User, Menu, X } from "lucide-react";
 import logoImg from "@assets/images/logos/surtitelas-logo.jpg";
 import { useCart, useAuth } from "@/app/providers/AppProviders";
 import { Tooltip } from "@/shared/components/Tooltip";
@@ -17,6 +17,7 @@ const Navbar: React.FC = () => {
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Estado para detectar si el usuario ha hecho scroll hacia abajo
   const [isScrolled, setIsScrolled] = useState(false);
@@ -36,7 +37,12 @@ const Navbar: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
   const role = user?.role;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const goToCart = () => navigate("/carrito");
   const goToLogin = () => navigate("/login");
@@ -45,6 +51,9 @@ const Navbar: React.FC = () => {
     await logout();
     navigate("/");
   };
+
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
+  const closeMenu = () => setIsMenuOpen(false);
 
   const handleUserClick = () => {
     if (!user) {
@@ -93,11 +102,21 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* NAVIGATION */}
-        <nav className="site-nav">
-          <Link to="/">Inicio</Link>
-          <Link to="/nosotros">Nosotros</Link>
-          <Link to="/catalogo">Catálogo</Link>
-          <Link to="/contacto">Contacto</Link>
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={isMenuOpen}
+          onClick={toggleMenu}
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        <nav className={`site-nav ${isMenuOpen ? "open" : ""}`}>
+          <Link to="/" onClick={closeMenu}>Inicio</Link>
+          <Link to="/nosotros" onClick={closeMenu}>Nosotros</Link>
+          <Link to="/catalogo" onClick={closeMenu}>Catálogo</Link>
+          <Link to="/contacto" onClick={closeMenu}>Contacto</Link>
         </nav>
 
         {/* ACTIONS */}

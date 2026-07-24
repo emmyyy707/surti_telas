@@ -47,6 +47,7 @@ export const AdminConfiguracion: React.FC = () => {
     };
     void load();
     return () => { active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

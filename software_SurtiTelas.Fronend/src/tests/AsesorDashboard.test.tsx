@@ -38,7 +38,7 @@ const mockCustomers = [
 ];
 
 vi.mock('@/presentation/pages/admin/StatCard', () => ({
-  StatCard: ({ label, value }: any) => (
+  StatCard: ({ label, value }: { label: string; value: string }) => (
     <div>
       <div>{label}</div>
       <div>{value}</div>
@@ -47,7 +47,7 @@ vi.mock('@/presentation/pages/admin/StatCard', () => ({
 }));
 
 vi.mock('@/shared/ui/Badge', () => ({
-  Badge: ({ children, variant }: any) => <span data-testid="badge">{children}</span>,
+  Badge: ({ children, variant: _variant }: { children: React.ReactNode; variant?: string }) => <span data-testid="badge">{children}</span>,
 }));
 
 vi.mock('@/core/stores/authStore', () => ({
