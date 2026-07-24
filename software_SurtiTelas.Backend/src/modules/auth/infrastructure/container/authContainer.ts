@@ -42,10 +42,10 @@ const emailService = new SmtpEmailService({
   host: env.SMTP_HOST,
   port: env.SMTP_PORT,
   secure: env.SMTP_SECURE,
-  user: env.SMTP_USER,
-  pass: env.SMTP_PASS,
+  user: env.SMTP_USER ?? '',
+  pass: env.SMTP_PASS ?? '',
   fromName: env.SMTP_FROM_NAME,
-  fromEmail: env.SMTP_FROM_EMAIL,
+  fromEmail: env.SMTP_FROM_EMAIL ?? '',
 });
 
 export const authUseCases = {

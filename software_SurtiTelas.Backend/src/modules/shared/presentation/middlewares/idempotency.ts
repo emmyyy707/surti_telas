@@ -6,7 +6,7 @@ const IDEMPOTENCY_TTL = 24 * 60 * 60;
 const MAX_CACHE_SIZE = 1024 * 1024;
 
 export async function idempotency(req: Request, res: Response, next: NextFunction) {
-  if (!redisClient.isReady) {
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true' || !redisClient.isReady) {
     return next();
   }
 

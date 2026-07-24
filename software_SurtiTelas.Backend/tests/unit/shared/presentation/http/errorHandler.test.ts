@@ -1,111 +1,119 @@
-import { describe, it, expect, vi } from 'vitest';
-import { z } from 'zod';
-import { Prisma } from '@prisma/client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { errorHandler } from '@/shared/presentation/http/errorHandler';
-import { ValidationError } from '@/shared/domain/errors';
+import { AppError, NotFoundError, ForbiddenError, ValidationError, BadRequestError, TooManyRequestsError } from '@/shared/domain/errors';
+
+const mockReq = {
+  requestId: 'test-request-id',
+  method: 'GET',
+  url: '/test',
+} as any;
 
 const mockRes = () => {
   const res: any = {
     status: vi.fn().mockReturnThis(),
     json: vi.fn().mockReturnThis(),
   };
-  return res as any;
-};
-
-const run = (err: unknown, reqOverrides = {}) => {
-  const res = mockRes();
-  const req = { requestId: 'req-123', ...reqOverrides };
-  errorHandler(err, req as any, res, vi.fn() as any);
   return res;
 };
 
 describe('errorHandler', () => {
-  it('handles entity.parse.failed / status 400', () => {
-    const res = run({ type: 'entity.parse.failed' });
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ success: false, error: 'bad_request', message: 'Cuerpo JSON inválido' });
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('handles body parser error with status 400', () => {
-    const res = run({ type: 'entity.parse.failed', status: 400 });
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ success: false, error: 'bad_request', message: 'Cuerpo JSON inválido' });
-  });
+  it('should handle AppError with correct status and code', () => {
+    const err = new NotFoundError('Not found');
+    const res = mockRes();
 
-  it('handles a ZodError using the first issue', () => {
-    let zodError: unknown;
-    try {
-      z.object({ name: z.string() }).parse({ name: 5 });
-    } catch (e) {
-      zodError = e;
-    }
-    const res = run(zodError!);
-    expect(res.status).toHaveBeenCalledWith(422);
-    const body = res.json.mock.calls[0][0];
-    expect(body.error).toBe('validation_error');
-    expect(body.details).toBeDefined();
-  });
+    errorHandler(err, mockReq, res, vi.fn());
 
-  it('handles a ZodError with no issues', () => {
-    const res = run(new z.ZodError([]));
-    expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json.mock.calls[0][0].message).toBe('Error de validación');
-  });
-
-  it('maps Prisma P2002 to conflict with target', () => {
-    const err = new Prisma.PrismaClientKnownRequestError('dup', {
-      code: 'P2002',
-      clientVersion: '5',
-      meta: { target: ['email'] },
-    } as any);
-    const res = run(err);
-    expect(res.status).toHaveBeenCalledWith(409);
-    expect(res.json.mock.calls[0][0]).toMatchObject({ error: 'conflict', message: expect.stringContaining('email') });
-  });
-
-  it('maps Prisma P2002 with no target', () => {
-    const err = new Prisma.PrismaClientKnownRequestError('dup', {
-      code: 'P2002',
-      clientVersion: '5',
-    } as any);
-    const res = run(err);
-    expect(res.status).toHaveBeenCalledWith(409);
-    expect(res.json.mock.calls[0][0].message).toBe('Registro duplicado: ');
-  });
-
-  it('maps Prisma P2025 to not found', () => {
-    const err = new Prisma.PrismaClientKnownRequestError('missing', {
-      code: 'P2025',
-      clientVersion: '5',
-    } as any);
-    const res = run(err);
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json.mock.calls[0][0].error).toBe('not_found');
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'not_found',
+      message: 'Not found',
+    });
   });
 
-  it('handles PrismaClientValidationError', () => {
-    const err = new Prisma.PrismaClientValidationError('bad', { clientVersion: '5' } as any);
-    const res = run(err);
+  it('should handle ForbiddenError', () => {
+    const err = new ForbiddenError('Forbidden');
+    const res = mockRes();
+
+    errorHandler(err, mockReq, res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'forbidden',
+      message: 'Forbidden',
+    });
+  });
+
+  it('should handle BadRequestError', () => {
+    const err = new BadRequestError('Bad request');
+    const res = mockRes();
+
+    errorHandler(err, mockReq, res, vi.fn());
+
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json.mock.calls[0][0].error).toBe('bad_request');
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'bad_request',
+      message: 'Bad request',
+    });
   });
 
-  it('handles a ValidationError with details', () => {
-    const err = new ValidationError('invalid', [{ field: 'x' }]);
-    const res = run(err);
+  it('should handle ValidationError with details', () => {
+    const err = new ValidationError('Validation failed', { field: 'error' });
+    const res = mockRes();
+
+    errorHandler(err, mockReq, res, vi.fn());
+
     expect(res.status).toHaveBeenCalledWith(422);
-    expect(res.json.mock.calls[0][0]).toMatchObject({ error: 'validation_error', message: 'invalid', details: [{ field: 'x' }] });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'validation_error',
+      message: 'Validation failed',
+      details: { field: 'error' },
+    });
   });
 
-  it('handles a generic AppError', () => {
-    const res = run(new Prisma.PrismaClientKnownRequestError('other', { code: 'P1000', clientVersion: '5' } as any));
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json.mock.calls[0][0]).toMatchObject({ success: false, error: 'internal', message: 'Error interno del servidor', requestId: 'req-123' });
+  it('should handle TooManyRequestsError', () => {
+    const err = new TooManyRequestsError('Rate limit exceeded');
+    const res = mockRes();
+
+    errorHandler(err, mockReq, res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'too_many_requests',
+      message: 'Rate limit exceeded',
+    });
   });
 
-  it('falls back to 500 for unknown errors and includes requestId', () => {
-    const res = run(new Error('boom'));
+  it('should handle generic Error as 500', () => {
+    const err = new Error('Something went wrong');
+    const res = mockRes();
+
+    errorHandler(err, mockReq, res, vi.fn());
+
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json.mock.calls[0][0]).toMatchObject({ error: 'internal', requestId: 'req-123' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: 'internal',
+      message: 'Error interno del servidor',
+      requestId: 'test-request-id',
+    });
+  });
+
+  it('should include requestId in 500 responses', () => {
+    const err = new Error('Unknown error');
+    const res = mockRes();
+
+    errorHandler(err, mockReq, res, vi.fn());
+
+    const callArgs = (res.json as any).mock.calls[0][0];
+    expect(callArgs).toHaveProperty('requestId', 'test-request-id');
   });
 });

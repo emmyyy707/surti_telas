@@ -5,7 +5,7 @@ import { parseDto } from '../../../../shared/presentation/http/validate';
 import { authUseCases } from '../../infrastructure/container/authContainer';
 import { LoginSchema, RegisterSchema, UserFiltersSchema, VerifyTwoFactorSchema, ForgotPasswordSchema, ResetPasswordSchema, ChangePasswordSchema, UpdateProfileSchema, GoogleTokenSchema, CreateUserSchema, UpdateUserStatusSchema, UpdateRoleStatusSchema } from '../validators/auth.validators';
 import { AssignPermissionSchema, CreatePermissionSchema, UpdatePermissionStatusSchema } from '../validators/permission.validators';
-import { ConflictError } from '../../../../shared/domain/errors';
+import { ConflictError, UnauthorizedError } from '../../../../shared/domain/errors';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
 import {
   AuthLoginEvent,
@@ -91,7 +91,7 @@ export const register = async (req: Request, res: Response) => {
 export const refresh = async (req: Request, res: Response) => {
   const refreshToken = req.cookies?.refreshToken;
   if (!refreshToken) {
-    return ok(res, { accessToken: null, user: null, message: 'No hay sesión activa' });
+    throw new UnauthorizedError('No hay sesión activa');
   }
   const result = await authUseCases.refresh.execute(refreshToken);
   setRefreshTokenCookie(res, result.refreshToken);

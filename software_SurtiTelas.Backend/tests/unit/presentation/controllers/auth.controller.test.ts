@@ -30,6 +30,7 @@ const mockReq = (overrides = {}) => ({
   query: {},
   params: {},
   cookies: {},
+  get: (_key: string) => 'test-agent',
   ...overrides,
 }) as unknown as Request;
 const mockRes = () => {
@@ -60,7 +61,7 @@ describe('auth.controller', () => {
     const req = mockReq({ body: { nombre: 'Test', email: 'test@test.com', password: 'password', role: 'ADMIN' } });
     const res = mockRes();
     const { authUseCases } = await import('@/modules/auth/infrastructure/container/authContainer');
-    (authUseCases.register.execute as any).mockResolvedValue({ id: '1', email: 'test@test.com' });
+    (authUseCases.register.execute as any).mockResolvedValue({ accessToken: 'token', refreshToken: 'refresh', user: { id: '1', nombre: 'Test', email: 'test@test.com', role: 'ADMIN' } });
 
     await register(req, res);
 

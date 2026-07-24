@@ -19,7 +19,7 @@ export const listPayments = async (req: Request, res: Response) => {
 export const getPayment = async (req: Request, res: Response) => {
   const payment = await paymentUseCases.getPaymentById.execute(req.params.id);
   if (!payment) {
-    return ok(res, { success: false, error: 'not_found', message: 'Pago no encontrado' });
+    return res.status(404).json({ success: false, error: 'not_found', message: 'Pago no encontrado' });
   }
   return ok(res, payment);
 };

@@ -20,8 +20,16 @@ const RATE_LIMIT_SCRIPT = `
 `;
 
 export async function redisUserRateLimiter(req: Request, res: Response, next: NextFunction) {
-  if (process.env.DISABLE_RATE_LIMIT === 'true' || !redisClient.isReady) {
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true') {
     return next();
+  }
+
+  if (!redisClient.isReady) {
+    return res.status(503).json({
+      success: false,
+      error: 'service_unavailable',
+      message: 'Servicio temporalmente no disponible. Intenta de nuevo más tarde.',
+    });
   }
 
   const userId = req.user?.id || req.ip || 'anonymous';

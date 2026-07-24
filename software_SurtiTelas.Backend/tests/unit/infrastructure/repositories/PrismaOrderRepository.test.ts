@@ -80,10 +80,17 @@ describe('PrismaOrderRepository', () => {
   });
 
   it('should create an order', async () => {
-    mockPrisma.order.findFirst.mockResolvedValueOnce({ numero: 'PED-000000' });
-    mockPrisma.order.create.mockResolvedValue(makeRow({ id: '1', numero: 'PED-000001' }));
     mockPrisma.customer.findFirst.mockResolvedValue({ nombre: 'Juan' });
     mockPrisma.user.findFirst.mockResolvedValue({ nombre: 'Asesor' });
+
+    const tx = {
+      order: {
+        findFirst: vi.fn().mockResolvedValue({ numero: 'PED-000000' }),
+        create: vi.fn().mockResolvedValue(makeRow({ id: '1', numero: 'PED-000001' })),
+      },
+      $executeRaw: vi.fn(),
+    };
+    mockPrisma.$transaction.mockImplementation((fn: any) => fn(tx));
 
     const result = await repo.create({
       clienteId: 'cli1',
@@ -92,7 +99,7 @@ describe('PrismaOrderRepository', () => {
     });
 
     expect(result.numero).toBe('PED-000001');
-    expect(mockPrisma.order.create).toHaveBeenCalledWith(
+    expect(tx.order.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           numero: 'PED-000001',

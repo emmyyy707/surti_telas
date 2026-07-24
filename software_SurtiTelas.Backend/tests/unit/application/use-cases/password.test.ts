@@ -31,7 +31,7 @@ describe('ForgotPassword', () => {
     const useCase = new ForgotPassword(mockRepo as any, mockEmailService as any);
     mockRepo.findByEmail.mockResolvedValue({ id: 'user-1', estado: 'ACTIVO' });
     mockRepo.setResetPasswordToken.mockResolvedValue(undefined);
-    mockEmailService.sendPasswordReset.mockResolvedValue(undefined);
+    mockEmailService.sendPasswordReset.mockResolvedValue({ previewUrl: undefined });
 
     const result = await useCase.execute('test@test.com');
 
@@ -39,6 +39,7 @@ describe('ForgotPassword', () => {
     expect(mockRepo.setResetPasswordToken).toHaveBeenCalledWith('user-1', expect.any(String), expect.any(Date));
     expect(mockEmailService.sendPasswordReset).toHaveBeenCalledWith('test@test.com', expect.any(String));
     expect(result.message).toContain('Si el correo existe');
+    expect(result.resetUrl).toBeDefined();
   });
 
   it('should return generic message for non-existing user', async () => {

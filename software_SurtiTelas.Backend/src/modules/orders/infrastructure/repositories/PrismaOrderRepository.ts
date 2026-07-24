@@ -102,49 +102,43 @@ export class PrismaOrderRepository implements OrderRepository {
     const itemsCount = itemsList.reduce((sum, i) => sum + i.cantidad, 0);
     const total = itemsList.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
 
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const lastOrder = await this.prisma.order.findFirst({
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('order_number'))`;
+
+      const lastOrder = await tx.order.findFirst({
         orderBy: { numero: 'desc' },
         select: { numero: true },
       });
       const lastNum = lastOrder ? parseInt(lastOrder.numero.replace('PED-', ''), 10) : 0;
       const numero = `PED-${(lastNum + 1).toString().padStart(6, '0')}`;
 
-      try {
-        const row = await this.prisma.order.create({
-          data: {
-            numero,
-            clienteId: input.clienteId,
-            clienteNombre: customer.nombre,
-            asesorId: input.asesorId,
-            asesorNombre: asesor.nombre,
-            fecha: input.fecha ? new Date(input.fecha) : new Date(),
-            total,
-            itemsCount,
-            estado: orderStatusToDb('Nuevo'),
-            prioridad: input.prioridad ? orderPriorityToDb(input.prioridad) : 'ESTANDAR',
-            observaciones: input.observaciones,
-            items: {
-              create: itemsList.map((i) => ({
-                productId: i.productId,
-                nombre: i.nombre,
-                precio: i.precio,
-                cantidad: i.cantidad,
-              })),
-            },
+      const row = await tx.order.create({
+        data: {
+          numero,
+          clienteId: input.clienteId,
+          clienteNombre: customer.nombre,
+          asesorId: input.asesorId,
+          asesorNombre: asesor.nombre,
+          fecha: input.fecha ? new Date(input.fecha) : new Date(),
+          total,
+          itemsCount,
+          estado: orderStatusToDb('Nuevo'),
+          prioridad: input.prioridad ? orderPriorityToDb(input.prioridad) : 'ESTANDAR',
+          observaciones: input.observaciones,
+          items: {
+            create: itemsList.map((i) => ({
+              productId: i.productId,
+              nombre: i.nombre,
+              precio: i.precio,
+              cantidad: i.cantidad,
+            })),
           },
-          include,
-        });
-        return new Order(toOrderData(row));
-      } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-          continue;
-        }
-        throw error;
-      }
-    }
+        },
+        include,
+      });
 
-    throw new BadRequestError('No se pudo generar el número de pedido después de varios intentos');
+      return new Order(toOrderData(row));
+    });
   }
 
   async updateStatus(id: string, estado: OrderStatus): Promise<Order> {

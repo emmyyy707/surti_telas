@@ -19,10 +19,10 @@ const schema = z.object({
   SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_SECURE: z.coerce.boolean().default(true),
-  SMTP_USER: z.string().email().optional().default('danielmurilloruiz53@gmail.com'),
-  SMTP_PASS: z.string().optional().default(''),
+  SMTP_USER: z.string().email().optional(),
+  SMTP_PASS: z.string().optional(),
   SMTP_FROM_NAME: z.string().default('SurtiTelas'),
-  SMTP_FROM_EMAIL: z.string().email().optional().default('danielmurilloruiz53@gmail.com'),
+  SMTP_FROM_EMAIL: z.string().email().optional(),
 });
 
 export const env = schema.parse(process.env);

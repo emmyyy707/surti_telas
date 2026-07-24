@@ -1,4 +1,4 @@
-import nodemailer, { type SendMailOptions } from 'nodemailer';
+import nodemailer, { getTestMessageUrl, type SendMailOptions } from 'nodemailer';
 
 export interface SmtpConfig {
   host: string;
@@ -86,7 +86,7 @@ Si no solicitaste este cambio, ignora este correo.`,
     try {
       const transporter = await this.getTransporter();
       const result = await transporter.sendMail(mailOptions);
-      const rawPreviewUrl = (nodemailer as any).getTestMessageUrl(result);
+      const rawPreviewUrl = getTestMessageUrl(result);
       const previewUrl = typeof rawPreviewUrl === 'string' ? rawPreviewUrl : undefined;
       if (previewUrl) {
         console.log(`[EMAIL] Password reset email sent to ${email}`);

@@ -1,0 +1,15 @@
+name: surtitelas-backend
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - postgresql=16
+  - python=3.11
+  - pip
+  - nodejs=20
+  - openssl
+  - libpq
+  - pkg-config
+  - git
+  - pip:
+    - -r requirements.txt
