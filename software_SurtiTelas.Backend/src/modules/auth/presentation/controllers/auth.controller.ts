@@ -24,7 +24,7 @@ function setRefreshTokenCookie(res: Response, refreshToken: string): void {
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'none',
+    sameSite: isProduction ? 'none' : 'lax',
     path: REFRESH_COOKIE_PATH,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -101,7 +101,13 @@ export const refresh = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   const userId = req.user!.id;
   await authUseCases.logout.execute(userId);
-  res.clearCookie(REFRESH_COOKIE_NAME, { httpOnly: true, sameSite: 'none', path: REFRESH_COOKIE_PATH });
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie(REFRESH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: REFRESH_COOKIE_PATH,
+  });
   eventBus.publish(
     new AuthLogoutEvent({ userId, email: req.user!.email }),
     req.requestId

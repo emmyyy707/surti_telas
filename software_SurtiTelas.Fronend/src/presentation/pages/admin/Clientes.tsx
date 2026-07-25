@@ -280,7 +280,7 @@ export const AdminClientes: React.FC = () => {
           <div className={s.formRow}>
             <div className={s.field}>
               <label className={s.label}>Teléfono</label>
-              <input type="tel" className={s.input} name="telefono" defaultValue={selectedCliente?.telefono ?? ''} maxLength={10} pattern="[0-9]*" inputMode="numeric" />
+              <input type="tel" className={s.input} name="telefono" defaultValue={selectedCliente?.telefono ?? ''} maxLength={11} pattern="[0-9]*" inputMode="numeric" />
             </div>
             <div className={s.field}>
               <label className={s.label}>NIT / Documento</label>

@@ -77,12 +77,12 @@ export const AdminGestionUsuarios: React.FC = () => {
       toast.error('Nombre y email son obligatorios');
       return;
     }
-    if (telefono && !/^[0-9]{1,10}$/.test(telefono)) {
-      toast.error('Teléfono inválido. Máximo 10 dígitos numéricos.');
+    if (telefono && !/^[0-9]{1,11}$/.test(telefono)) {
+      toast.error('Teléfono inválido. Máximo 11 dígitos numéricos.');
       return;
     }
-    if (nit && !/^[0-9]{1,10}$/.test(nit)) {
-      toast.error('Documento inválido. Máximo 10 dígitos numéricos.');
+    if (nit && !/^[0-9]{1,11}$/.test(nit)) {
+      toast.error('Documento inválido. Máximo 11 dígitos numéricos.');
       return;
     }
     setSaving(true);
@@ -218,7 +218,7 @@ export const AdminGestionUsuarios: React.FC = () => {
           <div className={s.formRow}>
             <div className={s.field}>
               <label className={s.label}>Teléfono</label>
-              <input type="tel" className={s.input} name="telefono" defaultValue={selectedUsuario?.telefono ?? ''} maxLength={10} inputMode="numeric" />
+              <input type="tel" className={s.input} name="telefono" defaultValue={selectedUsuario?.telefono ?? ''} maxLength={11} inputMode="numeric" />
             </div>
             <div className={s.field}>
               <label className={s.label}>Documento (NIT)</label>

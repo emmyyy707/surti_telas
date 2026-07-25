@@ -3,12 +3,13 @@ export function isValidPhone(phone: string | null | undefined): boolean {
   const cleaned = phone.replace(/[\s\-()]/g, '');
   if (cleaned.startsWith('+57')) {
     const withoutCountry = cleaned.slice(3);
-    return /^\d{10}$/.test(withoutCountry);
+    return /^\d{7,11}$/.test(withoutCountry);
   }
-  if (cleaned.startsWith('57') && cleaned.length === 12) {
-    return /^57\d{10}$/.test(cleaned);
+  if (cleaned.startsWith('57') && cleaned.length >= 10 && cleaned.length <= 13) {
+    const withoutPrefix = cleaned.slice(2);
+    return /^\d{7,11}$/.test(withoutPrefix);
   }
-  return /^\d{10}$/.test(cleaned);
+  return /^\d{7,11}$/.test(cleaned);
 }
 
 export function normalizePhone(phone: string | null | undefined): string | null {

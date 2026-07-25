@@ -18,10 +18,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY package.json ./
 COPY src ./src
-COPY docker-entrypoint.sh ./
 
-RUN chmod +x docker-entrypoint.sh && mkdir -p /app/uploads
+RUN mkdir -p /app/uploads
 
 EXPOSE 3000
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["npx", "tsx", "src/server.ts"]
