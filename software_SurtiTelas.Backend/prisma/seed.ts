@@ -56,7 +56,13 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'returns:read', 'returns:create', 'returns:update',
     'deliveries:read', 'deliveries:create', 'deliveries:update',
   ],
-  DOMICILIARIO: ['orders:read', 'orders:update', 'deliveries:read', 'deliveries:update'],
+  DOMICILIARIO: [
+    'orders:read', 'orders:update',
+    'deliveries:read', 'deliveries:update',
+    'notifications:read',
+    'customers:read',
+    'users:read',
+  ],
   CLIENTE: ['catalog:read', 'orders:read', 'orders:create', 'customers:read'],
 };
 

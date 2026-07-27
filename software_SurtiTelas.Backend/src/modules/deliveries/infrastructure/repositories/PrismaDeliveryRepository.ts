@@ -39,7 +39,7 @@ export class PrismaDeliveryRepository implements DeliveryRepository {
       LEFT JOIN orders o ON o.id = d.order_id
       LEFT JOIN users u ON u.id = d.domiciliario_id
       WHERE ${Prisma.raw(whereSql)}
-      ORDER BY d."createdAt" DESC
+      ORDER BY d.createdat DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 

@@ -4,17 +4,17 @@ import { Delivery, type DeliveryData } from '../../domain/entities/Delivery';
 export function toDeliveryData(row: any): DeliveryData {
   return {
     id: row.id,
-    orderId: row.orderId,
-    domiciliarioId: row.domiciliarioId,
+    orderId: row.order_id,
+    domiciliarioId: row.domiciliario_id,
     estado: row.estado,
     direccion: row.direccion,
     ciudad: row.ciudad,
     telefono: row.telefono,
     notas: row.notas,
-    asignadoEn: row.asignadoEn,
-    entregadoEn: row.entregadoEn,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    asignadoEn: row.asignadoen,
+    entregadoEn: row.entregadoen,
+    createdAt: row.createdat,
+    updatedAt: row.updatedat,
   };
 }
 
