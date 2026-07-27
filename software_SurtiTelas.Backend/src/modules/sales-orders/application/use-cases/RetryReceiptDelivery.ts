@@ -1,13 +1,15 @@
 import { NotFoundError } from '../../../../shared/domain/errors';
 import type { OrderRepository } from '../../../orders/domain/repositories/OrderRepository';
 import type { OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
+import type { ReceiptRepository } from '../../../receipts/domain/repositories/ReceiptRepository';
 import type { EventBus } from '../../../../shared/application/events';
-import { prisma } from '../../../../config/database';
+import { logger } from '../../../../shared/infrastructure/logger';
 
 export class RetryReceiptDelivery {
   constructor(
     private readonly orderRepo: OrderRepository,
     private readonly historyRepo: OrderHistoryRepository,
+    private readonly receiptRepo: ReceiptRepository,
     private readonly eventBus?: EventBus,
   ) {}
 
@@ -19,46 +21,58 @@ export class RetryReceiptDelivery {
       throw new Error('Solo se puede reintentar el envío de recibos en estado RECIBO_GENERADO');
     }
 
-    await this.orderRepo.updateReceiptSent(id, 'PENDIENTE', new Date(), (order as any).intentosEnvio + 1);
-
-    const receipt = await prisma.receipt.findFirst({
-      where: { orderId: id, deletedAt: null },
-    });
-
-    if (receipt) {
-      await prisma.receipt.update({
-        where: { id: receipt.id },
-        data: {
-          estadoEnvio: 'PENDIENTE',
-          intentosEnvio: { increment: 1 },
-        },
-      });
+    const receipt = await this.receiptRepo.findByOrderId(id);
+    if (!receipt) {
+      throw new NotFoundError('No se encontró el recibo asociado a este pedido');
     }
 
-    await this.historyRepo.create({
-      pedidoId: id,
-      usuarioId,
-      accion: 'REENVIO_RECIBO',
-      estadoAnterior: order.estado,
-      estadoNuevo: order.estado,
-      informacion: { receiptId: receipt?.id },
+    const intentosEnvio = (receipt.intentosEnvio ?? 0) + 1;
+
+    logger.info('[RetryReceiptDelivery] Iniciando reintento de envío', {
+      requestId,
+      orderId: order.id,
+      orderNumero: order.numero,
+      receiptId: receipt.id,
+      intentosEnvio,
     });
 
-    if (this.eventBus) {
-      this.eventBus.publish({
-        type: 'order.receipt.retry',
-        occurredAt: new Date(),
-        payload: {
-          orderId: order.id,
-          orderNumero: order.numero,
-          clienteId: order.clienteId,
-          clienteNombre: order.cliente,
-          receiptId: receipt?.id,
-        },
+    try {
+      await this.orderRepo.updateReceiptSent(id, 'PENDIENTE', new Date(), intentosEnvio);
+
+      await this.historyRepo.create({
+        pedidoId: id,
+        usuarioId,
+        accion: 'REENVIO_RECIBO',
+        estadoAnterior: order.estado,
+        estadoNuevo: order.estado,
+        informacion: { receiptId: receipt.id, intentosEnvio },
+      });
+
+      if (this.eventBus) {
+        this.eventBus.publish({
+          type: 'order.receipt.retry',
+          occurredAt: new Date(),
+          payload: {
+            orderId: order.id,
+            orderNumero: order.numero,
+            clienteId: order.clienteId,
+            clienteNombre: order.cliente,
+            receiptId: receipt.id,
+          },
+          requestId,
+        });
+      }
+
+      const updatedOrder = await this.orderRepo.getById(id);
+      return updatedOrder!;
+    } catch (error) {
+      logger.error('[RetryReceiptDelivery] Error en reintento de envío', {
         requestId,
+        orderId: order.id,
+        receiptId: receipt.id,
+        error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
     }
-
-    return order;
   }
 }

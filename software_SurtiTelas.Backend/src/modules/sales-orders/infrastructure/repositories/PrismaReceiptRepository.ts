@@ -63,6 +63,33 @@ export class PrismaReceiptRepository implements ReceiptRepository {
     } as unknown as Receipt;
   }
 
+  async findByOrderId(orderId: string): Promise<Receipt | null> {
+    const row = await this.prisma.receipt.findFirst({
+      where: { orderId, deletedAt: null },
+    });
+
+    if (!row) return null;
+    return {
+      id: row.id,
+      orderId: row.orderId ?? undefined,
+      customerId: row.customerId,
+      numero: row.numero,
+      total: Number(row.total),
+      concepto: row.concepto,
+      notas: row.notas ?? undefined,
+      url: row.url ?? undefined,
+      emitidoPor: row.emitidoPor ?? undefined,
+      emitidoAt: row.emitidoAt,
+      estado: row.estado,
+      estadoEnvio: row.estadoEnvio,
+      fechaEnvio: row.fechaEnvio,
+      intentosEnvio: row.intentosEnvio,
+      ultimoErrorEnvio: row.ultimoErrorEnvio ?? undefined,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    } as unknown as Receipt;
+  }
+
   async create(input: { orderId?: string; customerId: string; numero: string; total: number; concepto: string; notas?: string; emitidoPor?: string }): Promise<Receipt> {
     const row = await this.prisma.receipt.create({
       data: {

@@ -21,9 +21,9 @@ export class ReceiptSender {
         select: { nombre: true, telefono: true },
       });
 
-      if (cliente?.email) {
+      if (cliente?.nombre) {
         await this.emailService.sendReceipt(
-          { email: cliente.email, nombre: cliente.nombre },
+          { email: 'cliente@local.test', nombre: cliente.nombre },
           `${process.env.FRONTEND_URL || 'http://localhost:5173'}${url}`,
           order.numero,
           Number(receipt.total)

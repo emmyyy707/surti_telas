@@ -4,22 +4,19 @@ import { PrismaOrderRepository } from '../../../orders/infrastructure/repositori
 import { PrismaSaleRepository } from '../repositories/PrismaSaleRepository';
 import { PrismaOrderHistoryRepository } from '../repositories/PrismaOrderHistoryRepository';
 import { PrismaReceiptRepository } from '../repositories/PrismaReceiptRepository';
-import { PrismaPaymentRepository } from '../../../payments/infrastructure/repositories/PrismaPaymentRepository';
-import { UploadPaymentProof } from '../application/use-cases/UploadPaymentProof';
-import { StartValidation } from '../application/use-cases/StartValidation';
-import { AcceptOrder } from '../application/use-cases/AcceptOrder';
-import { RejectOrder } from '../application/use-cases/RejectOrder';
-import { RetryReceiptDelivery } from '../application/use-cases/RetryReceiptDelivery';
-import { GetSalesReport } from '../application/use-cases/GetSalesReport';
-import { ReceiptPdfGenerator } from '../infrastructure/services/ReceiptPdfGenerator';
-import { EmailService } from '../infrastructure/services/EmailService';
-import { ReceiptSender } from '../infrastructure/services/ReceiptSender';
+import { UploadPaymentProof } from '../../application/use-cases/UploadPaymentProof';
+import { StartValidation } from '../../application/use-cases/StartValidation';
+import { AcceptOrder } from '../../application/use-cases/AcceptOrder';
+import { RejectOrder } from '../../application/use-cases/RejectOrder';
+import { RetryReceiptDelivery } from '../../application/use-cases/RetryReceiptDelivery';
+import { GetSalesReport } from '../../application/use-cases/GetSalesReport';
+import { EmailService } from '../../infrastructure/services/EmailService';
+import { ReceiptSender } from '../../infrastructure/services/ReceiptSender';
 
 const orderRepository = new PrismaOrderRepository(prisma);
 const saleRepository = new PrismaSaleRepository(prisma);
 const historyRepository = new PrismaOrderHistoryRepository(prisma);
 const receiptRepository = new PrismaReceiptRepository(prisma);
-const paymentRepository = new PrismaPaymentRepository(prisma);
 
 const emailConfig = {
   host: process.env.SMTP_HOST || 'localhost',
@@ -31,17 +28,16 @@ const emailConfig = {
   fromEmail: process.env.SMTP_FROM_EMAIL || 'no-reply@surtitelas.com',
 };
 
-const pdfGenerator = new ReceiptPdfGenerator();
 const emailService = new EmailService(emailConfig);
-const receiptSender = new ReceiptSender(pdfGenerator, emailService);
+const receiptSender = new ReceiptSender(emailService);
 
 export const salesOrderUseCases = {
   uploadPaymentProof: new UploadPaymentProof(orderRepository, historyRepository, eventBus),
   startValidation: new StartValidation(orderRepository, historyRepository, eventBus),
-  acceptOrder: new AcceptOrder(orderRepository, historyRepository, saleRepository, receiptRepository, paymentRepository, eventBus),
+  acceptOrder: new AcceptOrder(orderRepository, historyRepository, saleRepository, receiptRepository, eventBus),
   rejectOrder: new RejectOrder(orderRepository, historyRepository, eventBus),
-  retryReceiptDelivery: new RetryReceiptDelivery(orderRepository, historyRepository, eventBus),
-  getSalesReport: new GetSalesReport(orderRepository, saleRepository, historyRepository),
+  retryReceiptDelivery: new RetryReceiptDelivery(orderRepository, historyRepository, receiptRepository, eventBus),
+  getSalesReport: new GetSalesReport(saleRepository),
   getOrderById: orderRepository.getById.bind(orderRepository),
 };
 

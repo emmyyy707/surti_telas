@@ -247,6 +247,7 @@ model Product {
 model Customer {
   id                String      @id @default(cuid())
   nombre            String
+  email             String?     @db.VarChar(255)
   ciudad            String?
   telefono          String?     @map("telefono")
   nit               String?

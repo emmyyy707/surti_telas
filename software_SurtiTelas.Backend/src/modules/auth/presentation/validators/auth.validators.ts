@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { OptionalPhoneSchema, OptionalDocumentNumberSchema, PaginationSchema } from '../../../../shared/presentation/validators';
+import { OptionalPhoneSchema, PaginationSchema } from '../../../../shared/presentation/validators';
 
 export const LoginSchema = z.object({
   email: z.string().email('Correo inválido'),

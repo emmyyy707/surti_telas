@@ -10,7 +10,7 @@ type OrderHistoryRow = {
   estadoAnterior: string;
   estadoNuevo: string;
   razon: string | null;
-  informacion: Record<string, unknown> | null;
+  informacion: unknown;
   createdAt: Date;
 };
 
@@ -24,7 +24,7 @@ export function toOrderHistoryData(row: OrderHistoryRow): OrderHistoryData {
     estadoAnterior: row.estadoAnterior,
     estadoNuevo: row.estadoNuevo,
     razon: row.razon ?? undefined,
-    informacion: row.informacion ?? undefined,
+    informacion: row.informacion as Record<string, unknown> | undefined,
     createdAt: row.createdAt.toISOString(),
   };
 }

@@ -86,7 +86,7 @@ Si no solicitaste este cambio, ignora este correo.`,
     try {
       const transporter = await this.getTransporter();
       const result = await transporter.sendMail(mailOptions);
-      const rawPreviewUrl = getTestMessageUrl(result);
+      const rawPreviewUrl = getTestMessageUrl(result as any);
       const previewUrl = typeof rawPreviewUrl === 'string' ? rawPreviewUrl : undefined;
       if (previewUrl) {
         console.log(`[EMAIL] Password reset email sent to ${email}`);

@@ -14,10 +14,22 @@ import { OrderReceiptPaymentSubscriber } from './modules/orders/application/use-
 import { PrismaWebhookSubscriptionRepository } from './modules/webhooks/infrastructure/repositories/PrismaWebhookSubscriptionRepository';
 import { WebhookDispatcher } from './modules/webhooks/application/WebhookDispatcher';
 import { SalesOrderNotificationSubscriber } from './modules/sales-orders/application/use-cases/SalesOrderNotificationSubscriber';
+import { ReceiptSendSubscriber } from './modules/sales-orders/application/use-cases/ReceiptSendSubscriber';
+import { PrismaOrderRepository } from './modules/orders/infrastructure/repositories/PrismaOrderRepository';
+import { PrismaSaleRepository } from './modules/sales-orders/infrastructure/repositories/PrismaSaleRepository';
+import { PrismaReceiptRepository } from './modules/sales-orders/infrastructure/repositories/PrismaReceiptRepository';
+import { PrismaCompanyConfigRepository } from './modules/company/infrastructure/repositories/PrismaCompanyConfigRepository';
+import { receiptSender } from './modules/sales-orders/infrastructure/container/salesOrderContainer';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
 new SalesOrderNotificationSubscriber(eventBus);
+
+const orderRepository = new PrismaOrderRepository(prisma);
+const saleRepository = new PrismaSaleRepository(prisma);
+const receiptRepository = new PrismaReceiptRepository(prisma);
+const companyRepository = new PrismaCompanyConfigRepository(prisma);
+new ReceiptSendSubscriber(eventBus, orderRepository, saleRepository, receiptRepository, companyRepository, receiptSender);
 
 const webhookRepo = new PrismaWebhookSubscriptionRepository(prisma);
 const webhookDispatcher = new WebhookDispatcher(webhookRepo);

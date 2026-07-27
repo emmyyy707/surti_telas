@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { OrderHistory, type OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
-import { toOrderHistory } from '../mappers/OrderHistoryMapper';
+import type { OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
+import { OrderHistory } from '../../domain/entities/OrderHistory';
+import type { OrderHistoryData } from '../../domain/entities/OrderHistory';
 
 export class PrismaOrderHistoryRepository implements OrderHistoryRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -17,18 +18,20 @@ export class PrismaOrderHistoryRepository implements OrderHistoryRepository {
         informacion: history.informacion as any,
       },
     });
-    return toOrderHistory({
+
+    const data: OrderHistoryData = {
       id: row.id,
       pedidoId: row.pedidoId,
       usuarioId: row.usuarioId ?? undefined,
-      usuarioNombre: null,
       accion: row.accion,
       estadoAnterior: row.estadoAnterior,
       estadoNuevo: row.estadoNuevo,
       razon: row.razon ?? undefined,
       informacion: row.informacion as Record<string, unknown> | undefined,
-      createdAt: row.createdAt,
-    });
+      createdAt: row.createdAt.toISOString(),
+    };
+
+    return new OrderHistory(data);
   }
 
   async findByPedidoId(pedidoId: string): Promise<OrderHistory[]> {
@@ -37,6 +40,21 @@ export class PrismaOrderHistoryRepository implements OrderHistoryRepository {
       include: { usuario: true },
       orderBy: { createdAt: 'desc' },
     });
-    return rows.map(toOrderHistory);
+
+    return rows.map((row) => {
+      const data: OrderHistoryData = {
+        id: row.id,
+        pedidoId: row.pedidoId,
+        usuarioId: row.usuarioId ?? undefined,
+        usuarioNombre: row.usuario?.nombre,
+        accion: row.accion,
+        estadoAnterior: row.estadoAnterior,
+        estadoNuevo: row.estadoNuevo,
+        razon: row.razon ?? undefined,
+        informacion: row.informacion as Record<string, unknown> | undefined,
+        createdAt: row.createdAt.toISOString(),
+      };
+      return new OrderHistory(data);
+    });
   }
 }

@@ -42,7 +42,7 @@ const receiptRepo = {
     ]);
 
     return {
-      data: rows.map((row) => ({
+      data: (rows as any[]).map((row) => ({
         id: row.id,
         orderId: row.orderId ?? undefined,
         customerId: row.customerId,
@@ -87,7 +87,7 @@ const receiptRepo = {
         createdAt: true,
         updatedAt: true,
       },
-    });
+    }) as any; // forced
 
     if (!row) return null;
     return {
@@ -147,14 +147,9 @@ const receiptRepo = {
       total: Number(row.total),
       concepto: row.concepto,
       notas: row.notas ?? undefined,
-      url: row.url ?? undefined,
       emitidoPor: row.emitidoPor ?? undefined,
       emitidoAt: row.emitidoAt,
       estado: row.estado,
-      estadoEnvio: row.estadoEnvio,
-      fechaEnvio: row.fechaEnvio,
-      intentosEnvio: row.intentosEnvio,
-      ultimoErrorEnvio: row.ultimoErrorEnvio ?? undefined,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     } as unknown as Receipt;

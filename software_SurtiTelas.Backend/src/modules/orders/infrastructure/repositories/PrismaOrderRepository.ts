@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { BadRequestError, NotFoundError } from '../../../../shared/domain/errors';
 import { Order, type OrderItem, type OrderPriority, type OrderStatus, type OrderFlow } from '../../domain/entities/Order';
 import type { OrderFilters, OrderRepository, CreateOrderInput } from '../../domain/repositories/OrderRepository';
-import { orderPriorityToDb, orderStatusToDb, toOrderData } from '../mappers/OrderMapper';
+import { orderPriorityToDb, orderStatusToDb, toOrderData, type OrderRow } from '../mappers/OrderMapper';
 
 const include = {
   cliente: true,
@@ -300,17 +300,36 @@ export class PrismaOrderRepository implements OrderRepository {
     return new Order(toOrderData(updated));
   }
 
-  async updateReceiptSent(id: string, _estadoEnvio: string, _fechaEnvio: Date, _intentos: number, _ultimoError?: string): Promise<Order> {
+  async updateReceiptSent(id: string, estadoEnvio: string, fechaEnvio: Date, intentos: number, ultimoError?: string): Promise<Order> {
     const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
     if (!existing) throw new NotFoundError('Pedido no encontrado');
 
-    const updated = await this.prisma.order.update({
-      where: { id },
-      data: {
-        estado: orderStatusToDb('Recibo enviado'),
-      },
-      include,
+    const receipt = await this.prisma.receipt.findFirst({
+      where: { orderId: id, deletedAt: null },
     });
+
+    const updated = await this.prisma.$transaction<OrderRow>(async (tx) => {
+      await tx.order.update({
+        where: { id },
+        data: { estado: orderStatusToDb('Recibo enviado') },
+        include,
+      });
+
+      if (receipt) {
+        await tx.receipt.update({
+          where: { id: receipt.id },
+          data: {
+            estadoEnvio: estadoEnvio as any,
+            fechaEnvio,
+            intentosEnvio: intentos,
+            ultimoErrorEnvio: ultimoError,
+          },
+        });
+      }
+
+      return tx.order.findFirst({ where: { id, deletedAt: null }, include }) as any as OrderRow;
+    });
+
     return new Order(toOrderData(updated));
   }
 

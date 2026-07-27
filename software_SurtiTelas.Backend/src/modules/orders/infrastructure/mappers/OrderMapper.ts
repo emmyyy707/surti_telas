@@ -43,14 +43,14 @@ const DB_TO_PRIORITY: Record<DbPriority, OrderPriority> = {
   PRIORITARIO: 'Prioritario',
 };
 
-type OrderRow = {
+export type OrderRow = {
   id: string;
   numero: string;
   clienteId: string;
-  cliente: { nombre: string };
+  cliente: { nombre: string } | null;
   clienteNombre: string;
   asesorId: string;
-  asesor: { nombre: string };
+  asesor: { nombre: string } | null;
   asesorNombre: string;
   tipoFlujo: string;
   fecha: Date;

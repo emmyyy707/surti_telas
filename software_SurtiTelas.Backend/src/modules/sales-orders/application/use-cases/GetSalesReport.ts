@@ -1,6 +1,4 @@
-import type { OrderRepository } from '../../../orders/domain/repositories/OrderRepository';
 import type { SaleRepository } from '../../domain/repositories/SaleRepository';
-import type { OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
 import { prisma } from '../../../../config/database';
 
 export interface SalesReportFilters {

@@ -11,6 +11,7 @@ import {
   canRetryReceipt,
   canViewSalesReport,
 } from '../../application/policies/orderApprovalPolicy';
+import type { RejectionReason } from '../../../orders/domain/entities/Order';
 
 export const uploadPaymentProof = async (req: Request, res: Response) => {
   const order = await salesOrderUseCases.getOrderById(req.params.id);
@@ -62,7 +63,7 @@ export const rejectOrder = async (req: Request, res: Response) => {
   if (!order) throw new NotFoundError('Pedido no encontrado');
   if (!canRejectOrder(order, req.user!)) throw new ForbiddenError('No tienes permiso para rechazar este pedido');
 
-  const { razon, observaciones } = req.body as { razon: string; observaciones?: string };
+  const { razon, observaciones } = req.body as { razon: RejectionReason; observaciones?: string };
   const updated = await salesOrderUseCases.rejectOrder.execute(req.params.id, { usuarioId: req.user!.id, razon, observaciones }, req.requestId);
   return ok(res, updated, 'Pedido rechazado');
 };

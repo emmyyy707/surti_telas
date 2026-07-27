@@ -196,7 +196,9 @@ export class Order {
   canTransitionTo(nextStatus: OrderStatus): boolean {
     if (nextStatus === this.estado) return true;
 
-    if (this.tipoFlujo === 'PRODUCCION') {
+    const flow = this.tipoFlujo === 'VENTAS' ? 'VENTAS' : 'PRODUCCION';
+
+    if (flow === 'PRODUCCION') {
       const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
         Nuevo: ['En producción', 'Cancelado'],
         'En producción': ['Listo', 'Cancelado'],
@@ -215,30 +217,27 @@ export class Order {
       return allowedTransitions[this.estado].includes(nextStatus);
     }
 
-    if (this.tipoFlujo === 'VENTAS') {
-      const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-        Pendiente: ['En validación', 'Aceptado', 'Rechazado'],
-        'En validación': ['Aceptado', 'Rechazado'],
-        Aceptado: ['Recibo generado'],
-        Rechazado: [],
-        'Recibo generado': ['Recibo enviado'],
-        'Recibo enviado': [],
-        Nuevo: [],
-        'En producción': [],
-        Listo: [],
-        Despachado: [],
-        'En camino': [],
-        Entregado: [],
-        Cancelado: [],
-      };
-      return allowedTransitions[this.estado].includes(nextStatus);
-    }
-
-    return false;
+    const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
+      Pendiente: ['En validación', 'Aceptado', 'Rechazado'],
+      'En validación': ['Aceptado', 'Rechazado'],
+      Aceptado: ['Recibo generado'],
+      Rechazado: [],
+      'Recibo generado': ['Recibo enviado'],
+      'Recibo enviado': [],
+      Nuevo: [],
+      'En producción': [],
+      Listo: [],
+      Despachado: [],
+      'En camino': [],
+      Entregado: [],
+      Cancelado: [],
+    };
+    return allowedTransitions[this.estado].includes(nextStatus);
   }
 
   isTerminal(): boolean {
-    if (this.tipoFlujo === 'PRODUCCION') {
+    const flow = this.tipoFlujo === 'VENTAS' ? 'VENTAS' : 'PRODUCCION';
+    if (flow === 'PRODUCCION') {
       return this.estado === 'Entregado' || this.estado === 'Cancelado';
     }
     return this.estado === 'Rechazado' || this.estado === 'Recibo enviado';
