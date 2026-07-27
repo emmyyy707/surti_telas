@@ -1,28 +1,31 @@
 import { z } from 'zod';
 import { OptionalPhoneSchema, OptionalNitSchema, NonNegativeNumberSchema } from '../../../../shared/presentation/validators';
 
-export const CreateCustomerSchema = z
-  .object({
-    nombre: z.string().min(1, 'El nombre es obligatorio'),
-    ciudad: z.string().min(1).optional(),
-    telefono: OptionalPhoneSchema,
-    tel: z.string().min(1).optional(),
-    asesorId: z.string().optional(),
-    nit: OptionalNitSchema,
-    cupoTotal: NonNegativeNumberSchema.optional(),
-    cupoUsado: NonNegativeNumberSchema.optional(),
-    deudaVencida: NonNegativeNumberSchema.optional(),
-    isTrustedCustomer: z.boolean().optional(),
-    estado: z.enum(['Activo', 'Inactivo']).optional(),
-  })
+const BaseCustomerSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  ciudad: z.string().min(1).optional(),
+  telefono: OptionalPhoneSchema,
+  tel: z.string().min(1).optional(),
+  asesorId: z.string().optional(),
+  nit: OptionalNitSchema,
+  cupoTotal: NonNegativeNumberSchema.optional(),
+  cupoUsado: NonNegativeNumberSchema.optional(),
+  deudaVencida: NonNegativeNumberSchema.optional(),
+  isTrustedCustomer: z.boolean().optional(),
+  estado: z.enum(['Activo', 'Inactivo']).optional(),
+});
+
+export const CreateCustomerSchema = BaseCustomerSchema.transform((data) => ({
+  ...data,
+  telefono: data.telefono ?? data.tel,
+}));
+
+export const UpdateCustomerSchema = BaseCustomerSchema.partial()
+  .extend({ asesorId: z.string().optional() })
   .transform((data) => ({
     ...data,
     telefono: data.telefono ?? data.tel,
   }));
-
-export const UpdateCustomerSchema = CreateCustomerSchema._def.schema
-  .partial()
-  .extend({ asesorId: z.string().optional() });
 
 export const AssignAsesorSchema = z.object({
   asesorId: z.string().min(1, 'asesorId es obligatorio'),

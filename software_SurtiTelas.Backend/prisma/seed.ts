@@ -55,6 +55,8 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'contact:read', 'contact:update',
     'returns:read', 'returns:create', 'returns:update',
     'deliveries:read', 'deliveries:create', 'deliveries:update',
+    'notifications:read',
+    'users:read',
   ],
   DOMICILIARIO: [
     'orders:read', 'orders:update',

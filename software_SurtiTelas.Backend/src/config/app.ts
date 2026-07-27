@@ -199,6 +199,7 @@ export function createApp(): Express {
   app.use('/api/v1/commissions', commissionsRoutes);
   app.use('/api/v1/company', companyRoutes);
   app.use('/api/v1/deliveries', deliveryRouter);
+  app.use('/api/v1/domiciliarios', deliveryRouter);
   app.use('/api/v1/cms', cmsRoutes);
   app.use('/api/v1/contact', contactRoutes);
   app.use('/api/v1/audit', auditRouter);
