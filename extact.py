@@ -3,7 +3,7 @@ from pathlib import Path
 # ======================================
 # CONFIGURACIÓN
 # ======================================
-
+###
 ROOT = Path(__file__).parent
 
 OUTPUT_FILE = ROOT / "PROYECTO_COMPLETO.md"
