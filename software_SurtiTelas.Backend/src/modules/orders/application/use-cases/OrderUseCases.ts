@@ -81,11 +81,11 @@ export class CreateOrder {
       return order;
     });
 
-    this.emitEvents(result, total, stockItems, input.paymentMethod, input.installments, requestId);
+    this.emitEvents(result, total, stockItems, input.paymentMethod, input.installments, input.tipoFlujo, requestId);
     return result;
   }
 
-  private emitEvents(order: Order, total: number, stockItems: { productId: string; productRef: string; cantidad: number }[], paymentMethod?: string, installments?: number, requestId?: string) {
+  private emitEvents(order: Order, total: number, stockItems: { productId: string; productRef: string; cantidad: number }[], paymentMethod?: string, installments?: number, tipoFlujo?: string, requestId?: string) {
     if (!this.eventBus) return;
     this.eventBus.publish(
       new StockReservedEvent({
@@ -105,6 +105,7 @@ export class CreateOrder {
         itemsCount: order.items,
         paymentMethod: paymentMethod || 'OTHER',
         installments,
+        tipoFlujo,
       }, requestId)
     );
   }

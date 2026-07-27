@@ -1,8 +1,9 @@
-import type { Order, OrderItem, OrderPriority, OrderStatus } from '../entities/Order';
+import type { Order, OrderItem, OrderPriority, OrderStatus, OrderFlow } from '../entities/Order';
 
 export interface CreateOrderInput {
   clienteId: string;
   asesorId: string;
+  tipoFlujo?: OrderFlow;
   itemsList?: OrderItem[];
   prioridad?: OrderPriority;
   observaciones?: string;
@@ -15,6 +16,7 @@ export interface OrderFilters {
   estado?: OrderStatus;
   clienteId?: string;
   asesorId?: string;
+  tipoFlujo?: OrderFlow;
   desde?: string;
   hasta?: string;
   page?: number;
@@ -22,6 +24,8 @@ export interface OrderFilters {
   cursor?: string;
   sort?: 'fecha' | 'total' | 'estado';
   order?: 'asc' | 'desc';
+  tieneComprobante?: boolean;
+  numero?: string;
 }
 
 export interface OrderRepository {
@@ -32,4 +36,32 @@ export interface OrderRepository {
   updateFull(id: string, changes: { clienteId?: string; asesorId?: string; prioridad?: OrderPriority; observaciones?: string; itemsList?: OrderItem[] }): Promise<Order>;
   assignDomiciliario(id: string, domiciliarioId: string): Promise<Order>;
   softDelete(id: string): Promise<void>;
+  updatePaymentProof(id: string, data: {
+    url: string;
+    nombreOriginal: string;
+    mime: string;
+    tamaño: number;
+    cargadoPorId: string;
+    estado: string;
+    observaciones?: string;
+  }): Promise<Order>;
+  updateValidationResult(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    razonRechazo?: string;
+    observacionesRechazo?: string;
+  }): Promise<Order>;
+  updateToAccepted(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    medioPago?: string;
+  }): Promise<Order>;
+  updateToRejected(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    razonRechazo: string;
+    observacionesRechazo?: string;
+  }): Promise<Order>;
+  updateReceiptSent(id: string, estadoEnvio: string, fechaEnvio: Date, intentos: number, ultimoError?: string): Promise<Order>;
+  getWithPaymentProof(id: string): Promise<Order | null>;
 }

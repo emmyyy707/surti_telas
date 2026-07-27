@@ -1,4 +1,4 @@
-import type { DomainEvent, EventBus } from '../../../shared/application/events';
+import type { DomainEvent, EventBus } from '../../../../shared/application/events';
 import { prisma } from '../../../../config/database';
 
 export class OrderReceiptPaymentSubscriber {
@@ -19,7 +19,12 @@ export class OrderReceiptPaymentSubscriber {
         itemsCount: number;
         paymentMethod: string;
         installments?: number;
+        tipoFlujo?: string;
       };
+
+      if (payload.tipoFlujo === 'VENTAS') {
+        return;
+      }
 
       const methodMap: Record<string, 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER'> = {
         CASH: 'CASH',
@@ -31,7 +36,7 @@ export class OrderReceiptPaymentSubscriber {
       const paymentMethod = methodMap[payload.paymentMethod] || 'OTHER';
 
       await prisma.$transaction(async (tx) => {
-        const receipt = await tx.receipt.create({
+        await tx.receipt.create({
           data: {
             orderId: payload.orderId,
             customerId: payload.clienteId,

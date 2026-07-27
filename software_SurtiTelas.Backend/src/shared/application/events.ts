@@ -18,6 +18,7 @@ export class OrderCreatedEvent implements DomainEvent {
       itemsCount: number;
       paymentMethod: string;
       installments?: number;
+      tipoFlujo?: string;
     },
     public readonly requestId?: string
   ) {}
@@ -270,6 +271,77 @@ export class ControlUpdatedEvent implements DomainEvent {
       etapa: string;
       creadoPorId: string;
       revisadoPorId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderPaymentProofUploadedEvent implements DomainEvent {
+  readonly type = 'order.payment_proof.uploaded';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderAcceptedEvent implements DomainEvent {
+  readonly type = 'order.accepted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+      saleId: string;
+      receiptId: string;
+      total: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderRejectedEvent implements DomainEvent {
+  readonly type = 'order.rejected';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+      razon: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderReceiptRetryEvent implements DomainEvent {
+  readonly type = 'order.receipt.retry';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      receiptId: string;
     },
     public readonly requestId?: string
   ) {}

@@ -6,9 +6,14 @@ export interface ReceiptData {
   total: number;
   concepto: string;
   notas?: string;
+  url?: string;
   emitidoPor?: string;
   emitidoAt: string;
   estado: string;
+  estadoEnvio?: string;
+  fechaEnvio?: string;
+  intentosEnvio?: number;
+  ultimoErrorEnvio?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,9 +26,14 @@ export class Receipt {
   readonly total: number;
   readonly concepto: string;
   readonly notas?: string;
+  readonly url?: string;
   readonly emitidoPor?: string;
   readonly emitidoAt: string;
   readonly estado: string;
+  readonly estadoEnvio?: string;
+  readonly fechaEnvio?: string;
+  readonly intentosEnvio?: number;
+  readonly ultimoErrorEnvio?: string;
   readonly createdAt: string;
   readonly updatedAt: string;
 
@@ -35,9 +45,14 @@ export class Receipt {
     this.total = data.total;
     this.concepto = data.concepto;
     this.notas = data.notas;
+    this.url = data.url;
     this.emitidoPor = data.emitidoPor;
     this.emitidoAt = data.emitidoAt;
     this.estado = data.estado;
+    this.estadoEnvio = data.estadoEnvio;
+    this.fechaEnvio = data.fechaEnvio;
+    this.intentosEnvio = data.intentosEnvio;
+    this.ultimoErrorEnvio = data.ultimoErrorEnvio;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }

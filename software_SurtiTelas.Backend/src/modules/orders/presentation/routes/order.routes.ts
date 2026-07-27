@@ -4,6 +4,7 @@ import { authenticate } from '../../../auth/presentation/middlewares/authenticat
 import { requirePermission, requireRole } from '../../../auth/presentation/middlewares/authorize';
 import { sensitiveUserRateLimiter } from '../../../../modules/shared/presentation/middlewares/sensitiveUserRateLimiter';
 import * as controller from '../controllers/order.controller';
+import * as approvalController from '../../../sales-orders/presentation/controllers/orderApproval.controller';
 
 /**
  * @swagger
@@ -277,4 +278,45 @@ orderRouter.delete(
   requirePermission('orders:delete'),
   sensitiveUserRateLimiter,
   asyncHandler(controller.deleteOrder)
+);
+
+orderRouter.post(
+  '/:id/payment-proof',
+  requireRole('CLIENTE'),
+  sensitiveUserRateLimiter,
+  asyncHandler(approvalController.uploadPaymentProof)
+);
+
+orderRouter.patch(
+  '/:id/start-validation',
+  requirePermission('orders:update'),
+  sensitiveUserRateLimiter,
+  asyncHandler(approvalController.startValidation)
+);
+
+orderRouter.post(
+  '/:id/accept',
+  requirePermission('orders:update'),
+  sensitiveUserRateLimiter,
+  asyncHandler(approvalController.acceptOrder)
+);
+
+orderRouter.post(
+  '/:id/reject',
+  requirePermission('orders:update'),
+  sensitiveUserRateLimiter,
+  asyncHandler(approvalController.rejectOrder)
+);
+
+orderRouter.post(
+  '/:id/retry-receipt',
+  requirePermission('orders:update'),
+  sensitiveUserRateLimiter,
+  asyncHandler(approvalController.retryReceipt)
+);
+
+orderRouter.get(
+  '/admin/sales-orders/report',
+  requirePermission('orders:read'),
+  asyncHandler(approvalController.getSalesReport)
 );

@@ -4,6 +4,7 @@ import { PositiveNumberSchema, PositiveIntegerSchema } from '../../../../shared/
 export const CreateOrderSchema = z.object({
   clienteId: z.string().min(1, 'clienteId es obligatorio'),
   asesorId: z.string().min(1).optional(),
+  tipoFlujo: z.enum(['PRODUCCION', 'VENTAS']).optional(),
   itemsList: z
     .array(
       z.object({
@@ -29,6 +30,12 @@ export const UpdateOrderStatusSchema = z.object({
     'En camino',
     'Entregado',
     'Cancelado',
+    'Pendiente',
+    'En validación',
+    'Aceptado',
+    'Rechazado',
+    'Recibo generado',
+    'Recibo enviado',
   ]),
 });
 
@@ -54,9 +61,10 @@ export const UpdateOrderFullSchema = z.object({
 });
 
 export const OrderFiltersSchema = z.object({
-  estado: z.enum(['Nuevo', 'En producción', 'Listo', 'Despachado', 'En camino', 'Entregado', 'Cancelado']).optional(),
+  estado: z.enum(['Nuevo', 'En producción', 'Listo', 'Despachado', 'En camino', 'Entregado', 'Cancelado', 'Pendiente', 'En validación', 'Aceptado', 'Rechazado', 'Recibo generado', 'Recibo enviado']).optional(),
   clienteId: z.string().optional(),
   asesorId: z.string().optional(),
+  tipoFlujo: z.enum(['PRODUCCION', 'VENTAS']).optional(),
   desde: z.string().optional(),
   hasta: z.string().optional(),
   page: z.coerce.number().int().positive().optional(),
@@ -64,4 +72,6 @@ export const OrderFiltersSchema = z.object({
   cursor: z.string().optional(),
   sort: z.enum(['fecha', 'total', 'estado']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
+  tieneComprobante: z.boolean().optional(),
+  numero: z.string().optional(),
 });

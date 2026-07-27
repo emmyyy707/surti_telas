@@ -5,9 +5,26 @@ export type OrderStatus =
   | 'Despachado'
   | 'En camino'
   | 'Entregado'
-  | 'Cancelado';
+  | 'Cancelado'
+  | 'Pendiente'
+  | 'En validación'
+  | 'Aceptado'
+  | 'Rechazado'
+  | 'Recibo generado'
+  | 'Recibo enviado';
 
 export type OrderPriority = 'Estándar' | 'Prioritario';
+export type OrderFlow = 'PRODUCCION' | 'VENTAS';
+
+export type RejectionReason =
+  | 'COMPROBANTE_FALSO'
+  | 'COMPROBANTE_ILEGIBLE'
+  | 'PAGO_INCOMPLETO'
+  | 'VALOR_INCORRECTO'
+  | 'INFORMACION_INCOMPLETA'
+  | 'PEDIDO_DUPLICADO'
+  | 'PRODUCTO_NO_DISPONIBLE'
+  | 'OTRA';
 
 export interface OrderItem {
   productId?: string;
@@ -20,13 +37,34 @@ export interface OrderData {
   id: string;
   numero: string;
   cliente: string;
+  clienteId: string;
   asesor: string;
+  asesorId: string;
+  tipoFlujo: OrderFlow;
   fecha: string;
-  items: number;
+  subtotal?: number;
+  impuestos?: number;
+  descuentos?: number;
   total: number;
+  items: number;
   estado: OrderStatus;
   prioridad?: OrderPriority;
   observaciones?: string;
+  medioPago?: string;
+  fechaValidacion?: string;
+  usuarioValidacionId?: string;
+  razonRechazo?: string;
+  observacionesRechazo?: string;
+  comprobantePagoUrl?: string;
+  comprobantePagoNombre?: string;
+  comprobantePagoMime?: string;
+  comprobantePagoTamaño?: number;
+  comprobantePagoCargadoEn?: string;
+  comprobantePagoCargadoPorId?: string;
+  comprobantePagoEstado?: string;
+  comprobantePagoObservaciones?: string;
+  usuarioValidacionNombre?: string;
+  comprobantePagoCargadoPorNombre?: string;
   itemsList?: OrderItem[];
   createdAt?: string;
   updatedAt?: string;
@@ -36,13 +74,34 @@ export class Order {
   readonly id: string;
   readonly numero: string;
   readonly cliente: string;
+  readonly clienteId: string;
   readonly asesor: string;
+  readonly asesorId: string;
+  readonly tipoFlujo: OrderFlow;
   readonly fecha: string;
-  readonly items: number;
+  readonly subtotal?: number;
+  readonly impuestos?: number;
+  readonly descuentos?: number;
   readonly total: number;
+  readonly items: number;
   readonly estado: OrderStatus;
   readonly prioridad?: OrderPriority;
   readonly observaciones?: string;
+  readonly medioPago?: string;
+  readonly fechaValidacion?: string;
+  readonly usuarioValidacionId?: string;
+  readonly razonRechazo?: string;
+  readonly observacionesRechazo?: string;
+  readonly comprobantePagoUrl?: string;
+  readonly comprobantePagoNombre?: string;
+  readonly comprobantePagoMime?: string;
+  readonly comprobantePagoTamaño?: number;
+  readonly comprobantePagoCargadoEn?: string;
+  readonly comprobantePagoCargadoPorId?: string;
+  readonly comprobantePagoEstado?: string;
+  readonly comprobantePagoObservaciones?: string;
+  readonly usuarioValidacionNombre?: string;
+  readonly comprobantePagoCargadoPorNombre?: string;
   readonly itemsList?: OrderItem[];
   readonly createdAt?: string;
   readonly updatedAt?: string;
@@ -53,13 +112,34 @@ export class Order {
     this.id = data.id;
     this.numero = data.numero;
     this.cliente = data.cliente;
+    this.clienteId = data.clienteId;
     this.asesor = data.asesor;
+    this.asesorId = data.asesorId;
+    this.tipoFlujo = data.tipoFlujo;
     this.fecha = data.fecha;
-    this.items = data.items;
+    this.subtotal = data.subtotal;
+    this.impuestos = data.impuestos;
+    this.descuentos = data.descuentos;
     this.total = data.total;
+    this.items = data.items;
     this.estado = data.estado;
     this.prioridad = data.prioridad;
     this.observaciones = data.observaciones;
+    this.medioPago = data.medioPago;
+    this.fechaValidacion = data.fechaValidacion;
+    this.usuarioValidacionId = data.usuarioValidacionId;
+    this.razonRechazo = data.razonRechazo;
+    this.observacionesRechazo = data.observacionesRechazo;
+    this.comprobantePagoUrl = data.comprobantePagoUrl;
+    this.comprobantePagoNombre = data.comprobantePagoNombre;
+    this.comprobantePagoMime = data.comprobantePagoMime;
+    this.comprobantePagoTamaño = data.comprobantePagoTamaño;
+    this.comprobantePagoCargadoEn = data.comprobantePagoCargadoEn;
+    this.comprobantePagoCargadoPorId = data.comprobantePagoCargadoPorId;
+    this.comprobantePagoEstado = data.comprobantePagoEstado;
+    this.comprobantePagoObservaciones = data.comprobantePagoObservaciones;
+    this.usuarioValidacionNombre = data.usuarioValidacionNombre;
+    this.comprobantePagoCargadoPorNombre = data.comprobantePagoCargadoPorNombre;
     this.itemsList = data.itemsList;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
@@ -116,16 +196,71 @@ export class Order {
   canTransitionTo(nextStatus: OrderStatus): boolean {
     if (nextStatus === this.estado) return true;
 
-    const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-      Nuevo: ['En producción', 'Cancelado'],
-      'En producción': ['Listo', 'Cancelado'],
-      Listo: ['Despachado', 'Cancelado'],
-      Despachado: ['En camino', 'Cancelado'],
-      'En camino': ['Entregado'],
-      Entregado: [],
-      Cancelado: [],
-    };
+    if (this.tipoFlujo === 'PRODUCCION') {
+      const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
+        Nuevo: ['En producción', 'Cancelado'],
+        'En producción': ['Listo', 'Cancelado'],
+        Listo: ['Despachado', 'Cancelado'],
+        Despachado: ['En camino', 'Cancelado'],
+        'En camino': ['Entregado'],
+        Entregado: [],
+        Cancelado: [],
+        Pendiente: [],
+        'En validación': [],
+        Aceptado: [],
+        Rechazado: [],
+        'Recibo generado': [],
+        'Recibo enviado': [],
+      };
+      return allowedTransitions[this.estado].includes(nextStatus);
+    }
 
-    return allowedTransitions[this.estado].includes(nextStatus);
+    if (this.tipoFlujo === 'VENTAS') {
+      const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
+        Pendiente: ['En validación', 'Aceptado', 'Rechazado'],
+        'En validación': ['Aceptado', 'Rechazado'],
+        Aceptado: ['Recibo generado'],
+        Rechazado: [],
+        'Recibo generado': ['Recibo enviado'],
+        'Recibo enviado': [],
+        Nuevo: [],
+        'En producción': [],
+        Listo: [],
+        Despachado: [],
+        'En camino': [],
+        Entregado: [],
+        Cancelado: [],
+      };
+      return allowedTransitions[this.estado].includes(nextStatus);
+    }
+
+    return false;
+  }
+
+  isTerminal(): boolean {
+    if (this.tipoFlujo === 'PRODUCCION') {
+      return this.estado === 'Entregado' || this.estado === 'Cancelado';
+    }
+    return this.estado === 'Rechazado' || this.estado === 'Recibo enviado';
+  }
+
+  canAcceptPaymentProof(): boolean {
+    return this.tipoFlujo === 'VENTAS' && this.estado === 'Pendiente';
+  }
+
+  canBeValidated(): boolean {
+    return this.tipoFlujo === 'VENTAS' && this.estado === 'Pendiente';
+  }
+
+  canBeAccepted(): boolean {
+    return this.tipoFlujo === 'VENTAS' && (this.estado === 'Pendiente' || this.estado === 'En validación');
+  }
+
+  canBeRejected(): boolean {
+    return this.tipoFlujo === 'VENTAS' && (this.estado === 'Pendiente' || this.estado === 'En validación');
+  }
+
+  hasPaymentProof(): boolean {
+    return Boolean(this.comprobantePagoUrl && this.comprobantePagoEstado);
   }
 }

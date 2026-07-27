@@ -1,12 +1,14 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { BadRequestError, NotFoundError } from '../../../../shared/domain/errors';
-import { Order, type OrderItem, type OrderPriority, type OrderStatus } from '../../domain/entities/Order';
+import { Order, type OrderItem, type OrderPriority, type OrderStatus, type OrderFlow } from '../../domain/entities/Order';
 import type { OrderFilters, OrderRepository, CreateOrderInput } from '../../domain/repositories/OrderRepository';
 import { orderPriorityToDb, orderStatusToDb, toOrderData } from '../mappers/OrderMapper';
 
 const include = {
   cliente: true,
   asesor: true,
+  usuarioValidacion: true,
+  comprobantePagoCargadoPor: true,
   items: true,
 } satisfies Prisma.OrderInclude;
 
@@ -25,6 +27,15 @@ export class PrismaOrderRepository implements OrderRepository {
     if (filters.estado) where.estado = orderStatusToDb(filters.estado);
     if (filters.clienteId) where.clienteId = filters.clienteId;
     if (filters.asesorId) where.asesorId = filters.asesorId;
+    if (filters.tipoFlujo) where.tipoFlujo = filters.tipoFlujo;
+    if (filters.numero) where.numero = { contains: filters.numero };
+    if (filters.tieneComprobante !== undefined) {
+      if (filters.tieneComprobante) {
+        where.comprobantePagoUrl = { not: null };
+      } else {
+        where.comprobantePagoUrl = null;
+      }
+    }
     if (filters.desde || filters.hasta) {
       where.fecha = {};
       if (filters.desde) where.fecha.gte = new Date(filters.desde);
@@ -89,6 +100,14 @@ export class PrismaOrderRepository implements OrderRepository {
     return row ? new Order(toOrderData(row)) : null;
   }
 
+  async getWithPaymentProof(id: string): Promise<Order | null> {
+    const row = await this.prisma.order.findFirst({
+      where: { id, deletedAt: null, comprobantePagoUrl: { not: null } },
+      include,
+    });
+    return row ? new Order(toOrderData(row)) : null;
+  }
+
   async create(input: CreateOrderInput): Promise<Order> {
     const customer = await this.prisma.customer.findFirst({
       where: { id: input.clienteId, deletedAt: null },
@@ -100,7 +119,16 @@ export class PrismaOrderRepository implements OrderRepository {
 
     const itemsList = input.itemsList ?? [];
     const itemsCount = itemsList.reduce((sum, i) => sum + i.cantidad, 0);
-    const total = itemsList.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
+    const subtotal = itemsList.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
+    const impuestos = 0;
+    const descuentos = 0;
+    const total = subtotal + impuestos - descuentos;
+
+    const tipoFlujo = input.tipoFlujo ?? 'PRODUCCION';
+    let estado: OrderStatus = 'Nuevo';
+    if (tipoFlujo === 'VENTAS') {
+      estado = 'Pendiente';
+    }
 
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('order_number'))`;
@@ -119,10 +147,14 @@ export class PrismaOrderRepository implements OrderRepository {
           clienteNombre: customer.nombre,
           asesorId: input.asesorId,
           asesorNombre: asesor.nombre,
+          tipoFlujo: tipoFlujo as OrderFlow,
           fecha: input.fecha ? new Date(input.fecha) : new Date(),
+          subtotal,
+          impuestos,
+          descuentos,
           total,
           itemsCount,
-          estado: orderStatusToDb('Nuevo'),
+          estado: orderStatusToDb(estado),
           prioridad: input.prioridad ? orderPriorityToDb(input.prioridad) : 'ESTANDAR',
           observaciones: input.observaciones,
           items: {
@@ -153,6 +185,130 @@ export class PrismaOrderRepository implements OrderRepository {
     const updated = await this.prisma.order.update({
       where: { id },
       data: { estado: orderStatusToDb(estado) },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
+  async updatePaymentProof(id: string, data: {
+    url: string;
+    nombreOriginal: string;
+    mime: string;
+    tamaño: number;
+    cargadoPorId: string;
+    estado: string;
+    observaciones?: string;
+  }): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const order = new Order(toOrderData(existing));
+    if (!order.canAcceptPaymentProof()) {
+      throw new BadRequestError('El pedido no puede recibir comprobantes de pago');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        comprobantePagoUrl: data.url,
+        comprobantePagoNombre: data.nombreOriginal,
+        comprobantePagoMime: data.mime,
+        comprobantePagoTamaño: data.tamaño,
+        comprobantePagoCargadoEn: new Date(),
+        comprobantePagoCargadoPorId: data.cargadoPorId,
+        comprobantePagoEstado: data.estado,
+        comprobantePagoObservaciones: data.observaciones,
+      },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
+  async updateValidationResult(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    razonRechazo?: string;
+    observacionesRechazo?: string;
+  }): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        usuarioValidacionId: data.usuarioValidacionId,
+        fechaValidacion: data.fechaValidacion,
+        razonRechazo: data.razonRechazo,
+        observacionesRechazo: data.observacionesRechazo,
+      },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
+  async updateToAccepted(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    medioPago?: string;
+  }): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const order = new Order(toOrderData(existing));
+    if (!order.canBeAccepted()) {
+      throw new BadRequestError('El pedido no puede ser aceptado en su estado actual');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        estado: orderStatusToDb('Aceptado'),
+        usuarioValidacionId: data.usuarioValidacionId,
+        fechaValidacion: data.fechaValidacion,
+        medioPago: data.medioPago,
+      },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
+  async updateToRejected(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    razonRechazo: string;
+    observacionesRechazo?: string;
+  }): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const order = new Order(toOrderData(existing));
+    if (!order.canBeRejected()) {
+      throw new BadRequestError('El pedido no puede ser rechazado en su estado actual');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        estado: orderStatusToDb('Rechazado'),
+        usuarioValidacionId: data.usuarioValidacionId,
+        fechaValidacion: data.fechaValidacion,
+        razonRechazo: data.razonRechazo,
+        observacionesRechazo: data.observacionesRechazo,
+      },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
+  async updateReceiptSent(id: string, _estadoEnvio: string, _fechaEnvio: Date, _intentos: number, _ultimoError?: string): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        estado: orderStatusToDb('Recibo enviado'),
+      },
       include,
     });
     return new Order(toOrderData(updated));

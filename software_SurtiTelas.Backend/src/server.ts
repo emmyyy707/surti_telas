@@ -13,9 +13,11 @@ import { notificationSubscriber } from './modules/notifications/infrastructure/c
 import { OrderReceiptPaymentSubscriber } from './modules/orders/application/use-cases/OrderReceiptPaymentSubscriber';
 import { PrismaWebhookSubscriptionRepository } from './modules/webhooks/infrastructure/repositories/PrismaWebhookSubscriptionRepository';
 import { WebhookDispatcher } from './modules/webhooks/application/WebhookDispatcher';
+import { SalesOrderNotificationSubscriber } from './modules/sales-orders/application/use-cases/SalesOrderNotificationSubscriber';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
+new SalesOrderNotificationSubscriber(eventBus);
 
 const webhookRepo = new PrismaWebhookSubscriptionRepository(prisma);
 const webhookDispatcher = new WebhookDispatcher(webhookRepo);
