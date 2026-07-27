@@ -11,6 +11,7 @@ export interface Usuario {
   estado: 'Activo' | 'Inactivo' | 'Pendiente';
   fechaRegistro: string;
   pedidosRealizados: number;
+  permisos?: string[];
 }
 
 function mapBackendRole(role: string | undefined): UserRole {
@@ -26,7 +27,7 @@ function mapBackendRole(role: string | undefined): UserRole {
   }
 }
 
-function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pedidosRealizados?: number }): Usuario {
+function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pedidosRealizados?: number; permisos?: string[] }): Usuario {
   const estado = dto.estado === 'INACTIVO' ? 'Inactivo' : dto.estado === 'PENDIENTE' ? 'Pendiente' : 'Activo';
   return {
     id: dto.id,
@@ -36,6 +37,7 @@ function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pe
     estado,
     fechaRegistro: (dto.createdAt ?? '').slice(0, 10),
     pedidosRealizados: dto.pedidosRealizados ?? 0,
+    permisos: dto.permisos ?? [],
   };
 }
 
@@ -45,11 +47,13 @@ export interface CreateUserInput {
   password: string;
   role: 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE';
   telefono?: string;
+  permisos?: string[];
 }
 
 export interface UpdateUserInput {
   nombre?: string;
   telefono?: string;
+  permisos?: string[];
 }
 
 export const usersApi = {

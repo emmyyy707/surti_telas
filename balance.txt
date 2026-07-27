@@ -1,0 +1,17 @@
+Line 48: 0 -> 1:   useEffect(() => {
+Line 50: 1 -> 0:   }, []);
+Line 52: 0 -> 1:   const filteredUsuarios = useMemo(() => {
+Line 53: 1 -> 2:     return items.filter(u =>
+Line 57: 2 -> 1:     );
+Line 58: 1 -> 0:   }, [search, items]);
+Line 117: 0 -> 1:     header: item => ({
+Line 125: 1 -> 0:     }),
+Line 133: 0 -> 1:     render: (item) => (
+Line 141: 1 -> 0:     ),
+Line 144: 0 -> 1:   const actions = ((item: UsuarioConDatos): DataTableAction<UsuarioConDatos>[] => [
+Line 167: 1 -> 2:   return (
+Line 277: 2 -> 4:              { key: 'domiciliario', label: 'Domiciliario', description: 'Gestion de entregas y rutas' }].map(mod => (
+Line 284: 4 -> 5:                     setUserPermissions(prev =>
+Line 286: 5 -> 4:                     );
+Line 294: 4 -> 2:             ))}
+Line 317: 2 -> 1:   );

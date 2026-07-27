@@ -140,7 +140,7 @@ export const AdminClientes: React.FC = () => {
             isTrustedCustomer,
             estado,
           });
-          setItems((prev) => [{ ...created, telefono, nit, isTrustedCustomer, estadoCliente: estado }, ...prev]);
+          setItems((prev) => [{ id: created.id, nombre: created.nombre, email: created.email ?? '', role: 'CLIENTE' as BackendRole, telefono: created.tel, nit: created.nit, isTrustedCustomer: created.isTrustedCustomer, estadoCliente: created.estado }, ...prev]);
           toast.success('Datos de cliente creados');
         }
       } else {

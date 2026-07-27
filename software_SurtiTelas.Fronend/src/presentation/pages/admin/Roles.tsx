@@ -11,7 +11,7 @@ import { cn } from '@/shared/utils';
 import { rolesApi, type Rol } from '@/infrastructure/api/rolesApi';
 import { PERMISOS_SISTEMA } from '@/shared/constants/options';
 
-const PROTECTED_ROLES = new Set(['ADMIN', 'ASESOR']);
+const PROTECTED_ROLES = new Set(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE']);
 
 const isProtectedRole = (rol: Rol) => PROTECTED_ROLES.has((rol.nombre ?? '').toUpperCase());
 
@@ -159,21 +159,21 @@ export const AdminRoles: React.FC = () => {
       },
     },
     {
-      label: (item: Rol) => (isProtectedRole(item) ? 'Protegido' : 'Desactivar'),
+      label: (item: Rol) => (isProtectedRole(item) ? 'Protegido' : 'Eliminar'),
       icon: <Trash2 size={14} aria-hidden="true" focusable="false" />,
       disabled: (item: Rol) => isProtectedRole(item),
+      danger: true,
       onClick: async (item: Rol) => {
         if (isProtectedRole(item)) {
           toast.error('Rol protegido, no se puede eliminar');
           return;
         }
-        const nuevoEstado = item.estado === 'Activo' ? 'Inactivo' : 'Activo';
         try {
-          await rolesApi.updateStatus(item.id, nuevoEstado);
-          setItems(prev => prev.map(it => it.id === item.id ? { ...it, estado: nuevoEstado } : it));
-          toast.success(`Rol ${nuevoEstado.toLowerCase()} correctamente`);
+          await rolesApi.delete(item.id);
+          setItems(prev => prev.filter(it => it.id !== item.id));
+          toast.success('Rol eliminado correctamente');
         } catch {
-          toast.error('No se pudo actualizar el estado del rol');
+          toast.error('No se pudo eliminar el rol');
         }
       },
     },
