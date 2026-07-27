@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ChevronDown, MessageCircle, Archive, Package, CreditCard, User } from 'lucide-react';
+import { ChevronDown, MessageCircle, Archive, Package, CreditCard, User, Plus } from 'lucide-react';
 import s from './MisPedidos.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
@@ -110,8 +110,15 @@ export const MisPedidos: React.FC = () => {
 
   return (
     <div className={s.pedidosLayout}>
-      <h1 className={s.pageTitle}>Mis Pedidos</h1>
-      <p className={s.pageSubtitle}>Historial y seguimiento de tus compras</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 className={s.pageTitle}>Mis Pedidos</h1>
+          <p className={s.pageSubtitle}>Historial y seguimiento de tus compras</p>
+        </div>
+        <Button leftIcon={<Plus size={16} />} onClick={() => navigate('/cliente/pedidos/crear')}>
+          Nuevo Pedido
+        </Button>
+      </div>
 
       <div className={s.estadoTabs}>
         {filtrosEstado.map((filtro) => (
