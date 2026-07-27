@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus, Eye, Trash2, Save, Loader2, AlertCircle, Upload, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Plus, Eye, Trash2, Save, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import s from './VentasPedidos.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';

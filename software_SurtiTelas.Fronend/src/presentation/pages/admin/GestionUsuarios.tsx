@@ -8,15 +8,6 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { usersApi, type Usuario } from '@/infrastructure/api/usersApi';
-import { ROL_LABELS, ROLES_SISTEMA } from '@/shared/constants/options';
-
-const roleToBackend: Record<string, 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE'> = {
-  ADMIN: 'ADMIN',
-  ASESO: 'ASESOR',
-  ASESOR: 'ASESOR',
-  DOMICILIARIO: 'DOMICILIARIO',
-  CLIENTE: 'CLIENTE',
-};
 
 interface UsuarioConDatos extends Usuario {
   telefono?: string | null;

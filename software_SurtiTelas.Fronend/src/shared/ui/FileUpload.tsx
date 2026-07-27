@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import { Upload, X, File, Image, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/shared/utils';
 
@@ -54,7 +54,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const files = useMemo(() => Array.isArray(value) ? value : value ? [value] : [], [value]);
+  const files = useMemo(() => (Array.isArray(value) ? value : value ? [value] : []), [value]);
 
   const validateFile = useCallback(
     (file: File): string | null => {
@@ -68,7 +68,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         return `Formato no permitido. Formatos aceptados: ${ALLOWED_EXTENSIONS.join(', ')}`;
       }
       if (file.size > maxSizeMB * 1024 * 1024) {
-        return `El archivo excede el tamanio máximo de ${maxSizeMB} MB`;
+        return `El archivo excede el tama\u00f1o m\u00e1ximo de ${maxSizeMB} MB`;
       }
       return null;
     },
@@ -202,13 +202,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         )}
         <div>
           <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-            {isDragOver ? 'Suelta el archivo aquí' : 'Arrastra un archivo o haz clic para seleccionar'}
+            {isDragOver ? 'Suelta el archivo aqu\u00ed' : 'Arrastra un archivo o haz clic para seleccionar'}
           </p>
           {hint && <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{hint}</p>}
         </div>
         {!loading && (
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            {accept ? `Formatos: ${accept} | ` : ''}Máximo: {maxSizeMB} MB
+            {accept ? `Formatos: ${accept} | ` : ''}M\u00e1ximo: {maxSizeMB} MB
           </p>
         )}
       </div>

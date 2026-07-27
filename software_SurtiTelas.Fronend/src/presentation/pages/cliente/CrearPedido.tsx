@@ -10,7 +10,6 @@ import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { productsApi } from '@/infrastructure/api/productsApi';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import { useAuthStore } from '@/core/stores/authStore';
 import type { ProductTerminado } from '@/infrastructure/api/productsApi';
 
 const TASA_IVA = 0.19;

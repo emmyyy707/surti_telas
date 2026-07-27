@@ -103,7 +103,6 @@ export const AdminClientes: React.FC = () => {
     const formData = new FormData(form);
 
     const nombre = String(formData.get('nombre') ?? '').trim();
-    const email = String(formData.get('email') ?? '').trim();
     const telefono = String(formData.get('telefono') ?? '').trim() || undefined;
     const nit = String(formData.get('nit') ?? '').trim() || undefined;
     const isTrustedCustomer = (formData.get('isTrustedCustomer') as string) === 'on';
@@ -141,7 +140,7 @@ export const AdminClientes: React.FC = () => {
             isTrustedCustomer,
             estado,
           });
-          setItems((prev) => [{ ...selectedCliente, telefono, nit, isTrustedCustomer, estadoCliente: estado }, ...prev]);
+          setItems((prev) => [{ ...created, telefono, nit, isTrustedCustomer, estadoCliente: estado }, ...prev]);
           toast.success('Datos de cliente creados');
         }
       } else {
