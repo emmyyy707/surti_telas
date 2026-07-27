@@ -62,6 +62,7 @@ const DomiciliarioPerfil = React.lazy(() => import('@/presentation/pages/domicil
 const ClienteLayout = React.lazy(() => import('@/presentation/pages/cliente/ClienteLayout').then(m => ({ default: m.ClienteLayout })));
 const InicioCliente = React.lazy(() => import('@/presentation/pages/cliente/InicioCliente').then(m => ({ default: m.InicioCliente })));
 const CatalogoCliente = React.lazy(() => import('@/presentation/pages/cliente/Catalogo').then(m => ({ default: m.CatalogoCliente })));
+const CrearPedido = React.lazy(() => import('@/presentation/pages/cliente/CrearPedido').then(m => ({ default: m.CrearPedido })));
 const MisPedidos = React.lazy(() => import('@/presentation/pages/cliente/MisPedidos').then(m => ({ default: m.MisPedidos })));
 const PerfilCliente = React.lazy(() => import('@/presentation/pages/cliente/PerfilCliente').then(m => ({ default: m.PerfilCliente })));
 const OrderTracking = React.lazy(() => import('@/presentation/pages/cliente/OrderTracking').then(m => ({ default: m.OrderTracking })));
@@ -179,6 +180,7 @@ const App: React.FC = () => (
             <Route path="inicio" element={<InicioCliente />} />
             <Route path="catalogo" element={<CatalogoCliente />} />
             <Route path="pedidos" element={<MisPedidos />} />
+            <Route path="pedidos/crear" element={<CrearPedido />} />
             <Route path="recibos" element={<Recibos />} />
             <Route path="favoritos" element={<Favoritos />} />
             <Route path="seguimiento" element={<OrderTracking />} />

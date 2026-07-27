@@ -21,6 +21,7 @@ export { Avatar } from './Avatar';
 export { DropdownMenu } from './DropdownMenu';
 export { StatsCard } from './StatsCard';
 export { DataTable } from './DataTable';
+export { FileUpload } from './FileUpload';
 
 
 

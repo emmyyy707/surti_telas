@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus, Eye, Trash2, Save, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Eye, Trash2, Save, Loader2, AlertCircle, Upload, CheckCircle, XCircle, FileText } from 'lucide-react';
 import s from './VentasPedidos.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { FileUpload } from '@/shared/ui/FileUpload';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { authApi } from '@/infrastructure/api/authApi';
 import type { Pedido, PedidoItem } from '@/core/types';
@@ -41,6 +42,7 @@ export const AdminVentasPedidos: React.FC = () => {
   const [estado, setEstado] = useState<Pedido['estado']>('Nuevo');
   const [prioridad, setPrioridad] = useState<Pedido['prioridad']>('Estándar');
   const [observaciones, setObservaciones] = useState('');
+  const [comprobantePago, setComprobantePago] = useState<File | null>(null);
   const [itemsForm, setItemsForm] = useState<PedidoItem[]>([
     { nombre: '', precio: 0, cantidad: 1 },
   ]);
@@ -95,12 +97,13 @@ export const AdminVentasPedidos: React.FC = () => {
     );
   }, [items, search]);
 
-  const resetForm = () => {
+const resetForm = () => {
     setClienteId('');
     setAsesorId('');
     setEstado('Nuevo');
-    setPrioridad('Estándar');
+    setPrioridad('EstÃ¡ndar');
     setObservaciones('');
+    setComprobantePago(null);
     setItemsForm([{ nombre: '', precio: 0, cantidad: 1 }]);
     setEditingId(null);
     setFormError(null);
@@ -148,22 +151,31 @@ export const AdminVentasPedidos: React.FC = () => {
     setSaving(true);
     try {
       if (editingId) {
+        const obs = [
+          observaciones,
+          comprobantePago ? `Comprobante: ${comprobantePago.name}` : null,
+        ].filter(Boolean).join(' ');
         await ordersApi.updateOrderFull(editingId, {
           clienteId,
           asesorId,
           prioridad,
-          observaciones,
+          observaciones: obs || undefined,
           itemsList: validItems,
         });
         await fetchPedidos();
         toast.success('Pedido actualizado');
       } else {
+        const obs = [
+          observaciones,
+          comprobantePago ? `Comprobante: ${comprobantePago.name}` : null,
+        ].filter(Boolean).join(' ');
         await ordersApi.create({
           clienteId,
           asesorId,
           prioridad,
-          observaciones,
+          observaciones: obs || undefined,
           itemsList: validItems,
+          comprobantePago: comprobantePago ?? undefined,
         });
         await fetchPedidos();
         toast.success('Pedido creado');
@@ -335,6 +347,24 @@ export const AdminVentasPedidos: React.FC = () => {
             <textarea className={f.textarea} rows={3} value={observaciones} onChange={e => setObservaciones(e.target.value)} placeholder="Notas del pedido..." />
           </div>
           <div className={f.field}>
+            <label className={f.label}>Comprobante de pago (opcional)</label>
+            <FileUpload
+              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+              maxSizeMB={10}
+              maxFiles={1}
+              value={comprobantePago}
+              onChange={(files) => {
+                if (files && files.length > 0) {
+                  setComprobantePago(files[0]);
+                } else {
+                  setComprobantePago(null);
+                }
+              }}
+              hint="Formatos permitidos: PDF, JPG, PNG, GIF, WEBP. Tamaño mÃ¡ximo: 10 MB."
+              allowPreview
+            />
+          </div>
+          <div className={f.field}>
             <label className={f.label}>Items del pedido</label>
             <table className={f.itemsTable}>
               <thead>
@@ -425,6 +455,16 @@ export const AdminVentasPedidos: React.FC = () => {
 
       <Modal open={!!statusConfirm} onClose={() => setStatusConfirm(null)} title="Cambiar estado del pedido" description="Selecciona el nuevo estado para el pedido." size="md" variant="form">
         <div className={f.form}>
+          {detailPedido && detailPedido.estado === 'Nuevo' && (
+            <div className={f.formRow}>
+              <Button variant="success" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'En producciÃ³n'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} aceptado`); setStatusConfirm(null); } }}>
+                <CheckCircle size={14} /> Aceptar
+              </Button>
+              <Button variant="danger" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Cancelado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} rechazado`); setStatusConfirm(null); } }}>
+                <XCircle size={14} /> Rechazar
+              </Button>
+            </div>
+          )}
           <div className={f.field}>
             <label className={f.label}>Estado</label>
             <select className={f.select} value={statusConfirm?.estado ?? ''} onChange={e => setStatusConfirm(prev => prev ? { ...prev, estado: e.target.value as Pedido['estado'] } : null)}>
