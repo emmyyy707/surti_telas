@@ -65,8 +65,8 @@ export interface AuthRepository {
   listRoles(filters?: { page?: number; limit?: number }): Promise<{ data: RoleData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   getRole(id: string): Promise<RoleData | null>;
   findRoleByName(name: string): Promise<RoleData | null>;
-  createRole(name: string, description?: string): Promise<RoleData>;
-  updateRole(name: string, description?: string): Promise<RoleData>;
+  createRole(name: string, description?: string, permisos?: string[]): Promise<RoleData>;
+  updateRole(name: string, description?: string, permisos?: string[]): Promise<RoleData>;
   updateRoleStatus(name: string, estado: 'Activo' | 'Inactivo'): Promise<RoleData>;
   deleteRole(name: string): Promise<void>;
   delete(id: string): Promise<void>;

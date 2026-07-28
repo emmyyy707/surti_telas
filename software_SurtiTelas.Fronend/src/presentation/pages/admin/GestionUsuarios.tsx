@@ -89,7 +89,7 @@ export const AdminGestionUsuarios: React.FC = () => {
         toast.success('Usuario actualizado');
       } else {
         const randomPass = Math.random().toString(36).slice(-8);
-        const creado = await usersApi.create({ nombre, email, telefono, nit, role: role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE', password: randomPass, permisos });
+        const creado = await usersApi.create({ nombre, email, telefono, role: role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE', password: randomPass, permisos });
         setItems(prev => [creado, ...prev]);
         toast.success('Usuario creado');
       }
@@ -270,8 +270,8 @@ export const AdminGestionUsuarios: React.FC = () => {
               { value: 'asesor', label: 'Asesor' },
               { value: 'domiciliario', label: 'Domiciliario' },
             ].map(mod => (
-                  <label key={value} className={s.permisoCheckbox}>
-                    <input type="checkbox" name="permisos" value={value} />
+                  <label key={mod.value} className={s.permisoCheckbox}>
+                    <input type="checkbox" name="permisos" value={mod.value} />
                     <span>{mod.label}</span>
                   </label>
                 ))}

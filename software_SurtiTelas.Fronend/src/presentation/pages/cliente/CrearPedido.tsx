@@ -67,7 +67,7 @@ export const CrearPedido: React.FC = () => {
   const productOptions = useMemo(() => {
     return products.map(p => ({
       value: p.id,
-      label: `${p.nombre} (${p.ref}) - ${formatCurrency(p.precio)} - Stock: ${p.stock}`,
+      label: `${p.nombre} (${p.codigo}) - ${formatCurrency(p.precio)} - Stock: ${p.stock}`,
       product: p,
     }));
   }, [products]);
@@ -166,7 +166,7 @@ export const CrearPedido: React.FC = () => {
           cantidad: it.cantidad,
         }));
 
-      const observaciones = [
+      const observacionesTexto = [
         observaciones || null,
         comprobantePago ? `Comprobante de pago adjunto: ${comprobantePago.name}` : null,
       ].filter(Boolean).join(' ');
@@ -175,7 +175,7 @@ export const CrearPedido: React.FC = () => {
         clienteId: selectedClientId,
         itemsList: validItems,
         prioridad,
-        observaciones,
+        observaciones: observacionesTexto,
         paymentMethod,
         installments,
         comprobantePago: comprobantePago ?? undefined,

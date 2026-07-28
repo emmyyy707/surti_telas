@@ -288,11 +288,22 @@ export class PrismaAuthRepository implements AuthRepository {
       if (rc.descripcion) descripcionMap.set(rc.role, rc.descripcion);
     }
 
+    const permissionMap = new Map<string, string[]>();
+    const allRolePermissions = await this.prisma.rolePermission.findMany({
+      where: { role: { in: roles } },
+      include: { permission: { select: { code: true } } },
+    });
+    for (const rp of allRolePermissions) {
+      const existing = permissionMap.get(rp.role) ?? [];
+      existing.push(rp.permission.code);
+      permissionMap.set(rp.role, existing);
+    }
+
     const allRoles = roles.map((name) => ({
       id: `R-${name}`,
       nombre: name,
       descripcion: descripcionMap.get(name) ?? defaultDescriptions[name] ?? name,
-      permisos: [],
+      permisos: permissionMap.get(name) ?? [],
       usuarios: countMap.get(name) ?? 0,
       estado: estadoMap.get(name) ?? 'Activo',
     }));
@@ -332,11 +343,17 @@ export class PrismaAuthRepository implements AuthRepository {
     };
     const estado = roleConfig ? (roleConfig.estado === 'ACTIVO' ? 'Activo' : 'Inactivo') : 'Activo';
 
+    const rolePermissions = await this.prisma.rolePermission.findMany({
+      where: { role: roleName as Role },
+      include: { permission: { select: { code: true } } },
+    });
+    const permisos = rolePermissions.map(rp => rp.permission.code);
+
     return {
       id: `R-${roleName}`,
       nombre: roleName,
       descripcion: roleConfig?.descripcion ?? defaultDescriptions[roleName] ?? roleName,
-      permisos: [],
+      permisos,
       usuarios,
       estado,
     };
@@ -346,12 +363,19 @@ export class PrismaAuthRepository implements AuthRepository {
     const roleName = name.startsWith('R-') ? name.slice(2) : name;
     const values = Object.values(Role) as Role[];
     if (!values.includes(roleName as Role)) return null;
-    
+
     const roleConfig = await this.prisma.roleConfig.findUnique({
       where: { role: roleName as Role },
     });
-    
+
     const count = await this.prisma.user.count({ where: { role: roleName as Role, deletedAt: null } });
+
+    const rolePermissions = await this.prisma.rolePermission.findMany({
+      where: { role: roleName as Role },
+      include: { permission: { select: { code: true } } },
+    });
+    const permisos = rolePermissions.map(rp => rp.permission.code);
+
     const defaultDescriptions: Record<string, string> = {
       ADMIN: 'Administrador del sistema',
       ASESOR: 'Asesor de ventas',
@@ -365,13 +389,13 @@ export class PrismaAuthRepository implements AuthRepository {
       id: `R-${roleName}`,
       nombre: roleName,
       descripcion: roleConfig?.descripcion ?? defaultDescriptions[roleName] ?? roleName,
-      permisos: [],
+      permisos,
       usuarios: count,
       estado: roleConfig?.estado === 'INACTIVO' ? 'Inactivo' : 'Activo',
     };
   }
 
-  async createRole(nombre: string, descripcion?: string): Promise<RoleData> {
+  async createRole(nombre: string, descripcion?: string, permisos?: string[]): Promise<RoleData> {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
     const values = Object.values(Role) as Role[];
     if (!values.includes(roleName as Role)) {
@@ -392,17 +416,25 @@ export class PrismaAuthRepository implements AuthRepository {
       create: { role: roleName as Role, estado: 'ACTIVO', descripcion: descripcion ?? defaultDescriptions[roleName] ?? roleName },
     });
     const count = await this.prisma.user.count({ where: { role: roleName as Role, deletedAt: null } });
+
+    if (permisos && permisos.length > 0) {
+      await this.prisma.rolePermission.deleteMany({ where: { role: roleName as Role } });
+      await this.prisma.rolePermission.createMany({
+        data: permisos.map(permissionId => ({ role: roleName as Role, permissionId })),
+      });
+    }
+
     return {
       id: `R-${roleName}`,
       nombre: roleName,
       descripcion: roleConfig.descripcion ?? defaultDescriptions[roleName] ?? roleName,
-      permisos: [],
+      permisos: permisos ?? [],
       usuarios: count,
       estado: roleConfig.estado === 'INACTIVO' ? 'Inactivo' : 'Activo',
     };
   }
 
-  async updateRole(nombre: string, descripcion?: string): Promise<RoleData> {
+  async updateRole(nombre: string, descripcion?: string, permisos?: string[]): Promise<RoleData> {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
     const values = Object.values(Role) as Role[];
     if (!values.includes(roleName as Role)) {
@@ -424,11 +456,21 @@ export class PrismaAuthRepository implements AuthRepository {
       PRODUCCION: 'Producción',
       REPORTES: 'Reportes',
     };
+
+    if (permisos !== undefined) {
+      await this.prisma.rolePermission.deleteMany({ where: { role: roleName as Role } });
+      if (permisos.length > 0) {
+        await this.prisma.rolePermission.createMany({
+          data: permisos.map(permissionId => ({ role: roleName as Role, permissionId })),
+        });
+      }
+    }
+
     return {
       id: `R-${roleName}`,
       nombre: roleName,
       descripcion: updated.descripcion ?? defaultDescriptions[roleName] ?? roleName,
-      permisos: [],
+      permisos: permisos ?? found.permisos,
       usuarios: count,
       estado: updated.estado === 'INACTIVO' ? 'Inactivo' : 'Activo',
     };

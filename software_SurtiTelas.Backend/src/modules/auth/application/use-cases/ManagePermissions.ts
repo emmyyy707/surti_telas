@@ -80,15 +80,15 @@ export class GetRole {
 
 export class CreateRole {
   constructor(private readonly repo: AuthRepository) {}
-  execute(nombre: string, descripcion?: string) {
-    return this.repo.createRole(nombre, descripcion);
+  execute(nombre: string, descripcion?: string, permisos?: string[]) {
+    return this.repo.createRole(nombre, descripcion, permisos);
   }
 }
 
 export class UpdateRole {
   constructor(private readonly repo: AuthRepository) {}
-  execute(nombre: string, data: { nombre?: string; descripcion?: string }) {
-    return this.repo.updateRole(data.nombre ?? nombre, data.descripcion);
+  execute(nombre: string, data: { nombre?: string; descripcion?: string; permisos?: string[] }) {
+    return this.repo.updateRole(data.nombre ?? nombre, data.descripcion, data.permisos);
   }
 }
 

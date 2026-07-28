@@ -94,7 +94,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       if (errors.length > 0) {
         onChange(validFiles.length > 0 ? validFiles : null);
       } else {
-        onChange(maxFiles === 1 ? validFiles[0] ?? null : validFiles);
+        onChange(validFiles);
       }
     },
     [maxFiles, validateFile, onChange],

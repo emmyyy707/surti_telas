@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Role } from '@prisma/client';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
@@ -192,7 +193,7 @@ export const deletePermission = async (req: Request, res: Response) => {
 };
 
 export const listRolePermissions = async (req: Request, res: Response) => {
-  const role = req.params.role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE';
+  const role = req.params.role as Role;
   const filters = parseDto(RolePermissionFiltersSchema, req.query);
   const result = await authUseCases.listRolePermissions.execute(role, filters);
   const response = buildApiPaginatedResponse(
@@ -206,14 +207,14 @@ export const listRolePermissions = async (req: Request, res: Response) => {
 };
 
 export const assignPermissionToRole = async (req: Request, res: Response) => {
-  const role = req.params.role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE';
+  const role = req.params.role as Role;
   const { permissionId } = parseDto(AssignPermissionSchema, req.body);
   await authUseCases.assignPermissionToRole.execute(role, permissionId);
   return ok(res, null, 'Permiso asignado al rol');
 };
 
 export const removePermissionFromRole = async (req: Request, res: Response) => {
-  const role = req.params.role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE';
+  const role = req.params.role as Role;
   const { permissionId } = parseDto(AssignPermissionSchema, req.body);
   await authUseCases.removePermissionFromRole.execute(role, permissionId);
   return noContent(res);
@@ -241,14 +242,14 @@ export const getRole = async (req: Request, res: Response) => {
 };
 
 export const createRole = async (req: Request, res: Response) => {
-  const { nombre, descripcion } = req.body as { nombre: string; descripcion?: string };
-  const role = await authUseCases.createRole.execute(nombre, descripcion);
+  const { nombre, descripcion, permisos } = req.body as { nombre: string; descripcion?: string; permisos?: string[] };
+  const role = await authUseCases.createRole.execute(nombre, descripcion, permisos);
   return created(res, role, 'Rol creado');
 };
 
 export const updateRole = async (req: Request, res: Response) => {
-  const { nombre, descripcion } = req.body as { nombre?: string; descripcion?: string };
-  const role = await authUseCases.updateRole.execute(req.params.id, { nombre, descripcion });
+  const { nombre, descripcion, permisos } = req.body as { nombre?: string; descripcion?: string; permisos?: string[] };
+  const role = await authUseCases.updateRole.execute(req.params.id, { nombre, descripcion, permisos });
   return ok(res, role, 'Rol actualizado');
 };
 

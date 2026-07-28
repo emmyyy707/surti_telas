@@ -101,7 +101,7 @@ const resetForm = () => {
     setClienteId('');
     setAsesorId('');
     setEstado('Nuevo');
-    setPrioridad('EstÃ¡ndar');
+    setPrioridad('Estándar');
     setObservaciones('');
     setComprobantePago(null);
     setItemsForm([{ nombre: '', precio: 0, cantidad: 1 }]);
@@ -457,7 +457,7 @@ const resetForm = () => {
         <div className={f.form}>
           {detailPedido && detailPedido.estado === 'Nuevo' && (
             <div className={f.formRow}>
-              <Button variant="success" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'En producciÃ³n'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} aceptado`); setStatusConfirm(null); } }}>
+              <Button variant="success" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'En producción'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} aceptado`); setStatusConfirm(null); } }}>
                 <CheckCircle size={14} /> Aceptar
               </Button>
               <Button variant="danger" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Cancelado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} rechazado`); setStatusConfirm(null); } }}>

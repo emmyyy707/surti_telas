@@ -42,9 +42,9 @@ export const AdminPermisos: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await authApi.listPermissions();
+        const result = await authApi.listPermissions();
         if (!active) return;
-        setItems(data.map((p, idx) => mapPermissionToPermiso(p, idx)));
+        setItems(result.data.map((p, idx) => mapPermissionToPermiso(p, idx)));
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : 'No se pudieron cargar los permisos');
@@ -89,8 +89,12 @@ export const AdminPermisos: React.FC = () => {
       toast.error(err instanceof Error ? err.message : 'Error al guardar permiso');
     } finally {
       handleCloseModal();
-      const data = await authApi.listPermissions();
-      setItems(data.map((p, idx) => mapPermissionToPermiso(p, idx)));
+      try {
+        const result = await authApi.listPermissions();
+        setItems(result.data.map((p, idx) => mapPermissionToPermiso(p, idx)));
+      } catch {
+        toast.error('No se pudieron recargar los permisos');
+      }
     }
   };
 

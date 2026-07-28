@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Edit, Shield, Loader2, AlertCircle, EyeOff, Trash2 } from 'lucide-react';
+import { Edit, Shield, Loader2, AlertCircle, EyeOff, Trash2, Plus } from 'lucide-react';
 import s from './Roles.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
@@ -200,6 +200,9 @@ export const AdminRoles: React.FC = () => {
           <h1 className={s.pageTitle}>Roles</h1>
           <p className={s.pageSubtitle}>Gestión de roles y permisos del sistema</p>
         </div>
+        <Button leftIcon={<Plus size={16} />} onClick={() => { setSelectedRol(null); setModalOpen(true); }}>
+          Nuevo Rol
+        </Button>
       </div>
 
       <div className={s.toolbar}>

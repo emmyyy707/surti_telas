@@ -123,7 +123,10 @@ export const authApi = {
     api.delete<void>(`/auth/users/${encodeURIComponent(id)}`),
 
   listPermissions: () =>
-    api.get<PermissionDTO[]>('/auth/permissions'),
+    api.get<{ items: PermissionDTO[]; meta: PaginatedResponse<PermissionDTO>['data']['meta'] }>('/auth/permissions').then((response) => ({
+      data: response.items,
+      meta: response.meta,
+    })),
 
   createPermission: (data: { code: string; description?: string; module?: string }) =>
     api.post<PermissionDTO & { id: string }>('/auth/permissions', data),
