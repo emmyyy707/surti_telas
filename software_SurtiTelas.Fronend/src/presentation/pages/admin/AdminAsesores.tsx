@@ -23,10 +23,10 @@ const toAsesor = (u: BackendAuthUser): Asesor => ({
   id: u.id,
   nombre: u.nombre,
   email: u.email,
-  tel: null,
+  tel: u.telefono ?? null,
   clientes: 0,
   comisiones: null,
-  estado: 'Activo',
+  estado: u.estado === 'INACTIVO' ? 'Inactivo' : 'Activo',
 });
 
 export const AdminAsesores: React.FC = () => {

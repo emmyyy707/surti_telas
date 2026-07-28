@@ -35,23 +35,17 @@ export const AdminClientes: React.FC = () => {
     try {
       const result = await authApi.listUsers({ limit: 100 });
       const soloClientes = result.data.filter((u) => u.role === 'CLIENTE');
-      const clientesConDatos = await Promise.all(
-        soloClientes.map(async (u) => {
-          try {
-            const customer = await customersApi.list({ limit: 1 });
-            const match = customer.data.find((c) => c.nombre === u.nombre || c.email === u.email);
-            return {
-              ...u,
-              telefono: match?.tel ?? null,
-              nit: match?.nit ?? null,
-              isTrustedCustomer: match?.isTrustedCustomer ?? false,
-              estadoCliente: match?.estado ?? 'Activo',
-            } as ClienteUI;
-          } catch {
-            return { ...u, telefono: null, nit: null, isTrustedCustomer: false, estadoCliente: 'Activo' } as ClienteUI;
-          }
-        })
-      );
+      const allCustomers = await customersApi.list({ limit: 1000 });
+      const clientesConDatos = soloClientes.map((u) => {
+        const match = allCustomers.data.find((c) => c.email && c.email.toLowerCase() === u.email.toLowerCase());
+        return {
+          ...u,
+          telefono: match?.tel ?? u.telefono ?? null,
+          nit: match?.nit ?? null,
+          isTrustedCustomer: match?.isTrustedCustomer ?? false,
+          estadoCliente: match?.estado ?? 'Activo',
+        } as ClienteUI;
+      });
       setItems(clientesConDatos);
     } catch {
       setError('No se pudieron cargar los clientes');
@@ -115,8 +109,8 @@ export const AdminClientes: React.FC = () => {
 
     try {
       if (selectedCliente) {
-        const customer = await customersApi.list({ limit: 1 });
-        const match = customer.data.find((c) => c.nombre === selectedCliente.nombre || c.email === selectedCliente.email);
+        const allCustomers = await customersApi.list({ limit: 1000 });
+        const match = allCustomers.data.find((c) => c.email && c.email.toLowerCase() === selectedCliente.email.toLowerCase());
 
         if (match) {
           const updated = await customersApi.update(match.id, {

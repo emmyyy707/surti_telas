@@ -27,8 +27,8 @@ function mapBackendRole(role: string | undefined): UserRole {
   }
 }
 
-function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pedidosRealizados?: number; permisos?: string[] }): Usuario {
-  const estado = dto.estado === 'INACTIVO' ? 'Inactivo' : dto.estado === 'PENDIENTE' ? 'Pendiente' : 'Activo';
+function toUser(dto: BackendAuthUser & { createdAt?: string; pedidosRealizados?: number; permisos?: string[] }): Usuario {
+  const estado = dto.estado ? (dto.estado === 'INACTIVO' ? 'Inactivo' : 'Activo') : 'Activo';
   return {
     id: dto.id,
     nombre: dto.nombre,

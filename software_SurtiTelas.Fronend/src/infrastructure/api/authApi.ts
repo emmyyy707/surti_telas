@@ -10,6 +10,8 @@ export interface BackendAuthUser {
   nombre: string;
   role: BackendRole;
   permissions?: string[];
+  telefono?: string | null;
+  estado?: 'ACTIVO' | 'INACTIVO';
 }
 
 export interface LoginResponse {
