@@ -3,6 +3,7 @@ export type CustomerStatus = 'Activo' | 'Inactivo';
 export interface CustomerData {
   id?: string;
   nombre: string;
+  email?: string;
   ciudad: string;
   tel: string;
   asesorId?: string;
@@ -20,6 +21,7 @@ export interface CustomerData {
 export class Customer {
   readonly id?: string;
   readonly nombre: string;
+  readonly email?: string;
   readonly ciudad: string;
   readonly tel: string;
   readonly asesorId?: string;
@@ -37,6 +39,7 @@ export class Customer {
     Customer.validate(data);
     this.id = data.id;
     this.nombre = data.nombre;
+    this.email = data.email;
     this.ciudad = data.ciudad;
     this.tel = data.tel;
     this.asesorId = data.asesorId;

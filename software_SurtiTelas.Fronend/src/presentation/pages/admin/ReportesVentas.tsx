@@ -123,7 +123,7 @@ export const AdminReportesVentas: React.FC = () => {
 
   const maxVentas = Math.max(...(reporte?.monthlyTrend?.map(m => m.ventas) || [1]));
   const chartHeight = 220;
-  const chartPadding = { top: 20, right: 20, bottom: 30, left: 50 };
+  const chartPadding = useMemo(() => ({ top: 20, right: 20, bottom: 30, left: 50 }), []);
 
   const puntos = useMemo(() => {
     const trend = reporte?.monthlyTrend || [];
@@ -131,8 +131,7 @@ export const AdminReportesVentas: React.FC = () => {
       x: chartPadding.left + (trend.length > 1 ? (i / (trend.length - 1)) * (400 - chartPadding.left - chartPadding.right) : 0),
       y: chartPadding.top + (1 - (d.ventas || 0) / Math.max(maxVentas, 1)) * (chartHeight - chartPadding.top - chartPadding.bottom),
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reporte, maxVentas]);
+  }, [reporte, maxVentas, chartPadding, chartHeight]);
 
   const pathD = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
   const areaD = puntos.length > 0 ? `${pathD} L ${puntos[puntos.length - 1].x} ${chartHeight - chartPadding.bottom} L ${puntos[0].x} ${chartHeight - chartPadding.bottom} Z` : '';

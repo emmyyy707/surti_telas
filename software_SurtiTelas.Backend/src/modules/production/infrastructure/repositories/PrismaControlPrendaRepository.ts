@@ -39,7 +39,7 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
     return this.toItem(row);
   }
 
-  async list(filters: { produccionId?: string; etapa?: string; estado?: string } = {}) {
+  async list(filters: { produccionId?: string; etapa?: string; estado?: string; page?: number; limit?: number } = {}) {
     const where: Prisma.ControlPrendaWhereInput = { deletedAt: null };
     if (filters.produccionId) where.produccionId = filters.produccionId;
     if (filters.etapa) {
@@ -51,6 +51,8 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
       where.estado = ESTADO_DB_MAP[estadoUpper] ?? (estadoUpper as ControlPrendaEstado);
     }
 
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 50;
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.controlPrenda.findMany({
         where,
@@ -59,13 +61,15 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
           revisadoPor: { select: { id: true, nombre: true } },
         },
         orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
       }),
       this.prisma.controlPrenda.count({ where }),
     ]);
 
     return {
       data: rows.map((r) => this.toItem(r)),
-      meta: { total },
+      meta: { total, page, limit },
     };
   }
 
@@ -84,12 +88,19 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
     const existing = await this.prisma.controlPrenda.findFirst({ where: { id, deletedAt: null } });
     if (!existing) throw new NotFoundError('Control de prenda no encontrado');
 
+    const cantidadAprobada = changes.cantidadAprobada ?? existing.cantidadAprobada;
+    const cantidadRechazada = changes.cantidadRechazada ?? existing.cantidadRechazada;
+    if (cantidadAprobada + cantidadRechazada > existing.cantidadTotal) {
+      throw new Error('La suma de cantidad aprobada y rechazada no puede superar la cantidad total');
+    }
+
     const data: Prisma.ControlPrendaUpdateInput = {
       estado: ESTADO_DB_MAP[changes.estado] ?? changes.estado as ControlPrendaEstado,
       revisadoPor: { connect: { id: changes.revisadoPorId } },
+      cantidadRevisada: cantidadAprobada + cantidadRechazada,
+      cantidadAprobada,
+      cantidadRechazada,
     };
-    if (changes.cantidadAprobada !== undefined) data.cantidadAprobada = changes.cantidadAprobada;
-    if (changes.cantidadRechazada !== undefined) data.cantidadRechazada = changes.cantidadRechazada;
 
     const row = await this.prisma.controlPrenda.update({
       where: { id },

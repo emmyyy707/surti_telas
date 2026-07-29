@@ -5,9 +5,10 @@ import { BarChart, LineChart, PieChart, TopProducts } from './Chart';
 import s from './Dashboard.module.css';
 import { Badge } from '../../../shared/ui/Badge';
 import { Users, ShoppingBag, DollarSign, TrendingUp, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { authApi } from '@/infrastructure/api/authApi';
-import { ordersApi } from '@/infrastructure/api/ordersApi';
-import { paymentsApi } from '@/infrastructure/api/paymentsApi';
+import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
+import { ordersApi, type OrdersListResult } from '@/infrastructure/api/ordersApi';
+import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
+import { productsApi, type ProductTerminado } from '@/infrastructure/api/productsApi';
 import { adminContent } from '@/shared/config/adminContent';
 import { ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
@@ -55,20 +56,21 @@ export const AdminDashboard: React.FC = () => {
     }
 
     try {
-      const [usersResult, ordersResult, paymentsResult] = await Promise.all([
+      const [usersResult, ordersResult, paymentsResult, productsResult] = await Promise.all([
         authApi.listUsers({ limit: 100, role: 'CLIENTE' }),
         ordersApi.list({ page: 1, limit: 100 }),
         paymentsApi.list(),
+        productsApi.list(),
       ]);
 
-      const clientes = (usersResult.data ?? []).filter(u => u.role === 'CLIENTE');
+      const clientes = (usersResult.data ?? []).filter((u: BackendAuthUser) => u.role === 'CLIENTE');
       const clientesIds = new Set(clientes.map(u => u.id));
-      const pedidos = (ordersResult.pedidos ?? []).filter(p => p.clienteId && clientesIds.has(p.clienteId));
-      const pagos = paymentsResult ?? [];
+      const pedidos = (ordersResult.pedidos ?? []).filter((p: OrdersListResult['pedidos'][number]) => p.clienteId && clientesIds.has(p.clienteId));
+      const pagos: Payment[] = paymentsResult ?? [];
 
       const totalCustomers = clientes.length;
       const totalOrders = pedidos.length;
-      const totalSales = pagos.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const totalSales = pagos.reduce((sum: number, p: Payment) => sum + (Number(p.amount) || 0), 0);
 
       const estadoMap = new Map<string, number>();
       for (const p of pedidos) {
@@ -78,7 +80,7 @@ export const AdminDashboard: React.FC = () => {
 
       const recentOrders = pedidos
         .slice()
-        .sort((a, b) => String(b.id).localeCompare(String(a.id)))
+        .sort((a: OrdersListResult['pedidos'][number], b: OrdersListResult['pedidos'][number]) => String(b.id).localeCompare(String(a.id)))
         .slice(0, 6)
         .map(p => ({
           id: p.id,
@@ -87,7 +89,17 @@ export const AdminDashboard: React.FC = () => {
           asesorNombre: p.asesor,
           total: Number(p.total) || 0,
           estado: p.estado,
-          createdAt: new Date().toISOString(),
+          createdAt: p.createdAt ?? p.fecha,
+        }));
+
+      const lowStockProducts = (productsResult ?? [])
+        .filter((p: ProductTerminado) => (p.stock ?? 0) <= 5)
+        .slice(0, 10)
+        .map(p => ({
+          id: p.id,
+          ref: p.codigo,
+          nombre: p.nombre,
+          cantidadStock: p.stock ?? 0,
         }));
 
       setMetrics({
@@ -96,7 +108,7 @@ export const AdminDashboard: React.FC = () => {
         totalSales,
         ordersByStatus,
         recentOrders,
-        lowStockProducts: [],
+        lowStockProducts,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudieron cargar las métricas del dashboard';

@@ -1,4 +1,4 @@
-.header {
+﻿.header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -348,7 +348,7 @@
 
 .formActions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 10px;
   margin-top: 8px;
 }
@@ -395,3 +395,4 @@
   color: var(--text-secondary, #6b7280);
   padding: 24px;
 }
+

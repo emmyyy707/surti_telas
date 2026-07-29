@@ -154,11 +154,15 @@ export const AsesorPedidos: React.FC = () => {
     try {
       if (editingId) {
         const cliente = clientes.find((c) => c.nombre.toLowerCase() === form.cliente.toLowerCase());
+        const itemsList = form.itemsList && form.itemsList.length > 0
+          ? form.itemsList
+          : [{ nombre: 'Solicitud personalizada', precio: Math.round(Number(form.total) / items), cantidad: items }];
         const actualizado = await ordersApi.updateOrderFull(editingId, {
           clienteId: cliente?.id || form.cliente,
           asesorId: user?.uid,
           prioridad: form.prioridad,
           observaciones: form.observaciones,
+          itemsList,
         });
         setPedidos((prev) => prev.map((p) => (p.id === editingId ? { ...actualizado, cliente: form.cliente, asesor: form.asesor, items, total: form.total, fecha: form.fecha } : p)));
         toast.success(`Pedido ${actualizado.id} actualizado`);

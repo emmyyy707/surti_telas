@@ -50,7 +50,7 @@ export type OrderRow = {
   cliente: { nombre: string } | null;
   clienteNombre: string;
   asesorId: string;
-  asesor: { nombre: string } | null;
+  asesor: { nombre: string; telefono?: string | null; email?: string | null } | null;
   asesorNombre: string;
   tipoFlujo: string;
   fecha: Date;
@@ -90,6 +90,8 @@ export function toOrderData(row: OrderRow): OrderData {
     clienteId: row.clienteId,
     asesor: row.asesorNombre || row.asesor?.nombre || '',
     asesorId: row.asesorId,
+    asesorTelefono: row.asesor?.telefono ?? undefined,
+    asesorEmail: row.asesor?.email ?? undefined,
     tipoFlujo: row.tipoFlujo as OrderFlow,
     fecha: row.fecha.toISOString(),
     subtotal: row.subtotal ? Number(row.subtotal.toNumber()) : undefined,

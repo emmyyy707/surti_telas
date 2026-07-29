@@ -86,11 +86,12 @@ export class PrismaAuthRepository implements AuthRepository {
     return toRecord(user);
   }
 
-  async updateProfile(id: string, data: { nombre?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }): Promise<UserRecord> {
+  async updateProfile(id: string, data: { nombre?: string; email?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }): Promise<UserRecord> {
     const user = await this.prisma.user.update({
       where: { id },
       data: {
         nombre: data.nombre,
+        email: data.email,
         telefono: data.telefono,
         direccion: data.direccion,
         tipoDocumento: data.tipoDocumento,
@@ -257,10 +258,11 @@ export class PrismaAuthRepository implements AuthRepository {
   }
 
   async listRoles(filters?: { page?: number; limit?: number }): Promise<{ data: RoleData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
-    const roles = Object.values(Role);
+    const roleConfigs = await this.prisma.roleConfig.findMany();
+    const roles = roleConfigs.map(rc => rc.role);
     const counts = await this.prisma.user.groupBy({
       by: ['role'],
-      where: { deletedAt: null },
+      where: { deletedAt: null, role: { in: roles } },
       _count: { role: true },
     });
 
@@ -269,9 +271,6 @@ export class PrismaAuthRepository implements AuthRepository {
       countMap.set(row.role, row._count.role);
     }
 
-    const roleConfigs = await this.prisma.roleConfig.findMany({
-      where: { role: { in: roles } },
-    });
     const estadoMap = new Map<string, 'Activo' | 'Inactivo'>();
     const descripcionMap = new Map<string, string>();
     const defaultDescriptions: Record<string, string> = {
@@ -508,8 +507,20 @@ export class PrismaAuthRepository implements AuthRepository {
     };
   }
 
-  async deleteRole(_nombre: string): Promise<void> {
-    throw new Error('No se puede eliminar este rol porque está definido por enum en Prisma');
+  async deleteRole(nombre: string): Promise<void> {
+    const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
+    const count = await this.prisma.user.count({ where: { role: roleName as any, deletedAt: null } });
+    if (count > 0) {
+      throw new Error(`No se puede eliminar el rol ${roleName} porque tiene ${count} usuario(s) asignado(s)`);
+    }
+    try {
+      await this.prisma.roleConfig.delete({ where: { role: roleName as any } });
+    } catch (error) {
+      if ((error as any)?.code === 'P2025') {
+        return;
+      }
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<void> {

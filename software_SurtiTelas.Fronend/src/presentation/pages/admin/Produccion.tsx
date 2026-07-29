@@ -57,13 +57,13 @@ export const AdminProduccion: React.FC = () => {
     setError(null);
     try {
       const data = await productionApi.list();
-      setItems(data.map(o => toOrden(o, operarios)));
+      setItems(data.map(o => toOrden(o)));
     } catch {
       setError('No se pudieron cargar las órdenes de producción');
     } finally {
       setLoading(false);
     }
-  }, [operarios]);
+  }, []);
 
   const fetchOperarios = useCallback(async () => {
     setLoadingOperarios(true);

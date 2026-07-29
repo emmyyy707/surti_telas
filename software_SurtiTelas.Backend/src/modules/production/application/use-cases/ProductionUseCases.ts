@@ -175,7 +175,7 @@ export class ReviewControlPrenda {
 
 export class ListControlPrendas {
   constructor(private readonly repo: ControlPrendaRepository) {}
-  execute(filters: { produccionId?: string; etapa?: string; estado?: string } = {}) {
+  execute(filters: { produccionId?: string; etapa?: string; estado?: string; page?: number; limit?: number } = {}) {
     return this.repo.list(filters);
   }
 }

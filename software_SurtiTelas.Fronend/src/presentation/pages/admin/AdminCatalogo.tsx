@@ -178,11 +178,7 @@ export const AdminCatalogo: React.FC = () => {
         const refreshed = await useAppStore.getState().updateProducto(editingRef, baseData);
         toast.success(`${refreshed.nombre} actualizado correctamente`);
       } else {
-        const nuevoCodigo = `PROD-${String(useAppStore.getState().productos.length + 1).padStart(3, '0')}`;
-        const creado = await useAppStore.getState().createProducto({
-          ...baseData,
-          codigo: nuevoCodigo,
-        });
+        const creado = await useAppStore.getState().createProducto(baseData);
         toast.success(`${creado.nombre} creado correctamente`);
       }
 

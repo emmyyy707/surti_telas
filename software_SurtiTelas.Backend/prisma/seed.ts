@@ -107,6 +107,25 @@ async function main() {
       }
     }
   }
+
+  const defaultDescriptions: Record<string, string> = {
+    ADMIN: 'Administrador del sistema',
+    ASESOR: 'Asesor de ventas',
+    DOMICILIARIO: 'Domiciliario',
+    CLIENTE: 'Cliente',
+    ALMACEN: 'Almacén',
+    PRODUCCION: 'Producción',
+    REPORTES: 'Reportes',
+  };
+
+  for (const role of Object.values(Role)) {
+    await prisma.roleConfig.upsert({
+      where: { role },
+      update: {},
+      create: { role, estado: 'ACTIVO', descripcion: defaultDescriptions[role] ?? role },
+    });
+  }
+
   console.log('✓ Roles y permisos creados');
 
   const adminEmail = 'admin@surtitelas.com';

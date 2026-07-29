@@ -2,6 +2,7 @@ import type { Customer, CustomerStatus } from '../entities/Customer';
 
 export interface CreateCustomerInput {
   nombre: string;
+  email?: string;
   ciudad?: string;
   tel?: string;
   asesorId?: string;
@@ -15,6 +16,7 @@ export interface CreateCustomerInput {
 
 export interface UpdateCustomerInput {
   nombre?: string;
+  email?: string;
   ciudad?: string;
   tel?: string;
   nit?: string;

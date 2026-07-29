@@ -1,4 +1,4 @@
-.pageTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 8px 0; }
+﻿.pageTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 8px 0; }
 .pageSubtitle { font-size: 0.9rem; color: var(--color-text-muted); margin: 0; }
 
 .header {
@@ -556,7 +556,7 @@
 
 .formActions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 10px;
   margin-top: 24px;
 }
@@ -638,3 +638,4 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+

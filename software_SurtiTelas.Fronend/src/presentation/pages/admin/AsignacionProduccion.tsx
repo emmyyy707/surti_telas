@@ -49,6 +49,12 @@ export const AdminAsignacionProduccion: React.FC = () => {
   const [formFecha, setFormFecha] = useState('');
   const [formEstado, setFormEstado] = useState<'Pendiente' | 'Asignada' | 'En produccion' | 'Completada'>('Pendiente');
   const [formNotas, setFormNotas] = useState('');
+  const [formTela, setFormTela] = useState('');
+  const [formColores, setFormColores] = useState('');
+  const [formCurvaTallas, setFormCurvaTallas] = useState('');
+  const [formOperarioId, setFormOperarioId] = useState('');
+  const [formFechaInicio, setFormFechaInicio] = useState('');
+  const [tallerCapacidadError, setTallerCapacidadError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -74,7 +80,7 @@ export const AdminAsignacionProduccion: React.FC = () => {
         const mappedWorkshops: Taller[] = workshops.map((w) => ({
           id: w.id,
           nombre: w.nombre,
-          capacidadDisponible: w.capacidad || 0,
+          capacidadDisponible: Math.max((w.capacidad || 0) - (w.ocupacion || 0), 0),
           especialidad: w.ciudad || 'General',
         }));
         setOrdenes(mappedOrders);
@@ -111,6 +117,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
       setSaving(true);
       const taller = talleres.find(t => t.nombre === tallerSeleccionado);
       if (!taller) return;
+      if (selectedOrden.cantidad > taller.capacidadDisponible) {
+        setTallerCapacidadError(`El taller no tiene capacidad disponible para ${selectedOrden.cantidad} unidades`);
+        return;
+      }
+      setTallerCapacidadError(null);
       const updated = await productionApi.assignToWorkshop(selectedOrden.id, taller.id);
       setOrdenes(prev => prev.map(o => o.id === selectedOrden.id
         ? {
@@ -139,6 +150,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
       setFormFecha(orden.fechaPrometida);
       setFormEstado(orden.estado === 'Asignada' ? 'Asignada' : orden.estado === 'En produccion' ? 'En produccion' : orden.estado === 'Completada' ? 'Completada' : 'Pendiente');
       setFormNotas('');
+      setFormTela('');
+      setFormColores('');
+      setFormCurvaTallas('');
+      setFormOperarioId('');
+      setFormFechaInicio('');
     } else {
       setEditingId(null);
       setFormReferencia('');
@@ -146,6 +162,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
       setFormFecha('');
       setFormEstado('Pendiente');
       setFormNotas('');
+      setFormTela('');
+      setFormColores('');
+      setFormCurvaTallas('');
+      setFormOperarioId('');
+      setFormFechaInicio('');
     }
     setCrudModalOpen(true);
   };
@@ -161,6 +182,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
           fechaEstimada: formFecha,
           estado: formEstado,
           notasTecnicas: formNotas || undefined,
+          tela: formTela || undefined,
+          colores: formColores ? formColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
+          curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
+          operarioId: formOperarioId || undefined,
+          fechaInicio: formFechaInicio || undefined,
         });
         setOrdenes(prev => prev.map(o => o.id === editingId ? {
           ...o,
@@ -177,6 +203,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
           fechaEstimada: formFecha,
           estado: formEstado,
           notasTecnicas: formNotas || undefined,
+          tela: formTela || undefined,
+          colores: formColores ? formColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
+          curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
+          operarioId: formOperarioId || undefined,
+          fechaInicio: formFechaInicio || undefined,
         });
         setOrdenes(prev => [{
           id: created.id,
@@ -474,6 +505,61 @@ export const AdminAsignacionProduccion: React.FC = () => {
                 value={formNotas}
                 onChange={e => setFormNotas(e.target.value)}
                 placeholder="Opcional"
+              />
+            </div>
+          </div>
+          <div className={s.formRow}>
+            <div className={s.field}>
+              <label className={s.label}>Tela</label>
+              <input
+                type="text"
+                className={s.input}
+                value={formTela}
+                onChange={e => setFormTela(e.target.value)}
+                placeholder="Ej: Algodón"
+              />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Colores (separados por coma)</label>
+              <input
+                type="text"
+                className={s.input}
+                value={formColores}
+                onChange={e => setFormColores(e.target.value)}
+                placeholder="Ej: Rojo, Azul"
+              />
+            </div>
+          </div>
+          <div className={s.formRow}>
+            <div className={s.field}>
+              <label className={s.label}>Curva de tallas (JSON)</label>
+              <input
+                type="text"
+                className={s.input}
+                value={formCurvaTallas}
+                onChange={e => setFormCurvaTallas(e.target.value)}
+                placeholder='Ej: {"s":10,"m":20}'
+              />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Operario ID</label>
+              <input
+                type="text"
+                className={s.input}
+                value={formOperarioId}
+                onChange={e => setFormOperarioId(e.target.value)}
+                placeholder="ID del operario"
+              />
+            </div>
+          </div>
+          <div className={s.formRow}>
+            <div className={s.field}>
+              <label className={s.label}>Fecha inicio</label>
+              <input
+                type="date"
+                className={s.input}
+                value={formFechaInicio}
+                onChange={e => setFormFechaInicio(e.target.value)}
               />
             </div>
           </div>

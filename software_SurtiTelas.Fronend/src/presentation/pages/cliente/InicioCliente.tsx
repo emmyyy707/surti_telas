@@ -72,8 +72,8 @@ export const InicioCliente: React.FC = () => {
   const asesorAsignado = {
     nombre: asesorNombre,
     iniciales: asesorIniciales,
-    telefono: '',
-    email: '',
+    telefono: pedidos.find(p => p.asesorTelefono)?.asesorTelefono || '',
+    email: pedidos.find(p => p.asesorEmail)?.asesorEmail || '',
   };
 
   const ultimosPedidos = pedidos.slice(0, 5);

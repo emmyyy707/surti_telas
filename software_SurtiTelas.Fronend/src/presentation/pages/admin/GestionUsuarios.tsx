@@ -8,6 +8,7 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { usersApi, type Usuario } from '@/infrastructure/api/usersApi';
+import { authApi, type PermissionDTO } from '@/infrastructure/api/authApi';
 
 interface UsuarioConDatos extends Usuario {
   telefono?: string | null;
@@ -26,6 +27,8 @@ export const AdminGestionUsuarios: React.FC = () => {
   const [permisosModalOpen, setPermisosModalOpen] = useState(false);
   const [selectedUsuarioPermisos, setSelectedUsuarioPermisos] = useState<UsuarioConDatos | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [permissions, setPermissions] = useState<PermissionDTO[]>([]);
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -45,6 +48,24 @@ export const AdminGestionUsuarios: React.FC = () => {
 
   useEffect(() => {
     void fetchUsuarios();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadPermissions = async () => {
+      setLoadingPermissions(true);
+      try {
+        const result = await authApi.listPermissions();
+        if (!active) return;
+        setPermissions(result.data);
+      } catch {
+        toast.error('No se pudieron cargar los permisos');
+      } finally {
+        if (active) setLoadingPermissions(false);
+      }
+    };
+    loadPermissions();
+    return () => { active = false; };
   }, []);
 
   const filteredUsuarios = useMemo(() => {
@@ -265,15 +286,25 @@ export const AdminGestionUsuarios: React.FC = () => {
             <div className={s.field}>
               <label className={s.label}>Módulos</label>
               <div className={s.permisosGrid}>
-                {[
-              { value: 'admin', label: 'Administrador' },
-              { value: 'asesor', label: 'Asesor' },
-              { value: 'domiciliario', label: 'Domiciliario' },
-            ].map(mod => (
-                  <label key={mod.value} className={s.permisoCheckbox}>
-                    <input type="checkbox" name="permisos" value={mod.value} />
-                    <span>{mod.label}</span>
-                  </label>
+                {Object.entries(
+                  permissions.reduce<Record<string, PermissionDTO[]>>((acc, perm) => {
+                    const module = perm.module || 'General';
+                    if (!acc[module]) acc[module] = [];
+                    acc[module].push(perm);
+                    return acc;
+                  }, {})
+                ).map(([module, modPermissions]) => (
+                  <div key={module} style={{ marginBottom: '8px' }}>
+                    <strong style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{module}</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                      {modPermissions.map(perm => (
+                        <label key={perm.id} className={s.permisoCheckbox}>
+                          <input type="checkbox" name="permisos" value={perm.code} />
+                          <span>{perm.code}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -317,29 +348,45 @@ export const AdminGestionUsuarios: React.FC = () => {
         size="lg"
       >
         <div className={s.form}>
-          <p className={s.permissionHint}>Asigna módulos a este usuario. Los módulos asignados serán visibles en su panel administrativo.</p>
-          <div className={s.permisosGrid}>
-            {[{ key: 'admin', label: 'Administrador', description: 'Acceso completo al sistema' },
-             { key: 'asesor', label: 'Asesor', description: 'Gestión de clientes y pedidos' },
-             { key: 'domiciliario', label: 'Domiciliario', description: 'Gestión de entregas y rutas' }].map(mod => (
-              <label key={mod.key} className={s.permisoCheckbox}>
-                <input
-                  type="checkbox"
-                  checked={userPermissions.includes(mod.key)}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setUserPermissions(prev =>
-                      checked ? [...prev, mod.key] : prev.filter(p => p !== mod.key)
-                    );
-                  }}
-                />
-                <div>
-                  <strong>{mod.label}</strong>
-                  <p style={{ fontSize: '0.76rem', color: 'var(--color-text-muted)', margin: 0 }}>{mod.description}</p>
+          <p className={s.permissionHint}>Asigna permisos específicos a este usuario organizados por módulo.</p>
+          {loadingPermissions ? (
+            <p>Cargando permisos...</p>
+          ) : (
+            <div className={s.permisosGrid}>
+              {Object.entries(
+                permissions.reduce<Record<string, PermissionDTO[]>>((acc, perm) => {
+                  const module = perm.module || 'General';
+                  if (!acc[module]) acc[module] = [];
+                  acc[module].push(perm);
+                  return acc;
+                }, {})
+              ).map(([module, modPermissions]) => (
+                <div key={module} style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-primary)' }}>{module}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '6px' }}>
+                    {modPermissions.map(perm => (
+                      <label key={perm.id} className={s.permisoCheckbox}>
+                        <input
+                          type="checkbox"
+                          checked={userPermissions.includes(perm.code)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setUserPermissions(prev =>
+                              checked ? [...prev, perm.code] : prev.filter(p => p !== perm.code)
+                            );
+                          }}
+                        />
+                        <div>
+                          <strong style={{ fontSize: '0.8rem' }}>{perm.code}</strong>
+                          <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', margin: 0 }}>{perm.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </label>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <div className={s.formActions}>
             <Button variant="secondary" onClick={() => setPermisosModalOpen(false)}>Cancelar</Button>
             <Button

@@ -53,13 +53,19 @@ const toRecibo = (dto: Receipt): Recibo => {
   const subtotal = Math.round(total / 1.19);
   const impuestos = total - subtotal;
 
+  const estadoMap: Record<string, ReciboStatus> = {
+    'EMITIDO': 'Aprobado',
+    'BORRADOR': 'Pendiente',
+    'ANULADO': 'Rechazado',
+  };
+
   return {
     id: dto.numero || dto.id,
     fecha: dto.createdAt || new Date().toISOString(),
     ordenId: dto.orderId || 'N/A',
     metodoPago,
     monto: total,
-    estado: 'Aprobado' as ReciboStatus,
+    estado: estadoMap[dto.estado] || 'Pendiente',
     cliente: dto.customerId,
     detalle: { subtotal, envio: 0, impuestos, total },
   };

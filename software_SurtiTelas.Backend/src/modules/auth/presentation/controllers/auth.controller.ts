@@ -319,8 +319,8 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 };
 
 export const updateUser = async (req: Request, res: Response) => {
-  const { nombre, telefono } = req.body as { nombre?: string; telefono?: string | null };
-  const user = await authUseCases.updateProfile.execute(req.params.id, { nombre, telefono });
+  const { nombre, email, telefono } = req.body as { nombre?: string; email?: string; telefono?: string | null };
+  const user = await authUseCases.updateProfile.execute(req.params.id, { nombre, email, telefono });
   return ok(res, user, 'Usuario actualizado');
 };
 

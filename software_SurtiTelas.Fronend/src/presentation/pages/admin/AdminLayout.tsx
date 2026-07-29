@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
+import { useAuthStore } from '@/core/stores/authStore';
+import { filterMenuByPermissions } from '@/shared/config/menuPermissions';
 import { useDashboardTheme } from '@/core/hooks/useDashboardTheme';
 import { TopHeader } from '@/presentation/components/TopHeader';
 import { cn } from '@/shared/utils';
 import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
-import { useAuthStore } from '@/core/stores/authStore';
 import { useAppStore } from '@/core/stores';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
 import { notificationsApi } from '@/infrastructure/api/notificationsApi';
@@ -101,6 +102,8 @@ export const AdminLayout: React.FC = () => {
   const { logout } = useAuth();
   const authUser = useAuthStore(state => state.user);
   const [notificationCount, setNotificationCount] = useState(0);
+
+  const filteredMenu = useMemo(() => filterMenuByPermissions(adminMenu, authUser), [authUser]);
 
   useEffect(() => {
     window.localStorage.setItem('surtitelas.sidebarCollapsed', String(isCollapsed));
@@ -201,10 +204,12 @@ export const AdminLayout: React.FC = () => {
   };
   const roleLabel = userDisplay.role === 'admin' ? adminContent.layout.userRoleLabels.admin : adminContent.layout.userRoleLabels.default;
 
+  const debugPermissions = import.meta.env.DEV && authUser;
+
   return (
     <div data-dashboard-theme className={cn(s.appLayout, isCollapsed && s.collapsed)}>
       <Sidebar
-        menu={adminMenu}
+        menu={filteredMenu}
         basePath="/admin"
         logo={logoImg}
         brandName={adminContent.layout.brandName}
@@ -217,6 +222,16 @@ export const AdminLayout: React.FC = () => {
       />
 
       <div className={s.mainContent}>
+        {debugPermissions && (
+          <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', marginBottom: '16px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+            <strong style={{ color: 'var(--color-text-primary)' }}>Debug permisos</strong>
+            <div>email: {authUser.email}</div>
+            <div>role: {authUser.role}</div>
+            <div>permissions: {JSON.stringify(authUser.permissions)}</div>
+            <div>menu visible: {filteredMenu.map(item => item.label ?? item.key ?? 'item').join(', ') || '—'}</div>
+            <button type="button" onClick={async () => { await useAuthStore.getState().checkSession(); window.location.reload(); }} style={{ marginTop: '8px' }}>Refrescar permisos</button>
+          </div>
+        )}
         <TopHeader
           user={{
             name: userDisplay.name,

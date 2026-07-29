@@ -8,6 +8,8 @@ export interface OrderDTO {
   numero: string;
   cliente: string;
   asesor: string;
+  asesorTelefono?: string;
+  asesorEmail?: string;
   fecha: string;
   items: number;
   total: number;
@@ -59,6 +61,8 @@ export function toPedido(dto: OrderDTO): Pedido {
     numero: dto.numero,
     cliente: dto.cliente,
     asesor: dto.asesor,
+    asesorTelefono: dto.asesorTelefono,
+    asesorEmail: dto.asesorEmail,
     fecha: formatDate(dto.fecha),
     items: dto.items,
     total: formatCurrency(dto.total),
@@ -68,6 +72,7 @@ export function toPedido(dto: OrderDTO): Pedido {
     itemsList: dto.itemsList ?? [],
     clienteId: dto.clienteId,
     asesorId: dto.asesorId,
+    createdAt: dto.createdAt,
   };
 }
 

@@ -155,7 +155,7 @@ export class PrismaProductionOrderRepository implements ProductionOrderRepositor
 
     const row = await this.prisma.productionOrder.update({
       where: { id },
-      data: { tallerId },
+      data: { tallerId, estado: 'ASIGNADA' },
       include,
     });
     return new ProductionOrder(toProductionOrderData(row));

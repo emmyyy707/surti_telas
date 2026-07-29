@@ -6,8 +6,11 @@ type WorkshopRow = {
   encargadoId: string | null;
   direccion: string | null;
   ciudad: string | null;
+  telefono: string | null;
+  email: string | null;
   estado: string;
   capacidad: number | null;
+  ocupacion: number | null;
 };
 
 export function toWorkshopData(row: WorkshopRow): WorkshopData {
@@ -17,8 +20,11 @@ export function toWorkshopData(row: WorkshopRow): WorkshopData {
     encargadoId: row.encargadoId ?? undefined,
     direccion: row.direccion ?? undefined,
     ciudad: row.ciudad ?? undefined,
+    telefono: row.telefono ?? null,
+    email: row.email ?? null,
     estado: row.estado as WorkshopStatus,
     capacidad: row.capacidad ?? undefined,
+    ocupacion: row.ocupacion ?? undefined,
   };
 }
 

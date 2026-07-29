@@ -92,6 +92,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
       await this.prisma.customer.create({
         data: {
           nombre: input.nombre,
+          email: input.email,
           ciudad: input.ciudad,
           telefono: input.tel,
           asesorId: input.asesorId,
@@ -116,6 +117,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
       where: { id },
       data: {
         nombre: changes.nombre,
+        email: changes.email,
         ciudad: changes.ciudad,
         telefono: changes.tel,
         nit: changes.nit,

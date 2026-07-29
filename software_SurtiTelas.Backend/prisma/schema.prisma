@@ -51,6 +51,7 @@ enum OrderPriority {
 }
 enum ProductionStatus {
   PENDIENTE
+  ASIGNADA
   EN_PROCESO
   TERMINADO
 }
@@ -409,8 +410,11 @@ model Workshop {
   encargadoId String?        @map("encargado_id")
   direccion   String?
   ciudad      String?
+  telefono    String?
+  email       String?
   estado      WorkshopStatus @default(ACTIVO)
   capacidad   Int?
+  ocupacion   Int?           @default(0)
   productions ProductionOrder[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt

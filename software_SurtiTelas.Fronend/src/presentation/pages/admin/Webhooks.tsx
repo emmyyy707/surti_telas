@@ -56,8 +56,7 @@ export const AdminWebhooks: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, search, pagination.setTotalRecords]);
+  }, [pagination, search]);
 
   useEffect(() => {
     void fetchWebhooks();
@@ -212,6 +211,13 @@ export const AdminWebhooks: React.FC = () => {
           minChars={0}
         />
       </div>
+
+      {error && !loading && (
+        <div style={{ marginBottom: 16, padding: 12, border: '1px solid #fca5a5', borderRadius: 8, background: '#fef2f2', color: '#b91c1c' }}>
+          <span>{error}</span>
+          <button onClick={() => void fetchWebhooks()} style={{ marginLeft: 12 }}>Reintentar</button>
+        </div>
+      )}
 
       <DataTable<Webhook>
         data={webhooks}

@@ -76,14 +76,14 @@ export const AdminAsesores: React.FC = () => {
     const estado = (String(fd.get('estado') ?? 'Activo') || 'Activo') as Asesor['estado'];
     try {
       if (selectedAsesor) {
-        await authApi.updateUser(selectedAsesor.id, { nombre, telefono: tel || null });
+        await authApi.updateUser(selectedAsesor.id, { nombre, email, telefono: tel || null });
         setItems(prev => prev.map(it => it.id === selectedAsesor.id ? { ...it, nombre, email, tel: tel || null, estado } : it));
         toast.success('Asesor actualizado');
       } else {
         const randomPass = Math.random().toString(36).slice(-8);
-        await authApi.createUser({ email, password: randomPass, nombre, role: 'ASESOR' });
+        const created = await authApi.createUser({ email, password: randomPass, nombre, role: 'ASESOR' });
         const nuevo: Asesor = {
-          id: `AS-${String(items.length + 1).padStart(3, '0')}`,
+          id: created.id,
           nombre,
           email,
           tel: tel || null,

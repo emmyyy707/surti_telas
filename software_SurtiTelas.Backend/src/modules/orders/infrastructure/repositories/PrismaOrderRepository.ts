@@ -412,4 +412,21 @@ export class PrismaOrderRepository implements OrderRepository {
     if (!existing) throw new NotFoundError('Pedido no encontrado');
     await this.prisma.order.update({ where: { id }, data: { deletedAt: new Date() } });
   }
+
+  async createReceipt(input: { orderId: string; customerId: string; numero: string; total: number; concepto: string; emitidoPor?: string }): Promise<{ id: string }> {
+    const receipt = await this.prisma.receipt.create({
+      data: {
+        orderId: input.orderId,
+        customerId: input.customerId,
+        numero: input.numero,
+        total: input.total,
+        concepto: input.concepto,
+        emitidoPor: input.emitidoPor,
+        estado: 'EMITIDO',
+        estadoEnvio: 'PENDIENTE',
+      },
+      select: { id: true },
+    });
+    return receipt;
+  }
 }

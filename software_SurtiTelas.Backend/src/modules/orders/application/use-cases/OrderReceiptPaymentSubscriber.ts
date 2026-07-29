@@ -61,5 +61,47 @@ export class OrderReceiptPaymentSubscriber {
         });
       });
     });
+
+    this.eventBus.subscribe('order.status.updated', async (event: DomainEvent) => {
+      const payload = event.payload as {
+        orderId: string;
+        orderNumero: string;
+        previousStatus: string;
+        newStatus: string;
+        clienteId: string;
+        clienteNombre: string;
+        asesorId: string;
+        asesorNombre: string;
+      };
+
+      if (payload.newStatus !== 'Aceptado') {
+        return;
+      }
+
+      await prisma.receipt.create({
+        data: {
+          orderId: payload.orderId,
+          customerId: payload.clienteId,
+          numero: payload.orderNumero,
+          total: 0,
+          concepto: `Pedido ${payload.orderNumero}`,
+          emitidoPor: payload.asesorNombre,
+          estado: 'EMITIDO',
+          estadoEnvio: 'PENDIENTE',
+        },
+      });
+
+      await prisma.payment.create({
+        data: {
+          orderId: payload.orderId,
+          customerId: payload.clienteId,
+          asesorId: payload.asesorId,
+          amount: 0,
+          method: 'OTHER',
+          status: 'PENDING',
+          notes: 'Pago a cuotas',
+        },
+      });
+    });
   }
 }

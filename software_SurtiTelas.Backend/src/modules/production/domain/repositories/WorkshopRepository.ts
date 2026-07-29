@@ -5,6 +5,8 @@ export interface CreateWorkshopInput {
   encargadoId?: string;
   direccion?: string;
   ciudad?: string;
+  telefono?: string;
+  email?: string;
   estado?: WorkshopStatus;
   capacidad?: number;
 }
@@ -14,6 +16,8 @@ export interface UpdateWorkshopInput {
   encargadoId?: string;
   direccion?: string;
   ciudad?: string;
+  telefono?: string;
+  email?: string;
   estado?: WorkshopStatus;
   capacidad?: number;
 }

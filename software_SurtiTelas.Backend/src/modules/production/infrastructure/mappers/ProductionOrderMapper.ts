@@ -3,12 +3,14 @@ import type { ProductionOrderData, ProductionStatus } from '../../domain/entitie
 
 const STATUS_TO_DB: Record<ProductionStatus, DbStatus> = {
   PENDIENTE: 'PENDIENTE',
+  ASIGNADA: 'ASIGNADA',
   EN_PROCESO: 'EN_PROCESO',
   TERMINADO: 'TERMINADO',
 };
 
 const DB_TO_STATUS: Record<DbStatus, ProductionStatus> = {
   PENDIENTE: 'PENDIENTE',
+  ASIGNADA: 'ASIGNADA',
   EN_PROCESO: 'EN_PROCESO',
   TERMINADO: 'TERMINADO',
 };
@@ -17,7 +19,9 @@ type ProductionOrderRow = {
   id: string;
   pedidoId: string | null;
   operarioId: string | null;
+  operario: { id: string; nombre: string; telefono?: string | null } | null;
   tallerId: string | null;
+  taller: { id: string; nombre: string; capacidad?: number | null } | null;
   referencia: string;
   cantidad: number;
   fechaInicio: Date;

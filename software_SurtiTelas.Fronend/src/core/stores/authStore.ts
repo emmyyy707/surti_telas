@@ -103,13 +103,14 @@ export const useAuthStore = create<AuthState>()(
         try {
           const profile = await authApi.me();
           const current = useAuthStore.getState().user;
+          const mergedPermissions = profile.permissions ?? current?.permissions ?? [];
           set({
             user: {
               uid: profile.id,
               email: profile.email,
               name: profile.nombre,
               role: mapRole(profile.role),
-              permissions: current?.permissions ?? profile.permissions,
+              permissions: mergedPermissions,
             },
             isAuthenticated: true,
             sessionChecked: true,

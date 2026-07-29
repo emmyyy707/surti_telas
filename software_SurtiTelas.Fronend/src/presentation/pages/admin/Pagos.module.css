@@ -1,4 +1,4 @@
-.loadingSpinner {
+﻿.loadingSpinner {
   animation: pagosSpin 0.9s linear infinite;
   color: var(--color-primary, #2563eb);
 }
@@ -531,6 +531,7 @@ select.input {
 .formActions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 20px;
 }
+

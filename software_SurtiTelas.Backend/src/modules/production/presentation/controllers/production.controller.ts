@@ -21,6 +21,7 @@ import {
 export const listWorkshops = async (req: Request, res: Response) => {
   const filters = parseDto(WorkshopFiltersSchema, req.query);
   const result = await productionUseCases.getWorkshops.execute(filters);
+  console.log('[Workshops] list result sample', JSON.stringify(result.data.slice(0, 2)));
   const response = buildApiPaginatedResponse(
     result.data,
     result.meta.total,
@@ -39,7 +40,9 @@ export const createWorkshop = async (req: Request, res: Response) => {
 
 export const updateWorkshop = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateWorkshopSchema, req.body);
+  console.log('[Workshops] update changes', JSON.stringify(changes));
   const workshop = await productionUseCases.updateWorkshop.execute(req.params.id, changes);
+  console.log('[Workshops] update response', JSON.stringify(workshop));
   return ok(res, workshop, 'Taller actualizado');
 };
 
@@ -125,17 +128,21 @@ export const reviewControlPrenda = async (req: Request, res: Response) => {
 };
 
 export const listControlPrendas = async (req: Request, res: Response) => {
+  const page = req.query.page ? Number(req.query.page) : undefined;
+  const limit = req.query.limit ? Number(req.query.limit) : undefined;
   const filters = {
     produccionId: req.query.produccionId as string | undefined,
     etapa: req.query.etapa as string | undefined,
     estado: req.query.estado as string | undefined,
+    page: Number.isFinite(page) ? page : undefined,
+    limit: Number.isFinite(limit) ? limit : undefined,
   };
   const result = await productionUseCases.listControlPrendas.execute(filters);
   const response = buildApiPaginatedResponse(
     result.data,
     result.meta.total,
-    1,
-    50,
+    result.meta.page ?? 1,
+    result.meta.limit ?? 50,
     null
   );
   return ok(res, response);

@@ -43,13 +43,29 @@ export interface ControlPrenda {
   updatedAt: string;
 }
 
+const ETAPA_TO_DB: Record<string, 'CORTE' | 'CONFECCION' | 'ACABADO' | 'CONTROL_CALIDAD' | 'EMPAQUE'> = {
+  Corte: 'CORTE',
+  Confección: 'CONFECCION',
+  Acabado: 'ACABADO',
+  'Control de Calidad': 'CONTROL_CALIDAD',
+  Empaque: 'EMPAQUE',
+};
+
+const DB_TO_ETAPA: Record<string, ControlPrenda['etapa']> = {
+  CORTE: 'Corte',
+  CONFECCION: 'Confección',
+  ACABADO: 'Acabado',
+  CONTROL_CALIDAD: 'Control de Calidad',
+  EMPAQUE: 'Empaque',
+};
+
 export function toControlPrenda(dto: ControlPrendaDTO): ControlPrenda {
   return {
     id: dto.id,
     produccionId: dto.produccionId,
     produccionNumero: dto.produccion?.pedido?.numero,
     produccionCliente: dto.produccion?.pedido?.clienteNombre,
-    etapa: dto.etapa === 'CORTE' ? 'Corte' : dto.etapa === 'CONFECCION' ? 'Confección' : dto.etapa === 'ACABADO' ? 'Acabado' : dto.etapa === 'CONTROL_CALIDAD' ? 'Control de Calidad' : 'Empaque',
+    etapa: DB_TO_ETAPA[dto.etapa] ?? dto.etapa,
     estado: dto.estado === 'PROCESO' ? 'Proceso' : dto.estado === 'APROBADO' ? 'Aprobado' : 'Rechazado',
     cantidadTotal: dto.cantidadTotal,
     cantidadRevisada: dto.cantidadRevisada,
@@ -73,7 +89,7 @@ export const controlPrendaApi = {
   async create(data: Partial<ControlPrenda>): Promise<ControlPrenda> {
     const body: Record<string, unknown> = {
       produccionId: data.produccionId,
-      etapa: data.etapa?.toUpperCase().replace(' ', '_'),
+      etapa: ETAPA_TO_DB[data.etapa ?? ''],
       cantidadTotal: data.cantidadTotal,
       observaciones: data.observaciones,
     };
@@ -92,7 +108,7 @@ export const controlPrendaApi = {
 
   async review(id: string, estado: 'Aprobado' | 'Rechazado', cantidadAprobada?: number, cantidadRechazada?: number): Promise<ControlPrenda> {
     const dto = await api.patch<ControlPrendaDTO>(`/production/control/${encodeURIComponent(id)}/review`, {
-      estado: estado.toUpperCase(),
+      estado: estado === 'Aprobado' ? 'APROBADO' : 'RECHAZADO',
       cantidadAprobada,
       cantidadRechazada,
     });
@@ -101,7 +117,7 @@ export const controlPrendaApi = {
 
   async update(id: string, changes: Partial<ControlPrenda>): Promise<ControlPrenda> {
     const body: Record<string, unknown> = {};
-    if (changes.etapa !== undefined) body.etapa = changes.etapa.toUpperCase().replace(' ', '_');
+    if (changes.etapa !== undefined) body.etapa = ETAPA_TO_DB[changes.etapa];
     if (changes.cantidadTotal !== undefined) body.cantidadTotal = changes.cantidadTotal;
     if (changes.cantidadRevisada !== undefined) body.cantidadRevisada = changes.cantidadRevisada;
     if (changes.cantidadAprobada !== undefined) body.cantidadAprobada = changes.cantidadAprobada;

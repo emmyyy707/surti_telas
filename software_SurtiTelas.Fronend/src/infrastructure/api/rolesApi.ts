@@ -34,8 +34,8 @@ export function toRole(dto: RoleDTO, index: number): Rol {
 
 export const rolesApi = {
   async list(): Promise<Rol[]> {
-    const response = await api.get<RoleDTO[] | { items: RoleDTO[]; meta: Record<string, unknown> }>('/auth/roles');
-    const raw = Array.isArray(response) ? response : response?.items;
+    const response = await api.get<RoleDTO[] | { items: RoleDTO[]; meta: Record<string, unknown> } | undefined>('/auth/roles');
+    const raw = Array.isArray(response) ? response : response?.items ?? [];
     return raw.map(toRole);
   },
 

@@ -40,6 +40,8 @@ export interface OrderData {
   clienteId: string;
   asesor: string;
   asesorId: string;
+  asesorTelefono?: string;
+  asesorEmail?: string;
   tipoFlujo: OrderFlow;
   fecha: string;
   subtotal?: number;
@@ -102,6 +104,8 @@ export class Order {
   readonly comprobantePagoObservaciones?: string;
   readonly usuarioValidacionNombre?: string;
   readonly comprobantePagoCargadoPorNombre?: string;
+  readonly asesorTelefono?: string;
+  readonly asesorEmail?: string;
   readonly itemsList?: OrderItem[];
   readonly createdAt?: string;
   readonly updatedAt?: string;
@@ -140,6 +144,8 @@ export class Order {
     this.comprobantePagoObservaciones = data.comprobantePagoObservaciones;
     this.usuarioValidacionNombre = data.usuarioValidacionNombre;
     this.comprobantePagoCargadoPorNombre = data.comprobantePagoCargadoPorNombre;
+    this.asesorTelefono = data.asesorTelefono;
+    this.asesorEmail = data.asesorEmail;
     this.itemsList = data.itemsList;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;

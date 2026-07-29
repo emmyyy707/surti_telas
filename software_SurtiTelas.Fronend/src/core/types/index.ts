@@ -71,6 +71,8 @@ export interface Pedido {
   numero?: string;
   cliente: string;
   asesor: string;
+  asesorTelefono?: string;
+  asesorEmail?: string;
   fecha: string;
   items: number;
   total: string;
@@ -80,6 +82,7 @@ export interface Pedido {
   itemsList?: PedidoItem[];
   clienteId?: string;
   asesorId?: string;
+  createdAt?: string;
 }
 
 export interface OrdenProduccion {

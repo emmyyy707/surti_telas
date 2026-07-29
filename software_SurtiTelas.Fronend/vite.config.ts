@@ -63,10 +63,13 @@ export default defineConfig({
       }
     }
   },
-  // Asegura que los tipos de módulo se resuelvan correctamente
-   optimizeDeps: {
-     include: ["react", "react-dom", "react-router-dom", "react-is", "recharts"]
-   },
+   // Asegura que los tipos de módulo se resuelvan correctamente
+    optimizeDeps: {
+      include: ["react", "react-dom", "react-router-dom", "react-is", "recharts"],
+      esbuildOptions: {
+        target: "esnext",
+      },
+    },
    ssr: {
      external: ["recharts", "lucide-react"]
    }

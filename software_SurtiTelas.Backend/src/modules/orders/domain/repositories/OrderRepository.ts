@@ -64,4 +64,5 @@ export interface OrderRepository {
   }): Promise<Order>;
   updateReceiptSent(id: string, estadoEnvio: string, fechaEnvio: Date, intentos: number, ultimoError?: string): Promise<Order>;
   getWithPaymentProof(id: string): Promise<Order | null>;
+  createReceipt(input: { orderId: string; customerId: string; numero: string; total: number; concepto: string; emitidoPor?: string }): Promise<{ id: string }>;
 }

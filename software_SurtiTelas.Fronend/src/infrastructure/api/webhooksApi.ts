@@ -19,7 +19,6 @@ export interface Webhook {
   usuarioId?: string;
   createdAt: string;
   updatedAt: string;
-  secret?: string;
 }
 
 export interface WebhookFilters {
@@ -39,7 +38,6 @@ export function toWebhook(dto: WebhookDTO): Webhook {
     usuarioId: dto.usuarioId,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
-    secret: (dto as { secret?: string }).secret,
   };
 }
 

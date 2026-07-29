@@ -108,25 +108,26 @@ export const authApi = {
     api.patch<UpdateProfileResponse>('/auth/me', data),
 
   listUsers: (query?: Record<string, string | number | boolean | undefined | null>): Promise<UsersListResult> =>
-    api.get<{ items: BackendAuthUser[]; meta: PaginatedResponse<BackendAuthUser>['data']['meta'] }>('/auth/users', { query }).then((response) => ({
-      data: response.items,
-      meta: response.meta,
-    })),
+    api.get<{ items: BackendAuthUser[]; meta: PaginatedResponse<BackendAuthUser>['data']['meta'] } | undefined>('/auth/users', { query }).then((response) => {
+      const items = response?.items ?? [];
+      const meta = response?.meta ?? { totalRecords: 0, page: 1, limit: 10, totalPages: 1 };
+      return { data: items, meta };
+    }),
 
   createUser: (data: CreateUserRequest) =>
     api.post<CreateUserResponse>('/auth/register', data),
 
-  updateUser: (id: string, data: { nombre?: string; telefono?: string | null }) =>
+  updateUser: (id: string, data: { nombre?: string; email?: string; telefono?: string | null }) =>
     api.patch<BackendAuthUser>(`/auth/users/${encodeURIComponent(id)}`, data),
 
   deleteUser: (id: string) =>
     api.delete<void>(`/auth/users/${encodeURIComponent(id)}`),
 
   listPermissions: () =>
-    api.get<{ items: PermissionDTO[]; meta: PaginatedResponse<PermissionDTO>['data']['meta'] }>('/auth/permissions').then((response) => ({
-      data: response.items,
-      meta: response.meta,
-    })),
+    api.get<{ items: PermissionDTO[]; meta: PaginatedResponse<PermissionDTO>['data']['meta'] } | undefined>('/auth/permissions').then((response) => {
+      const items = response?.items ?? [];
+      return { data: items, meta: response?.meta };
+    }),
 
   createPermission: (data: { code: string; description?: string; module?: string }) =>
     api.post<PermissionDTO & { id: string }>('/auth/permissions', data),

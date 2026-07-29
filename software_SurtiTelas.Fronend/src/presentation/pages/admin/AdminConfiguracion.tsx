@@ -15,6 +15,7 @@ interface ConfigSection {
 export const AdminConfiguracion: React.FC = () => {
   const [configSections, setConfigSections] = useState<ConfigSection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
   const configContent = adminContent.configuration;
 
   useEffect(() => {
@@ -39,6 +40,11 @@ export const AdminConfiguracion: React.FC = () => {
           ],
         };
         setConfigSections([empresa]);
+        const initialValues: Record<string, string> = {};
+        empresa.fields.forEach(f => {
+          initialValues[f.label.toLowerCase()] = f.value;
+        });
+        setFormValues(initialValues);
       } catch {
         if (active) setConfigSections([]);
       } finally {
@@ -47,8 +53,11 @@ export const AdminConfiguracion: React.FC = () => {
     };
     void load();
     return () => { active = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [configContent]);
+
+  const handleChange = (label: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [label.toLowerCase()]: value }));
+  };
 
   return (
     <div>
@@ -83,7 +92,11 @@ export const AdminConfiguracion: React.FC = () => {
                 <div key={i} className={s.field}>
                   <label className={s.label}>{field.label}</label>
                   {field.type === 'select' ? (
-                    <select className={s.select} defaultValue={field.value}>
+                    <select
+                      className={s.select}
+                      value={formValues[field.label.toLowerCase()] ?? field.value}
+                      onChange={e => handleChange(field.label, e.target.value)}
+                    >
                       {field.options?.map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
@@ -93,7 +106,8 @@ export const AdminConfiguracion: React.FC = () => {
                       id={`${section.id}-field-${i}`}
                       type={field.type}
                       className={s.input}
-                      defaultValue={field.value}
+                      value={formValues[field.label.toLowerCase()] ?? field.value}
+                      onChange={e => handleChange(field.label, e.target.value)}
                       placeholder={field.label}
                     />
                   )}
@@ -106,22 +120,15 @@ export const AdminConfiguracion: React.FC = () => {
 
       <div className={s.actionsBar}>
         <button className={s.saveBtn} onClick={async () => {
-          const first = configSections[0];
-          if (!first) return;
-          const values: Record<string, string> = {};
-          first.fields.forEach((f, idx) => {
-            const input = document.querySelector<HTMLInputElement>(`#${first.id}-field-${idx}`);
-            if (input) values[f.label.toLowerCase()] = input.value;
-          });
           try {
             await companyApi.update({
-              nombre: values['nombre'] || undefined,
-              email: values['email'] || undefined,
-              telefono: values['teléfono'] || values['telefono'] || undefined,
-              direccion: values['dirección'] || values['direccion'] || undefined,
-              ciudad: values['ciudad'] || undefined,
-              nit: values['nit'] || undefined,
-              moneda: values['moneda'] || undefined,
+              nombre: formValues['nombre'] || undefined,
+              email: formValues['email'] || undefined,
+              telefono: formValues['teléfono'] || formValues['telefono'] || undefined,
+              direccion: formValues['dirección'] || formValues['direccion'] || undefined,
+              ciudad: formValues['ciudad'] || undefined,
+              nit: formValues['nit'] || undefined,
+              moneda: formValues['moneda'] || undefined,
             });
             toast.success(configContent.success);
           } catch {

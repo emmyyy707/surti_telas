@@ -8,6 +8,7 @@ import { PrismaClient, StockStatus } from '@prisma/client';
 import { computeStockStatus } from '../../../catalog/domain/entities/Product';
 import { STOCK_TO_DB } from '../../../catalog/infrastructure/mappers/ProductMapper';
 import {
+  OrderAcceptedEvent,
   OrderCreatedEvent,
   OrderStatusUpdatedEvent,
   StockReservedEvent,
@@ -160,6 +161,30 @@ export class UpdateOrderStatus {
             orderId: updated.id,
             clienteId: updated.clienteId,
             clienteNombre: updated.cliente,
+            total: Number(updated.total),
+          }, requestId)
+        );
+      }
+
+      if (estado === 'Aceptado') {
+        const receipt = await this.repo.createReceipt({
+          orderId: updated.id,
+          customerId: updated.clienteId,
+          numero: updated.numero || updated.id,
+          total: Number(updated.total),
+          concepto: `Pedido ${updated.numero || updated.id} - ${updated.items} ítems`,
+          emitidoPor: updated.asesor,
+        });
+        this.eventBus.publish(
+          new OrderAcceptedEvent({
+            orderId: updated.id,
+            orderNumero: updated.numero || updated.id,
+            clienteId: updated.clienteId,
+            clienteNombre: updated.cliente,
+            asesorId: updated.asesorId,
+            asesorNombre: updated.asesor,
+            saleId: updated.id,
+            receiptId: receipt.id,
             total: Number(updated.total),
           }, requestId)
         );

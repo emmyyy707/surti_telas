@@ -56,12 +56,7 @@ export function useServerPagination(initialLimit = 10): ServerPaginationState & 
     setTotalRecords(0);
   }, []);
 
-  return {
-    page: safePage,
-    limit,
-    cursor,
-    totalRecords,
-    totalPages,
+  const actions = useMemo(() => ({
     setPage,
     setLimit,
     setCursor,
@@ -71,5 +66,14 @@ export function useServerPagination(initialLimit = 10): ServerPaginationState & 
     goToFirstPage,
     goToLastPage,
     reset,
-  };
+  }), [setPage, setLimit, setCursor, setTotalRecords, goToNextPage, goToPrevPage, goToFirstPage, goToLastPage, reset]);
+
+  return useMemo(() => ({
+    page: safePage,
+    limit,
+    cursor,
+    totalRecords,
+    totalPages,
+    ...actions,
+  }), [safePage, limit, cursor, totalRecords, totalPages, actions]);
 }

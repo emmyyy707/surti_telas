@@ -21,7 +21,7 @@ export interface ProductionOrderDTO {
   pedidoItemNombre?: string;
   pedidoTotal?: number;
   taller?: { id: string; nombre: string; capacidad?: number };
-  operario?: { id: string; nombre: string };
+  operario?: { id: string; nombre: string; telefono?: string };
 }
 
 export interface ProductionOrder {
@@ -37,9 +37,10 @@ export interface ProductionOrder {
   estado: 'Pendiente' | 'Asignada' | 'En produccion' | 'Completada';
   tela?: string;
   colores: string[];
+  curvaTallas?: Record<string, number>;
   notasTecnicas?: string;
   taller?: { id: string; nombre: string; capacidad?: number };
-  operario?: { id: string; nombre: string };
+  operario?: { id: string; nombre: string; telefono?: string };
   pedidoNumero?: string;
   pedidoCliente?: string;
   pedidoPrioridad?: string;
@@ -58,9 +59,10 @@ export function toProductionOrder(dto: ProductionOrderDTO): ProductionOrder {
     fechaInicio: dto.fechaInicio,
     fechaEstimada: dto.fechaEstimada,
     avance: dto.avance,
-    estado: dto.estado === 'EN_PROCESO' ? 'En produccion' : dto.estado === 'TERMINADO' ? 'Completada' : 'Pendiente',
+    estado: dto.estado === 'EN_PROCESO' ? 'En produccion' : dto.estado === 'TERMINADO' ? 'Completada' : dto.estado === 'ASIGNADA' ? 'Asignada' : 'Pendiente',
     tela: dto.tela,
     colores: dto.colores,
+    curvaTallas: dto.curvaTallas as Record<string, number> | undefined,
     notasTecnicas: dto.notasTecnicas,
     taller: dto.taller,
     operario: dto.operario,
@@ -122,5 +124,10 @@ export const productionApi = {
 
   async remove(id: string): Promise<void> {
     await api.delete(`/production/orders/${encodeURIComponent(id)}`);
+  },
+
+  async complete(id: string): Promise<ProductionOrder> {
+    const dto = await api.post<ProductionOrderDTO>(`/production/orders/${encodeURIComponent(id)}/complete`);
+    return toProductionOrder(dto);
   },
 };

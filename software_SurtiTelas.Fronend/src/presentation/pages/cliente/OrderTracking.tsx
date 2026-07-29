@@ -113,7 +113,7 @@ export const OrderTracking: React.FC = () => {
 
   const domiciliarioAsignado = {
     nombre: operarioNombre || 'Sin asignar',
-    telefono: operarioNombre ? '' : 'Sin asignar',
+    telefono: productionOrder?.operario?.telefono || (operarioNombre ? '' : 'Sin asignar'),
     iniciales: operarioNombre ? operarioNombre.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : '—',
   };
 

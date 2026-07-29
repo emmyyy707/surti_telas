@@ -47,6 +47,10 @@ interface OrdenProduccion {
   cliente: string;
   observaciones: string;
   avance: number;
+  tela?: string;
+  colores?: string[];
+  curvaTallas?: Record<string, number>;
+  operarioId?: string;
 }
 
 export const AdminSeguimientoProduccion: React.FC = () => {
@@ -67,6 +71,12 @@ export const AdminSeguimientoProduccion: React.FC = () => {
   const [editCantidad, setEditCantidad] = useState('');
   const [editFecha, setEditFecha] = useState('');
   const [editNotas, setEditNotas] = useState('');
+  const [editTela, setEditTela] = useState('');
+  const [editColores, setEditColores] = useState('');
+  const [editCurvaTallas, setEditCurvaTallas] = useState('');
+  const [editOperarioId, setEditOperarioId] = useState('');
+  const [editFechaInicio, setEditFechaInicio] = useState('');
+  const [filtroTaller, setFiltroTaller] = useState<string>('');
 
   useEffect(() => {
     const load = async () => {
@@ -89,6 +99,10 @@ export const AdminSeguimientoProduccion: React.FC = () => {
           cliente: o.pedidoCliente ?? '',
           observaciones: o.notasTecnicas || '',
           avance: o.avance,
+          tela: o.tela,
+          colores: o.colores,
+          curvaTallas: o.curvaTallas,
+          operarioId: o.operarioId,
         }));
         setOrdenes(mapped);
       } catch (err) {
@@ -105,12 +119,13 @@ export const AdminSeguimientoProduccion: React.FC = () => {
     return ordenes.filter(o =>
       (filtroEstado === 'Todos' || o.estado === filtroEstado) &&
       (filtroPrioridad === 'Todos' || o.prioridad === filtroPrioridad) &&
+      (filtroTaller === '' || o.tallerAsignado === filtroTaller) &&
       (o.numeroOrden.toLowerCase().includes(search.toLowerCase()) ||
        o.prenda.toLowerCase().includes(search.toLowerCase()) ||
        o.referencia.toLowerCase().includes(search.toLowerCase()) ||
        o.cliente.toLowerCase().includes(search.toLowerCase()))
     );
-  }, [ordenes, search, filtroEstado, filtroPrioridad]);
+  }, [ordenes, search, filtroEstado, filtroPrioridad, filtroTaller]);
 
   const abrirModal = (orden: OrdenProduccion) => {
     setSelectedOrden(orden);
@@ -134,6 +149,11 @@ export const AdminSeguimientoProduccion: React.FC = () => {
     setEditCantidad(String(orden.cantidad));
     setEditFecha(orden.fechaPrometida);
     setEditNotas(orden.observaciones);
+    setEditTela(orden.tela || '');
+    setEditColores((orden.colores || []).join(', '));
+    setEditCurvaTallas(orden.curvaTallas ? JSON.stringify(orden.curvaTallas) : '');
+    setEditOperarioId(orden.operarioId || '');
+    setEditFechaInicio(orden.fechaInicio || '');
     setEditModalOpen(true);
   };
 
@@ -146,14 +166,24 @@ export const AdminSeguimientoProduccion: React.FC = () => {
         referencia: editReferencia,
         cantidad: Number(editCantidad),
         fechaEstimada: editFecha,
+        fechaInicio: editFechaInicio || undefined,
         notasTecnicas: editNotas || undefined,
+        tela: editTela || undefined,
+        colores: editColores ? editColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
+        curvaTallas: editCurvaTallas ? JSON.parse(editCurvaTallas) : undefined,
+        operarioId: editOperarioId || undefined,
       });
       setOrdenes(prev => prev.map(o => o.id === editingId ? {
         ...o,
         referencia: updated.referencia,
         cantidad: updated.cantidad,
         fechaPrometida: updated.fechaEstimada,
+        fechaInicio: updated.fechaInicio,
         observaciones: updated.notasTecnicas || '',
+        tela: updated.tela,
+        colores: updated.colores,
+        curvaTallas: updated.curvaTallas,
+        operarioId: updated.operarioId,
         cantidadProducida: Math.round((updated.avance / 100) * updated.cantidad),
         avance: updated.avance,
       } : o));
@@ -183,22 +213,28 @@ export const AdminSeguimientoProduccion: React.FC = () => {
   };
 
   const handleActualizarAvance = async () => {
-    if (!selectedOrden || !nuevoAvance) return;
+    if (!selectedOrden || nuevoAvance === '') return;
     try {
       setSaving(true);
       const producidas = Number(nuevoAvance);
+      if (producidas > selectedOrden.cantidad) {
+        toast.error('La cantidad producida no puede superar la cantidad total');
+        return;
+      }
       const avance = Math.round((producidas / selectedOrden.cantidad) * 100);
       if (avance >= 100) {
-        await productionApi.update(selectedOrden.id, { estado: 'Completada' });
-      } else {
+        await productionApi.complete(selectedOrden.id);
+      } else if (avance > 0) {
         await productionApi.update(selectedOrden.id, { avance, estado: 'En produccion' });
+      } else {
+        await productionApi.update(selectedOrden.id, { avance: 0, estado: 'Asignada' });
       }
       setOrdenes(prev => prev.map(o => {
         if (o.id !== selectedOrden.id) return o;
         if (producidas >= o.cantidad) {
           return { ...o, cantidadProducida: o.cantidad, avance: 100, estado: 'Completada' as const };
         }
-        return { ...o, cantidadProducida: producidas, avance, estado: 'En produccion' as const };
+        return { ...o, cantidadProducida: producidas, avance, estado: avance > 0 ? 'En produccion' as const : 'Asignada' as const };
       }));
       toast.success(`Avance actualizado para ${selectedOrden.numeroOrden}`);
       setModalOpen(false);
@@ -212,7 +248,7 @@ export const AdminSeguimientoProduccion: React.FC = () => {
 
   const handleCompletarOrden = async (orden: OrdenProduccion) => {
     try {
-      await productionApi.update(orden.id, { estado: 'Completada' });
+      await productionApi.complete(orden.id);
       setOrdenes(prev => prev.map(o => o.id === orden.id
         ? { ...o, cantidadProducida: o.cantidad, avance: 100, estado: 'Completada' as const }
         : o
@@ -303,6 +339,18 @@ export const AdminSeguimientoProduccion: React.FC = () => {
               {prioridad}
             </button>
           ))}
+        </div>
+        <div className={s.filterGroup}>
+          <select
+            className={s.select}
+            value={filtroTaller}
+            onChange={e => setFiltroTaller(e.target.value)}
+          >
+            <option value="">Todos los talleres</option>
+            {[...new Set(ordenes.map(o => o.tallerAsignado).filter((v): v is string => Boolean(v)))].map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
         <div className={s.searchBox}>
           <Search size={16} className={s.searchIcon} />

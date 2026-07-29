@@ -1,4 +1,4 @@
-export type ProductionStatus = 'PENDIENTE' | 'EN_PROCESO' | 'TERMINADO';
+export type ProductionStatus = 'PENDIENTE' | 'ASIGNADA' | 'EN_PROCESO' | 'TERMINADO';
 
 export interface ProductionOrderData {
   id?: string;

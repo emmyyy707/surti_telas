@@ -87,8 +87,7 @@ export const AdminPedidos: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [asesorId, pagination.page, pagination.limit, search, pagination.setTotalRecords]);
+  }, [asesorId, pagination, search]);
 
   useEffect(() => {
     void hydrate();

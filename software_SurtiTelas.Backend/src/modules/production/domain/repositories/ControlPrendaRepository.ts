@@ -37,7 +37,7 @@ export interface ControlPrendaListItem {
 
 export interface ControlPrendaRepository {
   create(input: CreateControlPrendaInput): Promise<ControlPrendaListItem>;
-  list(filters?: { produccionId?: string; etapa?: string; estado?: string }): Promise<{ data: ControlPrendaListItem[]; meta: { total: number } }>;
+  list(filters?: { produccionId?: string; etapa?: string; estado?: string; page?: number; limit?: number }): Promise<{ data: ControlPrendaListItem[]; meta: { total: number; page?: number; limit?: number } }>;
   getById(id: string): Promise<ControlPrendaListItem | null>;
   review(id: string, changes: ReviewControlPrendaInput): Promise<ControlPrendaListItem>;
   update(id: string, changes: Partial<ControlPrendaListItem>): Promise<ControlPrendaListItem>;

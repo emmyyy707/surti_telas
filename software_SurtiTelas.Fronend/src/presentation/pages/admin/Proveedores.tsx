@@ -46,8 +46,7 @@ export const AdminProveedores: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, search, pagination.setTotalRecords]);
+  }, [pagination, search]);
 
   useEffect(() => {
     void fetchProveedores();
@@ -218,6 +217,13 @@ export const AdminProveedores: React.FC = () => {
           Nuevo proveedor
         </Button>
       </div>
+
+      {error && !loading && (
+        <div className={s.errorBox} style={{ marginBottom: 16, padding: 12, border: '1px solid #fca5a5', borderRadius: 8, background: '#fef2f2', color: '#b91c1c' }}>
+          <span>{error}</span>
+          <button onClick={() => void fetchProveedores()} style={{ marginLeft: 12 }}>Reintentar</button>
+        </div>
+      )}
 
       <div className={s.toolbar}>
         <SearchInput

@@ -5,6 +5,8 @@ export const CreateWorkshopSchema = z.object({
   encargadoId: z.string().optional(),
   direccion: z.string().optional(),
   ciudad: z.string().optional(),
+  telefono: z.string().optional(),
+  email: z.string().email().optional(),
   estado: z.enum(['ACTIVO', 'INACTIVO']).optional(),
   capacidad: z.number().int().positive().optional(),
 });
@@ -19,7 +21,7 @@ export const CreateProductionOrderSchema = z.object({
   cantidad: z.number().int().positive('La cantidad debe ser mayor a cero'),
   fechaEstimada: z.string().min(1, 'La fecha estimada es obligatoria'),
   avance: z.number().int().min(0).max(100).optional(),
-  estado: z.enum(['PENDIENTE', 'EN_PROCESO', 'TERMINADO']).optional(),
+  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO']).optional(),
   tela: z.string().optional(),
   colores: z.array(z.string()).optional(),
   curvaTallas: z.record(z.string(), z.number()).optional(),
@@ -33,7 +35,7 @@ export const UpdateProductionOrderSchema = z.object({
   cantidad: z.number().int().positive().optional(),
   fechaEstimada: z.string().min(1).optional(),
   avance: z.number().int().min(0).max(100).optional(),
-  estado: z.enum(['PENDIENTE', 'EN_PROCESO', 'TERMINADO']).optional(),
+  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO']).optional(),
   tela: z.string().optional(),
   colores: z.array(z.string()).optional(),
   curvaTallas: z.record(z.string(), z.number()).optional(),
@@ -41,7 +43,7 @@ export const UpdateProductionOrderSchema = z.object({
 });
 
 export const ProductionOrderFiltersSchema = z.object({
-  estado: z.enum(['PENDIENTE', 'EN_PROCESO', 'TERMINADO']).optional(),
+  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO']).optional(),
   tallerId: z.string().optional(),
   operarioId: z.string().optional(),
   pedidoId: z.string().optional(),

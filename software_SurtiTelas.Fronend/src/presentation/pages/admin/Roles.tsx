@@ -9,7 +9,7 @@ import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTab
 import { useDelegatedTooltips } from '@/shared/components/Tooltip';
 import { cn } from '@/shared/utils';
 import { rolesApi, type Rol } from '@/infrastructure/api/rolesApi';
-import { PERMISOS_SISTEMA } from '@/shared/constants/options';
+import { PERMISOS_SISTEMA, ROLES_SISTEMA, ROL_LABELS } from '@/shared/constants/options';
 
 const PROTECTED_ROLES = new Set(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE']);
 
@@ -258,7 +258,12 @@ export const AdminRoles: React.FC = () => {
                 <div className={s.formRow}>
                   <div className={s.field}>
                     <label className={s.label}>Nombre del Rol</label>
-                    <input type="text" className={s.input} name="nombre" defaultValue={selectedRol?.nombre} />
+                    <select className={s.select} name="nombre" defaultValue={selectedRol?.nombre}>
+                      <option value="">Selecciona un rol</option>
+                      {ROLES_SISTEMA.map(role => (
+                        <option key={role} value={role}>{ROL_LABELS[role] ?? role}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className={s.field}>

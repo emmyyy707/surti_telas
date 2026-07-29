@@ -12,11 +12,10 @@ import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 interface Taller {
   id: string;
   nombre: string;
-  contacto: string;
-  telefono: string;
-  email: string;
   direccion: string;
   ciudad: string;
+  telefono: string;
+  email: string;
   capacidad: number;
   ocupacion: number;
   estado: 'Activo' | 'Inactivo';
@@ -26,13 +25,12 @@ function toTaller(w: Workshop): Taller {
   return {
     id: w.id,
     nombre: w.nombre,
-    contacto: '',
-    telefono: '',
-    email: '',
     direccion: w.direccion ?? '',
     ciudad: w.ciudad ?? '',
+    telefono: w.telefono ?? '',
+    email: w.email ?? '',
     capacidad: w.capacidad ?? 0,
-    ocupacion: 0,
+    ocupacion: w.ocupacion ?? 0,
     estado: w.estado,
   };
 }
@@ -44,7 +42,14 @@ export const AdminRegistroTalleres: React.FC = () => {
   const [items, setItems] = useState<Taller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Taller | null>( null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Taller | null>(null);
+
+  const [nombre, setNombre] = useState('');
+  const [capacidad, setCapacidad] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [email, setEmail] = useState('');
+  const [direccion, setDireccion] = useState('');
+  const [ciudad, setCiudad] = useState('');
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -54,6 +59,7 @@ export const AdminRegistroTalleres: React.FC = () => {
       setError(null);
       try {
         const data = await workshopsApi.list();
+        console.log('[RegistroTalleres] list data', data);
         setItems(data.map(toTaller));
       } catch {
         setError('No se pudieron cargar los talleres');
@@ -66,42 +72,61 @@ export const AdminRegistroTalleres: React.FC = () => {
 
   const filteredTalleres = items.filter(t =>
     t.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    String(t.contacto ?? '').toLowerCase().includes(search.toLowerCase()) ||
     t.ciudad.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedTaller(null);
+    setNombre('');
+    setCapacidad('');
+    setTelefono('');
+    setEmail('');
+    setDireccion('');
+    setCiudad('');
   };
 
-  const handleSubmitTaller = async () => {
-    if (!formRef.current) return;
-    const fd = new FormData(formRef.current);
-    const nombre = String(fd.get('nombre') ?? '').trim();
-    const _contacto = String(fd.get('contacto') ?? '').trim();
-    const _telefono = String(fd.get('telefono') ?? '').trim();
-    const _email = String(fd.get('email') ?? '').trim();
-    const direccion = String(fd.get('direccion') ?? '').trim();
-    const ciudad = String(fd.get('ciudad') ?? '').trim();
-    const capacidad = Number(fd.get('capacidad') ?? 0) || 0;
+  const openModal = (taller?: Taller) => {
+    if (taller) {
+      setSelectedTaller(taller);
+      setNombre(taller.nombre);
+      setCapacidad(String(taller.capacidad ?? 0));
+      setTelefono(taller.telefono ?? '');
+      setEmail(taller.email ?? '');
+      setDireccion(taller.direccion ?? '');
+      setCiudad(taller.ciudad ?? '');
+      console.log('[RegistroTalleres] openModal taller', taller);
+    } else {
+      setSelectedTaller(null);
+      setNombre('');
+      setCapacidad('');
+      setTelefono('');
+      setEmail('');
+      setDireccion('');
+      setCiudad('');
+    }
+    setModalOpen(true);
+  };
+
+  const handleSubmitTaller = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
+      const payload = {
+        nombre: nombre.trim(),
+        direccion: direccion.trim() || undefined,
+        ciudad: ciudad.trim() || undefined,
+        telefono: telefono.trim() || undefined,
+        email: email.trim() || undefined,
+        capacidad: Number(capacidad) || undefined,
+      };
       if (selectedTaller) {
-        const actualizado = await workshopsApi.update(selectedTaller.id, {
-          nombre,
-          direccion,
-          ciudad,
-          capacidad,
-        });
+        const actualizado = await workshopsApi.update(selectedTaller.id, payload);
+        console.log('[RegistroTalleres] update response', actualizado);
         setItems(prev => prev.map(it => it.id === selectedTaller.id ? toTaller(actualizado) : it));
         toast.success('Taller actualizado');
       } else {
-        const nuevo = await workshopsApi.create({
-          nombre,
-          direccion,
-          ciudad,
-          capacidad,
-        });
+        const nuevo = await workshopsApi.create(payload);
+        console.log('[RegistroTalleres] create response', nuevo);
         setItems(prev => [toTaller(nuevo), ...prev]);
         toast.success('Taller creado');
       }
@@ -133,7 +158,7 @@ export const AdminRegistroTalleres: React.FC = () => {
           <h1 className={s.pageTitle}>Registro de Talleres</h1>
           <p className={s.pageSubtitle}>Gestión de talleres externos</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
+        <Button onClick={() => openModal()}>
           <Plus size={16} />
           Nuevo Taller
         </Button>
@@ -156,26 +181,20 @@ export const AdminRegistroTalleres: React.FC = () => {
         emptyMessage={loading ? 'Cargando talleres...' : error ? error : 'Sin resultados'}
         actions={(t) => [
           ...(t.estado === 'Activo' ? [{ label: 'Desactivar', icon: <ToggleLeft size={14} />, onClick: () => _handleToggleEstado(t.id, t.estado) }] : [{ label: 'Activar', icon: <ToggleLeft size={14} />, onClick: () => _handleToggleEstado(t.id, t.estado) }]),
-          { label: 'Editar', icon: <Edit size={14} />, onClick: () => { setSelectedTaller(t); setModalOpen(true); } },
+          { label: 'Editar', icon: <Edit size={14} />, onClick: () => openModal(t) },
           { label: 'Eliminar', icon: <Trash2 size={14} />, danger: true, onClick: () => handleEliminar(t) },
         ]}
         columns={[
           { key: 'nombre', header: 'Taller', width: '240px', render: (t) => (
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[var(--color-text-primary)]">{t.nombre}</span>
-              <span className="text-xs text-[var(--color-text-secondary)]">{t.contacto}</span>
+              <span className="text-xs text-[var(--color-text-secondary)]">{t.ciudad}</span>
             </div>
           )},
           { key: 'ciudad', header: 'Ubicación', width: '200px', render: (t) => (
             <div className="flex flex-col gap-0.5">
               <span className="text-[var(--color-text-primary)]">{t.ciudad}</span>
               <span className="text-xs text-[var(--color-text-secondary)]">{t.direccion}</span>
-            </div>
-          )},
-          { key: 'telefono', header: 'Contacto', width: '180px', render: (t) => (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[var(--color-text-primary)]">{t.telefono || '—'}</span>
-              <span className="text-xs text-[var(--color-text-secondary)]">{t.email || '—'}</span>
             </div>
           )},
           { key: 'ocupacion', header: 'Ocupación', width: '160px', render: (t) => (
@@ -207,48 +226,45 @@ export const AdminRegistroTalleres: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef}>
+              <form className={s.form} ref={formRef} onSubmit={handleSubmitTaller}>
                 <div className={s.formRow}>
                   <div className={s.field}>
                     <label className={s.label}>Nombre del Taller</label>
-                    <input type="text" className={s.input} name="nombre" defaultValue={selectedTaller?.nombre} />
+                    <input type="text" className={s.input} value={nombre} onChange={e => setNombre(e.target.value)} required />
                   </div>
                   <div className={s.field}>
-                    <label className={s.label}>Contacto</label>
-                    <input type="text" className={s.input} name="contacto" defaultValue={selectedTaller?.contacto} />
+                    <label className={s.label}>Capacidad</label>
+                    <input type="number" className={s.input} value={capacidad} onChange={e => setCapacidad(e.target.value)} min="0" />
                   </div>
                 </div>
+
                 <div className={s.formRow}>
                   <div className={s.field}>
                     <label className={s.label}>Teléfono</label>
-                    <input type="tel" className={s.input} name="telefono" defaultValue={selectedTaller?.telefono} />
+                    <input type="tel" className={s.input} value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="Ej: +57 300 000 0000" />
                   </div>
                   <div className={s.field}>
                     <label className={s.label}>Email</label>
-                    <input type="email" className={s.input} name="email" defaultValue={selectedTaller?.email} />
+                    <input type="email" className={s.input} value={email} onChange={e => setEmail(e.target.value)} placeholder="taller@correo.com" />
                   </div>
                 </div>
+
                 <div className={s.formRow}>
                   <div className={s.field}>
                     <label className={s.label}>Dirección</label>
-                    <input type="text" className={s.input} name="direccion" defaultValue={selectedTaller?.direccion} />
+                    <input type="text" className={s.input} value={direccion} onChange={e => setDireccion(e.target.value)} placeholder="Calle / Carrera / Avenida" />
                   </div>
                   <div className={s.field}>
                     <label className={s.label}>Ciudad</label>
-                    <input type="text" className={s.input} name="ciudad" defaultValue={selectedTaller?.ciudad} />
+                    <input type="text" className={s.input} value={ciudad} onChange={e => setCiudad(e.target.value)} placeholder="Ciudad" />
                   </div>
                 </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Capacidad</label>
-                    <input type="number" className={s.input} name="capacidad" defaultValue={selectedTaller?.capacidad} />
-                  </div>
-                </div>
+
                 <div className={s.formActions}>
-                  <Button variant="secondary" onClick={handleCloseModal}>
+                  <Button type="button" variant="secondary" onClick={handleCloseModal}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSubmitTaller}>
+                  <Button type="submit">
                     {selectedTaller ? 'Guardar cambios' : 'Crear taller'}
                   </Button>
                 </div>

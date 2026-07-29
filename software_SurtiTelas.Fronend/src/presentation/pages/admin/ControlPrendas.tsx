@@ -23,28 +23,33 @@ export const AdminControlPrendas: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filtroEtapa, setFiltroEtapa] = useState<'Todos' | Etapa>('Todos');
   const [filtroEstado, setFiltroEstado] = useState<'Todos' | Estado>('Todos');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [produccionId, setProduccionId] = useState('');
-  const [produccionError, setProduccionError] = useState<string | null>(null);
   const [ordenesProduccion, setOrdenesProduccion] = useState<{ id: string; numero?: string; cliente?: string }[]>([]);
   const [etapa, setEtapa] = useState<Etapa>('Control de Calidad');
   const [cantidadTotal, setCantidadTotal] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewEstado, setReviewEstado] = useState<'Aprobado' | 'Rechazado'>('Aprobado');
+  const [reviewAprobada, setReviewAprobada] = useState('');
+  const [reviewRechazada, setReviewRechazada] = useState('');
 
   useEffect(() => {
     const loadOrdenes = async () => {
       try {
-      const data = await productionApi.list();
-      const ordenes = data.map((o: { id: string; numero?: string; clienteNombre?: string }) => ({
-        id: o.id,
-        numero: o.numero,
-        cliente: o.clienteNombre,
-      }));
-      setOrdenesProduccion(ordenes);
+        const data = await productionApi.list();
+        const ordenes = data.map((o: { id: string; numero?: string; clienteNombre?: string }) => ({
+          id: o.id,
+          numero: o.numero,
+          cliente: o.clienteNombre,
+        }));
+        setOrdenesProduccion(ordenes);
       } catch {
         // Si falla la carga de órdenes, igual se permite escribir el ID manualmente
       }
@@ -101,16 +106,32 @@ export const AdminControlPrendas: React.FC = () => {
     total: registros.length,
   };
 
-  const handleReview = async (r: ControlPrenda, estado: 'Aprobado' | 'Rechazado') => {
+  const handleReview = async (r: ControlPrenda) => {
+    setReviewingId(r.id);
+    setReviewEstado('Aprobado');
+    setReviewAprobada(String(r.cantidadTotal));
+    setReviewRechazada('0');
+    setModalOpen(true);
+  };
+
+  const submitReview = async () => {
+    if (!reviewingId) return;
+    const aprobada = Number(reviewAprobada) || 0;
+    const rechazada = Number(reviewRechazada) || 0;
+    if (aprobada + rechazada <= 0) {
+      toast.error('Ingresá al menos una cantidad aprobada o rechazada');
+      return;
+    }
+    if (aprobada + rechazada > (registros.find(r => r.id === reviewingId)?.cantidadTotal ?? 0)) {
+      toast.error('La suma aprobada + rechazada no puede superar la cantidad total');
+      return;
+    }
     try {
-      const actualizado = await controlPrendaApi.review(
-        r.id,
-        estado,
-        estado === 'Aprobado' ? r.cantidadTotal : 0,
-        estado === 'Rechazado' ? r.cantidadTotal : 0,
-      );
-      setRegistros(prev => prev.map(reg => reg.id === r.id ? actualizado : reg));
-      toast.success(estado === 'Aprobado' ? 'Control aprobado' : 'Control rechazado');
+      const actualizado = await controlPrendaApi.review(reviewingId, reviewEstado, aprobada, rechazada);
+      setRegistros(prev => prev.map(reg => reg.id === reviewingId ? actualizado : reg));
+      toast.success('Control actualizado');
+      setModalOpen(false);
+      setReviewingId(null);
     } catch {
       toast.error('No fue posible actualizar el control');
     }
@@ -161,31 +182,16 @@ export const AdminControlPrendas: React.FC = () => {
     }
   };
 
-  const validateProduccionId = useCallback((id: string) => {
-    const trimmed = id.trim();
-    if (!trimmed) {
-      setProduccionError('El ID de producción es obligatorio');
-      return false;
-    }
-    const existe = ordenesProduccion.some(o => o.id === trimmed);
-    if (!existe) {
-      setProduccionError('El ID de producción no existe. Creá primero una orden de producción.');
-      return false;
-    }
-    setProduccionError(null);
-    return true;
-  }, [ordenesProduccion]);
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateProduccionId(produccionId)) {
-      toast.error(produccionError || 'ID de producción inválido');
+    if (!produccionId) {
+      toast.error('Seleccioná una orden de producción');
       return;
     }
     setSaving(true);
     try {
       const creado = await controlPrendaApi.create({
-        produccionId: produccionId.trim(),
+        produccionId,
         etapa,
         cantidadTotal: Number(cantidadTotal),
         observaciones: observaciones.trim() || undefined,
@@ -193,7 +199,6 @@ export const AdminControlPrendas: React.FC = () => {
       setRegistros(prev => [creado, ...prev]);
       setModalOpen(false);
       setProduccionId('');
-      setProduccionError(null);
       setEtapa('Control de Calidad');
       setCantidadTotal('');
       setObservaciones('');
@@ -310,8 +315,7 @@ export const AdminControlPrendas: React.FC = () => {
         exportFileName="control_prendas"
         actions={(r) => [
           ...(r.estado === 'Proceso' ? [
-            { label: 'Aprobar', icon: <CheckCircle size={14} />, onClick: () => void handleReview(r, 'Aprobado') },
-            { label: 'Rechazar', icon: <XCircle size={14} />, onClick: () => void handleReview(r, 'Rechazado') },
+            { label: 'Revisar', icon: <ClipboardCheck size={14} />, onClick: () => handleReview(r) },
           ] : []),
           { label: 'Editar', icon: <Edit size={14} />, onClick: () => handleEdit(r) },
           { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteId(r.id) },
@@ -383,8 +387,7 @@ export const AdminControlPrendas: React.FC = () => {
               <div className={s.formActions}>
                 {r.estado === 'Proceso' && (
                   <>
-                    <Button variant="primary" onClick={() => { void handleReview(r, 'Aprobado'); onClose(); }}>Aprobar</Button>
-                    <Button variant="secondary" onClick={() => { void handleReview(r, 'Rechazado'); onClose(); }}>Rechazar</Button>
+                    <Button variant="primary" onClick={() => { handleReview(r); onClose(); }}>Revisar</Button>
                   </>
                 )}
                 <Button variant="secondary" onClick={onClose}>Cerrar</Button>
@@ -396,70 +399,96 @@ export const AdminControlPrendas: React.FC = () => {
 
       <Modal
         open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditingId(null); }}
-        title={editingId ? 'Editar control de prenda' : 'Nuevo control de prenda'}
-        description={editingId ? 'Modifica los datos del control de prenda.' : 'Registra un nuevo control de prenda para producción.'}
-        size="lg"
+        onClose={() => { setModalOpen(false); setReviewingId(null); }}
+        title={reviewingId ? 'Revisar control de prenda' : 'Nuevo control de prenda'}
+        description={reviewingId ? 'Registrá la revisión parcial o total del control.' : 'Registra un nuevo control de prenda para producción.'}
+        size="md"
         variant="form"
         closeOnOverlay
       >
-        <form className={s.form} onSubmit={editingId ? handleUpdate : handleCreate}>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>ID Producción</label>
-              <input
-                type="text"
-                className={s.input}
-                value={produccionId}
-                onChange={e => { setProduccionId(e.target.value); setProduccionError(null); }}
-                placeholder="Ej: cmr..."
-                required
-                readOnly={!!editingId}
-              />
-              {produccionError && <span className={s.fieldError}>{produccionError}</span>}
+        {reviewingId ? (
+          <div className={s.detailModalContent}>
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Cantidad aprobada</label>
+                <input type="number" className={s.input} value={reviewAprobada} onChange={e => setReviewAprobada(e.target.value)} min={0} />
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Cantidad rechazada</label>
+                <input type="number" className={s.input} value={reviewRechazada} onChange={e => setReviewRechazada(e.target.value)} min={0} />
+              </div>
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Etapa</label>
-              <select
-                className={s.select}
-                value={etapa}
-                onChange={e => setEtapa(e.target.value as Etapa)}
-              >
-                {ETAPAS.map(e => (
-                  <option key={e} value={e}>{e}</option>
-                ))}
-              </select>
+            <div className={s.formActions}>
+              <Button variant="secondary" onClick={() => { setModalOpen(false); setReviewingId(null); }}>Cancelar</Button>
+              <Button variant="success" onClick={submitReview}>Confirmar revisión</Button>
             </div>
           </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Cantidad total</label>
-              <input
-                type="number"
-                className={s.input}
-                value={cantidadTotal}
-                onChange={e => setCantidadTotal(e.target.value)}
-                placeholder="Ej: 50"
-                required
-                min="1"
-              />
+        ) : (
+          <form className={s.form} onSubmit={editingId ? handleUpdate : handleCreate}>
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Orden de producción</label>
+                <select
+                  className={s.select}
+                  value={produccionId}
+                  onChange={e => setProduccionId(e.target.value)}
+                  required
+                  disabled={!!editingId}
+                >
+                  <option value="">Seleccioná una orden...</option>
+                  {ordenesProduccion.map(o => (
+                    <option key={o.id} value={o.id}>
+                      {o.numero ? `${o.numero} - ${o.cliente ?? ''}` : o.id}
+                    </option>
+                  ))}
+                </select>
+                {!editingId && ordenesProduccion.length === 0 && (
+                  <span className={s.fieldError}>No hay órdenes de producción disponibles</span>
+                )}
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Etapa</label>
+                <select
+                  className={s.select}
+                  value={etapa}
+                  onChange={e => setEtapa(e.target.value as Etapa)}
+                >
+                  {ETAPAS.map(e => (
+                    <option key={e} value={e}>{e}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Observaciones</label>
-              <input
-                type="text"
-                className={s.input}
-                value={observaciones}
-                onChange={e => setObservaciones(e.target.value)}
-                placeholder="Opcional"
-              />
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Cantidad total</label>
+                <input
+                  type="number"
+                  className={s.input}
+                  value={cantidadTotal}
+                  onChange={e => setCantidadTotal(e.target.value)}
+                  placeholder="Ej: 50"
+                  required
+                  min="1"
+                />
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Observaciones</label>
+                <input
+                  type="text"
+                  className={s.input}
+                  value={observaciones}
+                  onChange={e => setObservaciones(e.target.value)}
+                  placeholder="Opcional"
+                />
+              </div>
             </div>
-          </div>
-          <div className={s.formActions}>
-            <Button variant="secondary" type="button" onClick={() => { setModalOpen(false); setEditingId(null); }}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>{editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Guardando...' : 'Crear control')}</Button>
-          </div>
-        </form>
+            <div className={s.formActions}>
+              <Button variant="secondary" type="button" onClick={() => { setModalOpen(false); setEditingId(null); }} disabled={saving}>Cancelar</Button>
+              <Button type="submit" disabled={saving}>{editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Guardando...' : 'Crear control')}</Button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       <Modal
