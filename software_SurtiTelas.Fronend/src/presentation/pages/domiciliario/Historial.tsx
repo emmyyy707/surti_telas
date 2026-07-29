@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Eye, MapPin, Clock, Package, AlertCircle } from 'lucide-react';
+import { Eye, MapPin, Clock, Package, AlertCircle, Phone, MessageCircle } from 'lucide-react';
 import s from './Historial.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DetailModal } from '@/shared/ui/DetailModal';
-import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { deliveriesApi } from '@/infrastructure/api/deliveriesApi';
 import { useAuthStore } from '@/core/stores/authStore';
 
 interface Entrega {
@@ -13,6 +13,7 @@ interface Entrega {
   pedido: string;
   cliente: string;
   direccion: string;
+  telefono?: string;
   fecha: string;
   hora: string;
   estado: 'Entregado' | 'Fallido';
@@ -21,30 +22,58 @@ interface Entrega {
 
 export const DomiciliarioHistorial: React.FC = () => {
   const user = useAuthStore((s) => s.user);
-  const [desde, setDesde] = useState('2026-06-01');
-  const [hasta, setHasta] = useState('2026-06-08');
+  const [filterRange, setFilterRange] = useState<'hoy' | 'semana' | 'mes' | 'custom'>('mes');
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const setRange = (range: typeof filterRange) => {
+    setFilterRange(range);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (range === 'hoy') {
+      setDesde(today.toISOString().slice(0, 10));
+      setHasta(today.toISOString().slice(0, 10));
+    } else if (range === 'semana') {
+      const start = new Date(today);
+      start.setDate(today.getDate() - today.getDay());
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      setDesde(start.toISOString().slice(0, 10));
+      setHasta(end.toISOString().slice(0, 10));
+    } else if (range === 'mes') {
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      setDesde(start.toISOString().slice(0, 10));
+      setHasta(end.toISOString().slice(0, 10));
+    }
+  };
+
+  useEffect(() => {
+    setRange('mes');
+  }, []);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        const result = await ordersApi.list({ asesorId: user?.uid });
-        const mapped: Entrega[] = result.pedidos
-          .filter((p) => p.estado === 'Entregado' || p.estado === 'Cancelado')
-          .map((p) => ({
-            id: p.id,
-            pedido: p.id,
-            cliente: p.cliente,
-            direccion: '',
-            fecha: p.fecha,
-            hora: '',
-            estado: p.estado === 'Entregado' ? 'Entregado' : 'Fallido',
-            observaciones: p.observaciones || '',
+        const result = await deliveriesApi.list(user?.uid ? { domiciliarioId: user.uid } : undefined);
+        const mapped: Entrega[] = result
+          .filter((d) => d.estado === 'ENTREGADO' || d.estado === 'FALLIDO')
+          .map((d) => ({
+            id: d.id,
+            pedido: d.orderId || d.id,
+            cliente: d.clienteNombre || '',
+            direccion: d.direccion || '',
+            telefono: (d as unknown as { telefono?: string }).telefono || '',
+            fecha: d.entregadoEn ? new Date(d.entregadoEn).toISOString().slice(0, 10) : d.createdAt?.slice(0, 10) || '',
+            hora: d.entregadoEn ? new Date(d.entregadoEn).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '',
+            estado: d.estado === 'ENTREGADO' ? 'Entregado' : 'Fallido',
+            observaciones: d.notas || '',
           }));
         setEntregas(mapped);
       } catch {
@@ -67,18 +96,17 @@ export const DomiciliarioHistorial: React.FC = () => {
   }, [entregas]);
 
   const filteredHistorial = useMemo(() => {
-    const desdeDate = new Date(`${desde}T00:00:00`).getTime();
-    const hastaDate = new Date(`${hasta}T23:59:59`).getTime();
+    if (!desde && !hasta) return groupedByDate;
+    const desdeDate = desde ? new Date(`${desde}T00:00:00`).getTime() : undefined;
+    const hastaDate = hasta ? new Date(`${hasta}T23:59:59`).getTime() : undefined;
 
     const result: Record<string, Entrega[]> = {};
     Object.entries(groupedByDate).forEach(([fecha, ents]) => {
-      const parsed = new Date(fecha.replace(/(\d{2}) (\w+) (\d{4})/, (_, d, m, y) => {
-        const monthMap: Record<string, string> = { Ene:'01', Feb:'02', Mar:'03', Abr:'04', May:'05', Jun:'06', Jul:'07', Ago:'08', Sep:'09', Oct:'10', Nov:'11', Dic:'12' };
-        return `${y}-${monthMap[m] || '01'}-${d}`;
-      })).getTime();
-      if (!Number.isNaN(parsed) && parsed >= desdeDate && parsed <= hastaDate) {
-        result[fecha] = ents;
-      }
+      const parsed = new Date(`${fecha}T00:00:00`).getTime();
+      if (Number.isNaN(parsed)) return;
+      if (desdeDate !== undefined && parsed < desdeDate) return;
+      if (hastaDate !== undefined && parsed > hastaDate) return;
+      result[fecha] = ents;
     });
     return result;
   }, [desde, hasta, groupedByDate]);
@@ -95,6 +123,12 @@ export const DomiciliarioHistorial: React.FC = () => {
     { value: '—', label: 'Calificación', sub: 'Promedio clientes', color: 'default' as const },
   ];
 
+  const abrirWhatsApp = (entrega: Entrega) => {
+    if (!entrega.telefono) return;
+    const texto = encodeURIComponent(`Hola ${entrega.cliente}, soy tu domiciliario de SurtiTelas. Te confirmo que tu pedido fue entregado.`);
+    window.open(`https://wa.me/${entrega.telefono}?text=${texto}`, '_blank', 'noopener');
+  };
+
   if (loading) {
     return (
       <div>
@@ -108,7 +142,7 @@ export const DomiciliarioHistorial: React.FC = () => {
     return (
       <div>
         <h1 className={s.pageTitle}>Historial</h1>
-        <p className={s.pageSubtitle}>Registro de todas tus entregas</p>
+        <p className={s.pageSubtitle}>{error}</p>
         <div className={s.errorState}>
           <AlertCircle size={28} />
           <span>{error}</span>
@@ -136,6 +170,18 @@ export const DomiciliarioHistorial: React.FC = () => {
       </div>
 
       <div className={s.historialFilters}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {(['hoy', 'semana', 'mes', 'custom'] as const).map((range) => (
+            <button
+              key={range}
+              className={`${s.dateRangeGroup} ${filterRange === range ? s.dateRangeGroupActive : ''}`}
+              onClick={() => setRange(range)}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: filterRange === range ? 'var(--color-accent)' : 'var(--color-bg-card)', color: filterRange === range ? 'var(--text-inverse)' : 'var(--color-text-secondary)', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
+            >
+              {range === 'hoy' ? 'Hoy' : range === 'semana' ? 'Semana' : range === 'mes' ? 'Mes' : 'Personalizado'}
+            </button>
+          ))}
+        </div>
         <div className={s.dateRangeGroup}>
           <span className={s.dateRangeLabel}>Desde:</span>
           <input type="date" className={s.dateInput} value={desde} onChange={e => setDesde(e.target.value)} />
@@ -159,7 +205,7 @@ export const DomiciliarioHistorial: React.FC = () => {
               <span className={s.dayGroupCount}>{entregas.length} entregas</span>
             </div>
             {entregas.map((entrega) => (
-              <button type="button" key={entrega.id} className={s.historialRow} onClick={() => setSelectedEntrega(entrega)}>
+              <button type="button" key={entrega.id} className={s.historialRow} onClick={() => setSelectedEntrega(entrega)} title={`Ver detalle de ${entrega.id}`}>
                 <span className={s.historialRowId}>{entrega.id}</span>
                 <span style={{ flex: 0.8 }}>{entrega.pedido}</span>
                 <div className={s.historialRowCliente}>
@@ -171,9 +217,21 @@ export const DomiciliarioHistorial: React.FC = () => {
                   {entrega.estado}
                 </Badge>
                 <span className={s.historialRowObs}>{entrega.observaciones || '-'}</span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)]">
-                  <Eye size={14} />
-                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {entrega.telefono && (
+                    <>
+                      <button type="button" className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)]" onClick={() => window.open(`tel:${entrega.telefono}`, '_self')} title="Llamar">
+                        <Phone size={14} />
+                      </button>
+                      <button type="button" className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)]" onClick={() => abrirWhatsApp(entrega)} title="WhatsApp">
+                        <MessageCircle size={14} />
+                      </button>
+                    </>
+                  )}
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)]" title="Ver detalle">
+                    <Eye size={14} />
+                  </span>
+                </div>
               </button>
             ))}
           </div>
@@ -204,18 +262,31 @@ export const DomiciliarioHistorial: React.FC = () => {
               { label: 'Dirección', value: selectedEntrega?.direccion, icon: <MapPin size={16} /> },
               { label: 'Fecha', value: selectedEntrega?.fecha, icon: <Clock size={16} /> },
               { label: 'Hora', value: selectedEntrega?.hora, icon: <Clock size={16} /> },
+              { label: 'Teléfono', value: selectedEntrega?.telefono, icon: <Phone size={16} /> },
               { label: 'Observaciones', value: selectedEntrega?.observaciones || 'Sin observaciones', fullWidth: true, icon: <Eye size={16} /> },
             ],
           },
         ]}
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-wrap justify-end gap-3">
             <button type="button" className="inline-flex h-8 items-center justify-center rounded-xl border border-[var(--color-border)] bg-transparent px-4 text-sm font-medium text-[var(--color-text-primary)]" onClick={() => {
               toast.info(`Historial ${selectedEntrega?.id} listo para consulta`);
               setSelectedEntrega(null);
             }}>
               Cerrar
             </button>
+            {selectedEntrega?.telefono && (
+              <>
+                <Button size="sm" onClick={() => window.open(`tel:${selectedEntrega.telefono}`, '_self')}>
+                  <Phone size={14} />
+                  Llamar
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(selectedEntrega)}>
+                  <MessageCircle size={14} />
+                  WhatsApp
+                </Button>
+              </>
+            )}
           </div>
         }
       />

@@ -3,11 +3,16 @@ import { UnauthorizedError } from '../../../../shared/domain/errors';
 import { tokenService } from '../../infrastructure/container/authContainer';
 
 export const authenticate = (req: Request, _res: Response, next: NextFunction): void => {
-  const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Falta token de acceso');
+  try {
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) {
+      throw new UnauthorizedError('Falta token de acceso');
+    }
+    const token = header.slice('Bearer '.length);
+    req.user = tokenService.verifyAccessToken(token);
+    next();
+  } catch (error) {
+    console.error('authenticate error', error);
+    throw error;
   }
-  const token = header.slice('Bearer '.length);
-  req.user = tokenService.verifyAccessToken(token);
-  next();
 };

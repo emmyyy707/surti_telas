@@ -1,18 +1,20 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Map, MapPin, Clock, CheckCircle2, Navigation } from 'lucide-react';
+import { Map, MapPin, Clock, CheckCircle2, Navigation, Phone, MessageCircle } from 'lucide-react';
 import s from './RutaDelDia.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
 import { DetailModal } from '@/shared/ui/DetailModal';
 import { deliveriesApi } from '@/infrastructure/api/deliveriesApi';
 import { useAuthStore } from '@/core/stores/authStore';
+import { DeliveryMap } from './DeliveryMap';
 
-interface Entrega {
+export interface Entrega {
   id: string;
   cliente: string;
   direccion: string;
   barrio: string;
+  telefono?: string;
   horaEstimada: string;
   estado: 'Pendiente' | 'En camino' | 'Entregado' | 'Fallido';
 }
@@ -49,6 +51,7 @@ export const RutaDelDia: React.FC = () => {
           cliente: d.clienteNombre || '',
           direccion: d.direccion || '',
           barrio: d.ciudad || '',
+          telefono: (d as unknown as { telefono?: string }).telefono || '',
           horaEstimada: d.asignadoEn ? new Date(d.asignadoEn).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
           estado: deliveryStatusMap[d.estado] || 'Pendiente',
         }));
@@ -104,11 +107,34 @@ export const RutaDelDia: React.FC = () => {
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank', 'noopener');
   };
 
+  const llamarCliente = (entrega: Entrega) => {
+    if (!entrega.telefono) return;
+    window.open(`tel:${entrega.telefono}`, '_self');
+  };
+
+  const abrirWhatsApp = (entrega: Entrega) => {
+    if (!entrega.telefono) return;
+    const texto = encodeURIComponent(`Hola ${entrega.cliente}, soy tu domiciliario de SurtiTelas. Estoy en camino con tu pedido.`);
+    window.open(`https://wa.me/${entrega.telefono}?text=${texto}`, '_blank', 'noopener');
+  };
+
   if (loading) {
     return (
       <div>
         <h1 className={s.pageTitle}>Ruta del Día</h1>
         <p className={s.pageSubtitle}>Cargando entregas...</p>
+      </div>
+    );
+  }
+
+  if (entregas.length === 0) {
+    return (
+      <div>
+        <h1 className={s.pageTitle}>Ruta del Día</h1>
+        <p className={s.pageSubtitle}>No tienes entregas programadas para hoy</p>
+        <div className="rounded-2xl border border-dashed border-[var(--color-border)] p-8 text-center text-[var(--color-text-muted)]">
+          Cuando se te asignen entregas, aparecerán aquí para que puedas planificar tu ruta.
+        </div>
       </div>
     );
   }
@@ -131,7 +157,7 @@ export const RutaDelDia: React.FC = () => {
 
           <div className={s.rutaTimeline}>
             {entregas.map((entrega, i) => (
-              <button type="button" key={entrega.id} className={`${s.rutaStop} ${selectedEntrega?.id === entrega.id ? s.rutaStopActive : ''} ${entrega.estado === 'Entregado' ? s.rutaStopDone : ''}`} onClick={() => setSelectedEntrega(entrega)}>
+              <button type="button" key={entrega.id} className={`${s.rutaStop} ${selectedEntrega?.id === entrega.id ? s.rutaStopActive : ''} ${entrega.estado === 'Entregado' ? s.rutaStopDone : ''}`} onClick={() => setSelectedEntrega(entrega)} title={`Parada ${i + 1}: ${entrega.cliente}`}>
                 <div className={s.rutaStopLeft}>
                   <div className={s.rutaStopNumber}>{i + 1}</div>
                   <div className={s.rutaStopLine} />
@@ -154,43 +180,7 @@ export const RutaDelDia: React.FC = () => {
             <div className={s.mapTitle}>Mapa de ruta</div>
             <Button size="sm" variant="secondary" onClick={optimizarRuta}>Optimizar ruta</Button>
           </div>
-          <div className={s.mapPlaceholder}>
-            <div className={s.mapGrid} />
-            <div className={s.mapIcon}>
-              <Map size={48} />
-            </div>
-            <div className={s.mapText}>
-              Vista de mapa integrada disponible en la app móvil
-            </div>
-
-            {pins.map(({ entrega, index, top, left }) => (
-              <button type="button" key={entrega.id} style={{ position: 'absolute', top, left }} className={s.mapPin} onClick={() => setSelectedEntrega(entrega)}>
-                <div className={`${s.mapPinDot} ${entrega.estado === 'Entregado' ? s.mapPinDotDone : entrega.estado === 'En camino' ? s.mapPinDotActive : ''}`}><span className={s.mapPinLabel}>{index + 1}</span></div>
-                <div className={s.mapPinShadow} />
-              </button>
-            ))}
-
-            {selectedEntrega && (
-              <div className={s.mapDetailCard}>
-                <div className={s.mapDetailInfo}>
-                  <div className={s.mapDetailName}>{selectedEntrega.cliente}</div>
-                  <div className={s.mapDetailAddress}>{selectedEntrega.direccion}, {selectedEntrega.barrio}</div>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => irAEntrega(selectedEntrega)}>
-                    <Navigation size={14} />
-                    Ir a entrega
-                  </Button>
-                  {selectedEntrega.estado !== 'Entregado' && (
-                    <Button size="sm" variant="secondary" onClick={() => openStatus(selectedEntrega)}>
-                      <CheckCircle2 size={14} />
-                      Avanzar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <DeliveryMap entregas={entregas} onSelect={setSelectedEntrega} selectedId={selectedEntrega?.id} />
         </div>
       </div>
 
@@ -212,14 +202,31 @@ export const RutaDelDia: React.FC = () => {
               { label: 'Dirección', value: selectedEntrega?.direccion, icon: <MapPin size={16} /> },
               { label: 'Barrio', value: selectedEntrega?.barrio, icon: <MapPin size={16} /> },
               { label: 'Hora estimada', value: selectedEntrega?.horaEstimada, icon: <Clock size={16} /> },
+              { label: 'Teléfono', value: selectedEntrega?.telefono, icon: <Phone size={16} /> },
             ],
           },
         ]}
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => setSelectedEntrega(null)}>Cerrar</Button>
-            {selectedEntrega && selectedEntrega.estado !== 'Entregado' && (
-              <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
+            {selectedEntrega && (
+              <>
+                {selectedEntrega.telefono && (
+                  <>
+                    <Button size="sm" onClick={() => llamarCliente(selectedEntrega)} title={`Llamar a ${selectedEntrega.cliente}`}>
+                      <Phone size={14} />
+                      Llamar
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(selectedEntrega)} title={`Abrir WhatsApp con ${selectedEntrega.cliente}`}>
+                      <MessageCircle size={14} />
+                      WhatsApp
+                    </Button>
+                  </>
+                )}
+                {selectedEntrega.estado !== 'Entregado' && (
+                  <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
+                )}
+              </>
             )}
           </div>
         }

@@ -13,6 +13,9 @@ export interface DeliveryData {
   entregadoEn?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
+  orderNumero?: string | null;
+  clienteNombre?: string | null;
+  domiciliarioNombre?: string | null;
 }
 
 export interface DeliveryFilters {
@@ -45,6 +48,9 @@ export class Delivery {
   entregadoEn?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
+  orderNumero?: string | null;
+  clienteNombre?: string | null;
+  domiciliarioNombre?: string | null;
 
   constructor(data: DeliveryData) {
     this.id = data.id;
@@ -59,6 +65,9 @@ export class Delivery {
     this.entregadoEn = data.entregadoEn ?? null;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
+    this.orderNumero = data.orderNumero ?? null;
+    this.clienteNombre = data.clienteNombre ?? null;
+    this.domiciliarioNombre = data.domiciliarioNombre ?? null;
   }
 
   asignar() {
@@ -93,6 +102,9 @@ export class Delivery {
       entregadoEn: this.entregadoEn,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      orderNumero: this.orderNumero,
+      clienteNombre: this.clienteNombre,
+      domiciliarioNombre: this.domiciliarioNombre,
     };
   }
 }

@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: 380px 1fr;
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .rutaPanel {
@@ -152,6 +152,10 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .mapHeader {
@@ -160,6 +164,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .mapTitle {
@@ -168,8 +173,23 @@
   color: var(--color-text-primary);
 }
 
+.mapContainer {
+  flex: 1;
+  min-height: 500px;
+  width: 100%;
+  background: var(--color-bg-elevated);
+  position: relative;
+}
+
+.mapLeaflet {
+  height: 100%;
+  width: 100%;
+  min-height: 500px;
+}
+
 .mapPlaceholder {
-  height: 500px;
+  position: absolute;
+  inset: 0;
   background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
@@ -177,8 +197,7 @@
   justify-content: center;
   gap: 16px;
   color: var(--color-text-muted);
-  position: relative;
-  overflow: hidden;
+  z-index: 20;
 }
 
 .mapGrid {
@@ -203,83 +222,6 @@
   text-align: center;
   max-width: 240px;
   line-height: 1.5;
-}
-
-.mapPin {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 2;
-}
-
-.mapPinDot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-}
-
-.mapPinDotDone { background: var(--color-success); }
-.mapPinDotActive { background: var(--color-info); }
-.mapPinDotPending { background: var(--color-bg-elevated); border: 2px solid var(--color-border); }
-
-.mapPinLabel {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: var(--text-inverse);
-  transform: rotate(45deg);
-}
-
-.mapPinShadow {
-  width: 8px;
-  height: 4px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 50%;
-  margin-top: 2px;
-  filter: blur(2px);
-}
-
-.mapDetailCard {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  box-shadow: var(--shadow-elevated);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  z-index: 10;
-}
-
-.mapDetailInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.mapDetailName {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mapDetailAddress {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 @media (max-width: 768px) {

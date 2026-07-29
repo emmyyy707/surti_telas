@@ -8,8 +8,6 @@ import type { Producto } from '@/core/types';
 import { favoritesApi } from '@/infrastructure/api/favoritesApi';
 import s from './Favoritos.module.css';
 
-const _FAVORITES_STORAGE_KEY = 'surtitelas.favorites';
-
 const formatCurrency = (value: number) => `$${value.toLocaleString('es-CO')}`;
 
 const toFavoriteSnapshot = (product: Producto) => ({
@@ -50,14 +48,17 @@ export const Favoritos: React.FC = () => {
 
   const favoriteProducts = useMemo(() => favorites.map(toFavoriteSnapshot), [favorites]);
 
-  const removeFavorite = () => {
+  const removeFavorite = async () => {
     if (!productToRemove) return;
-
-    favoritesApi.toggle(productToRemove.id);
-    setFavorites(current => current.filter(p => p.id !== productToRemove.id));
-
-    toast.success(`${productToRemove.nombre} eliminado de favoritos`);
-    setProductToRemove(null);
+    try {
+      await favoritesApi.toggle(productToRemove.id);
+      setFavorites(current => current.filter(p => (p.id || p.ref) !== productToRemove.id));
+      toast.success(`${productToRemove.nombre} eliminado de favoritos`);
+    } catch {
+      toast.error('No se pudo eliminar el favorito');
+    } finally {
+      setProductToRemove(null);
+    }
   };
 
   const handleAddToCart = (product: ReturnType<typeof toFavoriteSnapshot>) => {

@@ -69,6 +69,16 @@
   white-space: nowrap;
 }
 
+.dateRangeGroupActive {
+  background: var(--color-accent);
+  color: var(--text-inverse);
+  border-color: var(--color-accent);
+}
+
+.dateRangeGroupActive .dateRangeLabel {
+  color: var(--text-inverse);
+}
+
 .dateInput {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -179,6 +189,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.dateRangeGroupActive {
+  background: var(--color-accent);
+  color: var(--text-inverse);
+  border-color: var(--color-accent);
 }
 
 @media (max-width: 768px) {

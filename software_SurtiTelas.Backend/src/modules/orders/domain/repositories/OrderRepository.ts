@@ -16,6 +16,7 @@ export interface OrderFilters {
   estado?: OrderStatus;
   clienteId?: string;
   asesorId?: string;
+  domiciliarioId?: string;
   tipoFlujo?: OrderFlow;
   desde?: string;
   hasta?: string;

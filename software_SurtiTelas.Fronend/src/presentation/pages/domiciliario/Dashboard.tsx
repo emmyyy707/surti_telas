@@ -108,7 +108,7 @@ export const DomiciliarioDashboard: React.FC = () => {
   if (loading) {
     return (
       <div>
-        <h1 className={s.pageTitle}>Dashboard</h1>
+        <h1 className={s.pageTitle}>Panel de Entregas</h1>
         <p className={s.pageSubtitle}>Cargando métricas...</p>
       </div>
     );
@@ -117,7 +117,7 @@ export const DomiciliarioDashboard: React.FC = () => {
   if (error) {
     return (
       <div>
-        <h1 className={s.pageTitle}>Dashboard</h1>
+        <h1 className={s.pageTitle}>Panel de Entregas</h1>
         <p className={s.pageSubtitle}>{error}</p>
       </div>
     );
@@ -125,8 +125,8 @@ export const DomiciliarioDashboard: React.FC = () => {
 
   return (
     <div>
-      <h1 className={s.pageTitle}>Dashboard</h1>
-      <p className={s.pageSubtitle}>Métricas de tu jornada</p>
+      <h1 className={s.pageTitle}>Panel de Entregas</h1>
+      <p className={s.pageSubtitle}>Bienvenido, {user?.name ?? 'domiciliario'}. Aquí tienes el resumen de tu jornada.</p>
 
       <div className={s.statsGrid}>
         {stats.map((stat, i) => (
@@ -159,7 +159,7 @@ export const DomiciliarioDashboard: React.FC = () => {
             fontSize: '0.875rem',
             fontWeight: 500,
             cursor: nextEntrega ? 'pointer' : 'not-allowed',
-          }} disabled={!nextEntrega} onClick={marcarSiguiente}>
+          }} disabled={!nextEntrega} onClick={marcarSiguiente} title={nextEntrega?.estado === 'En camino' ? 'Marcar entrega como completada' : 'Marcar entrega como en camino'}>
             {nextEntrega?.estado === 'En camino' ? 'Marcar como Entregada' : 'Marcar como En camino'}
           </button>
         </div>

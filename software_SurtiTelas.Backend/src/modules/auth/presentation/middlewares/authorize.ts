@@ -13,10 +13,15 @@ export const requireRole =
 export const requirePermission =
   (code: string) =>
   (req: Request, _res: Response, next: NextFunction): void => {
-    if (!req.user) throw new UnauthorizedError();
-    if (req.user.role === 'ADMIN') return next();
-    if (!req.user.permissions.includes(code)) {
-      throw new ForbiddenError(`Requiere el permiso "${code}"`);
+    try {
+      if (!req.user) throw new UnauthorizedError();
+      if (req.user.role === 'ADMIN') return next();
+      if (!req.user.permissions.includes(code)) {
+        throw new ForbiddenError(`Requiere el permiso "${code}"`);
+      }
+      next();
+    } catch (error) {
+      console.error('requirePermission error', error, { code, user: req.user });
+      throw error;
     }
-    next();
   };

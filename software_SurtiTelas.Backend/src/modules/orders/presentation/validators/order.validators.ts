@@ -64,6 +64,7 @@ export const OrderFiltersSchema = z.object({
   estado: z.enum(['Nuevo', 'En producción', 'Listo', 'Despachado', 'En camino', 'Entregado', 'Cancelado', 'Pendiente', 'En validación', 'Aceptado', 'Rechazado', 'Recibo generado', 'Recibo enviado']).optional(),
   clienteId: z.string().optional(),
   asesorId: z.string().optional(),
+  domiciliarioId: z.string().optional(),
   tipoFlujo: z.enum(['PRODUCCION', 'VENTAS']).optional(),
   desde: z.string().optional(),
   hasta: z.string().optional(),

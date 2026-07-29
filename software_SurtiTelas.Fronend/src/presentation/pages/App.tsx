@@ -1,4 +1,4 @@
-﻿import React, { Suspense } from 'react';
+﻿import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ProtectedRoute from '@/presentation/routes/ProtectedRoute';
@@ -6,6 +6,7 @@ import Layout from '@/presentation/pages/layouts/Layout';
 import ScrollToTop from '@/presentation/components/ScrollToTop';
 import { Spinner } from '@/shared/ui';
 import ErrorBoundary from '@/shared/components/ErrorBoundary';
+import { useAuthStore } from '@/core/stores/authStore';
 
 const ProtectedLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-[var(--bg-canvas)]">
@@ -79,7 +80,14 @@ const RegisterPage = React.lazy(() => import('@/presentation/pages/auth/Register
 const ForgotPasswordPage = React.lazy(() => import('@/presentation/pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = React.lazy(() => import('@/presentation/pages/auth/ResetPasswordPage'));
 
-const App: React.FC = () => (
+const App: React.FC = () => {
+  const checkSession = useAuthStore((s) => s.checkSession);
+
+  useEffect(() => {
+    void checkSession();
+  }, [checkSession]);
+
+  return (
   <BrowserRouter>
     <ScrollToTop />
     <ErrorBoundary>
@@ -195,6 +203,7 @@ const App: React.FC = () => (
     </ErrorBoundary>
     <Toaster position="top-right" richColors />
   </BrowserRouter>
-);
+  );
+};
 
 export default App;

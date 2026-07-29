@@ -3,6 +3,13 @@ import { Navigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
 
 import { useAuth } from '@/app/providers/AppProviders';
+import { Spinner } from '@/shared/ui';
+
+const ProtectedLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[var(--bg-canvas)]">
+    <Spinner size="lg" />
+  </div>
+);
 
 interface Props {
   children: ReactElement;
@@ -10,13 +17,17 @@ interface Props {
 }
 
 const ProtectedRoute: React.FC<Props> = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, sessionChecked } = useAuth();
 
-  if (!isAuthenticated) {
+  if (!sessionChecked) {
+    return <ProtectedLoader />;
+  }
+
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!user || !allowedRoles.includes(user.role)) {
+  if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

@@ -13,19 +13,24 @@ import {
 import { DeliveryStatusEnum } from '../validators/delivery.validators';
 
 export const listDeliveries = async (req: Request, res: Response) => {
-  const filters = parseDto(DeliveryFiltersSchema, req.query);
-  if (req.user?.role === 'DOMICILIARIO') {
-    filters.domiciliarioId = req.user.id;
+  try {
+    const filters = parseDto(DeliveryFiltersSchema, req.query);
+    if (req.user?.role === 'DOMICILIARIO') {
+      filters.domiciliarioId = req.user.id;
+    }
+    const result = await deliveriesUseCases.listDeliveries.execute(filters);
+    const response = buildApiPaginatedResponse(
+      result.data,
+      result.meta.total,
+      result.meta.page,
+      result.meta.limit,
+      result.meta.nextCursor
+    );
+    return ok(res, response);
+  } catch (error) {
+    console.error('listDeliveries error', error);
+    throw error;
   }
-  const result = await deliveriesUseCases.listDeliveries.execute(filters);
-  const response = buildApiPaginatedResponse(
-    result.data,
-    result.meta.total,
-    result.meta.page,
-    result.meta.limit,
-    result.meta.nextCursor
-  );
-  return ok(res, response);
 };
 
 export const getDelivery = async (req: Request, res: Response) => {

@@ -150,6 +150,7 @@ model User {
   ordersValidados        Order[]     @relation("OrderValidadoPor")
   comprobantesCargados   Order[]     @relation("OrderComprobanteCargadoPor")
   historialPedidos       OrderHistory[] @relation("OrderHistorialUsuario")
+  favorites              Favorite[]
   createdAt               DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
   deletedAt              DateTime?   @map("deleted_at")
@@ -157,6 +158,21 @@ model User {
   @@index([role])
   @@index([deletedAt])
   @@map("users")
+}
+
+model Favorite {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  productId  String    @map("product_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@map("favorites")
 }
 
 model Permission {
@@ -232,6 +248,7 @@ model Product {
   imagenes         String[]      @default([])
   orderItems       OrderItem[]
   movements        InventoryMovement[]
+  favorites        Favorite[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   deletedAt        DateTime?     @map("deleted_at")

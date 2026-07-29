@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Eye, CheckCircle2, MapPin, Clock, Package } from 'lucide-react';
+import { Eye, CheckCircle2, MapPin, Clock, Package, Phone, MessageCircle } from 'lucide-react';
 import s from './MisEntregas.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -15,6 +15,7 @@ interface Entrega {
   direccion: string;
   ciudad: string;
   barrio: string;
+  telefono?: string;
   horaEstimada: string;
   estado: 'Pendiente' | 'En camino' | 'Entregado' | 'Fallido';
 }
@@ -57,6 +58,7 @@ export const DomiciliarioEntregas: React.FC = () => {
           direccion: d.direccion || '',
           ciudad: d.ciudad || '',
           barrio: d.ciudad || '',
+          telefono: (d as unknown as { telefono?: string }).telefono || '',
           horaEstimada: d.asignadoEn ? new Date(d.asignadoEn).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
           estado: deliveryStatusMap[d.estado] || 'Pendiente',
         }));
@@ -100,6 +102,17 @@ export const DomiciliarioEntregas: React.FC = () => {
     }
   };
 
+  const llamarCliente = (entrega: Entrega) => {
+    if (!entrega.telefono) return;
+    window.open(`tel:${entrega.telefono}`, '_self');
+  };
+
+  const abrirWhatsApp = (entrega: Entrega) => {
+    if (!entrega.telefono) return;
+    const texto = encodeURIComponent(`Hola ${entrega.cliente}, soy tu domiciliario de SurtiTelas. Estoy en camino con tu pedido.`);
+    window.open(`https://wa.me/${entrega.telefono}?text=${texto}`, '_blank', 'noopener');
+  };
+
   if (loading) {
     return (
       <div>
@@ -130,6 +143,7 @@ export const DomiciliarioEntregas: React.FC = () => {
               key={filtro}
               className={`${s.filterBtn} ${activeFilter === filtro ? s.filterBtnActive : ''}`}
               onClick={() => setActiveFilter(filtro)}
+              title={filtro === 'Todas' ? 'Mostrar todas las entregas' : filtro === 'Pendiente' ? 'Mostrar entregas pendientes' : filtro === 'En camino' ? 'Mostrar entregas en camino' : 'Mostrar entregas entregadas'}
             >
               <span>{filtro}</span>
               <span className={s.filterCount}>{counts[filtro]}</span>
@@ -137,8 +151,8 @@ export const DomiciliarioEntregas: React.FC = () => {
           ))}
         </div>
         <div className={s.viewToggle}>
-          <button className={`${s.viewToggleBtn} ${viewMode === 'grid' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('grid')}>⊡</button>
-          <button className={`${s.viewToggleBtn} ${viewMode === 'list' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('list')}>☰</button>
+          <button className={`${s.viewToggleBtn} ${viewMode === 'grid' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('grid')} title="Vista en cuadrícula">⊡</button>
+          <button className={`${s.viewToggleBtn} ${viewMode === 'list' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('list')} title="Vista en lista">☰</button>
         </div>
       </div>
 
@@ -168,15 +182,25 @@ export const DomiciliarioEntregas: React.FC = () => {
               </div>
             </div>
             <div className={s.entregaCardFooter}>
-              <Button size="sm" style={{ flex: 1 }} onClick={() => setSelectedEntrega(entrega)}>
+              <Button size="sm" style={{ flex: 1 }} onClick={() => setSelectedEntrega(entrega)} title={`Ver detalle de entrega ${entrega.id}`}>
                 <Eye size={14} />
                 Ver detalle
               </Button>
               {entrega.estado !== 'Entregado' && (
-                <Button variant="secondary" size="sm" style={{ flex: 1 }} onClick={() => openStatus(entrega)}>
+                <Button variant="secondary" size="sm" style={{ flex: 1 }} onClick={() => openStatus(entrega)} title={`Cambiar estado de entrega ${entrega.id}`}>
                   <CheckCircle2 size={14} />
                   Cambiar estado
                 </Button>
+              )}
+              {entrega.telefono && (
+                <>
+                  <Button size="sm" variant="secondary" onClick={() => llamarCliente(entrega)} title={`Llamar a ${entrega.cliente}`}>
+                    <Phone size={14} />
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(entrega)} title={`Abrir WhatsApp con ${entrega.cliente}`}>
+                    <MessageCircle size={14} />
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -209,14 +233,31 @@ export const DomiciliarioEntregas: React.FC = () => {
               { label: 'Barrio', value: selectedEntrega?.barrio, icon: <MapPin size={16} /> },
               { label: 'Ciudad', value: selectedEntrega?.ciudad, icon: <MapPin size={16} /> },
               { label: 'Hora estimada', value: selectedEntrega?.horaEstimada, icon: <Clock size={16} /> },
+              { label: 'Teléfono', value: selectedEntrega?.telefono, icon: <Phone size={16} /> },
             ],
           },
         ]}
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => setSelectedEntrega(null)}>Cerrar</Button>
-            {selectedEntrega && selectedEntrega.estado !== 'Entregado' && (
-              <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
+            {selectedEntrega && (
+              <>
+                {selectedEntrega.telefono && (
+                  <>
+                    <Button size="sm" onClick={() => llamarCliente(selectedEntrega)} title={`Llamar a ${selectedEntrega.cliente}`}>
+                      <Phone size={14} />
+                      Llamar
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(selectedEntrega)} title={`Abrir WhatsApp con ${selectedEntrega.cliente}`}>
+                      <MessageCircle size={14} />
+                      WhatsApp
+                    </Button>
+                  </>
+                )}
+                {selectedEntrega.estado !== 'Entregado' && (
+                  <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
+                )}
+              </>
             )}
           </div>
         }
@@ -245,8 +286,20 @@ export const DomiciliarioEntregas: React.FC = () => {
           },
         ]}
         footer={
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => setStatusEntrega(null)}>Cancelar</Button>
+            {statusEntrega && statusEntrega.telefono && (
+              <>
+                <Button size="sm" onClick={() => llamarCliente(statusEntrega)} title={`Llamar a ${statusEntrega.cliente}`}>
+                  <Phone size={14} />
+                  Llamar
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(statusEntrega)} title={`Abrir WhatsApp con ${statusEntrega.cliente}`}>
+                  <MessageCircle size={14} />
+                  WhatsApp
+                </Button>
+              </>
+            )}
             <Button onClick={saveStatus}>Aplicar estado</Button>
           </div>
         }

@@ -27,6 +27,7 @@ import { contactRoutes } from '../modules/contact/presentation/routes/contact.ro
 import { auditRouter } from '../modules/audit/presentation/routes/audit.routes';
 import { reportRouter } from '../modules/reports/presentation/routes/report.routes';
 import { returnRouter } from '../modules/returns/presentation/routes/return.routes';
+import { favoriteRouter } from '../modules/favorites/presentation/routes/favorite.routes';
 import { healthRouter } from '../modules/health/presentation/routes/health.routes';
 import { userRateLimiter } from '../modules/shared/presentation/middlewares/userRateLimiter';
 import { redisUserRateLimiter } from '../modules/shared/presentation/middlewares/redisUserRateLimiter';
@@ -206,6 +207,7 @@ export function createApp(): Express {
   app.use('/api/v1/access-logs', auditRouter);
   app.use('/api/v1/reports', reportRouter);
   app.use('/api/v1/returns', returnRouter);
+  app.use('/api/v1/favorites', favoriteRouter);
 
 
 

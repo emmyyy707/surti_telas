@@ -13,6 +13,8 @@ export const getOrders = async (req: Request, res: Response) => {
     filters.asesorId = req.user.id;
   } else if (req.user?.role === 'CLIENTE') {
     filters.clienteId = req.user.id;
+  } else if (req.user?.role === 'DOMICILIARIO') {
+    filters.domiciliarioId = req.user.id;
   }
   const result = await orderUseCases.getOrders.execute(filters);
   const page = result.meta.page ?? 1;

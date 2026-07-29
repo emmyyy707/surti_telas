@@ -107,7 +107,7 @@ export const deliveriesApi = {
   },
 
   async updateStatus(id: string, estado: DeliveryDTO['estado']): Promise<DeliveryDTO> {
-    const dto = await api.post<DeliveryDTO>(`/deliveries/${encodeURIComponent(id)}/status`, { estado });
+    const dto = await api.patch<DeliveryDTO>(`/deliveries/${encodeURIComponent(id)}/status`, { estado });
     return dto;
   },
 };

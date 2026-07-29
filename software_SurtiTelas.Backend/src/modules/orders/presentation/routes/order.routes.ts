@@ -6,6 +6,10 @@ import { sensitiveUserRateLimiter } from '../../../../modules/shared/presentatio
 import * as controller from '../controllers/order.controller';
 import * as approvalController from '../../../sales-orders/presentation/controllers/orderApproval.controller';
 
+export const orderRouter = Router();
+
+orderRouter.use(authenticate);
+
 /**
  * @swagger
  * /orders:
@@ -30,12 +34,8 @@ import * as approvalController from '../../../sales-orders/presentation/controll
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PaginatedOrders'
- */
-export const orderRouter = Router();
-
-orderRouter.use(authenticate);
-
+  *               $ref: '#/components/schemas/PaginatedOrders'
+  */
 /**
  * @swagger
  * /orders/dashboard:
