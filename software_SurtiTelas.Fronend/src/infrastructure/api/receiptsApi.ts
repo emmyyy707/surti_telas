@@ -10,6 +10,7 @@ export interface ReceiptDTO {
   estado: string;
   estadoEnvio?: string;
   pagos?: Array<{ id: string; amount: number; method: string }>;
+  emitidoPor?: string;
   createdAt: string;
 }
 
@@ -23,6 +24,7 @@ export interface Receipt {
   estado: string;
   estadoEnvio?: string;
   pagos?: Array<{ id: string; amount: number; method: string }>;
+  emitidoPor?: string;
   createdAt: string;
 }
 
@@ -37,6 +39,7 @@ export function toReceipt(dto: ReceiptDTO): Receipt {
     estado: dto.estado,
     estadoEnvio: dto.estadoEnvio,
     pagos: dto.pagos,
+    emitidoPor: dto.emitidoPor,
     createdAt: dto.createdAt,
   };
 }

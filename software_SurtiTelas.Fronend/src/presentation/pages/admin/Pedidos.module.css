@@ -324,3 +324,150 @@
   border-top: 1px solid var(--color-border);
 }
 
+.proofThumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.proofThumbnail:hover {
+  transform: scale(1.1);
+  border-color: var(--color-accent);
+}
+
+.proofThumbnailNone {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px dashed var(--color-border);
+  background: var(--color-bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.proofDetailImage {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.proofDetailNone {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+}
+
+.statusTransitionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.statusTransitionCurrent,
+.statusTransitionTarget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusTransitionLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statusTransitionArrow {
+  color: var(--color-text-secondary);
+}
+
+.statusTransitionDescription {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.statusTransitionOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.statusOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--color-bg-elevated);
+}
+
+.statusOption:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg-surface);
+}
+
+.statusOptionSelected {
+  border-color: var(--color-accent);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.statusOptionRadio {
+  display: none;
+}
+
+.statusOptionBadge {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.statusOptionLabel {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.statusTransitionDisabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+
+.adminModalSm { max-width: 384px; }
+.adminModalMd { max-width: 560px; }
+.adminModalLg { max-width: 720px; }
+.adminModalXl { max-width: 960px; }

@@ -7,6 +7,7 @@ import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { toast } from 'sonner';
 import { returnsApi, type Return } from '@/infrastructure/api/returnsApi';
 
@@ -513,14 +514,10 @@ export const AdminStockDevuelto: React.FC = () => {
             <textarea className={f.textarea} value={observaciones} onChange={e => setObservaciones(e.target.value)} placeholder="Notas sobre la devolución..." rows={3} />
           </div>
 
-          <div className={f.formActions}>
-            <Button type="button" variant="secondary" onClick={closeModal} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving} leftIcon={<Save size={16} />}>
-              Registrar devolución
-            </Button>
-          </div>
+          <ModalFooter
+            secondary={{ label: 'Cancelar', onClick: closeModal, disabled: saving }}
+            primary={{ label: 'Registrar devolución', type: 'submit', loading: saving, leftIcon: <Save size={16} /> }}
+          />
         </form>
       </Modal>
     </div>

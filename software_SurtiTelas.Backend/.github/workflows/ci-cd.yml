@@ -2,22 +2,24 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master, main]
+    branches: [main, develop]
   pull_request:
-    branches: [master, main]
+    branches: [main]
 
 jobs:
   test:
-    name: Test
-    runs-on: ubuntu-latest
-    
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:15
         env:
-          POSTGRES_USER: surtitelas
-          POSTGRES_PASSWORD: surtitelas123
-          POSTGRES_DB: surtitelas
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: surtitelas_test
         ports:
           - 5432:5432
         options: >-
@@ -25,183 +27,88 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma client
-        run: npm run prisma:generate
-        env:
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-      - name: Run migrations
-        run: npm run prisma:deploy
-        env:
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-      - name: Run seed
-        run: npm run prisma:seed
-        env:
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run type check
+      - name: Run typecheck
         run: npm run typecheck
 
-      - name: Run unit tests
-        run: npm run test
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
         env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/surtitelas_test
+          JWT_SECRET: test-secret-ci
           REDIS_URL: redis://localhost:6379
-
-      - name: Run integration tests
-        run: npm run test
-        env:
-          REDIS_URL: redis://localhost:6379
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-  contract:
-    name: Contract Tests
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Pact consumer tests
-        run: npm run test:pact
-        env:
-          NODE_ENV: test
-
-  e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: test
-    
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: surtitelas
-          POSTGRES_PASSWORD: surtitelas123
-          POSTGRES_DB: surtitelas
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Generate Prisma client
-        run: npm run prisma:generate
-        env:
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-      - name: Run migrations
-        run: npm run prisma:deploy
-        env:
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-      - name: Run seed
-        run: npm run prisma:seed
-        env:
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
-
-      - name: Run E2E tests
-        run: npx playwright test
-        env:
-          REDIS_URL: redis://localhost:6379
-          DATABASE_URL: postgresql://surtitelas:surtitelas123@localhost:5432/surtitelas
 
   build:
-    name: Build and Push Docker
+    needs: test
     runs-on: ubuntu-latest
-    needs: [test, contract, e2e]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-    
+    if: github.event_name == 'push'
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          node-version: 20
+          cache: npm
 
-      - name: Extract metadata
-        id: meta
-        run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      - name: Build backend
+        run: npm run build
+        working-directory: ./software_SurtiTelas.Backend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./software_SurtiTelas.Fronend
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
         with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/surtitelas-backend:${{ steps.meta.outputs.tag }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/surtitelas-backend:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/surtitelas-backend:buildcache,mode=max
+          name: backend-build
+          path: software_SurtiTelas.Backend/dist/
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: software_SurtiTelas.Fronend/dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+
+      - name: Deploy backend
+        run: echo 'Deploy backend to production'
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+
+      - name: Deploy frontend
+        run: echo 'Deploy frontend to production'

@@ -260,7 +260,7 @@ export const AdminReportesProduccion: React.FC = () => {
           </div>
         </div>
 
-        <DataTable<ProduccionRep>
+        <DataTable enableExport={false} enableRowSelection={false}
           data={reportesFiltrados}
           pageSize={10}
           emptyMessage="Sin resultados"
@@ -298,8 +298,7 @@ export const AdminReportesProduccion: React.FC = () => {
                 <div className={s.eficienciaBar}>
                   <div
                     className={`${s.eficienciaFill} ${getEficienciaColor(r.eficiencia)}`}
-                    style={{ width: `${r.eficiencia}%` }}
-                  />
+                    style={{ width: `${r.eficiencia}%` }} />
                 </div>
                 <span className={`${s.eficienciaText} ${getEficienciaColor(r.eficiencia)}`}>
                   {r.eficiencia}%

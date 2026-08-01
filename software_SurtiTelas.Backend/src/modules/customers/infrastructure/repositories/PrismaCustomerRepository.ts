@@ -87,6 +87,11 @@ export class PrismaCustomerRepository implements CustomerRepository {
     return row ? new Customer(toCustomerData(row)) : null;
   }
 
+  async getByEmail(email: string): Promise<Customer | null> {
+    const row = await this.prisma.customer.findFirst({ where: { email, deletedAt: null }, include });
+    return row ? new Customer(toCustomerData(row)) : null;
+  }
+
   async create(input: CreateCustomerInput): Promise<Customer> {
     const data = toCustomerData(
       await this.prisma.customer.create({

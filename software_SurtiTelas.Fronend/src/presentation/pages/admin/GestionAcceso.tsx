@@ -172,8 +172,7 @@ export const AdminGestionAcceso: React.FC = () => {
           <h1 className={s.pageTitle}>Gestión de Acceso</h1>
           <p className={s.pageSubtitle}>Control de acceso al sistema</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus size={16} />
+        <Button onClick={() => setModalOpen(true)} leftIcon={<Plus size={16} />} >
           Nuevo Acceso
         </Button>
       </div>
@@ -205,11 +204,10 @@ export const AdminGestionAcceso: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           toolbarLeft={null}
-          maxVisibleColumns={5}
+          maxVisibleColumns={5} enableExport={false} enableRowSelection={false}
         />
       </div>
 

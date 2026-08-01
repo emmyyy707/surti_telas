@@ -171,12 +171,11 @@ export const AdminProduccion: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           emptyMessage={loading ? 'Cargando órdenes...' : error ? error : 'No se encontraron órdenes'}
           toolbarLeft={null}
-          maxVisibleColumns={5}
+          maxVisibleColumns={5} enableExport={false} enableRowSelection={false}
         />
       </div>
 

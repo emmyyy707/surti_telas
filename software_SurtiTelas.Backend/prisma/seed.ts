@@ -85,6 +85,7 @@ async function main() {
   const adminPassword = process.env.ADMIN_PASSWORD || generatePassword();
   const asesorPassword = process.env.ASESOR_PASSWORD || generatePassword();
   const domiciliarioPassword = process.env.DOMICILIARIO_PASSWORD || generatePassword();
+  const clientePassword = process.env.CLIENTE_PASSWORD || generatePassword();
 
   for (const p of PERMISSIONS) {
     await prisma.permission.upsert({
@@ -238,19 +239,20 @@ async function main() {
     }
     console.log('✓ Cliente demo asegurado (Juan Pérez)');
 
-    const asesorEmail = 'asesor@surtitelas.com';
-    const existingAsesor = await prisma.user.findUnique({ where: { email: asesorEmail } });
-    if (!existingAsesor) {
-      await prisma.user.create({
-        data: {
-          email: asesorEmail,
-          nombre: 'Asesor Demo',
-          passwordHash: await bcrypt.hash(asesorPassword, 12),
-          role: Role.ASESOR,
-        },
-      });
-      console.log(`✓ Asesor demo asegurado (${asesorEmail} / ${asesorPassword})`);
-    }
+  const clienteEmail = 'cliente@surtitelas.com';
+  const existingCliente = await prisma.user.findUnique({ where: { email: clienteEmail } });
+  if (!existingCliente) {
+    const passwordHash = await bcrypt.hash(clientePassword, 12);
+    await prisma.user.create({
+      data: {
+        email: clienteEmail,
+        nombre: 'Andres Daniel Ruiz Murillo',
+        passwordHash,
+        role: Role.CLIENTE,
+      },
+    });
+    console.log(`✓ Usuario cliente creado (${clienteEmail} / ${clientePassword})`);
+  }
   }
 
   const demoProduct = await prisma.product.findUnique({ where: { ref: 'REF-001' } });

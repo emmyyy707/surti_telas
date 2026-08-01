@@ -55,8 +55,11 @@ const toRecibo = (dto: Receipt): Recibo => {
 
   const estadoMap: Record<string, ReciboStatus> = {
     'EMITIDO': 'Aprobado',
+    'ENVIADO': 'Aprobado',
+    'PAGADO': 'Aprobado',
     'BORRADOR': 'Pendiente',
     'ANULADO': 'Rechazado',
+    'CANCELADO': 'Rechazado',
   };
 
   return {

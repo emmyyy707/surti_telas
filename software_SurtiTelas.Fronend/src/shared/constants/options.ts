@@ -89,17 +89,59 @@ export const MODULOS_SISTEMA = ['Usuarios', 'Inventario', 'Reportes', 'Producci�
 // Estados generales
 export const ESTADOS_GENERALES = ['Activo', 'Inactivo'] as const;
 
-// Estados de pedido
-export const ESTADOS_PEDIDO = ['Nuevo', 'En producción', 'Listo', 'Despachado', 'En camino', 'Entregado', 'Cancelado'] as const;
+// Pedidos (frontend) -> se mapean desde/hacia el backend OrderStatus
+export const ESTADOS_PEDIDO = ['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado'] as const;
+export type EstadoPedido = (typeof ESTADOS_PEDIDO)[number];
 
 export const ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default' | null> = {
-  'Nuevo': 'default',
-  'En producción': 'info',
-  'Listo': 'warning',
-  'Despachado': 'default',
-  'En camino': 'info',
-  'Entregado': 'success',
-  'Cancelado': 'danger',
+  Pendiente: 'warning',
+  Aceptado: 'info',
+  'En proceso': 'info',
+  Enviado: 'default',
+  Entregado: 'success',
+  Rechazado: 'danger',
+};
+
+export const ORDER_STATUS_BACKEND_MAP: Record<string, string> = {
+  Pendiente: 'PENDIENTE',
+  Aceptado: 'ACEPTADO',
+  'En proceso': 'EN_PROCESO',
+  Enviado: 'ENVIADO',
+  Entregado: 'ENTREGADO',
+  Rechazado: 'RECHAZADO',
+};
+
+export const ORDER_STATUS_FRONTEND_MAP: Record<string, EstadoPedido> = {
+  PENDIENTE: 'Pendiente',
+  ACEPTADO: 'Aceptado',
+  EN_PROCESO: 'En proceso',
+  ENVIADO: 'Enviado',
+  ENTREGADO: 'Entregado',
+  RECHAZADO: 'Rechazado',
+  NUEVO: 'Pendiente',
+  EN_PRODUCCION: 'En proceso',
+  LISTO: 'Enviado',
+  DESPACHADO: 'Enviado',
+  EN_CAMINO: 'Enviado',
+  CANCELADO: 'Rechazado',
+  EN_VALIDACION: 'Pendiente',
+  RECIBO_GENERADO: 'Entregado',
+  RECIBO_ENVIADO: 'Entregado',
+} as const;
+
+// Mapeos específicos de producción (backend enum -> frontend)
+export const PRODUCTION_STATUS_BACKEND_MAP: Record<string, string> = {
+  Pendiente: 'PENDIENTE',
+  Asignada: 'ASIGNADA',
+  'En produccion': 'EN_PROCESO',
+  Completada: 'TERMINADO',
+};
+
+export const PRODUCTION_STATUS_FRONTEND_MAP: Record<string, 'Pendiente' | 'Asignada' | 'En produccion' | 'Completada'> = {
+  PENDIENTE: 'Pendiente',
+  ASIGNADA: 'Asignada',
+  EN_PROCESO: 'En produccion',
+  TERMINADO: 'Completada',
 };
 
 // Control de prendas

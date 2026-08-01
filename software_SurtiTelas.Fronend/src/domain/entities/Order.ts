@@ -1,10 +1,15 @@
 export type OrderStatus =
   | 'Nuevo'
+  | 'Pendiente'
+  | 'Aceptado'
+  | 'En proceso'
   | 'En producción'
   | 'Listo'
   | 'Despachado'
   | 'En camino'
+  | 'Enviado'
   | 'Entregado'
+  | 'Rechazado'
   | 'Cancelado';
 
 export type OrderPriority = 'Estándar' | 'Prioritario';
@@ -127,13 +132,18 @@ export class Order {
     if (nextStatus === this.estado) return true;
 
     const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-      'Nuevo': ['En producción', 'Cancelado'],
-      'En producción': ['Listo', 'Cancelado'],
-      'Listo': ['Despachado', 'Cancelado'],
-      'Despachado': ['En camino', 'Cancelado'],
-      'En camino': ['Entregado'],
-      'Entregado': [],
-      'Cancelado': [],
+      Nuevo: ['Pendiente', 'Aceptado', 'Cancelado'],
+      Pendiente: ['Aceptado', 'En proceso', 'Rechazado', 'Cancelado'],
+      Aceptado: ['En proceso', 'Listo', 'Enviado', 'Entregado', 'Rechazado'],
+      'En proceso': ['En producción', 'Listo', 'Entregado', 'Rechazado'],
+      'En producción': ['Listo', 'Despachado', 'Cancelado'],
+      Listo: ['Despachado', 'Entregado'],
+      Despachado: ['En camino', 'Entregado'],
+      'En camino': ['Entregado', 'Cancelado'],
+      Enviado: ['Entregado'],
+      Entregado: [],
+      Rechazado: [],
+      Cancelado: [],
     };
 
     return allowedTransitions[this.estado].includes(nextStatus);

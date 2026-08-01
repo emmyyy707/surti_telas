@@ -283,7 +283,7 @@ export const AdminReportesInventario: React.FC = () => {
           </div>
         </div>
 
-        <DataTable<ProductoReporte>
+        <DataTable enableExport={false} enableRowSelection={false}
           data={productosFiltrados}
           pageSize={10}
           emptyMessage="Sin resultados"
@@ -325,8 +325,7 @@ export const AdminReportesInventario: React.FC = () => {
                     <div className={s.stockBar}>
                       <div
                         className={`${s.stockFill} ${porcentajeStock < 25 ? s.stockFillDanger : porcentajeStock < 50 ? s.stockFillWarning : s.stockFillSuccess}`}
-                        style={{ width: `${porcentajeStock}%` }}
-                      />
+                        style={{ width: `${porcentajeStock}%` }} />
                     </div>
                   </div>
                 </div>

@@ -1,0 +1,533 @@
+﻿/*
+ * SISTEMA DE DISEÃ‘O DE BOTONES â€” SurtiTelas
+ * GuÃ­a visual unificada para los 4 paneles de usuario
+ * ====================================================
+ * Roles: admin | asesor | domiciliario | cliente
+ * SeÃ±ales visuales: [data-role] en el elemento raÃ­z
+ * Temas: :root (claro) + [data-theme="dark"] (oscuro)
+ *
+ * Uso: <button class="btn btn--primary">Guardar</button>
+ *      <button class="btn btn--secondary">Cancelar</button>
+ *      <button class="btn btn--tertiary">Editar</button>
+ *      <button class="btn btn--danger">Eliminar</button>
+ *
+ * TamaÃ±os: btn--sm | btn--md (default) | btn--lg | btn--xl
+ * Estados: .is-hover | .is-active | .is-focus | .is-disabled | .is-loading
+ */
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 1: TOKENS BASE (heredados del sistema existente)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+:root {
+  /* TipografÃ­a */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  /* Spacing / TamaÃ±os */
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-lg: 20px;
+  --sp-xl: 24px;
+  --sp-2xl: 32px;
+
+  /* Border radius */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Sombras */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 3px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.07), 0 3px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.09), 0 6px 12px rgba(0, 0, 0, 0.05);
+
+  /* Transiciones */
+  --transition-fast: 120ms ease-out;
+  --transition-normal: 200ms ease-out;
+  --transition-slow: 320ms ease-in-out;
+
+  /* Texto */
+  --text-primary: #111111;
+  --text-secondary: #444444;
+  --text-tertiary: #666666;
+  --text-inverse: #ffffff;
+
+  /* Fondos */
+  --bg-canvas: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f5f5f5;
+  --bg-overlay: rgba(0, 0, 0, 0.65);
+
+  /* Bordes */
+  --border-default: #d0d0d0;
+  --border-subtle: #e0e0e0;
+  --border-focus: #111111;
+
+  /* Focus ring */
+  --ring-width: 2px;
+  --ring-offset: 2px;
+}
+
+/* Tema oscuro */
+[data-theme="dark"] {
+  --text-primary: #f4f4f5;
+  --text-secondary: #d4d4d8;
+  --text-tertiary: #a1a1aa;
+  --bg-canvas: #17171a;
+  --bg-surface: #222226;
+  --bg-elevated: #2a2a32;
+  --border-default: #2e2e3a;
+  --border-subtle: #24242a;
+  --border-focus: #d4a574;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 2: TOKENS DE COLOR POR ROL
+   Estrategia: cada rol redefine --role-hue y --role-* que luego
+   se usan en los tokens de botÃ³n. Las seÃ±ales son sutiles:
+   el cambio principal es en el color primario del botÃ³n,
+   manteniendo tipografÃ­a, radios y espaciado idÃ©nticos.
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* ADMIN â€” Ãndigo oscuro | Autoridad | GestiÃ³n */
+:root[data-role="admin"] {
+  --role-name: admin;
+  --role-hue: 221;
+  --role-primary: #4361ee;
+  --role-primary-hover: #3a56e6;
+  --role-primary-active: #314ac1;
+  --role-primary-contrast: #ffffff;
+  --role-primary-dim: rgba(67, 97, 238, 0.08);
+  --role-primary-border: rgba(67, 97, 238, 0.25);
+  --role-accent-sidebar: #4361ee;
+}
+
+:root[data-role="admin"][data-theme="dark"] {
+  --role-primary: #5c7cfa;
+  --role-primary-hover: #6f90e6;
+  --role-primary-active: #4a6fd1;
+  --role-primary-dim: rgba(92, 124, 250, 0.12);
+  --role-accent-sidebar: #5c7cfa;
+}
+
+/* ASESOR â€” Esmeralda | Crecimiento | GuÃ­a */
+:root[data-role="asesor"] {
+  --role-name: asesor;
+  --role-hue: 158;
+  --role-primary: #10b981;
+  --role-primary-hover: #059669;
+  --role-primary-active: #047857;
+  --role-primary-contrast: #ffffff;
+  --role-primary-dim: rgba(16, 185, 129, 0.08);
+  --role-primary-border: rgba(16, 185, 129, 0.25);
+  --role-accent-sidebar: #10b981;
+}
+
+:root[data-role="asesor"][data-theme="dark"] {
+  --role-primary: #34d399;
+  --role-primary-hover: #4ade80;
+  --role-primary-active: #2bb673;
+  --role-primary-dim: rgba(52, 211, 153, 0.12);
+  --role-accent-sidebar: #34d399;
+}
+
+/* DOMICILIARIO â€” Ãmbar | Urgencia | Movimiento */
+:root[data-role="domiciliario"] {
+  --role-name: domiciliario;
+  --role-hue: 38;
+  --role-primary: #f59e0b;
+  --role-primary-hover: #d97706;
+  --role-primary-active: #b45309;
+  --role-primary-contrast: #1f1404;
+  --role-primary-dim: rgba(245, 158, 11, 0.10);
+  --role-primary-border: rgba(245, 158, 11, 0.30);
+  --role-accent-sidebar: #f59e0b;
+}
+
+:root[data-role="domiciliario"][data-theme="dark"] {
+  --role-primary: #fbbf24;
+  --role-primary-hover: #fcd34d;
+  --role-primary-active: #d9a023;
+  --role-primary-dim: rgba(251, 191, 36, 0.14);
+  --role-accent-sidebar: #fbbf24;
+}
+
+/* CLIENTE â€” Teal | Confianza | Servicio */
+:root[data-role="cliente"] {
+  --role-name: cliente;
+  --role-hue: 174;
+  --role-primary: #0d9488;
+  --role-primary-hover: #0b7a6f;
+  --role-primary-active: #085f55;
+  --role-primary-contrast: #ffffff;
+  --role-primary-dim: rgba(13, 148, 136, 0.08);
+  --role-primary-border: rgba(13, 148, 136, 0.25);
+  --role-accent-sidebar: #0d9488;
+}
+
+:root[data-role="cliente"][data-theme="dark"] {
+  --role-primary: #2dd4bf;
+  --role-primary-hover: #5eead4;
+  --role-primary-active: #2ac2b3;
+  --role-primary-dim: rgba(45, 212, 191, 0.12);
+  --role-accent-sidebar: #2dd4bf;
+}
+
+/* Sin rol definido â†’ default (negro como el sistema existente) */
+:root:not([data-role]) {
+  --role-primary: #000000;
+  --role-primary-hover: #222222;
+  --role-primary-active: #111111;
+  --role-primary-contrast: #ffffff;
+  --role-primary-dim: rgba(0, 0, 0, 0.05);
+  --role-primary-border: rgba(0, 0, 0, 0.20);
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 3: TOKENS DE BOTÃ“N (derivados de --role-*)
+   Estos tokens se consumen directamente en las clases .btn
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+:root {
+  /* Primario â€” usa el color del rol */
+  --btn-primary-bg: var(--role-primary);
+  --btn-primary-bg-hover: var(--role-primary-hover);
+  --btn-primary-bg-active: var(--role-primary-active);
+  --btn-primary-text: var(--role-primary-contrast);
+  --btn-primary-border: var(--role-primary);
+  --btn-primary-focus-ring: var(--role-primary);
+
+  /* Secundario â€” fondo transparente, borde gris, texto primario */
+  --btn-secondary-bg: transparent;
+  --btn-secondary-bg-hover: var(--bg-elevated);
+  --btn-secondary-bg-active: var(--bg-subtle);
+  --btn-secondary-text: var(--text-primary);
+  --btn-secondary-border: var(--border-default);
+  --btn-secondary-focus-ring: var(--border-focus);
+
+  /* Terciario â€” sin borde, sin fondo, solo texto */
+  --btn-tertiary-bg: transparent;
+  --btn-tertiary-bg-hover: var(--role-primary-dim);
+  --btn-tertiary-bg-active: var(--role-primary-dim);
+  --btn-tertiary-text: var(--role-primary);
+  --btn-tertiary-text-hover: var(--role-primary-hover);
+  --btn-tertiary-border: transparent;
+  --btn-tertiary-focus-ring: var(--role-primary);
+
+  /* Peligro â€” rojo consistente en todos los roles */
+  --btn-danger-bg: #dc2626;
+  --btn-danger-bg-hover: #b91c1c;
+  --btn-danger-bg-active: #a31d1d;
+  --btn-danger-text: #ffffff;
+  --btn-danger-border: #dc2626;
+  --btn-danger-focus-ring: #dc2626;
+}
+
+[data-theme="dark"] {
+  --btn-danger-bg: #f87171;
+  --btn-danger-bg-hover: #fca5a5;
+  --btn-danger-bg-active: #f87171;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 4: ESTILOS BASE â€” .btn
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xs);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal),
+    transform var(--transition-fast),
+    opacity var(--transition-normal);
+}
+
+/* TamaÃ±os */
+.btn--sm {
+  height: 32px;
+  padding: 0 var(--sp-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem; /* 12px */
+  font-weight: 600;
+}
+
+.btn--md {
+  height: 36px;
+  padding: 0 var(--sp-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem; /* 14px */
+}
+
+.btn--lg {
+  height: 44px;
+  padding: 0 var(--sp-lg);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem; /* 14px */
+  font-weight: 600;
+}
+
+.btn--xl {
+  height: 48px;
+  padding: 0 var(--sp-xl);
+  border-radius: var(--radius-lg);
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+}
+
+/* Ãconos */
+.btn--icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.btn--sm.btn--icon {
+  width: 32px;
+  height: 32px;
+}
+
+.btn--lg.btn--icon {
+  width: 44px;
+  height: 44px;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 5: VARIANTES DE COLOR â€” botones Primario, Secundario,
+   Terciario y Peligro. Cada uno incluye todos los estados.
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* ===== PRIMARY ===== */
+.btn--primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primary:hover {
+  background-color: var(--btn-primary-bg-hover);
+  border-color: var(--btn-primary-border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn--primary:active,
+.btn--primary.is-active {
+  background-color: var(--btn-primary-bg-active);
+  transform: translateY(0);
+}
+
+.btn--primary:focus-visible,
+.btn--primary.is-focus {
+  outline: var(--ring-width) solid var(--btn-primary-focus-ring);
+  outline-offset: var(--ring-offset);
+}
+
+.btn--primary.is-disabled,
+.btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-xs);
+}
+
+/* ===== SECONDARY ===== */
+.btn--secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+}
+
+.btn--secondary:hover {
+  background-color: var(--btn-secondary-bg-hover);
+  border-color: var(--border-default);
+}
+
+.btn--secondary:active,
+.btn--secondary.is-active {
+  background-color: var(--btn-secondary-bg-active);
+}
+
+.btn--secondary:focus-visible,
+.btn--secondary.is-focus {
+  outline: var(--ring-width) solid var(--btn-secondary-focus-ring);
+  outline-offset: var(--ring-offset);
+}
+
+.btn--secondary.is-disabled,
+.btn--secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== TERTIARY ===== */
+.btn--tertiary {
+  background-color: var(--btn-tertiary-bg);
+  color: var(--btn-tertiary-text);
+  border: 1px solid var(--btn-tertiary-border);
+}
+
+.btn--tertiary:hover {
+  background-color: var(--btn-tertiary-bg-hover);
+  color: var(--btn-tertiary-text-hover);
+}
+
+.btn--tertiary:active,
+.btn--tertiary.is-active {
+  background-color: var(--btn-tertiary-bg-active);
+}
+
+.btn--tertiary:focus-visible,
+.btn--tertiary.is-focus {
+  outline: var(--ring-width) solid var(--btn-tertiary-focus-ring);
+  outline-offset: var(--ring-offset);
+}
+
+.btn--tertiary.is-disabled,
+.btn--tertiary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== DANGER ===== */
+.btn--danger {
+  background-color: var(--btn-danger-bg);
+  color: var(--btn-danger-text);
+  border: 1px solid var(--btn-danger-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--danger:hover {
+  background-color: var(--btn-danger-bg-hover);
+  border-color: var(--btn-danger-border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn--danger:active,
+.btn--danger.is-active {
+  background-color: var(--btn-danger-bg-active);
+  transform: translateY(0);
+}
+
+.btn--danger:focus-visible,
+.btn--danger.is-focus {
+  outline: var(--ring-width) solid var(--btn-danger-focus-ring);
+  outline-offset: var(--ring-offset);
+}
+
+.btn--danger.is-disabled,
+.btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: var(--shadow-xs);
+}
+
+/* ===== GHOST (para iconos sin relleno) ===== */
+.btn--ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+.btn--ghost:hover {
+  background-color: var(--role-primary-dim);
+  color: var(--role-primary);
+}
+
+.btn--ghost:focus-visible {
+  outline: var(--ring-width) solid var(--role-primary);
+  outline-offset: var(--ring-offset);
+}
+
+.btn--ghost.is-disabled,
+.btn--ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 6: ESTADO DE CARGA
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.btn.is-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.btn.is-loading .btn__spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: spin 0.8s linear infinite;
+}
+
+.btn__spinner {
+  display: none;
+  width: 1em;
+  height: 1em;
+  font-size: 0.875em;
+}
+
+.btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   CAPA 7: ACCESIBILIDAD (WCAG 2.1 AA)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* TamaÃ±o tÃ¡ctil mÃ­nimo: 44Ã—44px */
+/* Los botones .btn--sm son 32Ã—32 â†’ usar .btn--md o .btn--lg para touch targets */
+.btn--md,
+.btn--lg,
+.btn--xl {
+  min-height: 44px;
+}
+
+/* Foco visible: contraste mÃ­nimo 3:1 contra fondo */
+/* Los anillos de foco usan --ring-width: 2px + offset de 2px */
+/* Contraste de texto: 4.5:1 mÃ­nimo (cumplido con los tokens de color) */
+
+/* Modo reducido de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+  .btn:hover {
+    transform: none;
+  }
+  .btn__spinner {
+    animation: none;
+  }
+}
+

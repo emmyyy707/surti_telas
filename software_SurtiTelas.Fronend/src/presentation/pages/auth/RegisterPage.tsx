@@ -4,6 +4,7 @@ import { User, Mail, Eye, EyeOff, MapPin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import partnerLogo from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 import { authApi } from '@/infrastructure/api/authApi';
+import { customersApi } from '@/infrastructure/api/customersApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { appContent } from '@/shared/config/appContent';
 import { isValidPhone } from '@/shared/utils/phone';
@@ -71,7 +72,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       const nombre = `${firstName.trim()} ${lastName.trim()}`.trim();
-      await authApi.createUser({
+      const createdUser = await authApi.createUser({
         nombre,
         email: email.trim(),
         password,
@@ -81,6 +82,20 @@ const RegisterPage: React.FC = () => {
         tipoDocumento: documentType,
         numeroDocumento: documentNumber.trim() || undefined,
       });
+
+      if (createdUser.role === 'CLIENTE') {
+        await customersApi.create({
+          nombre: createdUser.nombre,
+          email: createdUser.email,
+          tel: phone.trim() || undefined,
+          direccion: address.trim() || undefined,
+          tipoDocumento: documentType as 'CC' | 'NIE' | 'PASSPORT' | 'CE' | 'OTHER',
+          numeroDocumento: documentNumber.trim() || undefined,
+          estado: 'Activo',
+          isTrustedCustomer: false,
+        });
+      }
+
       const loginResult = await loginWithCredentials(email.trim(), password);
       if (loginResult.success) {
         setSuccess(true);

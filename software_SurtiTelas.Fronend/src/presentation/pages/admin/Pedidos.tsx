@@ -14,6 +14,7 @@ import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
 import { ESTADOS_PEDIDO, ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import type { Pedido, PedidoItem } from '@/core/types';
 import { useServerPagination } from '@/hooks/useServerPagination';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 type PedidoFormItem = {
   id: string;
@@ -42,7 +43,7 @@ export const AdminPedidos: React.FC = () => {
   const [clienteId, setClienteId] = useState('');
   const [asesorId, setAsesorId] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
-  const [estado, setEstado] = useState<Pedido['estado']>('Nuevo');
+  const [estado, setEstado] = useState<Pedido['estado']>('Pendiente');
   const [observaciones, setObservaciones] = useState('');
   const [items, setItems] = useState<PedidoFormItem[]>([
     { id: 'I1', nombre: '', precio: 0, cantidad: 1 },
@@ -70,11 +71,10 @@ export const AdminPedidos: React.FC = () => {
         authApi.listUsers({ limit: 100, role: 'ASESOR' }),
       ]);
 
-      const clientesIds = new Set((clientesResult.data ?? []).map(c => c.id));
       setClientes(clientesResult.data ?? []);
       setAsesores(asesoresResult.data ?? []);
 
-      const pedidos = (ordersResult.pedidos ?? []).filter(p => p.clienteId && clientesIds.has(p.clienteId));
+      const pedidos = ordersResult.pedidos ?? [];
       setPageData(pedidos);
       pagination.setTotalRecords(ordersResult.meta.totalRecords);
 
@@ -104,7 +104,7 @@ export const AdminPedidos: React.FC = () => {
     setClienteId('');
     setAsesorId('');
     setFecha(new Date().toISOString().slice(0, 10));
-    setEstado('Nuevo');
+    setEstado('Pendiente');
     setObservaciones('');
     setItems([{ id: 'I1', nombre: '', precio: 0, cantidad: 1 }]);
     setFormError(null);
@@ -310,9 +310,9 @@ export const AdminPedidos: React.FC = () => {
                       <div className={s.detailItem}><span className={s.detailLabel}>Estado</span><span><Badge variant={orderStatuses[p.estado]}>{p.estado}</Badge></span></div>
                     </div>
                   </div>
-                  <div className={s.modalActions}>
-                    <Button variant="secondary" onClick={onClose}>Cerrar</Button>
-                  </div>
+                  <ModalFooter
+                    actions={[{ label: 'Cerrar', variant: 'secondary', onClick: onClose }]} />
+
                 </div>
               ),
             }}
@@ -452,14 +452,9 @@ export const AdminPedidos: React.FC = () => {
             />
           </div>
 
-          <div className={f.formActions}>
-            <Button type="button" variant="secondary" onClick={() => { setEditModalOpen(false); resetForm(); }} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving} leftIcon={<Save size={16} />}>
-              {selectedPedido ? 'Guardar cambios' : 'Crear pedido'}
-            </Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setEditModalOpen(false); resetForm(); }, disabled: saving }, { label: selectedPedido ? 'Guardar cambios' : 'Crear pedido' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
+
         </form>
       </Modal>
 
@@ -483,10 +478,9 @@ export const AdminPedidos: React.FC = () => {
               ))}
             </select>
           </div>
-          <div className={f.formActions}>
-            <Button variant="secondary" onClick={() => setStatusConfirm(null)} disabled={saving}>Cancelar</Button>
-            <Button onClick={handleChangeStatus} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , onClick: handleChangeStatus, disabled: saving }]} />
+
         </div>
       </Modal>
 
@@ -523,9 +517,9 @@ export const AdminPedidos: React.FC = () => {
                 </div>
               </div>
             )}
-            <div className={s.modalActions}>
-              <Button variant="secondary" onClick={() => setDetailId(null)}>Cerrar</Button>
-            </div>
+            <ModalFooter
+              actions={[{ label: 'Cerrar', variant: 'secondary', onClick: () => setDetailId(null) }]} />
+
           </div>
         )}
       </Modal>

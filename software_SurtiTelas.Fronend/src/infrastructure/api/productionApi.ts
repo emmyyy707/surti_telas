@@ -1,4 +1,5 @@
 import { api } from './httpClient';
+import { PRODUCTION_STATUS_BACKEND_MAP, PRODUCTION_STATUS_FRONTEND_MAP, type EstadoProduccion } from '@/shared/constants/options';
 
 export interface ProductionOrderDTO {
   id: string;
@@ -34,7 +35,7 @@ export interface ProductionOrder {
   fechaInicio: string;
   fechaEstimada: string;
   avance: number;
-  estado: 'Pendiente' | 'Asignada' | 'En produccion' | 'Completada';
+  estado: EstadoProduccion;
   tela?: string;
   colores: string[];
   curvaTallas?: Record<string, number>;
@@ -59,7 +60,7 @@ export function toProductionOrder(dto: ProductionOrderDTO): ProductionOrder {
     fechaInicio: dto.fechaInicio,
     fechaEstimada: dto.fechaEstimada,
     avance: dto.avance,
-    estado: dto.estado === 'EN_PROCESO' ? 'En produccion' : dto.estado === 'TERMINADO' ? 'Completada' : dto.estado === 'ASIGNADA' ? 'Asignada' : 'Pendiente',
+    estado: PRODUCTION_STATUS_FRONTEND_MAP[dto.estado] ?? 'Pendiente',
     tela: dto.tela,
     colores: dto.colores,
     curvaTallas: dto.curvaTallas as Record<string, number> | undefined,
@@ -87,7 +88,7 @@ export const productionApi = {
       cantidad: data.cantidad,
       fechaEstimada: data.fechaEstimada,
       avance: data.avance ?? 0,
-      estado: data.estado === 'Pendiente' ? 'PENDIENTE' : data.estado === 'Asignada' ? 'PENDIENTE' : data.estado === 'En produccion' ? 'EN_PROCESO' : data.estado === 'Completada' ? 'TERMINADO' : 'PENDIENTE',
+      estado: PRODUCTION_STATUS_BACKEND_MAP[data.estado ?? 'Pendiente'] ?? 'PENDIENTE',
       tela: data.tela,
       colores: data.colores ?? [],
       notasTecnicas: data.notasTecnicas,
@@ -112,7 +113,7 @@ export const productionApi = {
     if (changes.cantidad !== undefined) body.cantidad = changes.cantidad;
     if (changes.fechaEstimada !== undefined) body.fechaEstimada = changes.fechaEstimada;
     if (changes.avance !== undefined) body.avance = changes.avance;
-    if (changes.estado !== undefined) body.estado = changes.estado === 'Pendiente' ? 'PENDIENTE' : changes.estado === 'Asignada' ? 'PENDIENTE' : changes.estado === 'En produccion' ? 'EN_PROCESO' : changes.estado === 'Completada' ? 'TERMINADO' : 'PENDIENTE';
+    if (changes.estado !== undefined) body.estado = PRODUCTION_STATUS_BACKEND_MAP[changes.estado] ?? 'PENDIENTE';
     if (changes.tela !== undefined) body.tela = changes.tela;
     if (changes.colores !== undefined) body.colores = changes.colores;
     if (changes.notasTecnicas !== undefined) body.notasTecnicas = changes.notasTecnicas;

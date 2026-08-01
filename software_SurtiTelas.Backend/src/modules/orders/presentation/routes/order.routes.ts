@@ -5,6 +5,7 @@ import { requirePermission, requireRole } from '../../../auth/presentation/middl
 import { sensitiveUserRateLimiter } from '../../../../modules/shared/presentation/middlewares/sensitiveUserRateLimiter';
 import * as controller from '../controllers/order.controller';
 import * as approvalController from '../../../sales-orders/presentation/controllers/orderApproval.controller';
+import { upload } from '../../../../modules/shared/presentation/middlewares/upload';
 
 export const orderRouter = Router();
 
@@ -134,7 +135,7 @@ orderRouter.get('/:id', requirePermission('orders:read'), asyncHandler(controlle
  *                 data:
  *                   $ref: '#/components/schemas/Order'
  */
-orderRouter.post('/', requirePermission('orders:create'), sensitiveUserRateLimiter, asyncHandler(controller.createOrder));
+orderRouter.post('/', requirePermission('orders:create'), sensitiveUserRateLimiter, upload.single('comprobantePago'), asyncHandler(controller.createOrder));
 
 /**
  * @swagger
@@ -319,4 +320,35 @@ orderRouter.get(
   '/admin/sales-orders/report',
   requirePermission('orders:read'),
   asyncHandler(approvalController.getSalesReport)
+);
+
+orderRouter.patch(
+  '/:id/approve',
+  requirePermission('orders:update'),
+  asyncHandler(controller.approveOrder)
+);
+
+orderRouter.patch(
+  '/:id/reject',
+  requirePermission('orders:update'),
+  asyncHandler(controller.rejectOrder)
+);
+
+orderRouter.post(
+  '/:id/comprobante',
+  requirePermission('orders:update'),
+  upload.single('comprobantePago'),
+  asyncHandler(controller.uploadPaymentProof)
+);
+
+orderRouter.patch(
+  '/:id/cancel',
+  requirePermission('orders:update'),
+  asyncHandler(controller.cancelOrder)
+);
+
+orderRouter.get(
+  '/by-numero/:numero',
+  requirePermission('orders:read'),
+  asyncHandler(controller.getOrderByNumero)
 );

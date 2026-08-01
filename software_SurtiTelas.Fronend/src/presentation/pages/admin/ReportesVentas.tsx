@@ -306,7 +306,7 @@ export const AdminReportesVentas: React.FC = () => {
             <span>Cargando productos...</span>
           </div>
         ) : (
-          <DataTable<ProductoRep>
+          <DataTable enableExport={false} enableRowSelection={false}
             data={productos}
             pageSize={10}
             emptyMessage="Sin productos"
@@ -315,8 +315,7 @@ export const AdminReportesVentas: React.FC = () => {
               { key: 'nombre', header: 'Producto', sortable: true, render: (p) => <span className={s.tdPrimary}>{p.nombre}</span> },
               { key: 'cantidad', header: 'Cantidad', width: '120px', sortable: true, render: (p) => <span className={s.tdCenter}>{p.cantidad}</span> },
               { key: 'total', header: 'Total', width: '140px', sortable: true, align: 'right', render: (p) => <span className={`${s.tdRight} ${s.tdBold}`}>{formatCurrency(p.total)}</span> },
-            ]}
-          />
+            ]} />
         )}
       </div>
 
@@ -391,8 +390,7 @@ export const AdminReportesVentas: React.FC = () => {
                   <div className={s.cumplimientoBar}>
                     <div
                       className={`${s.cumplimientoFill} ${r.cumplimiento >= 90 ? s.cumplimientoAlto : r.cumplimiento >= 75 ? s.cumplimientoMedio : s.cumplimientoBajo}`}
-                      style={{ width: `${Math.min(r.cumplimiento, 100)}%` }}
-                    />
+                      style={{ width: `${Math.min(r.cumplimiento, 100)}%` }} />
                   </div>
                   <span className={`${s.cumplimientoText} ${r.cumplimiento >= 90 ? s.cumplimientoAlto : r.cumplimiento >= 75 ? s.cumplimientoMedio : s.cumplimientoBajo}`}>
                     {r.cumplimiento}%

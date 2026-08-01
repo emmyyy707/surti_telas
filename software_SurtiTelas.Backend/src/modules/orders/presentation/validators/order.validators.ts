@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { PositiveNumberSchema, PositiveIntegerSchema } from '../../../../shared/presentation/validators';
 
 export const CreateOrderSchema = z.object({
-  clienteId: z.string().min(1, 'clienteId es obligatorio'),
+  clienteId: z.string().min(1, 'clienteId es obligatorio').optional(),
   asesorId: z.string().min(1).optional(),
   tipoFlujo: z.enum(['PRODUCCION', 'VENTAS']).optional(),
   itemsList: z
@@ -19,23 +19,20 @@ export const CreateOrderSchema = z.object({
   observaciones: z.string().optional(),
   paymentMethod: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER']).optional(),
   installments: z.coerce.number().int().positive().max(12).optional(),
+  subtotal: PositiveNumberSchema.optional(),
+  impuestos: z.number().min(0).optional(),
+  descuentos: z.number().min(0).optional(),
+  comprobantePagoUrl: z.string().optional(),
 });
 
 export const UpdateOrderStatusSchema = z.object({
   estado: z.enum([
-    'Nuevo',
-    'En producción',
-    'Listo',
-    'Despachado',
-    'En camino',
-    'Entregado',
-    'Cancelado',
     'Pendiente',
-    'En validación',
     'Aceptado',
+    'En proceso',
+    'Enviado',
+    'Entregado',
     'Rechazado',
-    'Recibo generado',
-    'Recibo enviado',
   ]),
 });
 
@@ -61,7 +58,7 @@ export const UpdateOrderFullSchema = z.object({
 });
 
 export const OrderFiltersSchema = z.object({
-  estado: z.enum(['Nuevo', 'En producción', 'Listo', 'Despachado', 'En camino', 'Entregado', 'Cancelado', 'Pendiente', 'En validación', 'Aceptado', 'Rechazado', 'Recibo generado', 'Recibo enviado']).optional(),
+  estado: z.enum(['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado']).optional(),
   clienteId: z.string().optional(),
   asesorId: z.string().optional(),
   domiciliarioId: z.string().optional(),

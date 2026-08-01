@@ -128,7 +128,7 @@ export const AdminDashboard: React.FC = () => {
     return [
       { label: dashboardContent.stats.totalCustomers, value: metrics.totalCustomers.toLocaleString('es-CO'), trend: '', trendUp: true, Icon: Users, color: 'accent' as const },
       { label: dashboardContent.stats.totalOrders, value: metrics.totalOrders.toLocaleString('es-CO'), trend: '', trendUp: true, Icon: ShoppingBag, color: 'success' as const },
-      { label: dashboardContent.stats.activeProduction, value: ((metrics.ordersByStatus ?? []).find(o => o.estado === 'En producción')?.cantidad ?? 0).toLocaleString('es-CO'), trend: '', trendUp: true, Icon: TrendingUp, color: 'info' as const },
+      { label: dashboardContent.stats.activeProduction, value: ((metrics.ordersByStatus ?? []).find(o => o.estado === 'En proceso')?.cantidad ?? 0).toLocaleString('es-CO'), trend: '', trendUp: true, Icon: TrendingUp, color: 'info' as const },
       { label: dashboardContent.stats.totalSales, value: formatoCOP(metrics.totalSales ?? 0), trend: '', trendUp: true, Icon: DollarSign, color: 'warning' as const },
     ];
   }, [metrics, dashboardContent]);

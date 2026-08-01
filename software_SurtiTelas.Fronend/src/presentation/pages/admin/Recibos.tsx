@@ -11,6 +11,7 @@ import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import { receiptsApi, type Receipt } from '@/infrastructure/api/receiptsApi';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 interface Recibo {
   id: string;
@@ -43,6 +44,15 @@ interface ItemForm {
   precioUnitario: string;
 }
 
+const BACKEND_ESTADO_MAP: Record<string, Recibo['estado']> = {
+  BORRADOR: 'Borrador',
+  EMITIDO: 'Enviado',
+  ENVIADO: 'Enviado',
+  PAGADO: 'Pagado',
+  VENCIDO: 'Vencido',
+  CANCELADO: 'Cancelado',
+};
+
 function toRecibo(dto: Receipt, clientesMap: Map<string, BackendAuthUser>): Recibo {
   const total = Number(dto.total) || 0;
   const clienteUsuario = clientesMap.get(dto.customerId);
@@ -58,8 +68,8 @@ function toRecibo(dto: Receipt, clientesMap: Map<string, BackendAuthUser>): Reci
     subtotal: total,
     iva: Math.round(total * 0.19),
     total,
-    estado: 'Borrador',
-    vendedor: 'Sin asignar',
+    estado: BACKEND_ESTADO_MAP[dto.estado] ?? 'Borrador',
+    vendedor: dto.emitidoPor ?? 'Sin asignar',
     items: [{ id: 'I1', descripcion: 'Recibo', cantidad: 1, precioUnitario: total, total }],
   };
 }
@@ -215,9 +225,17 @@ export const AdminRecibos: React.FC = () => {
         toast.success('Recibo actualizado correctamente');
       } else {
         const secuencia = String(recibos.length + 1).padStart(3, '0');
+        const numeroRecibo = `R${secuencia}-${new Date().getFullYear()}`;
+        const concepto = itemsRecibo.map(it => it.descripcion).join(', ');
+        const created = await receiptsApi.create({
+          customerId: nitCliente.trim(),
+          numero: numeroRecibo,
+          total,
+          concepto,
+        });
         const nuevo: Recibo = {
-          id: `REC-${secuencia}`,
-          numeroRecibo: `R${secuencia}-${new Date().getFullYear()}`,
+          id: created.id,
+          numeroRecibo: created.numero,
           cliente: cliente.trim(),
           nitCliente: nitCliente.trim(),
           fechaEmision,
@@ -225,7 +243,7 @@ export const AdminRecibos: React.FC = () => {
           subtotal,
           iva,
           total,
-          estado: 'Borrador',
+          estado: BACKEND_ESTADO_MAP[created.estado] ?? 'Borrador',
           metodoPago: metodoPago || undefined,
           vendedor: vendedor.trim() || 'Sin asignar',
           items: itemsRecibo,
@@ -443,10 +461,9 @@ export const AdminRecibos: React.FC = () => {
                       <div className={`${s.totalRow} ${s.totalRowFinal}`}><span>Total:</span><span>{formatCurrency(r.total)}</span></div>
                     </div>
                   </div>
-                   <div className={s.modalActions}>
-                    <Button variant="secondary" onClick={onClose}>Cerrar</Button>
-                     <Button variant="secondary" leftIcon={<Printer size={16} />} onClick={() => { window.print(); toast.info(`Imprimiendo ${r.numeroRecibo}`); }}>Imprimir</Button>
-                  </div>
+                   <ModalFooter
+                     actions={[{ label: 'Cerrar', variant: 'secondary', onClick: onClose }, { label: 'Imprimir', variant: 'secondary', onClick: () => { window.print(); toast.info(`Imprimiendo ${r.numeroRecibo}`); }, leftIcon: <Printer size={16} /> }]} />
+
                 </div>
               ),
             }}
@@ -543,14 +560,9 @@ export const AdminRecibos: React.FC = () => {
             <div className={`${f.totalRow} ${s.totalRowFinal}`}><span>Total:</span><span>{formatCurrency(total)}</span></div>
           </div>
 
-          <div className={f.formActions}>
-            <Button type="button" variant="secondary" onClick={closeModal} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving} leftIcon={<Save size={16} />}>
-              {editingId ? 'Guardar cambios' : 'Crear recibo'}
-            </Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingId ? 'Guardar cambios' : 'Crear recibo' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
+
         </form>
       </Modal>
 
@@ -574,10 +586,9 @@ export const AdminRecibos: React.FC = () => {
               ))}
             </select>
           </div>
-          <div className={f.formActions}>
-            <Button variant="secondary" onClick={() => setStatusConfirm(null)} disabled={saving}>Cancelar</Button>
-            <Button onClick={handleChangeStatus} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , onClick: handleChangeStatus, disabled: saving }]} />
+
         </div>
       </Modal>
     </div>

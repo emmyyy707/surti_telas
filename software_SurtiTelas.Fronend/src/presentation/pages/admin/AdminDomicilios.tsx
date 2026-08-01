@@ -21,9 +21,14 @@ export const AdminDomicilios: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   const [formNombre, setFormNombre] = useState('');
+  const [formApellidos, setFormApellidos] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
+  const [formConfirmPassword, setFormConfirmPassword] = useState('');
   const [formTelefono, setFormTelefono] = useState('');
+  const [formDireccion, setFormDireccion] = useState('');
+  const [formTipoDocumento, setFormTipoDocumento] = useState('');
+  const [formNumeroDocumento, setFormNumeroDocumento] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,40 +60,71 @@ export const AdminDomicilios: React.FC = () => {
   const openCreate = () => {
     setEditingId(null);
     setFormNombre('');
+    setFormApellidos('');
     setFormEmail('');
     setFormPassword('');
+    setFormConfirmPassword('');
     setFormTelefono('');
+    setFormDireccion('');
+    setFormTipoDocumento('');
+    setFormNumeroDocumento('');
     setCreateOpen(true);
   };
 
   const openEdit = (item: Usuario) => {
     setEditingId(item.id);
     setFormNombre(item.nombre);
+    setFormApellidos('');
     setFormEmail(item.email);
     setFormPassword('');
+    setFormConfirmPassword('');
     setFormTelefono('');
+    setFormDireccion('');
+    setFormTipoDocumento('');
+    setFormNumeroDocumento('');
     setEditOpen(true);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formNombre.trim() || !formEmail.trim() || !formPassword) return;
+    const nombre = formNombre.trim();
+    const email = formEmail.trim();
+    const password = formPassword;
+    const confirmPassword = formConfirmPassword;
+
+    if (!nombre || !email || !password) {
+      toast.error('Nombre, correo y contraseña son obligatorios');
+      return;
+    }
+    if (password.length < 8) {
+      toast.error('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+    if (!formTipoDocumento || !formNumeroDocumento.trim()) {
+      toast.error('Tipo y número de documento son obligatorios');
+      return;
+    }
+
     setSaving(true);
     try {
       const created = await usersApi.create({
-        nombre: formNombre.trim(),
-        email: formEmail.trim(),
-        password: formPassword,
+        nombre,
+        apellidos: formApellidos.trim() || undefined,
+        email,
+        password,
         role: 'DOMICILIARIO',
         telefono: formTelefono.trim() || undefined,
+        direccion: formDireccion.trim() || undefined,
+        tipoDocumento: formTipoDocumento || undefined,
+        numeroDocumento: formNumeroDocumento.trim() || undefined,
       });
       setDomiciliarios(prev => [...prev, created]);
       toast.success('Domiciliario creado');
       setCreateOpen(false);
-      setFormNombre('');
-      setFormEmail('');
-      setFormPassword('');
-      setFormTelefono('');
     } catch {
       toast.error('No se pudo crear el domiciliario');
     } finally {
@@ -103,7 +139,11 @@ export const AdminDomicilios: React.FC = () => {
     try {
       const updated = await usersApi.update(editingId, {
         nombre: formNombre.trim(),
+        apellidos: formApellidos.trim() || undefined,
         telefono: formTelefono.trim() || undefined,
+        direccion: formDireccion.trim() || undefined,
+        tipoDocumento: formTipoDocumento || undefined,
+        numeroDocumento: formNumeroDocumento.trim() || undefined,
       });
       setDomiciliarios(prev => prev.map(d => d.id === editingId ? { ...d, ...updated } : d));
       toast.success('Domiciliario actualizado');
@@ -280,11 +320,10 @@ export const AdminDomicilios: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           toolbarLeft={null}
-          maxVisibleColumns={5}
+          maxVisibleColumns={5} enableExport={false} enableRowSelection={false}
         />
       </div>
 
@@ -299,22 +338,53 @@ export const AdminDomicilios: React.FC = () => {
         <form id="createDomiciliarioForm" className={f.form} onSubmit={handleCreate}>
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Nombre completo</label>
-              <input type="text" className={f.input} value={formNombre} onChange={e => setFormNombre(e.target.value)} placeholder="Ej: Juan Pérez" required />
+              <label className={f.label}>Nombre *</label>
+              <input type="text" className={f.input} value={formNombre} onChange={e => setFormNombre(e.target.value)} placeholder="Ej: Juan" required />
             </div>
             <div className={f.field}>
-              <label className={f.label}>Correo electrónico</label>
-              <input type="email" className={f.input} value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="Ej: juan@example.com" required />
+              <label className={f.label}>Apellidos</label>
+              <input type="text" className={f.input} value={formApellidos} onChange={e => setFormApellidos(e.target.value)} placeholder="Ej: Pérez García" />
             </div>
           </div>
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Contraseña</label>
-              <input type="password" className={f.input} value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
+              <label className={f.label}>Correo electrónico *</label>
+              <input type="email" className={f.input} value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="Ej: juan@example.com" required />
             </div>
             <div className={f.field}>
               <label className={f.label}>Teléfono</label>
-              <input type="tel" className={f.input} value={formTelefono} onChange={e => setFormTelefono(e.target.value)} placeholder="Opcional" />
+              <input type="tel" className={f.input} value={formTelefono} onChange={e => setFormTelefono(e.target.value)} placeholder="Opcional" inputMode="numeric" />
+            </div>
+          </div>
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label}>Tipo de documento *</label>
+              <select className={f.select} value={formTipoDocumento} onChange={e => setFormTipoDocumento(e.target.value)} required>
+                <option value="">Selecciona...</option>
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="NIE">NIE</option>
+                <option value="PASSPORT">Pasaporte</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="OTHER">Otro</option>
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Número de documento *</label>
+              <input type="text" className={f.input} value={formNumeroDocumento} onChange={e => setFormNumeroDocumento(e.target.value)} placeholder="Ej: 123456789" required inputMode="numeric" />
+            </div>
+          </div>
+          <div className={f.field}>
+            <label className={f.label}>Dirección</label>
+            <input type="text" className={f.input} value={formDireccion} onChange={e => setFormDireccion(e.target.value)} placeholder="Calle, número, ciudad..." />
+          </div>
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label}>Contraseña *</label>
+              <input type="password" className={f.input} value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Confirmar contraseña *</label>
+              <input type="password" className={f.input} value={formConfirmPassword} onChange={e => setFormConfirmPassword(e.target.value)} placeholder="Repite la contraseña" required minLength={8} />
             </div>
           </div>
           <div className={f.formActions}>
@@ -335,19 +405,44 @@ export const AdminDomicilios: React.FC = () => {
         <form id="editDomiciliarioForm" className={f.form} onSubmit={handleUpdate}>
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Nombre completo</label>
+              <label className={f.label}>Nombre *</label>
               <input type="text" className={f.input} value={formNombre} onChange={e => setFormNombre(e.target.value)} required />
             </div>
             <div className={f.field}>
-              <label className={f.label}>Correo electrónico</label>
-              <input type="email" className={f.input} value={formEmail} disabled />
+              <label className={f.label}>Apellidos</label>
+              <input type="text" className={f.input} value={formApellidos} onChange={e => setFormApellidos(e.target.value)} />
             </div>
           </div>
           <div className={f.formRow}>
             <div className={f.field}>
+              <label className={f.label}>Correo electrónico</label>
+              <input type="email" className={f.input} value={formEmail} disabled />
+            </div>
+            <div className={f.field}>
               <label className={f.label}>Teléfono</label>
               <input type="tel" className={f.input} value={formTelefono} onChange={e => setFormTelefono(e.target.value)} placeholder="Opcional" />
             </div>
+          </div>
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label}>Tipo de documento</label>
+              <select className={f.select} value={formTipoDocumento} onChange={e => setFormTipoDocumento(e.target.value)}>
+                <option value="">Selecciona...</option>
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="NIE">NIE</option>
+                <option value="PASSPORT">Pasaporte</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="OTHER">Otro</option>
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Número de documento</label>
+              <input type="text" className={f.input} value={formNumeroDocumento} onChange={e => setFormNumeroDocumento(e.target.value)} inputMode="numeric" />
+            </div>
+          </div>
+          <div className={f.field}>
+            <label className={f.label}>Dirección</label>
+            <input type="text" className={f.input} value={formDireccion} onChange={e => setFormDireccion(e.target.value)} />
           </div>
           <div className={f.formActions}>
             <Button variant="secondary" type="button" onClick={() => { setEditOpen(false); setEditingId(null); }} disabled={saving}>Cancelar</Button>

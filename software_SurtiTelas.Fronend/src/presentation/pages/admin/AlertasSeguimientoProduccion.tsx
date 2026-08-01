@@ -204,7 +204,7 @@ export const AdminAlertasSeguimientoProduccion: React.FC = () => {
       {loading ? (
         <div className={s.loadingBox}>Cargando alertas...</div>
       ) : (
-        <DataTable<AlertaSeguimiento>
+        <DataTable enableExport={false} enableRowSelection={false}
           data={filteredAlertas}
           pageSize={10}
           emptyMessage="No se encontraron alertas"

@@ -1,98 +1,109 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Plus, Archive, CreditCard, Package, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
-import s from '../admin/Pedidos.module.css';
-import { Badge } from '@/shared/ui/Badge';
-import { Button } from '@/shared/ui/Button';
-import { DetailModal } from '@/shared/ui/DetailModal';
-import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
-import { Tooltip } from '@/shared/components/Tooltip';
-import { ordersApi } from '@/infrastructure/api/ordersApi';
-import { authApi } from '@/infrastructure/api/authApi';
-import { useAuthStore } from '@/core/stores/authStore';
-import { useClientes } from '@/core/stores';
-import type { Pedido } from '@/core/types';
-import type { BackendAuthUser } from '@/infrastructure/api/authApi';
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import {
+  Search,
+  Plus,
+  Archive,
+  CreditCard,
+  Package,
+  AlertTriangle,
+} from "lucide-react";
+import { toast } from "sonner";
+import s from "../admin/Pedidos.module.css";
+import { Badge } from "@/shared/ui/Badge";
+import { Button } from "@/shared/ui/Button";
+import { DetailModal } from "@/shared/ui/DetailModal";
+import { ConfirmationModal } from "@/shared/ui/ConfirmationModal";
+import { Tooltip } from "@/shared/components/Tooltip";
+import { ordersApi } from "@/infrastructure/api/ordersApi";
+import { useAuthStore } from "@/core/stores/authStore";
+import { useClientes } from "@/core/stores";
+import type { Pedido } from "@/core/types";
 
-const orderStatuses: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default' | null> = {
-  'Nuevo': 'default',
-  'En producción': 'info',
-  'Listo': 'warning',
-  'Despachado': 'default',
-  'En camino': 'info',
-  'Entregado': 'success',
-  'Cancelado': 'danger',
+const orderStatuses: Record<
+  string,
+  "success" | "warning" | "danger" | "info" | "default" | null
+> = {
+  Pendiente: "warning",
+  Aceptado: "info",
+  "En proceso": "info",
+  Enviado: "default",
+  Entregado: "success",
+  Rechazado: "danger",
 };
 
-const emptyPedidoForm: Omit<Pedido, 'id'> = {
-  cliente: '',
-  asesor: '',
-  fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
+const emptyPedidoForm: Omit<Pedido, "id"> = {
+  cliente: "",
+  asesor: "",
+  fecha: new Date().toLocaleDateString("es-CO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }),
   items: 1,
-  total: '0',
-  estado: 'Nuevo',
-  prioridad: 'Estándar',
-  observaciones: '',
+  total: "0",
+  estado: "Pendiente",
+  prioridad: "Estándar",
+  observaciones: "",
   itemsList: [],
 };
 
-import { parseCurrency } from '@/shared/utils/number';
+import { parseCurrency } from "@/shared/utils/number";
 
 export const AsesorPedidos: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const { clientes } = useClientes();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [asesores, setAsesores] = useState<BackendAuthUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formError, setFormError] = useState('');
-  const [form, setForm] = useState<Omit<Pedido, 'id'>>(emptyPedidoForm);
-  const [statusValue, setStatusValue] = useState<Pedido['estado']>('Nuevo');
+  const [formError, setFormError] = useState("");
+  const [form, setForm] = useState<Omit<Pedido, "id">>(emptyPedidoForm);
+  const [statusValue, setStatusValue] = useState<Pedido["estado"]>("Pendiente");
   const asesorInicialRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [ordersResult, usersResult] = await Promise.all([
-          ordersApi.list({ asesorId: user?.uid }),
-          authApi.listUsers(),
-        ]);
-        setPedidos(ordersResult.pedidos);
-        setAsesores(usersResult.data.filter((u) => u.role === 'ASESOR'));
-        if (!asesorInicialRef.current && usersResult.data.some((u) => u.role === 'ASESOR')) {
-          const asesor = usersResult.data.find((u) => u.role === 'ASESOR');
-          setForm((prev) => ({ ...prev, asesor: asesor?.nombre ?? '' }));
+        const ordersResult = await ordersApi.list({ asesorId: user?.uid });
+        console.log("ORDERS_RESULT_ASESOR", ordersResult);
+        console.log("ORDERS_RESULT_ASESOR_JSON", JSON.stringify(ordersResult));
+        setPedidos(ordersResult.pedidos ?? []);
+        if (!asesorInicialRef.current) {
+          setForm((prev) => ({ ...prev, asesor: user?.name || "" }));
           asesorInicialRef.current = true;
         }
-      } catch {
-        toast.error('No se pudieron cargar los pedidos');
+      } catch (error) {
+        console.error("ERROR_LOADING_ASESOR_PEDIDOS", error);
+        toast.error("No se pudieron cargar los pedidos");
       } finally {
         setLoading(false);
       }
     };
-    void load();
-  }, [user?.uid]);
+    if (user?.uid) {
+      void load();
+    }
+  }, [user?.uid, user?.name]);
 
   const misPedidos = pedidos;
 
   const filteredPedidos = useMemo(() => {
-    return misPedidos.filter((p) =>
-      p.id.toLowerCase().includes(search.toLowerCase()) ||
-      p.cliente.toLowerCase().includes(search.toLowerCase())
+    return misPedidos.filter(
+      (p) =>
+        p.id.toLowerCase().includes(search.toLowerCase()) ||
+        p.cliente.toLowerCase().includes(search.toLowerCase()),
     );
   }, [misPedidos, search]);
 
   const resetForm = () => {
-    setForm({ ...emptyPedidoForm, asesor: user?.name || '' });
+    setForm({ ...emptyPedidoForm, asesor: user?.name || "" });
     setEditingId(null);
-    setFormError('');
+    setFormError("");
   };
 
   const openCreate = () => {
@@ -109,11 +120,11 @@ export const AsesorPedidos: React.FC = () => {
       items: pedido.items,
       total: pedido.total,
       estado: pedido.estado,
-      prioridad: pedido.prioridad || 'Estándar',
-      observaciones: pedido.observaciones || '',
+      prioridad: pedido.prioridad || "Estándar",
+      observaciones: pedido.observaciones || "",
       itemsList: pedido.itemsList || [],
     });
-    setFormError('');
+    setFormError("");
     setIsFormOpen(true);
   };
 
@@ -134,29 +145,38 @@ export const AsesorPedidos: React.FC = () => {
   };
 
   const savePedido = async () => {
-    setFormError('');
+    setFormError("");
     const items = Number(form.items) || 0;
     const total = parseCurrency(form.total);
 
     if (!form.cliente.trim()) {
-      setFormError('El cliente es obligatorio.');
+      setFormError("El cliente es obligatorio.");
       return;
     }
     if (items <= 0) {
-      setFormError('La cantidad de artículos debe ser mayor a 0.');
+      setFormError("La cantidad de artículos debe ser mayor a 0.");
       return;
     }
     if (total <= 0) {
-      setFormError('El total del pedido debe ser mayor a 0.');
+      setFormError("El total del pedido debe ser mayor a 0.");
       return;
     }
 
     try {
       if (editingId) {
-        const cliente = clientes.find((c) => c.nombre.toLowerCase() === form.cliente.toLowerCase());
-        const itemsList = form.itemsList && form.itemsList.length > 0
-          ? form.itemsList
-          : [{ nombre: 'Solicitud personalizada', precio: Math.round(Number(form.total) / items), cantidad: items }];
+        const cliente = clientes.find(
+          (c) => c.nombre.toLowerCase() === form.cliente.toLowerCase(),
+        );
+        const itemsList =
+          form.itemsList && form.itemsList.length > 0
+            ? form.itemsList
+            : [
+                {
+                  nombre: "Solicitud personalizada",
+                  precio: Math.round(Number(form.total) / items),
+                  cantidad: items,
+                },
+              ];
         const actualizado = await ordersApi.updateOrderFull(editingId, {
           clienteId: cliente?.id || form.cliente,
           asesorId: user?.uid,
@@ -164,21 +184,43 @@ export const AsesorPedidos: React.FC = () => {
           observaciones: form.observaciones,
           itemsList,
         });
-        setPedidos((prev) => prev.map((p) => (p.id === editingId ? { ...actualizado, cliente: form.cliente, asesor: form.asesor, items, total: form.total, fecha: form.fecha } : p)));
+        setPedidos((prev) =>
+          prev.map((p) =>
+            p.id === editingId
+              ? {
+                  ...actualizado,
+                  cliente: form.cliente,
+                  asesor: form.asesor,
+                  items,
+                  total: form.total,
+                  fecha: form.fecha,
+                }
+              : p,
+          ),
+        );
         toast.success(`Pedido ${actualizado.id} actualizado`);
       } else {
-        const cliente = clientes.find((c) => c.nombre.toLowerCase() === form.cliente.toLowerCase());
+        const cliente = clientes.find(
+          (c) => c.nombre.toLowerCase() === form.cliente.toLowerCase(),
+        );
         if (!cliente) {
-          setFormError('Cliente no encontrado. Registra el cliente primero.');
+          setFormError("Cliente no encontrado. Registra el cliente primero.");
           return;
         }
-        const data: Omit<Pedido, 'id'> = {
+        const data: Omit<Pedido, "id"> = {
           ...form,
           items,
           total: `$${total.toLocaleString()}`,
-          itemsList: form.itemsList && form.itemsList.length > 0
-            ? form.itemsList
-            : [{ nombre: 'Solicitud personalizada', precio: Math.round(total / items), cantidad: items }],
+          itemsList:
+            form.itemsList && form.itemsList.length > 0
+              ? form.itemsList
+              : [
+                  {
+                    nombre: "Solicitud personalizada",
+                    precio: Math.round(total / items),
+                    cantidad: items,
+                  },
+                ],
         };
         const resultado = await ordersApi.create({
           clienteId: cliente.id,
@@ -193,14 +235,19 @@ export const AsesorPedidos: React.FC = () => {
       setIsFormOpen(false);
       resetForm();
     } catch {
-      toast.error('No fue posible guardar el pedido.');
+      toast.error("No fue posible guardar el pedido.");
     }
   };
 
   const saveStatus = async () => {
     if (!selectedPedido) return;
-    const actualizado = await ordersApi.updateStatus(selectedPedido.id, statusValue);
-    setPedidos((prev) => prev.map((p) => (p.id === selectedPedido.id ? actualizado : p)));
+    const actualizado = await ordersApi.updateStatus(
+      selectedPedido.id,
+      statusValue,
+    );
+    setPedidos((prev) =>
+      prev.map((p) => (p.id === selectedPedido.id ? actualizado : p)),
+    );
     toast.success(`Pedido ${actualizado.id} marcado como ${statusValue}`);
     setIsStatusOpen(false);
     setSelectedPedido(null);
@@ -213,7 +260,7 @@ export const AsesorPedidos: React.FC = () => {
       setPedidos((prev) => prev.filter((p) => p.id !== selectedPedido.id));
       toast.success(`Pedido ${selectedPedido.id} eliminado`);
     } catch {
-      toast.error('No se pudo eliminar el pedido');
+      toast.error("No se pudo eliminar el pedido");
     } finally {
       setIsDeleteOpen(false);
       setSelectedPedido(null);
@@ -262,8 +309,15 @@ export const AsesorPedidos: React.FC = () => {
           <tbody>
             {filteredPedidos.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.5)' }}>
-                  {loading ? 'Cargando pedidos...' : 'No hay pedidos'}
+                <td
+                  colSpan={7}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  {loading ? "Cargando pedidos..." : "No hay pedidos"}
                 </td>
               </tr>
             ) : (
@@ -281,10 +335,38 @@ export const AsesorPedidos: React.FC = () => {
                   </td>
                   <td>
                     <div className={s.actions}>
-                      <Tooltip title="Ver detalle"><button className={s.actionBtn} onClick={() => openDetail(pedido)}>Ver</button></Tooltip>
-                      <Tooltip title="Editar"><button className={s.actionBtn} onClick={() => openEdit(pedido)}>Editar</button></Tooltip>
-                      <Tooltip title="Cambiar estado"><button className={s.actionBtn} onClick={() => openStatus(pedido)}>Estado</button></Tooltip>
-                      <Tooltip title="Eliminar"><button className={s.actionBtn} onClick={() => openDelete(pedido)}>Eliminar</button></Tooltip>
+                      <Tooltip title="Ver detalle">
+                        <button
+                          className={s.actionBtn}
+                          onClick={() => openDetail(pedido)}
+                        >
+                          Ver
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="Editar">
+                        <button
+                          className={s.actionBtn}
+                          onClick={() => openEdit(pedido)}
+                        >
+                          Editar
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="Cambiar estado">
+                        <button
+                          className={s.actionBtn}
+                          onClick={() => openStatus(pedido)}
+                        >
+                          Estado
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <button
+                          className={s.actionBtn}
+                          onClick={() => openDelete(pedido)}
+                        >
+                          Eliminar
+                        </button>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>
@@ -298,29 +380,63 @@ export const AsesorPedidos: React.FC = () => {
         children={null}
         open={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        title={selectedPedido ? `Pedido ${selectedPedido.id}` : 'Pedido'}
+        title={selectedPedido ? `Pedido ${selectedPedido.id}` : "Pedido"}
         subtitle={selectedPedido?.fecha}
         size="xl"
         header={{
           icon: <Archive size={18} />,
-          status: selectedPedido ? <Badge variant={orderStatuses[selectedPedido.estado]}>{selectedPedido.estado}</Badge> : undefined,
+          status: selectedPedido ? (
+            <Badge variant={orderStatuses[selectedPedido.estado]}>
+              {selectedPedido.estado}
+            </Badge>
+          ) : undefined,
         }}
-        kpis={selectedPedido ? [
-          { label: 'Cliente', value: selectedPedido.cliente, icon: <Archive size={16} /> },
-          { label: 'Total', value: selectedPedido.total, icon: <CreditCard size={16} />, monospace: true },
-          { label: 'Prioridad', value: selectedPedido.prioridad || 'Estándar', icon: <AlertTriangle size={16} /> },
-        ] : undefined}
+        kpis={
+          selectedPedido
+            ? [
+                {
+                  label: "Cliente",
+                  value: selectedPedido.cliente,
+                  icon: <Archive size={16} />,
+                },
+                {
+                  label: "Total",
+                  value: selectedPedido.total,
+                  icon: <CreditCard size={16} />,
+                  monospace: true,
+                },
+                {
+                  label: "Prioridad",
+                  value: selectedPedido.prioridad || "Estándar",
+                  icon: <AlertTriangle size={16} />,
+                },
+              ]
+            : undefined
+        }
         sections={[
           {
-            title: 'Detalle comercial',
+            title: "Detalle comercial",
             fields: [
-              { label: 'Asesor asignado', value: selectedPedido?.asesor, icon: <Archive size={16} /> },
-              { label: 'Cantidad de artículos', value: selectedPedido?.items, icon: <Package size={16} /> },
-              { label: 'Observaciones', value: selectedPedido?.observaciones || 'Sin observaciones', fullWidth: true, icon: <AlertTriangle size={16} /> },
+              {
+                label: "Asesor asignado",
+                value: selectedPedido?.asesor,
+                icon: <Archive size={16} />,
+              },
+              {
+                label: "Cantidad de artículos",
+                value: selectedPedido?.items,
+                icon: <Package size={16} />,
+              },
+              {
+                label: "Observaciones",
+                value: selectedPedido?.observaciones || "Sin observaciones",
+                fullWidth: true,
+                icon: <AlertTriangle size={16} />,
+              },
             ],
           },
           {
-            title: 'Artículos',
+            title: "Artículos",
             children: (
               <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)]">
                 <table className="min-w-full text-sm">
@@ -328,19 +444,38 @@ export const AsesorPedidos: React.FC = () => {
                     <tr>
                       <th className="px-4 py-3 font-medium">Referencia</th>
                       <th className="px-4 py-3 font-medium">Producto</th>
-                      <th className="px-4 py-3 font-medium text-right">Cantidad</th>
-                      <th className="px-4 py-3 font-medium text-right">Precio</th>
-                      <th className="px-4 py-3 font-medium text-right">Subtotal</th>
+                      <th className="px-4 py-3 font-medium text-right">
+                        Cantidad
+                      </th>
+                      <th className="px-4 py-3 font-medium text-right">
+                        Precio
+                      </th>
+                      <th className="px-4 py-3 font-medium text-right">
+                        Subtotal
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {(selectedPedido?.itemsList || []).map((item, index) => (
-                      <tr key={`${item.nombre}-${index}`} className="border-t border-[var(--color-border)]">
-                        <td className="px-4 py-3 font-mono text-[var(--color-text-muted)]">REF-{String(index + 1).padStart(3, '0')}</td>
-                        <td className="px-4 py-3 text-[var(--color-text-primary)]">{item.nombre}</td>
-                        <td className="px-4 py-3 text-right text-[var(--color-text-primary)]">{item.cantidad}</td>
-                        <td className="px-4 py-3 text-right text-[var(--color-text-primary)]">${item.precio.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-[var(--color-text-primary)]">${(item.cantidad * item.precio).toLocaleString()}</td>
+                      <tr
+                        key={`${item.nombre}-${index}`}
+                        className="border-t border-[var(--color-border)]"
+                      >
+                        <td className="px-4 py-3 font-mono text-[var(--color-text-muted)]">
+                          REF-{String(index + 1).padStart(3, "0")}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--color-text-primary)]">
+                          {item.nombre}
+                        </td>
+                        <td className="px-4 py-3 text-right text-[var(--color-text-primary)]">
+                          {item.cantidad}
+                        </td>
+                        <td className="px-4 py-3 text-right text-[var(--color-text-primary)]">
+                          ${item.precio.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-[var(--color-text-primary)]">
+                          ${(item.cantidad * item.precio).toLocaleString()}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -351,8 +486,19 @@ export const AsesorPedidos: React.FC = () => {
         ]}
         footer={
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setIsDetailOpen(false)}>Cerrar</Button>
-            {selectedPedido && <Button onClick={() => { setIsDetailOpen(false); openStatus(selectedPedido); }}>Cambiar estado</Button>}
+            <Button variant="secondary" onClick={() => setIsDetailOpen(false)}>
+              Cerrar
+            </Button>
+            {selectedPedido && (
+              <Button
+                onClick={() => {
+                  setIsDetailOpen(false);
+                  openStatus(selectedPedido);
+                }}
+              >
+                Cambiar estado
+              </Button>
+            )}
           </div>
         }
       />
@@ -360,55 +506,126 @@ export const AsesorPedidos: React.FC = () => {
       <DetailModal
         children={null}
         open={isFormOpen}
-        onClose={() => { setIsFormOpen(false); resetForm(); }}
-        title={editingId ? 'Editar Pedido' : 'Crear Nuevo Pedido'}
-        subtitle={editingId ? 'Actualiza los datos del pedido' : 'Registra un pedido para tus clientes'}
+        onClose={() => {
+          setIsFormOpen(false);
+          resetForm();
+        }}
+        title={editingId ? "Editar Pedido" : "Crear Nuevo Pedido"}
+        subtitle={
+          editingId
+            ? "Actualiza los datos del pedido"
+            : "Registra un pedido para tus clientes"
+        }
         size="lg"
         sections={[
           {
-            title: 'Datos del pedido',
+            title: "Datos del pedido",
             children: (
               <div className="grid gap-4">
-                {formError && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{formError}</div>}
+                {formError && (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+                    {formError}
+                  </div>
+                )}
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                     Cliente
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.cliente} onChange={(e) => setForm({ ...form, cliente: e.target.value })} placeholder="Nombre del cliente" />
+                    <input
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={form.cliente}
+                      onChange={(e) =>
+                        setForm({ ...form, cliente: e.target.value })
+                      }
+                      placeholder="Nombre del cliente"
+                    />
                   </label>
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                     Fecha
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} />
+                    <input
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={form.fecha}
+                      onChange={(e) =>
+                        setForm({ ...form, fecha: e.target.value })
+                      }
+                    />
                   </label>
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                     Asesor
-                    <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.asesor} onChange={(e) => setForm({ ...form, asesor: e.target.value })}>
-                      <option value="">Selecciona un asesor</option>
-                      {asesores.map((u) => (
-                        <option key={u.id} value={u.nombre}>
-                          {u.nombre}
+                    <input
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={form.asesor}
+                      onChange={(e) =>
+                        setForm({ ...form, asesor: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                    Estado
+                    <select
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={form.estado}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          estado: e.target.value as Pedido["estado"],
+                        })
+                      }
+                    >
+                      {(
+                        [
+                          "Pendiente",
+                          "Aceptado",
+                          "En proceso",
+                          "Enviado",
+                          "Entregado",
+                          "Rechazado",
+                        ] as Pedido["estado"][]
+                      ).map((es) => (
+                        <option key={es} value={es}>
+                          {es}
                         </option>
                       ))}
                     </select>
                   </label>
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Estado
-                    <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value as Pedido['estado'] })}>
-                      {(['Nuevo', 'En producción', 'Listo', 'Despachado', 'En camino', 'Entregado', 'Cancelado'] as Pedido['estado'][]).map((es) => (
-                        <option key={es} value={es}>{es}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                     Cantidad de artículos
-                    <input type="number" min="1" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.items} onChange={(e) => setForm({ ...form, items: Number(e.target.value) })} />
+                    <input
+                      type="number"
+                      min="1"
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={form.items}
+                      onChange={(e) =>
+                        setForm({ ...form, items: Number(e.target.value) })
+                      }
+                    />
                   </label>
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                     Total
-                    <input type="number" min="1" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={parseCurrency(form.total)} onChange={(e) => setForm({ ...form, total: `$${Number(e.target.value || 0).toLocaleString()}` })} />
+                    <input
+                      type="number"
+                      min="1"
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={parseCurrency(form.total)}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          total: `$${Number(e.target.value || 0).toLocaleString()}`,
+                        })
+                      }
+                    />
                   </label>
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                     Prioridad
-                    <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.prioridad} onChange={(e) => setForm({ ...form, prioridad: e.target.value as Pedido['prioridad'] })}>
+                    <select
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={form.prioridad}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          prioridad: e.target.value as Pedido["prioridad"],
+                        })
+                      }
+                    >
                       <option value="Estándar">Estándar</option>
                       <option value="Prioritario">Prioritario</option>
                     </select>
@@ -416,7 +633,13 @@ export const AsesorPedidos: React.FC = () => {
                 </div>
                 <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                   Observaciones
-                  <textarea className="min-h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} />
+                  <textarea
+                    className="min-h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                    value={form.observaciones}
+                    onChange={(e) =>
+                      setForm({ ...form, observaciones: e.target.value })
+                    }
+                  />
                 </label>
               </div>
             ),
@@ -424,8 +647,19 @@ export const AsesorPedidos: React.FC = () => {
         ]}
         footer={
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="secondary" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancelar</Button>
-            <Button type="button" onClick={savePedido}>{editingId ? 'Guardar cambios' : 'Crear pedido'}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsFormOpen(false);
+                resetForm();
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button type="button" onClick={savePedido}>
+              {editingId ? "Guardar cambios" : "Crear pedido"}
+            </Button>
           </div>
         }
       />
@@ -438,12 +672,22 @@ export const AsesorPedidos: React.FC = () => {
         subtitle={selectedPedido ? `Pedido ${selectedPedido.id}` : undefined}
         sections={[
           {
-            title: 'Nuevo estado',
+            title: "Nuevo estado",
             children: (
               <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                 Estado
-                <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={statusValue} onChange={(e) => setStatusValue(e.target.value as Pedido['estado'])}>
-                  {Object.keys(orderStatuses).map((estado) => <option key={estado} value={estado}>{estado}</option>)}
+                <select
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                  value={statusValue}
+                  onChange={(e) =>
+                    setStatusValue(e.target.value as Pedido["estado"])
+                  }
+                >
+                  {Object.keys(orderStatuses).map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
                 </select>
               </label>
             ),
@@ -451,7 +695,9 @@ export const AsesorPedidos: React.FC = () => {
         ]}
         footer={
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setIsStatusOpen(false)}>Cancelar</Button>
+            <Button variant="secondary" onClick={() => setIsStatusOpen(false)}>
+              Cancelar
+            </Button>
             <Button onClick={saveStatus}>Aplicar cambio</Button>
           </div>
         }

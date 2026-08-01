@@ -1,0 +1,31 @@
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: var(--modal-footer-padding, 20px 24px);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  flex-shrink: 0;
+}
+
+.align--center {
+  justify-content: center;
+}
+
+.align--start {
+  justify-content: flex-start;
+}
+
+@media (max-width: 640px) {
+  .modalFooter {
+    flex-direction: column-reverse;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+
+  .modalFooter > * {
+    width: 100%;
+  }
+}

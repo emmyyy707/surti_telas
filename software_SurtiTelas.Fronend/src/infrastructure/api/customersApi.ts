@@ -6,6 +6,7 @@ import type { PaginatedResponse } from './pagination';
 export interface CustomerDTO {
   id: string;
   nombre: string;
+  apellidos?: string;
   email?: string;
   ciudad?: string;
   tel?: string;
@@ -24,6 +25,7 @@ export function toCliente(dto: CustomerDTO): Cliente {
   return {
     id: dto.id,
     nombre: dto.nombre,
+    apellidos: dto.apellidos,
     email: dto.email,
     ciudad: dto.ciudad ?? '',
     tel: dto.tel ?? '',
@@ -41,6 +43,7 @@ export function toCliente(dto: CustomerDTO): Cliente {
 function toCustomerBody(c: Partial<Cliente>): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (c.nombre !== undefined) body.nombre = c.nombre;
+  if (c.apellidos !== undefined) body.apellidos = c.apellidos;
   if (c.email !== undefined) body.email = c.email;
   if (c.ciudad !== undefined) body.ciudad = c.ciudad;
   if (c.tel !== undefined) body.tel = c.tel;

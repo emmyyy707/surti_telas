@@ -692,6 +692,17 @@
   }
 }
 
+@keyframes chPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .ch-install-label {
   font-size: 0.9rem;
   font-weight: 800;
@@ -1078,8 +1089,8 @@
 }
 
 /* ============================================================
-   REDUCED MOTION
-   ============================================================ */
+    REDUCED MOTION
+    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -1087,6 +1098,71 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================
+    CHECKOUT SUCCESS / ERROR SCREENS
+    ============================================================ */
+
+.ch-success-screen,
+.ch-error-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  gap: 1rem;
+}
+
+.ch-success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ch-pop-in 0.4s ease-out;
+}
+
+.ch-error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ch-pop-in 0.4s ease-out;
+}
+
+.ch-success-text,
+.ch-error-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.ch-success-hint,
+.ch-error-hint {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+  max-width: 320px;
+}
+
+.ch-success-screen .ch-btn-primary,
+.ch-error-screen .ch-btn-primary {
+  margin-top: 1rem;
+  min-width: 160px;
 }
 
 

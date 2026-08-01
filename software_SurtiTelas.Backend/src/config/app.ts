@@ -12,6 +12,7 @@ import { authRouter } from '../modules/auth/presentation/routes/auth.routes';
 import { catalogRouter } from '../modules/catalog/presentation/routes/catalog.routes';
 import { customerRouter } from '../modules/customers/presentation/routes/customer.routes';
 import { orderRouter } from '../modules/orders/presentation/routes/order.routes';
+import { adminOrderRouter } from '../modules/orders/presentation/routes/admin-order.routes';
 import { stockRouter } from '../modules/stock/presentation/routes/stock.routes';
 import { productionRouter } from '../modules/production/presentation/routes/production.routes';
 import { notificationRouter } from '../modules/notifications/presentation/routes/notification.routes';
@@ -29,6 +30,8 @@ import { reportRouter } from '../modules/reports/presentation/routes/report.rout
 import { returnRouter } from '../modules/returns/presentation/routes/return.routes';
 import { favoriteRouter } from '../modules/favorites/presentation/routes/favorite.routes';
 import { healthRouter } from '../modules/health/presentation/routes/health.routes';
+import { orderApprovalRouter } from '../modules/sales-orders/presentation/routes/orderApproval.routes';
+import { salesReportRouter } from '../modules/sales-orders/presentation/routes/salesReport.routes';
 import { userRateLimiter } from '../modules/shared/presentation/middlewares/userRateLimiter';
 import { redisUserRateLimiter } from '../modules/shared/presentation/middlewares/redisUserRateLimiter';
 import { metricsMiddleware, metricsEndpoint } from '../modules/shared/presentation/middlewares/metrics';
@@ -38,6 +41,12 @@ import { setupSwagger } from './swagger';
 import { logger } from '../shared/infrastructure/logger';
 import { getHealthStatus } from '../shared/infrastructure/healthCheck';
 import { registerAuditEventHandlers } from '../modules/audit/application/use-cases/AuditEventHandler';
+import { analyticsRouter } from '../modules/analytics/presentation/routes/analytics.routes';
+import { exportRouter } from '../modules/export/presentation/routes/export.routes';
+import { deliveryTrackingRouter } from '../modules/delivery/presentation/routes/delivery.routes';
+import { commissionRouter } from '../modules/commission/presentation/routes/commission.routes';
+import { alertInventoryRouter } from '../modules/alert/presentation/routes/alert-inventory.routes';
+import { financialRouter } from '../modules/financial/presentation/routes/financial.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -205,16 +214,25 @@ export function createApp(): Express {
   app.use('/api/v1/contact', contactRoutes);
   app.use('/api/v1/audit', auditRouter);
   app.use('/api/v1/access-logs', auditRouter);
-  app.use('/api/v1/reports', reportRouter);
-  app.use('/api/v1/returns', returnRouter);
-  app.use('/api/v1/favorites', favoriteRouter);
+app.use('/api/v1/reports', reportRouter);
+app.use('/api/v1/returns', returnRouter);
+app.use('/api/v1/favorites', favoriteRouter);
+app.use('/api/v1/sales-orders', orderApprovalRouter);
+  app.use('/api/v1/sales-orders', salesReportRouter);
 
 
 
   app.use('/api/v1/auth', authRouter);
+  app.use('/api/v1/analytics', analyticsRouter);
+  app.use('/api/v1/admin/export', exportRouter);
+  app.use('/api/v1/admin/delivery', deliveryTrackingRouter);
+  app.use('/api/v1/admin/commissions', commissionRouter);
+  app.use('/api/v1/admin/alerts', alertInventoryRouter);
+  app.use('/api/v1/admin/financial', financialRouter);
   app.use('/api/v1/catalog', catalogRouter);
   app.use('/api/v1/customers', customerRouter);
   app.use('/api/v1/orders', orderRouter);
+  app.use('/api/v1/admin/orders', adminOrderRouter);
   app.use('/api/v1/stock', stockRouter);
   app.use('/api/v1/production', productionRouter);
   app.use('/health', healthRouter);

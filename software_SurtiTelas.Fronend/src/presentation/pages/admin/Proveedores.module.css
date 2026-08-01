@@ -308,7 +308,22 @@
 .form {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+
+.formSectionTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
 }
 
 .formRow {
@@ -353,6 +368,26 @@
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
   box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.1);
+}
+
+.inputError {
+  border-color: var(--color-error) !important;
+}
+
+.inputError:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--color-error);
+  font-weight: 500;
+}
+
+.hint {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
 }
 
 .inputWithIcon {

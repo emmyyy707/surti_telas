@@ -8,8 +8,10 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import s from './Clientes.module.css';
-import { authApi, type BackendAuthUser, type BackendRole } from '@/infrastructure/api/authApi';
+import { authApi, type BackendAuthUser, type BackendRole, type CreateUserRequest } from '@/infrastructure/api/authApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
+import type { Cliente } from '@/core/types';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 interface ClienteUI extends BackendAuthUser {
   telefono?: string | null;
@@ -17,6 +19,10 @@ interface ClienteUI extends BackendAuthUser {
   isTrustedCustomer?: boolean;
   estadoCliente?: 'Activo' | 'Inactivo';
   customerId?: string;
+  apellidos?: string | null;
+  direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
 }
 
 export const AdminClientes: React.FC = () => {
@@ -54,6 +60,10 @@ export const AdminClientes: React.FC = () => {
           isTrustedCustomer: match?.isTrustedCustomer ?? false,
           estadoCliente: (match?.estado ?? 'Activo') === 'Inactivo' ? 'Inactivo' : 'Activo',
           customerId: match?.id,
+          apellidos: match?.apellidos ?? null,
+          direccion: match?.direccion ?? null,
+          tipoDocumento: match?.tipoDocumento ?? null,
+          numeroDocumento: match?.numeroDocumento ?? null,
         } as ClienteUI;
       });
       setItems(clientesConDatos);
@@ -107,9 +117,14 @@ export const AdminClientes: React.FC = () => {
     const formData = new FormData(form);
 
     const nombre = String(formData.get('nombre') ?? '').trim();
+    const apellidos = String(formData.get('apellidos') ?? '').trim() || undefined;
     const email = String(formData.get('email') ?? '').trim() || undefined;
     const telefono = String(formData.get('telefono') ?? '').trim() || undefined;
-    const nit = String(formData.get('nit') ?? '').trim() || undefined;
+    const direccion = String(formData.get('direccion') ?? '').trim() || undefined;
+    const tipoDocumento = String(formData.get('tipoDocumento') ?? '').trim() || undefined;
+    const numeroDocumento = String(formData.get('numeroDocumento') ?? '').trim() || undefined;
+    const password = String(formData.get('password') ?? '').trim();
+    const confirmPassword = String(formData.get('confirmPassword') ?? '').trim();
     const isTrustedCustomer = (formData.get('isTrustedCustomer') as string) === 'on';
     const estado = (formData.get('estado') as string) === 'Inactivo' ? 'Inactivo' : 'Activo';
 
@@ -124,41 +139,81 @@ export const AdminClientes: React.FC = () => {
         if (customerId) {
           const updated = await customersApi.update(customerId, {
             nombre,
+            apellidos,
             email,
             tel: telefono,
-            nit,
+            nit: numeroDocumento,
+            direccion,
+            tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
             isTrustedCustomer,
             estado,
           });
           setItems((prev) =>
             prev.map((it) =>
-              it.id === updated.id ? { ...it, nombre: updated.nombre, email: updated.email ?? '', telefono: updated.tel, nit: updated.nit, isTrustedCustomer: updated.isTrustedCustomer, estadoCliente: updated.estado } : it
+              it.id === updated.id ? { ...it, nombre: updated.nombre, email: updated.email ?? '', telefono: updated.tel, nit: updated.nit, isTrustedCustomer: updated.isTrustedCustomer, estadoCliente: updated.estado, apellidos, direccion, tipoDocumento, numeroDocumento } : it
             )
           );
           toast.success('Cliente actualizado');
         } else {
           const created = await customersApi.create({
             nombre,
+            apellidos,
             email,
             tel: telefono,
-            nit,
+            nit: numeroDocumento,
+            direccion,
+            tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
             isTrustedCustomer,
             estado,
           });
-          setItems((prev) => [...prev, { ...created, email: created.email ?? '', role: 'CLIENTE' as BackendRole }]);
+          setItems((prev) => [...prev, { ...created, email: created.email ?? '', role: 'CLIENTE' as BackendRole, apellidos, direccion, tipoDocumento, numeroDocumento }]);
           toast.success('Cliente creado');
         }
       } else {
+        if (!email || !password) {
+          toast.error('Correo y contraseña son obligatorios');
+          return;
+        }
+        if (password.length < 8) {
+          toast.error('La contraseña debe tener al menos 8 caracteres');
+          return;
+        }
+        if (password !== confirmPassword) {
+          toast.error('Las contraseñas no coinciden');
+          return;
+        }
+        if (!tipoDocumento || !numeroDocumento) {
+          toast.error('Tipo y número de documento son obligatorios');
+          return;
+        }
+
+        const userPayload: CreateUserRequest = {
+          nombre,
+          apellidos,
+          email,
+          password,
+          role: 'CLIENTE',
+          telefono,
+          direccion,
+          tipoDocumento,
+          numeroDocumento,
+        };
+        const _userResult = await authApi.createUser(userPayload);
+
         const created = await customersApi.create({
           nombre,
+          apellidos,
           email,
           tel: telefono,
-          nit,
+          nit: numeroDocumento,
+          direccion,
+          tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
           isTrustedCustomer,
           estado,
         });
-        setItems((prev) => [...prev, { id: created.id, nombre: created.nombre, email: created.email ?? '', role: 'CLIENTE' as BackendRole, telefono: created.tel, nit: created.nit, isTrustedCustomer: created.isTrustedCustomer, estadoCliente: created.estado }]);
-        toast.success('Cliente creado');
+
+        setItems((prev) => [...prev, { ...created, email: created.email ?? '', role: 'CLIENTE' as BackendRole, apellidos, direccion, tipoDocumento, numeroDocumento }]);
+        toast.success('Cliente creado con usuario de acceso');
       }
       closeModal();
     } catch {
@@ -216,9 +271,9 @@ export const AdminClientes: React.FC = () => {
             <div className={s.detailItem}><span className={s.detailLabel}>Cliente de confianza</span><span>{item.isTrustedCustomer ? 'Sí' : 'No'}</span></div>
           </div>
         </div>
-        <div className={s.modalActions}>
-          <Button variant="secondary" onClick={closeModal}>Cerrar</Button>
-        </div>
+        <ModalFooter
+          actions={[{ label: 'Cerrar', variant: 'secondary', onClick: closeModal }]} />
+
       </div>
     ),
   };
@@ -252,15 +307,14 @@ export const AdminClientes: React.FC = () => {
         />
       </div>
 
-      <DataTable<ClienteUI>
+      <DataTable enableExport={false} enableRowSelection={false}
         data={filteredClientes}
         columns={columns}
         detailPanel={detailPanel}
         actions={actions}
         enableSorting
         enableColumnFilters
-        enableRowSelection={false}
-        enableExport={false}
+
         emptyMessage={loading ? 'Cargando clientes...' : error ? error : 'Sin resultados'}
         serverMode={false}
       />
@@ -274,24 +328,57 @@ export const AdminClientes: React.FC = () => {
         <form className={s.form} ref={formRef} onSubmit={handleSubmit}>
           <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>Nombre</label>
+              <label className={s.label}>Nombre *</label>
               <input type="text" className={s.input} name="nombre" defaultValue={selectedCliente?.nombre} required maxLength={100} />
             </div>
             <div className={s.field}>
-              <label className={s.label}>Email</label>
-              <input type="email" className={s.input} name="email" defaultValue={selectedCliente?.email ?? ''} required maxLength={100} />
+              <label className={s.label}>Apellidos</label>
+              <input type="text" className={s.input} name="apellidos" defaultValue={selectedCliente?.apellidos ?? ''} maxLength={100} />
             </div>
           </div>
           <div className={s.formRow}>
             <div className={s.field}>
+              <label className={s.label}>Email {selectedCliente ? '' : '*'}</label>
+              <input type="email" className={s.input} name="email" defaultValue={selectedCliente?.email ?? ''} required={!selectedCliente} maxLength={100} />
+            </div>
+            <div className={s.field}>
               <label className={s.label}>Teléfono</label>
               <input type="tel" className={s.input} name="telefono" defaultValue={selectedCliente?.telefono ?? ''} maxLength={11} pattern="[0-9]*" inputMode="numeric" />
             </div>
+          </div>
+          <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>NIT / Documento</label>
-              <input type="text" className={s.input} name="nit" defaultValue={selectedCliente?.nit ?? ''} maxLength={10} inputMode="numeric" />
+              <label className={s.label}>Tipo de documento *</label>
+              <select className={s.select} name="tipoDocumento" defaultValue={selectedCliente?.tipoDocumento ?? ''} required>
+                <option value="">Selecciona...</option>
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="NIE">NIE</option>
+                <option value="PASSPORT">Pasaporte</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="OTHER">Otro</option>
+              </select>
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Número de documento *</label>
+              <input type="text" className={s.input} name="numeroDocumento" defaultValue={selectedCliente?.numeroDocumento ?? ''} required maxLength={20} inputMode="numeric" />
             </div>
           </div>
+          <div className={s.field}>
+            <label className={s.label}>Dirección</label>
+            <input type="text" className={s.input} name="direccion" defaultValue={selectedCliente?.direccion ?? ''} maxLength={200} />
+          </div>
+          {!selectedCliente && (
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Contraseña *</label>
+                <input type="password" className={s.input} name="password" required minLength={8} placeholder="Mínimo 8 caracteres" />
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Confirmar contraseña *</label>
+                <input type="password" className={s.input} name="confirmPassword" required minLength={8} placeholder="Repite la contraseña" />
+              </div>
+            </div>
+          )}
           <div className={s.formRow}>
             <div className={s.field}>
               <label className={s.label}>Estado</label>
@@ -305,10 +392,9 @@ export const AdminClientes: React.FC = () => {
               <label htmlFor="isTrustedCustomer" className={s.label} style={{ margin: 0 }}>Cliente de confianza</label>
             </div>
           </div>
-          <div className={s.formActions}>
-            <Button variant="secondary" type="button" onClick={closeModal}>Cancelar</Button>
-            <Button type="submit">{selectedCliente ? 'Guardar cambios' : 'Crear cliente'}</Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal }, { label: selectedCliente ? 'Guardar cambios' : 'Crear cliente' , type: 'submit' }]} />
+
         </form>
       </Modal>
 

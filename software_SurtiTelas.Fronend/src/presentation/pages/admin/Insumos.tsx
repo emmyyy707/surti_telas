@@ -213,9 +213,9 @@ export const AdminInsumos: React.FC = () => {
   };
 
   const actions = ((item: Insumo): DataTableAction<Insumo>[] => [
-    { label: 'Editar', icon: <Edit size={14} />, onClick: (i) => { setSelectedInsumo(i); setModalOpen(true); } },
-    { label: item.estado === 'Activo' ? 'Desactivar' : 'Activar', icon: <ToggleLeft size={14} />, onClick: () => handleToggleEstado(item) },
-    { label: 'Eliminar', icon: <Trash2 size={14} />, danger: true, onClick: () => handleEliminar(item) },
+    { label: 'Editar', icon: <Edit size={14} aria-hidden="true" focusable="false" />, onClick: (i) => { setSelectedInsumo(i); setModalOpen(true); } },
+    { label: item.estado === 'Activo' ? 'Desactivar' : 'Activar', icon: <ToggleLeft size={14} aria-hidden="true" focusable="false" />, onClick: (i) => handleToggleEstado(i) },
+    { label: 'Eliminar', icon: <Trash2 size={14} aria-hidden="true" focusable="false" />, danger: true, onClick: (i) => handleEliminar(i) },
   ]) as DataTableAction<Insumo>[] | ((item: Insumo) => DataTableAction<Insumo>[]);
 
   return (
@@ -238,8 +238,7 @@ export const AdminInsumos: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
           debounceMs={100}
-          minChars={0}
-        />
+          minChars={0} />
       </div>
 
       <div className={s.tableWrapper}>
@@ -249,12 +248,10 @@ export const AdminInsumos: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           emptyMessage={loading ? 'Cargando insumos...' : error ? error : 'Sin resultados'}
-          maxVisibleColumns={5}
-        />
+          maxVisibleColumns={5} enableExport={false} enableRowSelection={false} />
       </div>
 
       {modalOpen && (
@@ -347,8 +344,7 @@ export const AdminInsumos: React.FC = () => {
         title="Eliminar insumo"
         description={`¿Estás seguro de que deseas eliminar "${deleteConfirm?.nombre}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
-        variant="danger"
-      />
+        variant="danger" />
     </div>
   );
 };

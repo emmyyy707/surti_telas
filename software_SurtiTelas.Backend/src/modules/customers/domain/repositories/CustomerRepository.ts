@@ -42,6 +42,7 @@ export interface CustomerFilters {
 export interface CustomerRepository {
   list(filters?: CustomerFilters): Promise<{ data: Customer[]; meta: { total: number; page?: number; limit: number; nextCursor?: string } }>;
   getById(id: string): Promise<Customer | null>;
+  getByEmail(email: string): Promise<Customer | null>;
   create(input: CreateCustomerInput): Promise<Customer>;
   update(id: string, changes: UpdateCustomerInput): Promise<Customer>;
   assignAsesor(id: string, asesorId: string): Promise<Customer>;

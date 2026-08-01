@@ -2,35 +2,28 @@ import { OrderPriority as DbPriority, OrderStatus as DbStatus } from '@prisma/cl
 import type { OrderData, OrderItem, OrderPriority, OrderStatus, OrderFlow } from '../../domain/entities/Order';
 
 const STATUS_TO_DB: Record<OrderStatus, DbStatus> = {
-  Nuevo: 'NUEVO',
-  'En producción': 'EN_PRODUCCION',
-  Listo: 'LISTO',
-  Despachado: 'DESPACHADO',
-  'En camino': 'EN_CAMINO',
-  Entregado: 'ENTREGADO',
-  Cancelado: 'CANCELADO',
   Pendiente: 'PENDIENTE',
-  'En validación': 'EN_VALIDACION',
   Aceptado: 'ACEPTADO',
+  'En proceso': 'EN_PRODUCCION',
+  Enviado: 'DESPACHADO',
+  Entregado: 'ENTREGADO',
   Rechazado: 'RECHAZADO',
-  'Recibo generado': 'RECIBO_GENERADO',
-  'Recibo enviado': 'RECIBO_ENVIADO',
 };
 
 const DB_TO_STATUS: Record<DbStatus, OrderStatus> = {
-  NUEVO: 'Nuevo',
-  EN_PRODUCCION: 'En producción',
-  LISTO: 'Listo',
-  DESPACHADO: 'Despachado',
-  EN_CAMINO: 'En camino',
+  NUEVO: 'Pendiente',
+  EN_PRODUCCION: 'En proceso',
+  LISTO: 'En proceso',
+  DESPACHADO: 'Enviado',
+  EN_CAMINO: 'En proceso',
   ENTREGADO: 'Entregado',
-  CANCELADO: 'Cancelado',
+  CANCELADO: 'Rechazado',
   PENDIENTE: 'Pendiente',
-  EN_VALIDACION: 'En validación',
+  EN_VALIDACION: 'Pendiente',
   ACEPTADO: 'Aceptado',
   RECHAZADO: 'Rechazado',
-  RECIBO_GENERADO: 'Recibo generado',
-  RECIBO_ENVIADO: 'Recibo enviado',
+  RECIBO_GENERADO: 'Aceptado',
+  RECIBO_ENVIADO: 'Entregado',
 };
 
 const PRIORITY_TO_DB: Record<OrderPriority, DbPriority> = {

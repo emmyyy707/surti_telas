@@ -198,7 +198,7 @@ export const AdminAlertasAsignacionProduccion: React.FC = () => {
       {loading ? (
         <div className={s.loadingBox}>Cargando alertas...</div>
       ) : (
-        <DataTable<AlertaAsignacion>
+        <DataTable enableExport={false} enableRowSelection={false}
           data={filteredAlertas}
           pageSize={10}
           emptyMessage="No se encontraron alertas"

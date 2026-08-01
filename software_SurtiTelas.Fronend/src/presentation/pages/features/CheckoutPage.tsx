@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useCart, useAuth } from '@/app/providers/AppProviders';
 import { useClientes } from '@/core/stores';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { BankingQrCode } from '@/presentation/components/BankingQrCode';
 import type { PedidoItem } from '@/core/types';
 import { appContent } from '@/shared/config/appContent';
 import './CheckoutPage.css';
@@ -14,9 +15,7 @@ const formatCurrency = (value: number) => `$${value.toLocaleString('es-CO')}`;
 
 type PaymentType = 'immediate' | 'installments';
 
-const bankOptions = appContent.checkout.paymentBanks;
-
-const installmentOptions = appContent.checkout.installmentOptions;
+  const installmentOptions = appContent.checkout.installmentOptions;
 
 const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
@@ -32,7 +31,6 @@ const CheckoutPage: React.FC = () => {
     clearCart,
   } = useCart();
 
-  const [selectedBank, setSelectedBank] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [paymentType, setPaymentType] = useState<PaymentType>('immediate');
   const [installments, setInstallments] = useState(2);
@@ -41,7 +39,7 @@ const CheckoutPage: React.FC = () => {
 
   const clienteActual = useMemo(() => {
     if (!user?.email) return null;
-    return clientes.find(c => c.nombre === user.name || c.nombre === user.email) || null;
+    return clientes.find(c => c.email === user.email || c.nombre === user.name || c.nombre === user.email) || null;
   }, [user?.email, user?.name, clientes]);
 
   const isTrustedCustomer = clienteActual?.isTrustedCustomer ?? false;
@@ -66,10 +64,6 @@ const CheckoutPage: React.FC = () => {
     [total, installments],
   );
 
-  const handleBankChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedBank(event.target.value);
-  };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     if (!file) {
@@ -91,11 +85,6 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-    if (!selectedBank) {
-      toast.error('Selecciona un banco antes de continuar.');
-      return;
-    }
-
     if (!proofFile) {
       toast.error('Adjunta el comprobante de pago.');
       return;
@@ -115,7 +104,9 @@ const CheckoutPage: React.FC = () => {
       }));
 
       const observaciones = [
-        `Banco: ${selectedBank}`,
+        `Banco: ${appContent.checkout.bankingKey.bankName}`,
+        `Cuenta: ${appContent.checkout.bankingKey.accountNumber}`,
+        `Beneficiario: ${appContent.checkout.bankingKey.beneficiary}`,
         proofFile ? `Comprobante: ${proofFile.name}` : null,
         paymentType === 'installments' ? `Pago por abonos: ${installments} cuotas` : 'Pago inmediato',
         clienteActual?.asesorId ? `Asesor: ${clienteActual.asesorId}` : null,
@@ -123,23 +114,37 @@ const CheckoutPage: React.FC = () => {
         .filter(Boolean)
         .join(' | ');
 
-      if (!clienteActual?.id) {
-        toast.error('No se pudo identificar tu perfil de cliente. Contacta con el asesor.');
-        return;
-      }
-
-      await ordersApi.create({
-        clienteId: clienteActual.id,
-        asesorId: clienteActual.asesorId,
+      const createInput = {
+        clienteId: clienteActual?.id,
+        asesorId: clienteActual?.asesorId,
         itemsList,
+        prioridad: undefined,
         observaciones,
+        paymentMethod: 'TRANSFER',
+        installments: paymentType === 'installments' ? installments : undefined,
         comprobantePago: proofFile ?? undefined,
-      });
+      } as Parameters<typeof ordersApi.create>[0];
+
+      if (createInput.comprobantePago) {
+        const form = new FormData();
+        form.append('clienteId', createInput.clienteId || '');
+        form.append('asesorId', createInput.asesorId || '');
+        form.append('itemsList', JSON.stringify(createInput.itemsList || []));
+        form.append('prioridad', createInput.prioridad || 'Estándar');
+        form.append('observaciones', createInput.observaciones || '');
+        form.append('paymentMethod', createInput.paymentMethod || 'OTHER');
+        if (createInput.installments) form.append('installments', String(createInput.installments));
+        form.append('comprobantePago', createInput.comprobantePago);
+        const result = await ordersApi.createForm(form);
+      } else {
+        const result = await ordersApi.create(createInput);
+      }
 
       clearCart();
       toast.success('Pago registrado. Tu pedido será confirmado en breve.');
-    } catch {
-      toast.error('No se pudo registrar el pedido. Intenta nuevamente.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo registrar el pedido. Intenta nuevamente.';
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -244,20 +249,9 @@ const CheckoutPage: React.FC = () => {
             <strong className="checkout-total-value">{formatCurrency(total)}</strong>
           </div>
 
-          {/* Bank selector */}
+          {/* Banking QR Code */}
           <div className="ch-field">
-            <label htmlFor="bank-select" className="ch-label">Selecciona el Banco *</label>
-            <select
-              id="bank-select"
-              className="ch-select"
-              value={selectedBank}
-              onChange={handleBankChange}
-            >
-              <option value="">Selecciona tu banco</option>
-              {bankOptions.map((bank) => (
-                <option key={bank} value={bank}>{bank}</option>
-              ))}
-            </select>
+            <BankingQrCode amount={total} />
           </div>
 
 {/* Payment type selector */}

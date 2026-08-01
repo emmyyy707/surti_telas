@@ -108,7 +108,7 @@ export const AdminAlertasStock: React.FC = () => {
   };
 
   const actions: DataTableAction<AlertaStock>[] = [
-    { label: 'Resolver', icon: <CheckCircle size={14} />, onClick: async (a) => {
+    { label: 'Resolver', icon: <CheckCircle size={14} aria-hidden="true" focusable="false" />, onClick: async (a) => {
       try {
         await alertsApi.markAsResolved(a.id);
         setAlertas(prev => prev.map(al => al.id === a.id ? { ...al, estado: 'Resuelta' } : al));
@@ -117,7 +117,7 @@ export const AdminAlertasStock: React.FC = () => {
         toast.error('No se pudo resolver la alerta');
       }
     }, disabled: (a) => a.estado === 'Resuelta' },
-    { label: 'Eliminar', icon: <Trash2 size={14} />, danger: true, onClick: (a) => setDeleteConfirm(a) },
+    { label: 'Eliminar', icon: <Trash2 size={14} aria-hidden="true" focusable="false" />, danger: true, onClick: (a) => setDeleteConfirm(a) },
   ];
 
   return (
@@ -164,13 +164,12 @@ export const AdminAlertasStock: React.FC = () => {
             placeholder="Buscar alertas..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className={s.searchInput}
-          />
+            className={s.searchInput} />
         </div>
       </div>
 
       <div className={s.tableWrapper}>
-        <DataTable<AlertaStock>
+        <DataTable enableExport={false} enableRowSelection={false}
           data={filteredAlertas}
           pageSize={10}
           emptyMessage={loading ? 'Cargando alertas...' : error ? error : 'No se encontraron alertas'}
@@ -179,11 +178,9 @@ export const AdminAlertasStock: React.FC = () => {
           actions={actions}
           columns={columns}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
-          toolbarLeft={null}
-        />
+          toolbarLeft={null} />
       </div>
 
       <ConfirmationModal
@@ -198,8 +195,7 @@ export const AdminAlertasStock: React.FC = () => {
         title="Eliminar alerta"
         description={`¿Estás seguro de que deseas eliminar la alerta de "${deleteConfirm?.nombre ?? deleteConfirm?.id}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
-        variant="danger"
-      />
+        variant="danger" />
     </div>
   );
 };

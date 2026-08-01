@@ -1,0 +1,35 @@
+
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.header h1 { font-size: 24px; font-weight: 700; }
+.actions { display: flex; gap: 8px; align-items: center; }
+.select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); }
+.comparison { display: flex; gap: 16px; margin-bottom: 24px; }
+.compCard { flex: 1; padding: 16px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
+.compLabel { font-size: 12px; color: var(--text-secondary); }
+.compValue { font-size: 20px; font-weight: 700; }
+.compSub { font-size: 12px; color: var(--text-muted); }
+.positive { border-color: var(--success-color); }
+.negative { border-color: var(--error-color); }
+.kpiGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpiCard { padding: 20px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+.kpiCard svg { color: var(--primary-color); }
+.kpiValue { font-size: 28px; font-weight: 700; }
+.kpiLabel { font-size: 12px; color: var(--text-secondary); }
+.section { margin-bottom: 24px; }
+.section h2 { font-size: 18px; margin-bottom: 16px; }
+.barChart { display: flex; flex-direction: column; gap: 8px; }
+.barRow { display: flex; align-items: center; gap: 12px; }
+.barLabel { width: 100px; font-size: 13px; }
+.barTrack { flex: 1; height: 24px; background: var(--bg-elevated); border-radius: 6px; overflow: hidden; }
+.barFill { height: 100%; background: var(--primary-color); border-radius: 6px; transition: width 0.3s ease; }
+.barValue { width: 60px; text-align: right; font-size: 13px; font-weight: 600; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+.table th { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.table td { font-size: 14px; }
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; }
+.spinner { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px; }
+.empty { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px; }

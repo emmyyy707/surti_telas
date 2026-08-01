@@ -82,7 +82,7 @@ export const AtencionCliente: React.FC = () => {
         fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
         items: 1,
         total: '0',
-        estado: 'Nuevo',
+        estado: 'Pendiente',
         prioridad: pedidoData.urgencia,
         observaciones: pedidoData.detalle,
         itemsList: [],
@@ -290,7 +290,7 @@ export const AtencionCliente: React.FC = () => {
         size="xl"
         header={{
           icon: <Archive size={18} />,
-          status: selectedPedido ? <Badge variant={selectedPedido.estado === 'Entregado' ? 'success' : selectedPedido.estado === 'Cancelado' ? 'danger' : 'info'}>{selectedPedido.estado}</Badge> : undefined,
+          status: selectedPedido ? <Badge variant={selectedPedido.estado === 'Entregado' ? 'success' : selectedPedido.estado === 'Rechazado' ? 'danger' : selectedPedido.estado === 'Pendiente' ? 'warning' : 'info'}>{selectedPedido.estado}</Badge> : undefined,
         }}
         sections={[
           {

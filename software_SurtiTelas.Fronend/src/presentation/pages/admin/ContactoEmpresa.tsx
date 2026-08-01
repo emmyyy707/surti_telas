@@ -299,7 +299,7 @@ export const AdminContactoEmpresa: React.FC = () => {
         <div className={s.errorRow}>{error}</div>
       )}
 
-      <DataTable<MensajeContacto>
+      <DataTable enableExport={false} enableRowSelection={false}
         data={filteredMensajes}
         pageSize={10}
         emptyMessage={loading ? 'Cargando mensajes de contacto...' : error ? error : 'No se encontraron mensajes de contacto'}

@@ -5,6 +5,8 @@ import { useAuth } from '@/app/providers/AppProviders';
 import { toast } from 'sonner';
 import partnerLogo from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 import { authApi } from '@/infrastructure/api/authApi';
+import { tokenStorage } from '@/infrastructure/api/tokenStorage';
+import { mapRole } from '@/core/stores/authStore';
 import { appContent } from '@/shared/config/appContent';
 import './AuthPage.css';
 
@@ -25,7 +27,7 @@ declare global {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { loginWithCredentials, clearReturnTo } = useAuth();
+  const { loginWithCredentials, clearReturnTo, login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -67,21 +69,24 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       const result = await authApi.googleLogin(response.credential);
-      const loginResult = await loginWithCredentials(result.user.email, '');
-      if (loginResult.success) {
-        clearReturnTo();
-        toast.success('¡Sesión iniciada con Google!');
-        const destination = getDashboardByRole(loginResult.role);
-        setTimeout(() => navigate(destination, { replace: true }), 800);
-      } else {
-        toast.error('No se pudo iniciar sesión con Google');
-      }
+      tokenStorage.setAccessToken(result.accessToken);
+      login({
+        uid: result.user.id,
+        email: result.user.email,
+        name: result.user.nombre,
+        role: mapRole(result.user.role),
+        permissions: result.user.permissions,
+      });
+      clearReturnTo();
+      toast.success('¡Autenticado con Google!');
+      const destination = getDashboardByRole(mapRole(result.user.role));
+      setTimeout(() => navigate(destination, { replace: true }), 1000);
     } catch {
       toast.error('Error al autenticar con Google');
     } finally {
       setLoading(false);
     }
-  }, [loginWithCredentials, clearReturnTo, navigate]);
+  }, [login, clearReturnTo, navigate]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || typeof window === 'undefined' || !window.google) return;

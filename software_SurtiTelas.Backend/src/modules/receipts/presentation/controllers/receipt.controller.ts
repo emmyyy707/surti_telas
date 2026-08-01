@@ -9,10 +9,11 @@ import type { Receipt } from '../../domain/entities/Receipt';
 const prisma = new PrismaClient();
 
 const receiptRepo = {
-  async list(filters: { customerId?: string; orderId?: string }): Promise<{ data: Receipt[]; total: number }> {
+  async list(filters: { customerId?: string; orderId?: string; estado?: string }): Promise<{ data: Receipt[]; total: number }> {
     const where: Record<string, string | null> = { deletedAt: null };
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.orderId) where.orderId = filters.orderId;
+    if (filters.estado) where.estado = filters.estado;
 
     const [rows, total] = await Promise.all([
       prisma.receipt.findMany({
@@ -275,14 +276,68 @@ export const listReceipts = async (req: Request, res: Response) => {
 };
 
 export const listMyReceipts = async (req: Request, res: Response) => {
-  const filters = parseDto(ReceiptFiltersSchema, req.query);
-  filters.customerId = req.user!.id;
-  const result = await receiptUseCases.listReceipts.execute(filters);
+  const user = req.user!;
+  const customer = await prisma.customer.findFirst({
+    where: { email: user.email, deletedAt: null },
+    select: { id: true },
+  });
+  const customerIds = [user.id, customer?.id].filter(Boolean) as string[];
+
+  const where: Record<string, unknown> = { deletedAt: null, customerId: { in: customerIds } };
+
+  const rows = await prisma.receipt.findMany({
+    where,
+    select: {
+      id: true,
+      orderId: true,
+      customerId: true,
+      numero: true,
+      total: true,
+      concepto: true,
+      notas: true,
+      url: true,
+      emitidoPor: true,
+      emitidoAt: true,
+      estado: true,
+      estadoEnvio: true,
+      fechaEnvio: true,
+      intentosEnvio: true,
+      ultimoErrorEnvio: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    orderBy: { emitidoAt: 'desc' },
+  });
+
+  const mapped = rows.map((row: any) => ({
+    id: row.id,
+    orderId: row.orderId ?? undefined,
+    customerId: row.customerId,
+    numero: row.numero,
+    total: Number(row.total),
+    concepto: row.concepto,
+    notas: row.notas ?? undefined,
+    url: row.url ?? undefined,
+    emitidoPor: row.emitidoPor ?? undefined,
+    emitidoAt: row.emitidoAt,
+    estado: row.estado,
+    estadoEnvio: row.estadoEnvio,
+    fechaEnvio: row.fechaEnvio,
+    intentosEnvio: row.intentosEnvio,
+    ultimoErrorEnvio: row.ultimoErrorEnvio ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  })) as unknown as Receipt[];
+
+  let visible = mapped;
+  if (!req.query.estado) {
+    visible = mapped.filter(r => r.estado === 'ENVIADO' || r.estado === 'PAGADO');
+  }
   const response = buildApiPaginatedResponse(
-    result.data,
-    result.total,
+    visible,
+    visible.length,
     1,
-    result.data.length,
+    visible.length,
     null
   );
   return ok(res, response);

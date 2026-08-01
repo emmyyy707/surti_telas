@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
@@ -7,6 +7,7 @@ import { useAuth } from '@/app/providers/AppProviders';
 import { useAuthStore } from '@/core/stores/authStore';
 import { filterMenuByPermissions } from '@/shared/config/menuPermissions';
 import { useDashboardTheme } from '@/core/hooks/useDashboardTheme';
+import { useUserRole, clearUserRole } from '@/core/hooks/useUserRole';
 import { TopHeader } from '@/presentation/components/TopHeader';
 import { cn } from '@/shared/utils';
 import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
@@ -93,6 +94,7 @@ const adminMenu: SidebarItem[] = [
 ];
 
 export const AdminLayout: React.FC = () => {
+  useUserRole('admin');
   const [darkMode, toggleTheme] = useDashboardTheme();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -147,6 +149,7 @@ export const AdminLayout: React.FC = () => {
       document.querySelectorAll<HTMLElement>('[data-dashboard-theme]').forEach(el => el.removeAttribute('data-theme'));
       document.documentElement.removeAttribute('data-theme');
       document.body?.removeAttribute('data-theme');
+      clearUserRole();
     } catch (_e) {
       // ignore
     }
@@ -276,7 +279,7 @@ export const AdminLayout: React.FC = () => {
               <div>email: {authUser.email}</div>
               <div>role: {authUser.role}</div>
               <div style={{ wordBreak: 'break-all' }}>permissions: {JSON.stringify(authUser.permissions)}</div>
-              <div>menu visible: {(adminMenu as SidebarItem[]).map((item) => item.label ?? item.key ?? 'item').join(', ') || '—'}</div>
+              <div>menu visible: {(adminMenu as SidebarItem[]).map((item) => item.label ?? item.key ?? 'item').join(', ') || 'â€”'}</div>
             </div>
           )}
         </>
@@ -284,3 +287,8 @@ export const AdminLayout: React.FC = () => {
     </div>
   );
 };
+
+
+
+
+

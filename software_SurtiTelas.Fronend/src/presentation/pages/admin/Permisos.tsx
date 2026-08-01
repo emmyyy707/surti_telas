@@ -212,12 +212,11 @@ export const AdminPermisos: React.FC = () => {
           </div>
         )}
         {!loading && !error && (
-          <DataTable<Permiso>
+          <DataTable enableExport={false} enableRowSelection={false}
             data={filteredPermisos}
             columns={columns}
             actions={actions}
-            enableExport={false}
-            enableRowSelection={false}
+
             enableSorting={true}
             enableColumnFilters={false}
             toolbarLeft={null}

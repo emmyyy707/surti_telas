@@ -45,6 +45,7 @@ export interface ProductoDetalle {
 export interface Cliente {
   id: string;
   nombre: string;
+  apellidos?: string;
   ciudad: string;
   tel: string;
   asesor: string;
@@ -54,10 +55,14 @@ export interface Cliente {
   nit?: string;
   email?: string;
   direccion?: string;
+  tipoDocumento?: 'CC' | 'NIE' | 'PASSPORT' | 'CE' | 'OTHER';
+  numeroDocumento?: string;
   cupoTotal?: number;
   cupoUsado?: number;
   deudaVencida?: number;
   isTrustedCustomer?: boolean;
+  password?: string;
+  confirmPassword?: string;
 }
 
 export interface PedidoItem {
@@ -76,12 +81,13 @@ export interface Pedido {
   fecha: string;
   items: number;
   total: string;
-  estado: 'Nuevo' | 'En producción' | 'Listo' | 'Despachado' | 'En camino' | 'Entregado' | 'Cancelado';
+  estado: 'Pendiente' | 'Aceptado' | 'En proceso' | 'Enviado' | 'Entregado' | 'Rechazado';
   prioridad?: 'Estándar' | 'Prioritario';
   observaciones?: string;
   itemsList?: PedidoItem[];
   clienteId?: string;
   asesorId?: string;
+  comprobantePagoUrl?: string;
   createdAt?: string;
 }
 
@@ -124,11 +130,14 @@ export interface Notificacion {
 export interface Proveedor {
   id: string;
   nombre: string;
+  apellidos?: string | null;
   nit: string;
   telefono: string;
   email: string;
   direccion: string;
   ciudad: string;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
   materiales: string[];
   estado: 'Activo' | 'Inactivo';
   calificacion: number;

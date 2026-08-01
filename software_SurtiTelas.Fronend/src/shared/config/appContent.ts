@@ -89,6 +89,14 @@ export const appContent = {
       { label: 'Pago seguro' },
       { label: 'Compra protegida' },
     ],
+    bankingKey: {
+      bankName: 'Banco de Occidente',
+      accountNumber: '1234567890',
+      accountType: 'Cuenta de ahorros',
+      beneficiary: 'SurtiTelas SAS',
+      taxId: '900123456-7',
+      qrPayload: '{"bank":"Banco de Occidente","account":"1234567890","type":"CA","beneficiary":"SurtiTelas SAS","taxId":"900123456-7"}',
+    },
   },
   catalog: {
     productCategories: parseCsv(import.meta.env.VITE_PRODUCT_CATEGORIES, ['Categoría principal', 'Categoría secundaria']),

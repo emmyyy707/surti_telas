@@ -1,4 +1,4 @@
-﻿import React, { Suspense, useEffect } from 'react';
+﻿import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ProtectedRoute from '@/presentation/routes/ProtectedRoute';
@@ -6,7 +6,6 @@ import Layout from '@/presentation/pages/layouts/Layout';
 import ScrollToTop from '@/presentation/components/ScrollToTop';
 import { Spinner } from '@/shared/ui';
 import ErrorBoundary from '@/shared/components/ErrorBoundary';
-import { useAuthStore } from '@/core/stores/authStore';
 
 const ProtectedLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-[var(--bg-canvas)]">
@@ -23,6 +22,9 @@ const AdminProduccion = React.lazy(() => import('@/presentation/pages/admin/Prod
 const AdminInventario = React.lazy(() => import('@/presentation/pages/admin/Inventario').then(m => ({ default: m.AdminInventario })));
 const AdminAsesores = React.lazy(() => import('@/presentation/pages/admin/AdminAsesores').then(m => ({ default: m.AdminAsesores })));
 const AdminReportes = React.lazy(() => import('@/presentation/pages/admin/AdminReportes').then(m => ({ default: m.AdminReportes })));
+const AdminDashboardAnalitico = React.lazy(() => import('@/presentation/pages/admin/DashboardAnalitico').then(m => ({ default: m.AdminDashboardAnalitico })));
+const PortalCliente = React.lazy(() => import('@/presentation/pages/admin/PortalCliente').then(m => ({ default: m.PortalCliente })));
+
 const AdminConfiguracion = React.lazy(() => import('@/presentation/pages/admin/AdminConfiguracion').then(m => ({ default: m.AdminConfiguracion })));
 const AdminDomicilios = React.lazy(() => import('@/presentation/pages/admin/AdminDomicilios').then(m => ({ default: m.AdminDomicilios })));
 const AdminRoles = React.lazy(() => import('@/presentation/pages/admin/Roles').then(m => ({ default: m.AdminRoles })));
@@ -79,14 +81,8 @@ const LoginPage = React.lazy(() => import('@/presentation/pages/auth/LoginPage')
 const RegisterPage = React.lazy(() => import('@/presentation/pages/auth/RegisterPage'));
 const ForgotPasswordPage = React.lazy(() => import('@/presentation/pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = React.lazy(() => import('@/presentation/pages/auth/ResetPasswordPage'));
-
+ 
 const App: React.FC = () => {
-  const checkSession = useAuthStore((s) => s.checkSession);
-
-  useEffect(() => {
-    void checkSession();
-  }, [checkSession]);
-
   return (
   <BrowserRouter>
     <ScrollToTop />
@@ -142,6 +138,8 @@ const App: React.FC = () => {
             <Route path="pagos" element={<AdminPagos />} />
             <Route path="ventas-pedidos" element={<AdminPedidos />} />
             <Route path="reportes-ventas" element={<AdminReportesVentas />} />
+            <Route path="dashboard-analitico" element={<AdminDashboardAnalitico />} />
+            <Route path="portal-cliente" element={<PortalCliente />} />
             <Route path="reportes-usuarios" element={<AdminReportesUsuarios />} />
             <Route path="reportes-produccion" element={<AdminReportesProduccion />} />
             <Route path="reportes-inventario" element={<AdminReportesInventario />} />

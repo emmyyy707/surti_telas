@@ -57,6 +57,7 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   nombre: string;
+  apellidos?: string;
   role: BackendRole;
   telefono?: string;
   direccion?: string;
@@ -117,7 +118,7 @@ export const authApi = {
   createUser: (data: CreateUserRequest) =>
     api.post<CreateUserResponse>('/auth/register', data),
 
-  updateUser: (id: string, data: { nombre?: string; email?: string; telefono?: string | null }) =>
+  updateUser: (id: string, data: { nombre?: string; apellidos?: string; email?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }) =>
     api.patch<BackendAuthUser>(`/auth/users/${encodeURIComponent(id)}`, data),
 
   deleteUser: (id: string) =>

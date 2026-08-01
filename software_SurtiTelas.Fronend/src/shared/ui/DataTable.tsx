@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import {
   ArrowUp,
   ArrowDown,
@@ -627,7 +627,7 @@ export function DataTable<T extends { id?: string | number }>({
                    </th>
                  );
                })}
-                {hiddenColumnsCount > 0 && (
+                {hiddenColumnsCount > 0 && detailPanel && (
                   <th className={cn(s.headerCell, s.actionHeader)}>
                     <span className={s.hiddenColsIndicator} data-bs-toggle="tooltip" data-bs-title={`${hiddenColumnsCount} columnas ocultas disponibles en el detalle`}>
                       +{hiddenColumnsCount}

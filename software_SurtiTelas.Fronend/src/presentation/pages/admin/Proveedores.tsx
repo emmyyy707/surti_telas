@@ -9,6 +9,7 @@ import { DataTable, DataTableColumn } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { stockApi } from '@/infrastructure/api/stockApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import type { Proveedor } from '@/core/types';
 import { isValidPhone } from '@/shared/utils/phone';
 import { isValidNit } from '@/shared/utils/document';
@@ -57,27 +58,39 @@ export const AdminProveedores: React.FC = () => {
   }, [pagination]);
 
   const [formNombre, setFormNombre] = useState('');
+  const [formApellidos, setFormApellidos] = useState('');
   const [formNit, setFormNit] = useState('');
   const [formTelefono, setFormTelefono] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formDireccion, setFormDireccion] = useState('');
   const [formCiudad, setFormCiudad] = useState('');
+  const [formTipoDocumento, setFormTipoDocumento] = useState('');
+  const [formNumeroDocumento, setFormNumeroDocumento] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [formConfirmPassword, setFormConfirmPassword] = useState('');
   const [formMateriales, setFormMateriales] = useState('');
   const [formCalificacion, setFormCalificacion] = useState(3);
   const [formEstado, setFormEstado] = useState<Proveedor['estado']>('Activo');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const resetForm = () => {
     setFormNombre('');
+    setFormApellidos('');
     setFormNit('');
     setFormTelefono('');
     setFormEmail('');
     setFormDireccion('');
     setFormCiudad('');
+    setFormTipoDocumento('');
+    setFormNumeroDocumento('');
+    setFormPassword('');
+    setFormConfirmPassword('');
     setFormMateriales('');
     setFormCalificacion(3);
     setFormEstado('Activo');
     setSelectedProveedor(null);
     setSaving(false);
+    setErrors({});
   };
 
   const openCreateModal = () => {
@@ -88,15 +101,19 @@ export const AdminProveedores: React.FC = () => {
   const openEditModal = (proveedor: Proveedor) => {
     setSelectedProveedor(proveedor);
     setFormNombre(proveedor.nombre);
+    setFormApellidos(proveedor.apellidos ?? '');
     setFormNit(proveedor.nit);
     setFormTelefono(proveedor.telefono);
     setFormEmail(proveedor.email);
     setFormDireccion(proveedor.direccion);
     setFormCiudad(proveedor.ciudad);
+    setFormTipoDocumento(proveedor.tipoDocumento ?? '');
+    setFormNumeroDocumento(proveedor.numeroDocumento ?? '');
     setFormMateriales(proveedor.materiales.join(', '));
     setFormCalificacion(proveedor.calificacion);
     setFormEstado(proveedor.estado);
     setSaving(false);
+    setErrors({});
     setFormModalOpen(true);
   };
 
@@ -107,34 +124,49 @@ export const AdminProveedores: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-
     const materialesArr = formMateriales.split(',').map(m => m.trim()).filter(Boolean);
 
+    const newErrors: Record<string, string> = {};
+    if (!formNombre || formNombre.length < 3) newErrors.nombre = 'El nombre debe tener al menos 3 caracteres';
+    if (formApellidos && formApellidos.length < 3) newErrors.apellidos = 'Mínimo 3 caracteres';
+    if (!formEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail)) newErrors.email = 'Email inválido';
+    if (formTelefono && !isValidPhone(formTelefono)) newErrors.telefono = 'Teléfono inválido (7-11 dígitos)';
+    if (!formNit || !isValidNit(formNit)) newErrors.nit = 'NIT inválido';
+    if (!formDireccion || formDireccion.length < 5) newErrors.direccion = 'Dirección muy corta';
+    if (!formCiudad || formCiudad.length < 3) newErrors.ciudad = 'Ciudad inválida';
+    if (formTipoDocumento && !formNumeroDocumento) newErrors.numeroDocumento = 'Requerido';
+    if (!selectedProveedor) {
+      if (!formPassword) newErrors.password = 'La contraseña es obligatoria';
+      else if (formPassword.length < 8) newErrors.password = 'Mínimo 8 caracteres';
+      else if (!/[A-Z]/.test(formPassword)) newErrors.password = 'Debe contener mayúscula';
+      else if (!/[a-z]/.test(formPassword)) newErrors.password = 'Debe contener minúscula';
+      else if (!/[0-9]/.test(formPassword)) newErrors.password = 'Debe contener número';
+      if (!formConfirmPassword) newErrors.confirmPassword = 'Confirma la contraseña';
+      else if (formPassword !== formConfirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setSaving(false);
+      return;
+    }
+
+    setSaving(true);
     const data = {
       nombre: formNombre,
+      apellidos: formApellidos || undefined,
       nit: formNit,
       telefono: formTelefono,
       email: formEmail,
       direccion: formDireccion,
       ciudad: formCiudad,
+      tipoDocumento: formTipoDocumento || undefined,
+      numeroDocumento: formNumeroDocumento || undefined,
       materiales: materialesArr,
       estado: formEstado,
       calificacion: formCalificacion,
       pedidosRealizados: selectedProveedor?.pedidosRealizados,
       ultimoPedido: selectedProveedor?.ultimoPedido,
     };
-
-    if (formTelefono && !isValidPhone(formTelefono)) {
-      toast.error('Teléfono inválido. Usa formato: 3001234567 o +573001234567');
-      setSaving(false);
-      return;
-    }
-    if (!formNit || !isValidNit(formNit)) {
-      toast.error('NIT inválido. Usa formato: 900123456 o 900123456-7');
-      setSaving(false);
-      return;
-    }
 
     try {
       if (selectedProveedor) {
@@ -281,9 +313,9 @@ export const AdminProveedores: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <div className={s.modalActions}>
-                <Button variant="secondary" onClick={onClose}>Cerrar</Button>
-              </div>
+              <ModalFooter
+                secondary={{ label: 'Cerrar', onClick: onClose }}
+              />
             </div>
           ),
         }}
@@ -296,105 +328,180 @@ export const AdminProveedores: React.FC = () => {
         size="lg"
       >
         <form className={s.form} onSubmit={handleSubmit}>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Nombre / Razón social</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formNombre}
-                onChange={e => setFormNombre(e.target.value)}
-                required
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>NIT</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formNit}
-                onChange={e => setFormNit(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Teléfono</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formTelefono}
-                onChange={e => setFormTelefono(e.target.value)}
-                required
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Email</label>
-              <input
-                type="email"
-                className={s.input}
-                value={formEmail}
-                onChange={e => setFormEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Ciudad</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formCiudad}
-                onChange={e => setFormCiudad(e.target.value)}
-                required
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Dirección</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formDireccion}
-                onChange={e => setFormDireccion(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={s.field}>
-            <label className={s.label}>Materiales / Servicios (separados por coma)</label>
-            <div className={s.inputWithIcon}>
-              <Package size={14} className={s.inputIcon} />
-              <input
-                type="text"
-                className={s.input}
-                value={formMateriales}
-                onChange={e => setFormMateriales(e.target.value)}
-                placeholder="Algodón, Poliéster, Hilos..."
-              />
-            </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Calificación (1 a 5)</label>
-              <div className={s.ratingRow}>
+          <div className={s.formSection}>
+            <h3 className={s.formSectionTitle}>Información básica</h3>
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Nombre / Razón social</label>
                 <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={formCalificacion}
-                  onChange={e => setFormCalificacion(Number(e.target.value))}
-                  className={s.ratingInput}
+                  type="text"
+                  className={`${s.input} ${errors.nombre ? s.inputError : ''}`}
+                  value={formNombre}
+                  onChange={e => { setFormNombre(e.target.value); delete errors.nombre; setErrors({...errors}); }}
+                  minLength={3}
                 />
-                <span className={s.ratingValue}>{formCalificacion}</span>
+                {errors.nombre && <span className={s.errorText}>{errors.nombre}</span>}
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Apellidos</label>
+                <input
+                  type="text"
+                  className={`${s.input} ${errors.apellidos ? s.inputError : ''}`}
+                  value={formApellidos}
+                  onChange={e => { setFormApellidos(e.target.value); delete errors.apellidos; setErrors({...errors}); }}
+                  minLength={3}
+                  placeholder="Opcional"
+                />
+                {errors.apellidos && <span className={s.errorText}>{errors.apellidos}</span>}
               </div>
             </div>
-            <div className={s.field}>
+
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Email</label>
+                <input
+                  type="email"
+                  className={`${s.input} ${errors.email ? s.inputError : ''}`}
+                  value={formEmail}
+                  onChange={e => { setFormEmail(e.target.value); delete errors.email; setErrors({...errors}); }}
+                />
+                {errors.email && <span className={s.errorText}>{errors.email}</span>}
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Teléfono</label>
+                <input
+                  type="tel"
+                  className={`${s.input} ${errors.telefono ? s.inputError : ''}`}
+                  value={formTelefono}
+                  onChange={e => { setFormTelefono(e.target.value); delete errors.telefono; setErrors({...errors}); }}
+                  maxLength={11}
+                  inputMode="numeric"
+                />
+                {errors.telefono && <span className={s.errorText}>{errors.telefono}</span>}
+              </div>
+            </div>
+
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Ciudad</label>
+                <input
+                  type="text"
+                  className={`${s.input} ${errors.ciudad ? s.inputError : ''}`}
+                  value={formCiudad}
+                  onChange={e => { setFormCiudad(e.target.value); delete errors.ciudad; setErrors({...errors}); }}
+                />
+                {errors.ciudad && <span className={s.errorText}>{errors.ciudad}</span>}
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Dirección</label>
+                <input
+                  type="text"
+                  className={`${s.input} ${errors.direccion ? s.inputError : ''}`}
+                  value={formDireccion}
+                  onChange={e => { setFormDireccion(e.target.value); delete errors.direccion; setErrors({...errors}); }}
+                />
+                {errors.direccion && <span className={s.errorText}>{errors.direccion}</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className={s.formSection}>
+            <h3 className={s.formSectionTitle}>Documento</h3>
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Tipo de documento</label>
+                <select
+                  className={`${s.select} ${errors.tipoDocumento ? s.inputError : ''}`}
+                  value={formTipoDocumento}
+                  onChange={e => { setFormTipoDocumento(e.target.value); delete errors.tipoDocumento; setErrors({...errors}); }}
+                >
+                  <option value="">Selecciona...</option>
+                  <option value="CC">C.C.</option>
+                  <option value="CE">C.E.</option>
+                  <option value="NIT">NIT</option>
+                </select>
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Número de documento</label>
+                <input
+                  type="text"
+                  className={`${s.input} ${errors.numeroDocumento ? s.inputError : ''}`}
+                  value={formNumeroDocumento}
+                  onChange={e => { setFormNumeroDocumento(e.target.value); delete errors.numeroDocumento; setErrors({...errors}); }}
+                  maxLength={20}
+                />
+                {errors.numeroDocumento && <span className={s.errorText}>{errors.numeroDocumento}</span>}
+              </div>
+            </div>
+          </div>
+
+          {!selectedProveedor && (
+            <div className={s.formSection}>
+              <h3 className={s.formSectionTitle}>Credenciales de acceso</h3>
+              <div className={s.formRow}>
+                <div className={s.field}>
+                  <label className={s.label}>Contraseña</label>
+                  <input
+                    type="password"
+                    className={`${s.input} ${errors.password ? s.inputError : ''}`}
+                    value={formPassword}
+                    onChange={e => { setFormPassword(e.target.value); delete errors.password; setErrors({...errors}); }}
+                    minLength={8}
+                  />
+                  {errors.password && <span className={s.errorText}>{errors.password}</span>}
+                  <p className={s.hint}>Mínimo 8 caracteres: 1 mayúscula, 1 minúscula, 1 número</p>
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Confirmar contraseña</label>
+                  <input
+                    type="password"
+                    className={`${s.input} ${errors.confirmPassword ? s.inputError : ''}`}
+                    value={formConfirmPassword}
+                    onChange={e => { setFormConfirmPassword(e.target.value); delete errors.confirmPassword; setErrors({...errors}); }}
+                    minLength={8}
+                  />
+                  {errors.confirmPassword && <span className={s.errorText}>{errors.confirmPassword}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className={s.formSection}>
+            <h3 className={s.formSectionTitle}>Información adicional</h3>
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Materiales / Servicios (separados por coma)</label>
+                <div className={s.inputWithIcon}>
+                  <Package size={14} className={s.inputIcon} />
+                  <input
+                    type="text"
+                    className={s.input}
+                    value={formMateriales}
+                    onChange={e => setFormMateriales(e.target.value)}
+                    placeholder="Algodón, Poliéster, Hilos..."
+                  />
+                </div>
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Calificación (1 a 5)</label>
+                <div className={s.ratingRow}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={formCalificacion}
+                    onChange={e => setFormCalificacion(Number(e.target.value))}
+                    className={s.ratingInput}
+                  />
+                  <span className={s.ratingValue}>{formCalificacion}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={s.formSection}>
+            <h3 className={s.formSectionTitle}>Estado</h3>
+            <div className={s.field} style={{ maxWidth: '200px' }}>
               <label className={s.label}>Estado</label>
               <select
                 className={s.select}
@@ -407,14 +514,10 @@ export const AdminProveedores: React.FC = () => {
             </div>
           </div>
 
-          <div className={s.formActions}>
-            <Button type="button" variant="secondary" onClick={closeModals} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving}>
-              {selectedProveedor ? 'Guardar cambios' : 'Crear proveedor'}
-            </Button>
-          </div>
+          <ModalFooter
+            secondary={{ label: 'Cancelar', onClick: closeModals, disabled: saving }}
+            primary={{ label: selectedProveedor ? 'Guardar cambios' : 'Crear proveedor', type: 'submit', loading: saving }}
+          />
         </form>
       </Modal>
 

@@ -1,6 +1,7 @@
 import type { Pedido, PedidoItem } from '@/core/types';
 import { api } from './httpClient';
 import type { PaginatedResponse } from './pagination';
+import { ORDER_STATUS_BACKEND_MAP, ORDER_STATUS_FRONTEND_MAP, type EstadoPedido } from '@/shared/constants/options';
 
 /** DTO del backend (OrderMapper.toOrderData). */
 export interface OrderDTO {
@@ -19,12 +20,13 @@ export interface OrderDTO {
   itemsList?: PedidoItem[];
   clienteId: string;
   asesorId: string;
+  comprobantePagoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateOrderInput {
-  clienteId: string;
+  clienteId?: string;
   asesorId?: string;
   itemsList: PedidoItem[];
   prioridad?: Pedido['prioridad'];
@@ -66,26 +68,41 @@ export function toPedido(dto: OrderDTO): Pedido {
     fecha: formatDate(dto.fecha),
     items: dto.items,
     total: formatCurrency(dto.total),
-    estado: dto.estado,
+    estado: ORDER_STATUS_FRONTEND_MAP[dto.estado] ?? dto.estado,
     prioridad: dto.prioridad,
     observaciones: dto.observaciones,
     itemsList: dto.itemsList ?? [],
     clienteId: dto.clienteId,
     asesorId: dto.asesorId,
+    comprobantePagoUrl: dto.comprobantePagoUrl,
     createdAt: dto.createdAt,
   };
 }
 
+export interface PaginatedApiResponse<T> {
+  items: T[];
+  totalRecords: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  nextCursor?: string | null;
+}
+
 export const ordersApi = {
   async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<OrdersListResult> {
-    const response = await api.get<{ items: OrderDTO[]; meta: PaginatedResponse<OrderDTO>['data']['meta'] }>('/orders', { query });
+    const response = await api.get<PaginatedApiResponse<OrderDTO>>('/orders', { query });
     const data = response?.items ?? [];
     const idByNumero: Record<string, string> = {};
     const pedidos = data.map((dto) => {
       idByNumero[dto.numero] = dto.id;
       return toPedido(dto);
     });
-    const meta = response?.meta ?? { totalRecords: 0, page: 1, limit: 10, totalPages: 1 };
+    const meta = {
+      totalRecords: response?.totalRecords ?? 0,
+      page: response?.page ?? 1,
+      limit: response?.limit ?? 10,
+      totalPages: response?.totalPages ?? 1,
+    };
     return { pedidos, idByNumero, meta };
   },
 
@@ -99,14 +116,19 @@ export const ordersApi = {
   },
 
   async me(query?: Record<string, string | number | boolean | undefined | null>): Promise<OrdersListResult> {
-    const response = await api.get<{ items: OrderDTO[]; meta: PaginatedResponse<OrderDTO>['data']['meta'] }>('/orders/me', { query });
+    const response = await api.get<PaginatedApiResponse<OrderDTO>>('/orders/me', { query });
     const data = response?.items ?? [];
     const idByNumero: Record<string, string> = {};
     const pedidos = data.map((dto) => {
       idByNumero[dto.numero] = dto.id;
       return toPedido(dto);
     });
-    const meta = response?.meta ?? { totalRecords: 0, page: 1, limit: 10, totalPages: 1 };
+    const meta = {
+      totalRecords: response?.totalRecords ?? 0,
+      page: response?.page ?? 1,
+      limit: response?.limit ?? 10,
+      totalPages: response?.totalPages ?? 1,
+    };
     return { pedidos, idByNumero, meta };
   },
 
@@ -116,23 +138,51 @@ export const ordersApi = {
       input.comprobantePago ? `Comprobante: ${input.comprobantePago.name}` : null,
     ].filter(Boolean).join(' ');
 
-    const dto = await api.post<OrderDTO>('/orders', {
-      clienteId: input.clienteId,
+    const body: Record<string, unknown> = {
       asesorId: input.asesorId,
       itemsList: input.itemsList,
       prioridad: input.prioridad,
       observaciones: observaciones || undefined,
       paymentMethod: input.paymentMethod,
       installments: input.installments,
-    } as unknown);
+    };
+    if (input.clienteId) {
+      body.clienteId = input.clienteId;
+    }
+    const dto = await api.post<OrderDTO>('/orders', body);
     return { pedido: toPedido(dto), id: dto.id };
   },
 
-  async updateStatus(id: string, estado: Pedido['estado']): Promise<Pedido> {
+  async createForm(formData: FormData): Promise<{ pedido: Pedido; id: string }> {
+    const dto = await api.postForm<OrderDTO>('/orders', formData);
+    return { pedido: toPedido(dto), id: dto.id };
+  },
+
+  async updateStatus(id: string, estado: EstadoPedido): Promise<Pedido> {
     const dto = await api.patch<OrderDTO>(
       `/orders/${encodeURIComponent(id)}/status`,
-      { estado },
+      { estado: ORDER_STATUS_BACKEND_MAP[estado] ?? estado },
     );
+    return toPedido(dto);
+  },
+
+  async approveOrder(id: string, usuarioValidacionId: string): Promise<Pedido> {
+    const dto = await api.post<OrderDTO>(`/orders/${encodeURIComponent(id)}/approve`, { usuarioValidacionId });
+    return toPedido(dto);
+  },
+
+  async rejectOrder(id: string, usuarioValidacionId: string, razonRechazo: string, observacionesRechazo?: string): Promise<Pedido> {
+    const dto = await api.post<OrderDTO>(`/orders/${encodeURIComponent(id)}/reject`, { usuarioValidacionId, razonRechazo, observacionesRechazo });
+    return toPedido(dto);
+  },
+
+  async cancelOrder(id: string): Promise<Pedido> {
+    const dto = await api.patch<OrderDTO>(`/orders/${encodeURIComponent(id)}/cancel`, {});
+    return toPedido(dto);
+  },
+
+  async acceptOrder(id: string, medioPago?: string): Promise<Pedido> {
+    const dto = await api.post<OrderDTO>(`/orders/${encodeURIComponent(id)}/accept`, { medioPago });
     return toPedido(dto);
   },
 
@@ -146,5 +196,36 @@ export const ordersApi = {
 
   async delete(id: string): Promise<void> {
     await api.delete<void>(`/orders/${encodeURIComponent(id)}`);
+  },
+
+  async adminList(query?: Record<string, string | number | boolean | undefined | null>): Promise<OrdersListResult> {
+    const response = await api.get<PaginatedApiResponse<OrderDTO>>('/admin/orders', { query });
+    const data = response?.items ?? [];
+    const idByNumero: Record<string, string> = {};
+    const pedidos = data.map((dto) => {
+      idByNumero[dto.numero] = dto.id;
+      return toPedido(dto);
+    });
+    const meta = {
+      totalRecords: response?.totalRecords ?? 0,
+      page: response?.page ?? 1,
+      limit: response?.limit ?? 10,
+      totalPages: response?.totalPages ?? 1,
+    };
+    return { pedidos, idByNumero, meta };
+  },
+
+  async adminUpdate(id: string, changes: { estado?: EstadoPedido; prioridad?: Pedido['prioridad']; observaciones?: string; asesorId?: string }): Promise<Pedido> {
+    const body: Record<string, unknown> = {};
+    if (changes.estado !== undefined) body.estado = ORDER_STATUS_BACKEND_MAP[changes.estado] ?? changes.estado;
+    if (changes.prioridad !== undefined) body.prioridad = changes.prioridad;
+    if (changes.observaciones !== undefined) body.observaciones = changes.observaciones;
+    if (changes.asesorId !== undefined) body.asesorId = changes.asesorId;
+    const dto = await api.patch<OrderDTO>(`/admin/orders/${encodeURIComponent(id)}`, body);
+    return toPedido(dto);
+  },
+
+  async adminDelete(id: string): Promise<void> {
+    await api.delete<void>(`/admin/orders/${encodeURIComponent(id)}`);
   },
 };

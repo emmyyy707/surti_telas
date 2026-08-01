@@ -1,14 +1,16 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import s from './AdminCatalogo.module.css';
+import f from '@/styles/Form.module.css';
 import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTable';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { AddTagInput } from '@/presentation/components/AddTagInput';
 import { ProductPreviewModal } from '@/presentation/components/ProductPreviewModal';
 import { ProductDetailModal } from '@/presentation/components/ProductDetailModal';
@@ -64,6 +66,8 @@ export const AdminCatalogo: React.FC = () => {
   const [nuevo, setNuevo] = useState(false);
   const [masVendido, setMasVendido] = useState(false);
   const [tela, setTela] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [localFiles, setLocalFiles] = useState<Record<string, File>>({});
 
   const filtered = useMemo(() => {
     return productos.filter(p =>
@@ -94,10 +98,61 @@ export const AdminCatalogo: React.FC = () => {
     setNuevo(false);
     setMasVendido(false);
     setTela('');
+    setLocalFiles({});
     setEditingRef(null);
     setFormError(null);
     setIsCreateOpen(false);
     setIsEditOpen(false);
+  };
+
+  const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddLocalImages = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const remaining = 4 - imagenes.length;
+    if (remaining <= 0) {
+      toast.error('Máximo 4 imágenes');
+      return;
+    }
+    const next = [...imagenes];
+    const nextLocal = { ...localFiles };
+    const toProcess = Array.from(files).slice(0, remaining);
+    for (const file of toProcess) {
+      if (!file.type.startsWith('image/')) continue;
+      const dataUrl = await readFileAsDataURL(file);
+      const id = `${Date.now()}-${Math.round(Math.random() * 1000)}`;
+      next.push(dataUrl);
+      nextLocal[id] = file;
+    }
+    setImagenes(next);
+    setLocalFiles(nextLocal);
+    if (!imagenPrincipal && next.length > 0) {
+      setImagenPrincipal(next[0]);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const next = imagenes.filter((_, i) => i !== index);
+    setImagenes(next);
+    setLocalFiles((prev) => {
+      const nextLocal = { ...prev };
+      delete nextLocal[imagenes[index]];
+      return nextLocal;
+    });
+    if (imagenPrincipal === imagenes[index]) {
+      setImagenPrincipal(next.length > 0 ? next[0] : '');
+    }
+  };
+
+  const handleSetPrincipal = (url: string) => {
+    setImagenPrincipal(url);
   };
 
   const openEdit = (product: Producto) => {
@@ -381,12 +436,11 @@ export const AdminCatalogo: React.FC = () => {
         />
       </div>
 
-      <DataTable<Producto>
+      <DataTable enableExport={false} enableRowSelection={false}
         data={filtered}
         columns={columns}
         actions={actions}
-        enableExport={false}
-        enableRowSelection={false}
+
         enableSorting={true}
         enableColumnFilters={false}
         toolbarLeft={null}
@@ -394,115 +448,149 @@ export const AdminCatalogo: React.FC = () => {
       />
 
       <Modal open={isCreateOpen || isEditOpen} onClose={resetForm} title={editingRef ? 'Editar Producto' : 'Registrar Nuevo Producto'} size="lg">
-        <form onSubmit={handleSaveProduct} className={s.modalForm}>
+        <form onSubmit={handleSaveProduct} className={f.form}>
           {formError && !saving && (
-            <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', color: '#ef4444', fontSize: '0.82rem', fontWeight: 500 }}>
+            <div className={f.formError} role="alert">
               {formError}
             </div>
           )}
 
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Nombre del Producto *</label>
-              <input type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-nombre">Nombre del Producto *</label>
+              <input id="ac-nombre" className={f.input} type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
             </div>
-            <div className={s.formGroup}>
-              <label>Categoría *</label>
-              <input type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="Ej: Camisetas" />
-            </div>
-          </div>
-
-          <div className={s.formGroup}>
-            <label>Descripción Corta</label>
-            <input type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve para el catálogo" />
-          </div>
-
-          <div className={s.formGroup}>
-            <label>Descripción Completa</label>
-            <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Precio ($) *</label>
-              <input type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
-            </div>
-            <div className={s.formGroup}>
-              <label>Precio Anterior (opcional)</label>
-              <input type="number" min="0" value={precioAnterior} onChange={e => setPrecioAnterior(e.target.value)} placeholder="Sin descuento" />
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-categoria">Categoría *</label>
+              <input id="ac-categoria" className={f.input} type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="Ej: Camisetas" />
             </div>
           </div>
 
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Descuento (%)</label>
-              <input type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
+          <div className={f.field}>
+            <label className={f.label} htmlFor="ac-descripcion-corta">Descripción Corta</label>
+            <input id="ac-descripcion-corta" className={f.input} type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve para el catálogo" />
+          </div>
+
+          <div className={f.field}>
+            <label className={f.label} htmlFor="ac-descripcion">Descripción Completa</label>
+            <textarea id="ac-descripcion" className={f.textarea} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
+          </div>
+
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-precio">Precio ($) *</label>
+              <input id="ac-precio" className={f.input} type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
             </div>
-            <div className={s.formGroup}>
-              <label>Cantidad Stock</label>
-              <input type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-precio-anterior">Precio Anterior (opcional)</label>
+              <input id="ac-precio-anterior" className={f.input} type="number" min="0" value={precioAnterior} onChange={e => setPrecioAnterior(e.target.value)} placeholder="Sin descuento" />
             </div>
           </div>
 
-          <div className={s.formRow}>
-              <div className={s.formGroup}>
-                <label>Tipo de Tela</label>
-                <input type="text" value={tela} onChange={(e) => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
-              </div>
-            <div className={s.formGroup}>
-              <label>Marca</label>
-              <input type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-descuento">Descuento (%)</label>
+              <input id="ac-descuento" className={f.input} type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
+            </div>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-stock">Cantidad Stock</label>
+              <input id="ac-stock" className={f.input} type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
             </div>
           </div>
 
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Colores Disponibles</label>
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-tela">Tipo de Tela</label>
+              <input id="ac-tela" className={f.input} type="text" value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
+            </div>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-marca">Marca</label>
+              <input id="ac-marca" className={f.input} type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
+            </div>
+          </div>
+
+          <div className={f.formRow}>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-colores">Colores Disponibles</label>
               <AddTagInput tags={colores} onTagsChange={setColores} placeholder="Ej: Azul, Blanco, Verde" />
             </div>
-            <div className={s.formGroup}>
-              <label>Tallas Disponibles</label>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-tallas">Tallas Disponibles</label>
               <AddTagInput tags={tallas} onTagsChange={setTallas} placeholder="Ej: S, M, L, XL" />
             </div>
           </div>
 
-          <div className={s.formGroup}>
-            <label>Subcategoría</label>
-            <input type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
+          <div className={f.field}>
+            <label className={f.label} htmlFor="ac-subcategoria">Subcategoría</label>
+            <input id="ac-subcategoria" className={f.input} type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
           </div>
 
-          <div className={s.formGroup}>
-            <label>Imagen Principal (URL)</label>
-            <input type="text" value={imagenPrincipal} onChange={e => setImagenPrincipal(e.target.value)} placeholder="https://..." />
+          <div className={f.field}>
+            <label className={f.label} htmlFor="ac-imagen-principal">Imagen Principal</label>
+            <select id="ac-imagen-principal" className={f.select} value={imagenPrincipal} onChange={e => setImagenPrincipal(e.target.value)}>
+              <option value="">Sin imagen principal</option>
+              {imagenes.map((url, index) => (
+                <option key={index} value={url}>Imagen {index + 1}</option>
+              ))}
+            </select>
           </div>
 
-          <div className={s.formGroup}>
-            <label>Imágenes de Referencia (URLs adicionales, máx 4)</label>
-            <div className={s.uploadContainer}>
-              <label className={s.uploadPlaceholder}>
-                <span style={{ fontSize: '1.2rem' }}>+</span>
-                <span>Agregar imagen (URL)</span>
+          <div className={f.field}>
+            <label className={f.label}>Galería de Imágenes</label>
+            <div
+              className={s.uploadContainer}
+              onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleAddLocalImages(e.dataTransfer.files);
+                }
+              }}
+            >
+              <label className={s.uploadPlaceholder} htmlFor="ac-file-input">
+                <Upload size={22} />
+                <span>Arrastra imágenes aquí o haz clic para seleccionar</span>
+                <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>JPG, PNG, WEBP (máx 4)</span>
                 <input
-                  type="text"
+                  id="ac-file-input"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
                   className={s.hiddenFileInput}
-                  placeholder="Pegar URL y presionar Enter"
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim() && imagenes.length < 4) {
-                      e.preventDefault();
-                      setImagenes([...imagenes, e.currentTarget.value.trim()]);
-                      e.currentTarget.value = '';
-                    }
+                  onChange={e => {
+                    handleAddLocalImages(e.target.files);
+                    if (e.target.value) e.target.value = '';
                   }}
                 />
               </label>
+
               {imagenes.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div className={s.previewGrid}>
                   {imagenes.map((url, index) => (
-                    <div key={index} className={s.previewBox} style={{ width: '100px' }}>
-                      <img src={url} alt={`Ref ${index + 1}`} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '6px' }} />
-                      <button type="button" onClick={() => setImagenes(imagenes.filter((_, i) => i !== index))} className={s.removeImgBtn}>
-                        <span style={{ fontSize: '14px' }}>×</span>
-                      </button>
+                    <div key={index} className={s.previewBox}>
+                      <img src={url} alt={`Imagen ${index + 1}`} />
+                      <div style={{ position: 'absolute', top: '4px', right: '4px', display: 'flex', gap: '4px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrincipal(url)}
+                          className={s.removeImgBtn}
+                          style={{ background: imagenPrincipal === url ? 'var(--color-accent)' : 'rgba(0,0,0,0.5)' }}
+                          aria-label={imagenPrincipal === url ? 'Quitar imagen principal' : 'Establecer como principal'}
+                          title={imagenPrincipal === url ? 'Quitar imagen principal' : 'Establecer como principal'}
+                        >
+                          ★
+                        </button>
+                        <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn} aria-label={`Eliminar imagen ${index + 1}`}>
+                          <span style={{ fontSize: '14px' }}>×</span>
+                        </button>
+                      </div>
+                      {imagenPrincipal === url && (
+                        <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--color-accent)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                          Principal
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -510,16 +598,16 @@ export const AdminCatalogo: React.FC = () => {
             </div>
           </div>
 
-          <div className={s.formGroup}>
-            <label>Estado</label>
-            <select value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
+          <div className={f.field}>
+            <label className={f.label} htmlFor="ac-estado">Estado</label>
+            <select id="ac-estado" className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
               <option value="Activo">Activo</option>
               <option value="Inactivo">Inactivo (Oculto)</option>
             </select>
           </div>
 
-          <div className={s.formGroup}>
-            <label>Etiquetas</label>
+          <div className={f.field}>
+            <label className={f.label}>Etiquetas</label>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {ETIQUETAS_PRODUCTO.map(({ key, label }) => {
                 const state = key === 'destacado' ? destacado : key === 'oferta' ? oferta : key === 'nuevo' ? nuevo : masVendido;
@@ -534,12 +622,10 @@ export const AdminCatalogo: React.FC = () => {
             </div>
           </div>
 
-          <div className={s.modalActions}>
-            <Button type="button" variant="secondary" onClick={resetForm} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving}>{editingRef ? 'Guardar Cambios' : 'Crear Producto (Borrador)'}</Button>
-          </div>
+          <ModalFooter
+            secondary={{ label: 'Cancelar', onClick: resetForm, disabled: saving, loading: saving }}
+            primary={{ label: editingRef ? 'Guardar Cambios' : 'Crear Producto (Borrador)', type: 'submit', loading: saving }}
+          />
         </form>
       </Modal>
 

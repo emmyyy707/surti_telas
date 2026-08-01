@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, PackageCheck, MapPin, ClipboardList, UserCircle } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
 import { useDashboardTheme } from '@/core/hooks/useDashboardTheme';
+import { useUserRole, clearUserRole } from '@/core/hooks/useUserRole';
 import { TopHeader } from '@/presentation/components/TopHeader';
 import { cn } from '@/shared/utils';
 import { useAuthStore } from '@/core/stores/authStore';
@@ -15,12 +16,13 @@ import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 const domiciliarioMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard General', key: 'dashboard' },
   { icon: PackageCheck, label: 'Entregas de Hoy', key: 'entregas' },
-  { icon: MapPin, label: 'Ruta del Día', key: 'ruta' },
+  { icon: MapPin, label: 'Ruta del DÃ­a', key: 'ruta' },
   { icon: ClipboardList, label: 'Historial', key: 'historial' },
   { icon: UserCircle, label: 'Mi Perfil', key: 'perfil' },
 ];
 
 export const DomiciliarioLayout: React.FC = () => {
+  useUserRole('domiciliario');
   const [darkMode, toggleTheme] = useDashboardTheme();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -76,6 +78,7 @@ export const DomiciliarioLayout: React.FC = () => {
       document.querySelectorAll<HTMLElement>('[data-dashboard-theme]').forEach(el => el.removeAttribute('data-theme'));
       document.documentElement.removeAttribute('data-theme');
       document.body?.removeAttribute('data-theme');
+      clearUserRole();
     } catch (_e) {
       // ignore
     }
@@ -125,3 +128,4 @@ export const DomiciliarioLayout: React.FC = () => {
     </div>
   );
 };
+

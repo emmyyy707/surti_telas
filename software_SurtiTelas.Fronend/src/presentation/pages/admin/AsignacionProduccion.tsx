@@ -6,6 +6,7 @@ import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { productionApi } from '@/infrastructure/api/productionApi';
 import { workshopsApi } from '@/infrastructure/api/workshopsApi';
 import { ESTADOS_PRODUCCION } from '@/shared/constants/options';
@@ -52,9 +53,7 @@ export const AdminAsignacionProduccion: React.FC = () => {
   const [formTela, setFormTela] = useState('');
   const [formColores, setFormColores] = useState('');
   const [formCurvaTallas, setFormCurvaTallas] = useState('');
-  const [formOperarioId, setFormOperarioId] = useState('');
   const [formFechaInicio, setFormFechaInicio] = useState('');
-  const [tallerCapacidadError, setTallerCapacidadError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -118,10 +117,9 @@ export const AdminAsignacionProduccion: React.FC = () => {
       const taller = talleres.find(t => t.nombre === tallerSeleccionado);
       if (!taller) return;
       if (selectedOrden.cantidad > taller.capacidadDisponible) {
-        setTallerCapacidadError(`El taller no tiene capacidad disponible para ${selectedOrden.cantidad} unidades`);
+        toast.error(`El taller no tiene capacidad disponible para ${selectedOrden.cantidad} unidades`);
         return;
       }
-      setTallerCapacidadError(null);
       const updated = await productionApi.assignToWorkshop(selectedOrden.id, taller.id);
       setOrdenes(prev => prev.map(o => o.id === selectedOrden.id
         ? {
@@ -153,7 +151,6 @@ export const AdminAsignacionProduccion: React.FC = () => {
       setFormTela('');
       setFormColores('');
       setFormCurvaTallas('');
-      setFormOperarioId('');
       setFormFechaInicio('');
     } else {
       setEditingId(null);
@@ -165,7 +162,6 @@ export const AdminAsignacionProduccion: React.FC = () => {
       setFormTela('');
       setFormColores('');
       setFormCurvaTallas('');
-      setFormOperarioId('');
       setFormFechaInicio('');
     }
     setCrudModalOpen(true);
@@ -184,18 +180,17 @@ export const AdminAsignacionProduccion: React.FC = () => {
           notasTecnicas: formNotas || undefined,
           tela: formTela || undefined,
           colores: formColores ? formColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
-          curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
-          operarioId: formOperarioId || undefined,
-          fechaInicio: formFechaInicio || undefined,
-        });
-        setOrdenes(prev => prev.map(o => o.id === editingId ? {
-          ...o,
-          referencia: updated.referencia,
-          cantidad: updated.cantidad,
-          fechaPrometida: updated.fechaEstimada,
-          estado: updated.estado === 'En produccion' ? 'En produccion' : updated.estado === 'Completada' ? 'Completada' : updated.estado === 'Pendiente' ? 'Pendiente' : 'Asignada',
-        } : o));
-        toast.success('Orden actualizada');
+           curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
+           fechaInicio: formFechaInicio || undefined,
+         });
+         setOrdenes(prev => prev.map(o => o.id === editingId ? {
+           ...o,
+           referencia: updated.referencia,
+           cantidad: updated.cantidad,
+           fechaPrometida: updated.fechaEstimada,
+           estado: updated.estado === 'En produccion' ? 'En produccion' : updated.estado === 'Completada' ? 'Completada' : updated.estado === 'Pendiente' ? 'Pendiente' : 'Asignada',
+         } : o));
+         toast.success('Orden actualizada');
       } else {
         const created = await productionApi.create({
           referencia: formReferencia,
@@ -205,11 +200,10 @@ export const AdminAsignacionProduccion: React.FC = () => {
           notasTecnicas: formNotas || undefined,
           tela: formTela || undefined,
           colores: formColores ? formColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
-          curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
-          operarioId: formOperarioId || undefined,
-          fechaInicio: formFechaInicio || undefined,
-        });
-        setOrdenes(prev => [{
+           curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
+           fechaInicio: formFechaInicio || undefined,
+         });
+         setOrdenes(prev => [{
           id: created.id,
           numeroOrden: created.pedidoNumero || created.referencia,
           prenda: created.pedidoItemNombre || created.referencia,
@@ -399,11 +393,9 @@ export const AdminAsignacionProduccion: React.FC = () => {
                     {talleres.map(t => (<option key={t.id} value={t.nombre}>{t.nombre} (Disponible: {t.capacidadDisponible})</option>))}
                   </select>
                 </div>
-              </div>
-              <div className={s.formActions}>
-                <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-                <Button onClick={handleAsignarTaller} disabled={!tallerSeleccionado || saving}>{saving ? 'Guardando...' : 'Asignar taller'}</Button>
-              </div>
+              </div>              <ModalFooter
+                actions={[{ label: 'Cancelar', variant: 'secondary', onClick: onClose }, { label: saving ? 'Guardando...' : 'Asignar taller' , onClick: handleAsignarTaller, disabled: !tallerSeleccionado || saving }]}
+              />
             </div>
           ),
         }}
@@ -432,11 +424,9 @@ export const AdminAsignacionProduccion: React.FC = () => {
                   {talleres.map(t => (<option key={t.id} value={t.nombre}>{t.nombre} (Disponible: {t.capacidadDisponible})</option>))}
                 </select>
               </div>
-            </div>
-            <div className={s.formActions}>
-              <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
-              <Button onClick={handleAsignarTaller} disabled={!tallerSeleccionado || saving}>{saving ? 'Guardando...' : 'Asignar taller'}</Button>
-            </div>
+            </div>            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setModalOpen(false) }, { label: saving ? 'Guardando...' : 'Asignar taller' , onClick: handleAsignarTaller, disabled: !tallerSeleccionado || saving }]}
+            />
           </div>
         )}
       </Modal>
@@ -496,6 +486,7 @@ export const AdminAsignacionProduccion: React.FC = () => {
               </select>
             </div>
           </div>
+
           <div className={s.formRow}>
             <div className={s.field}>
               <label className={s.label}>Notas técnicas</label>
@@ -507,7 +498,17 @@ export const AdminAsignacionProduccion: React.FC = () => {
                 placeholder="Opcional"
               />
             </div>
+            <div className={s.field}>
+              <label className={s.label}>Fecha inicio</label>
+              <input
+                type="date"
+                className={s.input}
+                value={formFechaInicio}
+                onChange={e => setFormFechaInicio(e.target.value)}
+              />
+            </div>
           </div>
+
           <div className={s.formRow}>
             <div className={s.field}>
               <label className={s.label}>Tela</label>
@@ -530,9 +531,10 @@ export const AdminAsignacionProduccion: React.FC = () => {
               />
             </div>
           </div>
+
           <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>Curva de tallas (JSON)</label>
+              <label className={s.label}>Tallas (JSON)</label>
               <input
                 type="text"
                 className={s.input}
@@ -541,36 +543,11 @@ export const AdminAsignacionProduccion: React.FC = () => {
                 placeholder='Ej: {"s":10,"m":20}'
               />
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Operario ID</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formOperarioId}
-                onChange={e => setFormOperarioId(e.target.value)}
-                placeholder="ID del operario"
-              />
-            </div>
           </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Fecha inicio</label>
-              <input
-                type="date"
-                className={s.input}
-                value={formFechaInicio}
-                onChange={e => setFormFechaInicio(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className={s.formActions}>
-            <Button variant="secondary" type="button" onClick={() => { setCrudModalOpen(false); setEditingId(null); }} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Creando...' : 'Crear orden')}
-            </Button>
-          </div>
+
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setCrudModalOpen(false); setEditingId(null); }, disabled: saving }, { label: editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Creando...' : 'Crear orden') , type: 'submit', disabled: saving }]} />
+
         </form>
       </Modal>
 
@@ -581,14 +558,9 @@ export const AdminAsignacionProduccion: React.FC = () => {
         description="Esta acción no se puede deshacer."
         size="sm"
       >
-        <div className={s.formActions}>
-          <Button variant="secondary" onClick={() => setDeleteId(null)} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={saving}>
-            {saving ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </div>
+        <ModalFooter
+          actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setDeleteId(null), disabled: saving }, { label: saving ? 'Eliminando...' : 'Eliminar' , variant: 'danger', onClick: handleDelete, disabled: saving }]} />
+
       </Modal>
     </div>
   );

@@ -13,9 +13,8 @@ import type { Pedido } from '@/core/types';
 
 const statusVariant = (estado: Pedido['estado']) => {
   if (estado === 'Entregado') return 'success';
-  if (estado === 'En producción' || estado === 'Despachado' || estado === 'En camino') return 'info';
-  if (estado === 'Listo') return 'warning';
-  if (estado === 'Cancelado') return 'danger';
+  if (estado === 'En proceso' || estado === 'Enviado') return 'info';
+  if (estado === 'Rechazado') return 'danger';
   return 'default';
 };
 
@@ -55,13 +54,11 @@ export const MisPedidos: React.FC = () => {
 
   const filtrosEstado = [
     { label: 'Todos', key: 'todos', count: pedidos.length },
-    { label: 'Nuevo', key: 'nuevo', count: pedidos.filter((p) => p.estado === 'Nuevo').length },
-    { label: 'En producción', key: 'produccion', count: pedidos.filter((p) => p.estado === 'En producción').length },
-    { label: 'Listo', key: 'listo', count: pedidos.filter((p) => p.estado === 'Listo').length },
-    { label: 'Despachado', key: 'despachado', count: pedidos.filter((p) => p.estado === 'Despachado').length },
-    { label: 'En camino', key: 'camino', count: pedidos.filter((p) => p.estado === 'En camino').length },
-    { label: 'Entregado', key: 'entregado', count: pedidos.filter((p) => p.estado === 'Entregado').length },
-    { label: 'Cancelado', key: 'cancelado', count: pedidos.filter((p) => p.estado === 'Cancelado').length },
+    { label: 'Pendiente', key: 'Pendiente', count: pedidos.filter((p) => p.estado === 'Pendiente').length },
+    { label: 'En proceso', key: 'En proceso', count: pedidos.filter((p) => p.estado === 'En proceso').length },
+    { label: 'Enviado', key: 'Enviado', count: pedidos.filter((p) => p.estado === 'Enviado').length },
+    { label: 'Entregado', key: 'Entregado', count: pedidos.filter((p) => p.estado === 'Entregado').length },
+    { label: 'Rechazado', key: 'Rechazado', count: pedidos.filter((p) => p.estado === 'Rechazado').length },
   ];
 
   const contactarAsesor = () => {
@@ -80,8 +77,8 @@ export const MisPedidos: React.FC = () => {
   const cancelarPedido = async () => {
     if (!cancelPedido) return;
     try {
-      await ordersApi.updateStatus(cancelPedido.id, 'Cancelado');
-      setPedidos((prev) => prev.map((p) => (p.id === cancelPedido.id ? { ...p, estado: 'Cancelado' } : p)));
+      await ordersApi.updateStatus(cancelPedido.id, 'Rechazado');
+      setPedidos((prev) => prev.map((p) => (p.id === cancelPedido.id ? { ...p, estado: 'Rechazado' } : p)));
       toast.success(`Pedido ${cancelPedido.id} cancelado`);
     } catch {
       toast.error('No se pudo cancelar el pedido');
@@ -242,7 +239,7 @@ export const MisPedidos: React.FC = () => {
                           <Package size={14} style={{ marginRight: 6 }} />
                           Seguimiento
                         </button>
-                        {pedido.estado === 'Nuevo' && (
+                        {pedido.estado === 'Pendiente' && (
                           <button
                             type="button"
                             className="inline-flex h-8 items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-3 text-sm font-medium text-red-400"

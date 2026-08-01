@@ -43,16 +43,24 @@ function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pe
 
 export interface CreateUserInput {
   nombre: string;
+  apellidos?: string;
   email: string;
   password: string;
   role: 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE';
   telefono?: string;
+  direccion?: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
   permisos?: string[];
 }
 
 export interface UpdateUserInput {
   nombre?: string;
+  apellidos?: string;
   telefono?: string;
+  direccion?: string;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
   permisos?: string[];
 }
 

@@ -158,8 +158,7 @@ export const AdminRegistroTalleres: React.FC = () => {
           <h1 className={s.pageTitle}>Registro de Talleres</h1>
           <p className={s.pageSubtitle}>Gestión de talleres externos</p>
         </div>
-        <Button onClick={() => openModal()}>
-          <Plus size={16} />
+        <Button onClick={() => openModal()} leftIcon={<Plus size={16} />} >
           Nuevo Taller
         </Button>
       </div>
@@ -175,7 +174,7 @@ export const AdminRegistroTalleres: React.FC = () => {
         />
       </div>
 
-      <DataTable<Taller>
+      <DataTable enableExport={false} enableRowSelection={false}
         data={filteredTalleres}
         pageSize={10}
         emptyMessage={loading ? 'Cargando talleres...' : error ? error : 'Sin resultados'}

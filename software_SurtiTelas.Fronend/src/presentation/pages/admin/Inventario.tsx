@@ -182,12 +182,11 @@ export const AdminInventario: React.FC = () => {
           detailPanel={detailPanel}
           actions={[]}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           emptyMessage={loading ? 'Cargando inventario...' : error ? error : 'No se encontraron movimientos'}
           toolbarLeft={null}
-          maxVisibleColumns={5}
+          maxVisibleColumns={5} enableExport={false} enableRowSelection={false}
         />
       </div>
 

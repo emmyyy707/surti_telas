@@ -12,15 +12,15 @@ import { authApi } from '@/infrastructure/api/authApi';
 import type { Pedido, PedidoItem } from '@/core/types';
 import type { BackendAuthUser } from '@/infrastructure/api/authApi';
 import f from '@/styles/Form.module.css';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 const ESTADOS_ORDEN = [
-  'Nuevo',
-  'En producción',
-  'Listo',
-  'Despachado',
-  'En camino',
+  'Pendiente',
+  'Aceptado',
+  'En proceso',
+  'Enviado',
   'Entregado',
-  'Cancelado',
+  'Rechazado',
 ] as const;
 
 export const AdminVentasPedidos: React.FC = () => {
@@ -39,7 +39,7 @@ export const AdminVentasPedidos: React.FC = () => {
 
   const [clienteId, setClienteId] = useState('');
   const [asesorId, setAsesorId] = useState('');
-  const [estado, setEstado] = useState<Pedido['estado']>('Nuevo');
+  const [estado, setEstado] = useState<Pedido['estado']>('Pendiente');
   const [prioridad, setPrioridad] = useState<Pedido['prioridad']>('Estándar');
   const [observaciones, setObservaciones] = useState('');
   const [comprobantePago, setComprobantePago] = useState<File | null>(null);
@@ -100,7 +100,7 @@ export const AdminVentasPedidos: React.FC = () => {
 const resetForm = () => {
     setClienteId('');
     setAsesorId('');
-    setEstado('Nuevo');
+    setEstado('Pendiente');
     setPrioridad('Estándar');
     setObservaciones('');
     setComprobantePago(null);
@@ -396,10 +396,9 @@ const resetForm = () => {
               <Plus size={14} /> Agregar item
             </button>
           </div>
-          <div className={f.formActions}>
-            <Button type="button" variant="secondary" onClick={closeModal} disabled={saving}>Cancelar</Button>
-            <Button type="submit" loading={saving} leftIcon={<Save size={16} />}>{editingId ? 'Guardar cambios' : 'Crear pedido'}</Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingId ? 'Guardar cambios' : 'Crear pedido' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
+
         </form>
       </Modal>
 
@@ -436,9 +435,9 @@ const resetForm = () => {
                 </div>
               </div>
             )}
-            <div className={s.modalActions}>
-              <Button variant="secondary" onClick={() => setDetailId(null)}>Cerrar</Button>
-            </div>
+            <ModalFooter
+              actions={[{ label: 'Cerrar', variant: 'secondary', onClick: () => setDetailId(null) }]} />
+
           </div>
         )}
       </Modal>
@@ -455,12 +454,12 @@ const resetForm = () => {
 
       <Modal open={!!statusConfirm} onClose={() => setStatusConfirm(null)} title="Cambiar estado del pedido" description="Selecciona el nuevo estado para el pedido." size="md" variant="form">
         <div className={f.form}>
-          {detailPedido && detailPedido.estado === 'Nuevo' && (
+          {detailPedido && detailPedido.estado === 'Pendiente' && (
             <div className={f.formRow}>
-              <Button variant="success" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'En producción'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} aceptado`); setStatusConfirm(null); } }}>
+              <Button variant="success" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Aceptado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} aceptado`); setStatusConfirm(null); } }}>
                 <CheckCircle size={14} /> Aceptar
               </Button>
-              <Button variant="danger" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Cancelado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} rechazado`); setStatusConfirm(null); } }}>
+              <Button variant="danger" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Rechazado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} rechazado`); setStatusConfirm(null); } }}>
                 <XCircle size={14} /> Rechazar
               </Button>
             </div>
@@ -471,10 +470,9 @@ const resetForm = () => {
               {ESTADOS_ORDEN.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
           </div>
-          <div className={f.formActions}>
-            <Button variant="secondary" onClick={() => setStatusConfirm(null)} disabled={saving}>Cancelar</Button>
-            <Button onClick={handleChangeStatus} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , onClick: handleChangeStatus, disabled: saving }]} />
+
         </div>
       </Modal>
     </div>

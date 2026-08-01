@@ -1,10 +1,11 @@
-﻿import React, { useMemo, useRef, useState } from 'react'
+﻿import React, { useMemo, useRef, useState, useEffect } from 'react'
 import { X, Upload, CreditCard, BadgePercent, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart, useAuth } from '@/app/providers/AppProviders'
 import { useClientes } from '@/core/stores'
 import { ordersApi } from '@/infrastructure/api/ordersApi'
 import { AuthRequiredModal } from './AuthRequiredModal'
+import { BankingQrCode } from './BankingQrCode'
 import { appContent } from '@/shared/config/appContent'
 import './CheckoutModal.css'
 
@@ -15,25 +16,23 @@ interface CheckoutModalProps {
 
 type PaymentType = 'immediate' | 'installments'
 
-const bankOptions = appContent.checkout.paymentBanks
-
 const installmentOptions = appContent.checkout.installmentOptions
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
   const { subtotal, discount, tax, shipping, total, clearCart, items } = useCart()
   const { isAuthenticated, user } = useAuth();
   const { clientes } = useClientes();
-  const [selectedBank, setSelectedBank] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [paymentType, setPaymentType] = useState<PaymentType>('immediate')
   const [installments, setInstallments] = useState(2)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const clienteActual = useMemo(() => {
     if (!user?.email) return null;
-    return clientes.find(c => c.nombre === user.name || c.nombre === user.email) || null;
+    return clientes.find(c => c.email === user.email || c.nombre === user.name || c.nombre === user.email) || null;
   }, [user?.email, user?.name, clientes]);
 
   const isTrustedCustomer = clienteActual?.isTrustedCustomer ?? false;
@@ -49,10 +48,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
     () => Math.round((total / installments) * 100) / 100,
     [total, installments],
   )
-
-  const handleBankChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedBank(event.target.value)
-  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
@@ -81,16 +76,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       return;
     }
 
-    if (!selectedBank) {
-      toast.error('Selecciona un banco antes de continuar.')
-      return
-    }
-
-    if (!clienteActual?.id) {
-      toast.error('No se pudo identificar tu perfil de cliente. Contacta con el asesor.');
-      return;
-    }
-
     if (!proofFile) {
       toast.error('Adjunta el comprobante de pago.')
       return
@@ -104,12 +89,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
 
     setIsSubmitting(true)
     try {
-      const methodMap: Record<string, 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER'> = {
-        'CASH': 'CASH',
-        'TRANSFER': 'TRANSFER',
-        'CARD': 'CARD',
-        'OTHER': 'OTHER',
-      };
 
       const itemsList = items.map((item) => ({
         nombre: item.nombre,
@@ -118,32 +97,57 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       }));
 
       const observaciones = [
-        `Banco: ${selectedBank}`,
+        `Banco: ${appContent.checkout.bankingKey.bankName}`,
+        `Cuenta: ${appContent.checkout.bankingKey.accountNumber}`,
+        `Beneficiario: ${appContent.checkout.bankingKey.beneficiary}`,
         paymentType === 'installments' ? `Pago por abonos: ${installments} cuotas` : 'Pago inmediato',
         clienteActual?.asesorId ? `Asesor: ${clienteActual.asesorId}` : null,
       ]
         .filter(Boolean)
         .join(' | ');
 
-      await ordersApi.create({
-        clienteId: clienteActual.id,
-        asesorId: clienteActual.asesorId,
-        itemsList,
-        prioridad: 'Estándar',
-        observaciones,
-        comprobantePago: proofFile ?? undefined,
-        paymentMethod: methodMap[selectedBank] || 'OTHER',
-        installments: paymentType === 'installments' ? installments : undefined,
-      });
+      if (proofFile) {
+         const form = new FormData();
+         if (clienteActual?.id) form.append('clienteId', clienteActual.id);
+         if (clienteActual?.asesorId) form.append('asesorId', clienteActual.asesorId);
+         form.append('itemsList', JSON.stringify(itemsList));
+         form.append('prioridad', 'Estándar');
+         form.append('observaciones', observaciones);
+          form.append('paymentMethod', 'TRANSFER');
+         if (paymentType === 'installments') form.append('installments', String(installments));
+         form.append('comprobantePago', proofFile);
+         await ordersApi.createForm(form);
+       } else {
+         await ordersApi.create({
+           clienteId: clienteActual?.id,
+          asesorId: clienteActual?.asesorId,
+          itemsList,
+          prioridad: 'Estándar',
+          observaciones,
+          paymentMethod: 'TRANSFER',
+          installments: paymentType === 'installments' ? installments : undefined,
+        });
+      }
 
-      clearCart();
-      toast.success('Pago registrado. Tu pedido será confirmado en breve.');
-      onClose();
-    } catch {
-      toast.error('No se pudo registrar el pedido. Intenta nuevamente.');
-    } finally {
-      setIsSubmitting(false)
-    }
+clearCart();
+       setPaymentResult('success');
+       toast.success('Pago registrado. Tu pedido será confirmado en breve.');
+       setTimeout(() => { onClose(); setPaymentResult(null); }, 2500);
+} catch (error) {
+        const errMsg = error instanceof Error ? error.message : '';
+        if (errMsg.includes('422') || errMsg.includes('Error de validación')) {
+          toast.error('Error en los datos del pedido. Verifica que tu información esté completa e intenta de nuevo.');
+        } else if (errMsg.includes('cupo disponible')) {
+          toast.error('Tu cliente no tiene cupo disponible. Contacta a tu asesor para actualizar tu límite de crédito.');
+        } else if (errMsg.includes('network_error') || errMsg.includes('No se pudo conectar')) {
+          toast.error('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+        } else {
+          toast.error(errMsg || 'No se pudo registrar el pedido. Intenta nuevamente.');
+        }
+        setPaymentResult('error');
+      } finally {
+       setIsSubmitting(false);
+     }
   }
 
   if (!isOpen) return null
@@ -170,82 +174,103 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
           <X size={18} />
         </button>
 
-        {/*Header*/}
-        <div className="ch-header">
-          <h2 className="ch-title">Finalizar Compra</h2>
-          <p className="ch-subtitle">Completa los datos de pago para confirmar tu pedido.</p>
-        </div>
+{/*Header*/}
+         <div className="ch-header">
+           {paymentResult === 'success' ? (
+             <>
+               <h2 className="ch-title" style={{ color: '#16a34a' }}>¡Compra Realizada!</h2>
+               <p className="ch-subtitle">Tu pedido ha sido Registrado correctamente.</p>
+             </>
+           ) : paymentResult === 'error' ? (
+             <>
+               <h2 className="ch-title" style={{ color: '#dc2626' }}>Error al Registrar el Pago</h2>
+               <p className="ch-subtitle">No se pudo procesar tu pedido. Intenta de nuevo.</p>
+             </>
+           ) : (
+             <>
+               <h2 className="ch-title">Finalizar Compra</h2>
+               <p className="ch-subtitle">Completa los datos de pago para confirmar tu pedido.</p>
+             </>
+           )}
+         </div>
 
-        {/* Body */}
-        <div className="ch-body">
-          {/* Summary */}
-          <aside className="ch-summary-card">
-            <div className="ch-summary-top">
-              <h3 className="ch-section-title">Resumen del Pedido</h3>
-              <span className="ch-items-count">{items.length} {items.length === 1 ? 'producto' : 'productos'}</span>
-            </div>
+         {/* Body */}
+         <div className="ch-body">
+           {paymentResult === 'success' ? (
+             <div className="ch-success-screen">
+               <div className="ch-success-icon">✓</div>
+               <p className="ch-success-text">Tu pedido ha sido registrado exitosamente.</p>
+               <p className="ch-success-hint">Un asesor se comunicará contigo en las próximas 24 horas para confirmar tu pago.</p>
+               <button className="ch-btn-primary" onClick={onClose}>Cerrar</button>
+             </div>
+           ) : paymentResult === 'error' ? (
+             <div className="ch-error-screen">
+               <div className="ch-error-icon">✕</div>
+               <p className="ch-error-text">Ocurrió un error al registrar tu pedido.</p>
+               <p className="ch-error-hint">Puedes intentar nuevamente o contactar a tu asesor.</p>
+               <div className="ch-actions">
+                 <button className="ch-btn-primary" onClick={() => setPaymentResult(null)}>Intentar de Nuevo</button>
+               </div>
+             </div>
+           ) : (
+             <>
+           {/* Summary */}
+           <aside className="ch-summary-card">
+             <div className="ch-summary-top">
+               <h3 className="ch-section-title">Resumen del Pedido</h3>
+               <span className="ch-items-count">{items.length} {items.length === 1 ? 'producto' : 'productos'}</span>
+             </div>
 
-            <ul className="ch-summary-list">
-              <li className="ch-summary-row">
-                <span>Subtotal</span>
-                <strong>{subtotal.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
-              </li>
-              {discount > 0 && (
-                <li className="ch-summary-row muted">
-                  <span>Descuento</span>
-                  <strong>-{discount.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
-                </li>
-              )}
-              <li className="ch-summary-row muted">
-                <span>{taxesLabel}</span>
-                <strong>{tax.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
-              </li>
-              <li className="ch-summary-row muted">
-                <span>Envi­o</span>
-                <strong>{shipping === 0 ? 'Gratis' : shipping.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
-              </li>
-            </ul>
+             <ul className="ch-summary-list">
+               <li className="ch-summary-row">
+                 <span>Subtotal</span>
+                 <strong>{subtotal.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
+               </li>
+               {discount > 0 && (
+                 <li className="ch-summary-row muted">
+                   <span>Descuento</span>
+                   <strong>-{discount.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
+                 </li>
+               )}
+               <li className="ch-summary-row muted">
+                 <span>{taxesLabel}</span>
+                 <strong>{tax.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
+               </li>
+               <li className="ch-summary-row muted">
+                 <span>Envi­o</span>
+                 <strong>{shipping === 0 ? 'Gratis' : shipping.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</strong>
+               </li>
+             </ul>
 
-            <div className="ch-summary-spacer" />
+             <div className="ch-summary-spacer" />
 
-            <div className="ch-divider" />
+             <div className="ch-divider" />
 
-            <div className="ch-summary-footer">
-              <div className="ch-summary-row ch-total-row">
-                <span>Total</span>
-                <strong className="ch-total-value">
-                  {total.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
-                </strong>
+             <div className="ch-summary-footer">
+               <div className="ch-summary-row ch-total-row">
+                 <span>Total</span>
+                 <strong className="ch-total-value">
+                   {total.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+                 </strong>
+               </div>
+
+               <div className="ch-trust-badges">
+                 {appContent.checkout.trustBadges.map((item) => (
+                   <div className="ch-trust-item" key={item.label}>
+                     <ShieldCheck size={14} strokeWidth={2} />
+                     <span>{item.label}</span>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           </aside>
+
+           {/* Form */}
+            <section className="ch-form-card">
+              {/* Banking QR Code */}
+              <div className="ch-field">
+                <BankingQrCode amount={total} />
               </div>
-
-              <div className="ch-trust-badges">
-                {appContent.checkout.trustBadges.map((item) => (
-                  <div className="ch-trust-item" key={item.label}>
-                    <ShieldCheck size={14} strokeWidth={2} />
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* Form */}
-          <section className="ch-form-card">
-            {/* Bank selector */}
-            <div className="ch-field">
-              <label htmlFor="bank-select" className="ch-label">Selecciona el Banco *</label>
-              <select
-                id="bank-select"
-                className="ch-select"
-                value={selectedBank}
-                onChange={handleBankChange}
-              >
-                <option value="">Selecciona tu banco</option>
-                {bankOptions.map((bank) => (
-                  <option key={bank} value={bank}>{bank}</option>
-                ))}
-              </select>
-            </div>
 
              {/* Payment type selector */}
              <div className="ch-field">
@@ -378,11 +403,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
                 {isSubmitting ? 'Procesando…' : 'Finalizar Compra'}
               </button>
             </div>
-          </section>
+</section>
+            </>
+          )}
+          </div>
         </div>
-      </div>
 
-      {showAuthModal && (
+{showAuthModal && (
         <AuthRequiredModal
           open={showAuthModal}
           onOpenChange={setShowAuthModal}

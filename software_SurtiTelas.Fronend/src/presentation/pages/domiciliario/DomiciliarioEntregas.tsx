@@ -113,7 +113,8 @@ export const DomiciliarioEntregas: React.FC = () => {
                 {accionesDisponibles(entrega.estado).map(accion => (
                   <Button
                     key={accion.estado}
-                    size="sm"
+                    size="md"
+                    variant={accion.estado === 'FALLIDO' ? 'danger' : accion.estado === 'ENTREGADO' ? 'success' : 'primary'}
                     loading={updatingId === entrega.id}
                     onClick={() => cambiarEstado(entrega.id, accion.estado)}
                   >

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { Search, Plus, Eye, Edit, Trash2, User, MapPin, Phone, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import s from '../admin/Clientes.module.css';
@@ -22,6 +22,12 @@ const emptyClienteForm: Omit<Cliente, 'id' | 'pedidos'> = {
   cupoUsado: 0,
   deudaVencida: 0,
   isTrustedCustomer: false,
+  email: '',
+  direccion: '',
+  tipoDocumento: 'CC',
+  numeroDocumento: '',
+  password: '',
+  confirmPassword: '',
 };
 
 export const AsesorClientes: React.FC = () => {
@@ -72,6 +78,12 @@ export const AsesorClientes: React.FC = () => {
       cupoUsado: cliente.cupoUsado || 0,
       deudaVencida: cliente.deudaVencida || 0,
       isTrustedCustomer: cliente.isTrustedCustomer || false,
+      email: (cliente as unknown as { email?: string }).email || '',
+      direccion: (cliente as unknown as { direccion?: string }).direccion || '',
+      tipoDocumento: ((cliente as unknown as { tipoDocumento?: string })?.tipoDocumento || 'CC') as Cliente['tipoDocumento'],
+      numeroDocumento: (cliente as unknown as { numeroDocumento?: string }).numeroDocumento || '',
+      password: '',
+      confirmPassword: '',
     });
     setFormError('');
     setIsFormOpen(true);
@@ -251,7 +263,7 @@ export const AsesorClientes: React.FC = () => {
                         <div className="font-semibold text-[var(--color-text-primary)]">{pedido.id}</div>
                         <div className="text-sm text-[var(--color-text-secondary)]">{pedido.fecha} • {pedido.items} artículos</div>
                       </div>
-                      <Badge variant={pedido.estado === 'Entregado' ? 'success' : pedido.estado === 'Cancelado' ? 'danger' : 'info'}>{pedido.estado}</Badge>
+                      <Badge variant={pedido.estado === 'Entregado' ? 'success' : pedido.estado === 'Rechazado' ? 'danger' : 'info'}>{pedido.estado}</Badge>
                     </div>
                   </div>
                 ))}

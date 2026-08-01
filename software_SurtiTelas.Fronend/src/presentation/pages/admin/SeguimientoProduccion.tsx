@@ -3,9 +3,9 @@ import { Search, Clock, Factory, TrendingUp, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './SeguimientoProduccion.module.css';
 import { Badge } from '@/shared/ui/Badge';
-import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { productionApi } from '@/infrastructure/api/productionApi';
 import { ESTADOS_PRODUCCION, PRIORIDADES } from '@/shared/constants/options';
 
@@ -444,12 +444,9 @@ export const AdminSeguimientoProduccion: React.FC = () => {
                   </div>
                   <span className={s.avancePorcentaje}>{Math.round(((Number(nuevoAvance) || 0) / o.cantidad) * 100)}%</span>
                 </div>
-              </div>
-              <div className={s.formActions}>
-                <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-                <Button onClick={handleActualizarAvance} disabled={saving}>{saving ? 'Guardando...' : 'Actualizar avance'}</Button>
-                {Number(nuevoAvance) >= o.cantidad && <Button variant="success" onClick={() => o && handleCompletarOrden(o)}>Marcar como entregada</Button>}
-              </div>
+              </div>              <ModalFooter
+                actions={[{ label: 'Cancelar', variant: 'secondary', onClick: onClose }, { label: saving ? 'Guardando...' : 'Actualizar avance' , onClick: handleActualizarAvance, disabled: saving }, { label: 'Marcar como entregada', variant: 'success', onClick: () => o && handleCompletarOrden(o) }]}
+              />
             </div>
           ),
         }}
@@ -481,11 +478,9 @@ export const AdminSeguimientoProduccion: React.FC = () => {
                 </div>
                 <span className={s.avancePorcentaje}>{Math.round(((Number(nuevoAvance) || 0) / selectedOrden.cantidad) * 100)}%</span>
               </div>
-            </div>
-            <div className={s.formActions}>
-              <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
-              <Button onClick={handleActualizarAvance} disabled={saving}>{saving ? 'Guardando...' : 'Actualizar avance'}</Button>
-            </div>
+            </div>            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setModalOpen(false) }, { label: saving ? 'Guardando...' : 'Actualizar avance' , onClick: handleActualizarAvance, disabled: saving }]}
+            />
           </div>
         )}
       </Modal>
@@ -544,14 +539,9 @@ export const AdminSeguimientoProduccion: React.FC = () => {
               />
             </div>
           </div>
-          <div className={s.formActions}>
-            <Button variant="secondary" type="button" onClick={() => { setEditModalOpen(false); setEditingId(null); }} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setEditModalOpen(false); setEditingId(null); }, disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , type: 'submit', disabled: saving }]} />
+
         </form>
       </Modal>
 
@@ -562,14 +552,9 @@ export const AdminSeguimientoProduccion: React.FC = () => {
         description="Esta acción no se puede deshacer."
         size="sm"
       >
-        <div className={s.formActions}>
-          <Button variant="secondary" onClick={() => setDeleteId(null)} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={saving}>
-            {saving ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </div>
+        <ModalFooter
+          actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setDeleteId(null), disabled: saving }, { label: saving ? 'Eliminando...' : 'Eliminar' , variant: 'danger', onClick: handleDelete, disabled: saving }]} />
+
       </Modal>
     </div>
   );

@@ -56,5 +56,12 @@ export const errorHandler = (
   }
 
   logger.error('[UnhandledError]', { requestId: req.requestId, error: (err as Error).message, stack: (err as Error).stack });
-  return res.status(500).json({ success: false, error: 'internal', message: 'Error interno del servidor', requestId: req.requestId });
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  return res.status(500).json({
+    success: false,
+    error: 'internal',
+    message: isDevelopment ? (err as Error).message : 'Error interno del servidor',
+    requestId: req.requestId,
+    ...(isDevelopment ? { stack: (err as Error).stack } : {}),
+  });
 };

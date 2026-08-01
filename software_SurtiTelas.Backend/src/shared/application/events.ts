@@ -71,6 +71,25 @@ export class OrderDeliveredEvent implements DomainEvent {
   ) {}
 }
 
+export class OrderReceiptGeneratedEvent implements DomainEvent {
+  readonly type = 'order.receipt.generated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+      receiptId: string;
+      total: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
 export class OrderCanceledEvent implements DomainEvent {
   readonly type = 'order.canceled';
   readonly occurredAt = new Date();

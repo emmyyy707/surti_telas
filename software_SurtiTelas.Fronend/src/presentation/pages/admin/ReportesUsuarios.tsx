@@ -356,14 +356,14 @@ export const AdminReportesUsuarios: React.FC = () => {
             </div>
           </div>
         </div>
-        <DataTable<UsuarioRep>
+        <DataTable
           data={filtrados}
           pageSize={10}
           emptyMessage="Sin resultados"
           enableSorting
           enableColumnFilters
-          enableRowSelection
-          enableExport
+          enableRowSelection={false}
+          enableExport={false}
           exportFileName="reportes_usuarios"
           maxVisibleColumns={5}
           detailPanel={{

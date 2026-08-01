@@ -1,17 +1,10 @@
 export type OrderStatus =
-  | 'Nuevo'
-  | 'En producción'
-  | 'Listo'
-  | 'Despachado'
-  | 'En camino'
-  | 'Entregado'
-  | 'Cancelado'
   | 'Pendiente'
-  | 'En validación'
   | 'Aceptado'
-  | 'Rechazado'
-  | 'Recibo generado'
-  | 'Recibo enviado';
+  | 'En proceso'
+  | 'Enviado'
+  | 'Entregado'
+  | 'Rechazado';
 
 export type OrderPriority = 'Estándar' | 'Prioritario';
 export type OrderFlow = 'PRODUCCION' | 'VENTAS';
@@ -201,70 +194,65 @@ export class Order {
   canTransitionTo(nextStatus: OrderStatus): boolean {
     if (nextStatus === this.estado) return true;
 
-    const flow = this.tipoFlujo === 'VENTAS' ? 'VENTAS' : 'PRODUCCION';
-
-    if (flow === 'PRODUCCION') {
-      const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-        Nuevo: ['En producción', 'Cancelado'],
-        'En producción': ['Listo', 'Cancelado'],
-        Listo: ['Despachado', 'Cancelado'],
-        Despachado: ['En camino', 'Cancelado'],
-        'En camino': ['Entregado'],
-        Entregado: [],
-        Cancelado: [],
-        Pendiente: [],
-        'En validación': [],
-        Aceptado: [],
-        Rechazado: [],
-        'Recibo generado': [],
-        'Recibo enviado': [],
-      };
-      return allowedTransitions[this.estado].includes(nextStatus);
-    }
-
     const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-      Pendiente: ['En validación', 'Aceptado', 'Rechazado'],
-      'En validación': ['Aceptado', 'Rechazado'],
-      Aceptado: ['Recibo generado'],
-      Rechazado: [],
-      'Recibo generado': ['Recibo enviado'],
-      'Recibo enviado': [],
-      Nuevo: [],
-      'En producción': [],
-      Listo: [],
-      Despachado: [],
-      'En camino': [],
+      Pendiente: ['Aceptado', 'Rechazado'],
+      Aceptado: ['En proceso', 'Enviado', 'Entregado'],
+      'En proceso': ['Enviado', 'Entregado'],
+      Enviado: ['Entregado'],
       Entregado: [],
-      Cancelado: [],
+      Rechazado: [],
     };
     return allowedTransitions[this.estado].includes(nextStatus);
   }
 
   isTerminal(): boolean {
-    const flow = this.tipoFlujo === 'VENTAS' ? 'VENTAS' : 'PRODUCCION';
-    if (flow === 'PRODUCCION') {
-      return this.estado === 'Entregado' || this.estado === 'Cancelado';
-    }
-    return this.estado === 'Rechazado' || this.estado === 'Recibo enviado';
+    return this.estado === 'Entregado' || this.estado === 'Rechazado';
   }
 
   canAcceptPaymentProof(): boolean {
-    return this.tipoFlujo === 'VENTAS' && this.estado === 'Pendiente';
+    return this.estado === 'Pendiente';
+  }
+
+  isSalesFlow(): boolean {
+    return true;
+  }
+
+  isProductionFlow(): boolean {
+    return false;
   }
 
   canBeValidated(): boolean {
-    return this.tipoFlujo === 'VENTAS' && this.estado === 'Pendiente';
+    return this.estado === 'Pendiente';
   }
 
   canBeAccepted(): boolean {
-    return this.tipoFlujo === 'VENTAS' && (this.estado === 'Pendiente' || this.estado === 'En validación');
+    return this.estado === 'Pendiente';
   }
 
   canBeRejected(): boolean {
-    return this.tipoFlujo === 'VENTAS' && (this.estado === 'Pendiente' || this.estado === 'En validación');
+    return this.estado === 'Pendiente' || this.estado === 'Aceptado';
   }
 
-  hasPaymentProof(): boolean {
-    return Boolean(this.comprobantePagoUrl && this.comprobantePagoEstado);
+  canBeAssigned(): boolean {
+    return this.estado === 'Aceptado' || this.estado === 'En proceso';
+  }
+
+  canBeDelivered(): boolean {
+    return this.estado === 'Enviado' || this.estado === 'En proceso';
+  }
+
+  canBeCanceled(): boolean {
+    if (this.estado === 'Entregado' || this.estado === 'Rechazado') {
+      return false;
+    }
+    return true;
+  }
+
+  paymentProofRequired(): boolean {
+    return this.estado === 'Pendiente';
+  }
+
+  receiptRequired(): boolean {
+    return this.estado === 'Entregado';
   }
 }

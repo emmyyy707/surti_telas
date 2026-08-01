@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ToggleLeft, Barcode, Package, CreditCard, Calendar, User, Save, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft, Barcode, Package, CreditCard, Calendar, User, Loader2, AlertCircle, Upload } from 'lucide-react';
 import s from './ProductosTerminados.module.css';
 import f from '@/styles/Form.module.css';
 import { Button } from '@/shared/ui/Button';
@@ -8,8 +8,10 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
+import { AddTagInput } from '@/presentation/components/AddTagInput';
 import { productsApi, type ProductTerminado } from '@/infrastructure/api/productsApi';
-import { CATEGORIAS_PRODUCTO, TALLAS_PRODUCTO } from '@/shared/constants/options';
+import { ETIQUETAS_PRODUCTO } from '@/shared/constants/options';
 
 interface Producto {
   id: string;
@@ -36,9 +38,6 @@ interface Producto {
   fechaCreacion: string;
   estado: 'Activo' | 'Inactivo';
 }
-
-const categorias: string[] = [...CATEGORIAS_PRODUCTO];
-const tallas: string[] = [...TALLAS_PRODUCTO];
 
 export const AdminProductosTerminados: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -70,22 +69,23 @@ export const AdminProductosTerminados: React.FC = () => {
     return () => { active = false; };
   }, []);
 
-  const [codigo, setCodigo] = useState('');
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [descripcionCorta, setDescripcionCorta] = useState('');
   const [categoria, setCategoria] = useState('');
   const [subcategoria, setSubcategoria] = useState('');
   const [marca, setMarca] = useState('');
-  const [talla, setTalla] = useState('');
-  const [color, setColor] = useState('');
-  const [stock, setStock] = useState('');
+  const [cantidadStock, setCantidadStock] = useState('');
   const [precio, setPrecio] = useState('');
   const [precioAnterior, setPrecioAnterior] = useState('');
   const [descuento, setDescuento] = useState('');
   const [tela, setTela] = useState('');
+  const [colores, setColores] = useState<string[]>([]);
+  const [tallas, setTallas] = useState<string[]>([]);
   const [imagenes, setImagenes] = useState<string[]>([]);
   const [imagenPrincipal, setImagenPrincipal] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [localFiles, setLocalFiles] = useState<Record<string, File>>({});
   const [destacado, setDestacado] = useState(false);
   const [oferta, setOferta] = useState(false);
   const [nuevo, setNuevo] = useState(false);
@@ -102,20 +102,19 @@ export const AdminProductosTerminados: React.FC = () => {
   }, [productos, search]);
 
   const resetForm = () => {
-    setCodigo('');
     setNombre('');
     setDescripcion('');
     setDescripcionCorta('');
     setCategoria('');
     setSubcategoria('');
     setMarca('');
-    setTalla('');
-    setColor('');
-    setStock('');
+    setCantidadStock('');
     setPrecio('');
     setPrecioAnterior('');
     setDescuento('');
     setTela('');
+    setColores([]);
+    setTallas([]);
     setImagenes([]);
     setImagenPrincipal('');
     setDestacado(false);
@@ -128,20 +127,19 @@ export const AdminProductosTerminados: React.FC = () => {
 
   const openModal = (item?: Producto) => {
     if (item) {
-      setCodigo(item.codigo);
       setNombre(item.nombre);
       setDescripcion(item.descripcion);
       setDescripcionCorta(item.descripcionCorta);
       setCategoria(item.categoria);
       setSubcategoria(item.subcategoria);
       setMarca(item.marca);
-      setTalla(item.talla);
-      setColor(item.color);
-      setStock(String(item.stock));
+      setCantidadStock(String(item.stock));
       setPrecio(String(item.precio));
       setPrecioAnterior(String(item.precioAnterior));
       setDescuento(String(item.descuento));
       setTela(item.tela);
+      setColores(item.color && item.color !== 'Sin especificar' ? [item.color] : []);
+      setTallas(item.talla && item.talla !== 'Única' ? [item.talla] : []);
       setImagenes(item.imagenes);
       setImagenPrincipal(item.imagenPrincipal);
       setDestacado(item.destacado);
@@ -162,56 +160,119 @@ export const AdminProductosTerminados: React.FC = () => {
     setSaving(false);
     setFormError(null);
     setEditingId(null);
+    setLocalFiles({});
+  };
+
+  const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddLocalImages = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const remaining = 4 - imagenes.length;
+    if (remaining <= 0) {
+      toast.error('Máximo 4 imágenes');
+      return;
+    }
+    const next = [...imagenes];
+    const nextLocal = { ...localFiles };
+    const toProcess = Array.from(files).slice(0, remaining);
+    for (const file of toProcess) {
+      if (!file.type.startsWith('image/')) continue;
+      const dataUrl = await readFileAsDataURL(file);
+      const id = `${Date.now()}-${Math.round(Math.random() * 1000)}`;
+      next.push(dataUrl);
+      nextLocal[id] = file;
+    }
+    setImagenes(next);
+    setLocalFiles(nextLocal);
+    if (!imagenPrincipal && next.length > 0) {
+      setImagenPrincipal(next[0]);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const next = imagenes.filter((_, i) => i !== index);
+    setImagenes(next);
+    setLocalFiles((prev) => {
+      const nextLocal = { ...prev };
+      delete nextLocal[imagenes[index]];
+      return nextLocal;
+    });
+    if (imagenPrincipal === imagenes[index]) {
+      setImagenPrincipal(next.length > 0 ? next[0] : '');
+    }
+  };
+
+  const handleSetPrincipal = (url: string) => {
+    setImagenPrincipal(url);
+  };
+
+  const validateForm = (): boolean => {
+    setFormError(null);
+    if (!nombre.trim()) { setFormError('El nombre del producto es obligatorio'); return false; }
+    if (!categoria.trim()) { setFormError('La categoría es obligatoria'); return false; }
+    if (!precio || Number(precio) <= 0) { setFormError('El precio debe ser mayor a 0'); return false; }
+    if (!imagenPrincipal && (!imagenes || imagenes.length === 0)) {
+      setFormError('Debes añadir al menos 1 imagen para el producto.');
+      return false;
+    }
+    if (imagenes.length > 4) { setFormError('El producto permite un máximo de 4 imágenes.'); return false; }
+    if (cantidadStock !== '' && Number(cantidadStock) < 0) { setFormError('La cantidad en stock no puede ser negativa'); return false; }
+    if (!colores || colores.length === 0) { setFormError('Debes añadir al menos 1 color.'); return false; }
+    if (!tallas || tallas.length === 0) { setFormError('Debes añadir al menos 1 talla.'); return false; }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError(null);
-    if (!nombre.trim()) { setFormError('El nombre del producto es obligatorio'); return; }
-    if (!codigo.trim()) { setFormError('El código del producto es obligatorio'); return; }
-    if (!precio || Number(precio) <= 0) { setFormError('El precio debe ser mayor a 0'); return; }
+    if (!validateForm()) return;
     setSaving(true);
     try {
+      const totalQty = Number(cantidadStock) || 0;
+      const pre = precioAnterior ? Number(precioAnterior) : Number(precio);
+      const desc = descuento ? Number(descuento) : 0;
       const data: Partial<ProductTerminado> = {
-        codigo: codigo.trim(),
         nombre: nombre.trim(),
-        descripcion: descripcion.trim() || descripcionCorta.trim() || nombre.trim(),
+        descripcion: descripcion.trim() || descripcionCorta.trim(),
         descripcionCorta: descripcionCorta.trim() || descripcion.trim() || nombre.trim(),
-        categoria,
-        subcategoria,
+        categoria: categoria.trim(),
+        subcategoria: subcategoria.trim(),
         marca: marca.trim(),
-        talla,
-        color: color.trim() || '',
-        stock: Number(stock) || 0,
         precio: Number(precio),
-        precioAnterior: precioAnterior ? Number(precioAnterior) : undefined,
-        descuento: descuento ? Number(descuento) : undefined,
-        tela: tela.trim() || undefined,
+        precioAnterior: pre,
+        descuento: desc,
+        stock: totalQty,
+        cantidadStock: totalQty,
+        estado,
         imagenes: imagenes.filter(Boolean),
         imagenPrincipal: imagenPrincipal || (imagenes.length > 0 ? imagenes[0] : ''),
         destacado,
         oferta,
         nuevo,
         masVendido,
-        estado,
+        tela: tela.trim() || undefined,
+        colores,
+        tallas,
       };
+
       if (editingId) {
-        await productsApi.update(editingId, data);
-        setProductos(prev => prev.map(p => p.id === editingId ? { ...p, ...data } : p));
-        toast.success(`Producto "${nombre.trim()}" actualizado correctamente`);
+        const updated = await productsApi.update(editingId, data);
+        setProductos(prev => prev.map(p => p.id === editingId ? { ...p, ...updated } : p));
+        toast.success(`${updated.nombre} actualizado correctamente`);
       } else {
-        if (productos.some(p => p.codigo.toLowerCase() === codigo.trim().toLowerCase())) {
-          setFormError('Ya existe un producto con ese código');
-          setSaving(false);
-          return;
-        }
         const creado = await productsApi.create(data);
         setProductos(prev => [creado, ...prev]);
-        toast.success(`Producto "${creado.nombre}" creado correctamente`);
+        toast.success(`${creado.nombre} creado correctamente`);
       }
       closeModal();
-    } catch {
-      toast.error('No se pudo guardar el producto');
+    } catch (err: unknown) {
+      toast.error((err as { message?: string })?.message || 'No se pudo guardar el producto');
     } finally {
       setSaving(false);
     }
@@ -265,14 +326,18 @@ export const AdminProductosTerminados: React.FC = () => {
   };
 
   const actions: DataTableAction<Producto>[] = [
-    { label: 'Editar', icon: <Edit size={14} />, onClick: (item) => openModal(item) },
-    { label: 'Desactivar', icon: <ToggleLeft size={14} />, onClick: async (item) => {
-      const nuevoEstado = item.estado === 'Activo' ? 'Inactivo' : 'Activo';
-      await productsApi.update(item.id, { estado: nuevoEstado });
-      setProductos(prev => prev.map(p => p.id === item.id ? { ...p, estado: nuevoEstado } : p));
-      toast.info(`Producto "${item.nombre}" ${nuevoEstado === 'Inactivo' ? 'desactivado' : 'activado'}`);
+    { label: 'Editar', icon: <Edit size={14} aria-hidden="true" focusable="false" />, onClick: (item) => openModal(item) },
+    { label: 'Desactivar', icon: <ToggleLeft size={14} aria-hidden="true" focusable="false" />, onClick: async (item) => {
+      try {
+        const nuevoEstado = item.estado === 'Activo' ? 'Inactivo' : 'Activo';
+        await productsApi.update(item.id, { estado: nuevoEstado });
+        setProductos(prev => prev.map(p => p.id === item.id ? { ...p, estado: nuevoEstado } : p));
+        toast.success(`Producto "${item.nombre}" ${nuevoEstado === 'Inactivo' ? 'desactivado' : 'activado'}`);
+      } catch {
+        toast.error('No se pudo cambiar el estado del producto');
+      }
     } },
-    { label: 'Eliminar', icon: <Trash2 size={14} />, danger: true, onClick: (item) => setDeleteConfirm(item) },
+    { label: 'Eliminar', icon: <Trash2 size={14} aria-hidden="true" focusable="false" />, danger: true, onClick: (item) => setDeleteConfirm(item) },
   ];
 
   return (
@@ -294,8 +359,7 @@ export const AdminProductosTerminados: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
           debounceMs={100}
-          minChars={0}
-        />
+          minChars={0} />
       </div>
 
       <div className={s.tableWrapper}>
@@ -318,59 +382,44 @@ export const AdminProductosTerminados: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           toolbarLeft={null}
           maxVisibleColumns={5}
-          emptyMessage="Sin resultados"
-        />
+          emptyMessage="Sin resultados" enableExport={false} enableRowSelection={false} />
         )}
       </div>
 
       <Modal
         open={modalOpen}
         onClose={closeModal}
-        title="Registrar Nuevo Producto"
-        description="Completa la información del producto terminado"
+        title={editingId ? 'Editar Producto' : 'Registrar Nuevo Producto'}
         size="lg"
-        variant="form"
       >
         <form onSubmit={handleSubmit} className={f.form}>
-          {formError && <div className={f.formError}>{formError}</div>}
+          {formError && !saving && (
+            <div className={f.formError}>
+              {formError}
+            </div>
+          )}
 
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Código *</label>
-              <input className={f.input} value={codigo} onChange={e => setCodigo(e.target.value)} placeholder="Ej: PROD-006" />
+              <label className={f.label}>Nombre del Producto *</label>
+              <input className={f.input} type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
             </div>
-            <div className={f.field}>
-              <label className={f.label}>Nombre *</label>
-              <input className={f.input} value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camisa Polo M" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
             <div className={f.field}>
               <label className={f.label}>Categoría *</label>
-              <select className={f.select} value={categoria} onChange={e => setCategoria(e.target.value)}>
-                {categorias.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Talla *</label>
-              <select className={f.select} value={talla} onChange={e => setTalla(e.target.value)}>
-                {tallas.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <input className={f.input} type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="Ej: Camisetas" />
             </div>
           </div>
 
-          <div className={f.formGroup}>
+          <div className={f.field}>
             <label className={f.label}>Descripción Corta</label>
-            <input className={f.input} value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve del producto" />
+            <input className={f.input} type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve del producto" />
           </div>
 
-          <div className={f.formGroup}>
+          <div className={f.field}>
             <label className={f.label}>Descripción Completa</label>
             <textarea className={f.textarea} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
           </div>
@@ -378,7 +427,7 @@ export const AdminProductosTerminados: React.FC = () => {
           <div className={f.formRow}>
             <div className={f.field}>
               <label className={f.label}>Precio ($) *</label>
-              <input className={f.input} type="number" min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
+              <input className={f.input} type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
             </div>
             <div className={f.field}>
               <label className={f.label}>Precio Anterior (opcional)</label>
@@ -392,68 +441,118 @@ export const AdminProductosTerminados: React.FC = () => {
               <input className={f.input} type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
             </div>
             <div className={f.field}>
-              <label className={f.label}>Stock (unidades) *</label>
-              <input className={f.input} type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} placeholder="Unidades en bodega" />
+              <label className={f.label}>Cantidad Stock</label>
+              <input className={f.input} type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
             </div>
           </div>
 
           <div className={f.formRow}>
             <div className={f.field}>
               <label className={f.label}>Tipo de Tela</label>
-              <input className={f.input} value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
+              <input className={f.input} type="text" value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
             </div>
             <div className={f.field}>
               <label className={f.label}>Marca</label>
-              <input className={f.input} value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
+              <input className={f.input} type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
             </div>
           </div>
 
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Color</label>
-              <input className={f.input} value={color} onChange={e => setColor(e.target.value)} placeholder="Ej: Azul" />
+              <label className={f.label}>Colores Disponibles</label>
+              <AddTagInput tags={colores} onTagsChange={setColores} placeholder="Ej: Azul, Blanco, Verde" />
             </div>
             <div className={f.field}>
-              <label className={f.label}>Estado *</label>
-              <select className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo (Oculto)</option>
-              </select>
+              <label className={f.label}>Tallas Disponibles</label>
+              <AddTagInput tags={tallas} onTagsChange={setTallas} placeholder="Ej: S, M, L, XL" />
             </div>
           </div>
 
-          <div className={f.formGroup}>
-            <label className={f.label}>Imagen Principal (URL)</label>
-            <input className={f.input} type="text" value={imagenPrincipal} onChange={e => setImagenPrincipal(e.target.value)} placeholder="https://..." />
+          <div className={f.field}>
+            <label className={f.label}>Subcategoría</label>
+            <input className={f.input} type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
           </div>
 
-          <div className={f.formGroup}>
-            <label className={f.label}>Imágenes de Referencia (URLs adicionales, máx 4)</label>
-            <div className={s.uploadContainer}>
+          <div className={f.field}>
+            <label className={f.label}>Imagen Principal</label>
+            <select
+              className={f.select}
+              value={imagenPrincipal}
+              onChange={e => setImagenPrincipal(e.target.value)}
+            >
+              <option value="">Sin imagen principal</option>
+              {imagenes.map((url, index) => (
+                <option key={index} value={url}>Imagen {index + 1}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={f.field}>
+            <label className={f.label}>Galería de Imágenes</label>
+            <div
+              className={s.uploadContainer}
+              onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleAddLocalImages(e.dataTransfer.files);
+                }
+              }}
+            >
               <label className={s.uploadPlaceholder}>
-                <span style={{ fontSize: '1.2rem' }}>+</span>
-                <span>Agregar imagen (URL)</span>
+                <Upload size={22} />
+                <span>Arrastra imágenes aquí o haz clic para seleccionar</span>
+                <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>JPG, PNG, WEBP (máx 4)</span>
                 <input
-                  type="text"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
                   className={s.hiddenFileInput}
-                  placeholder="Pegar URL y presionar Enter"
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim() && imagenes.length < 4) {
-                      e.preventDefault();
-                      setImagenes([...imagenes, e.currentTarget.value.trim()]);
-                      e.currentTarget.value = '';
-                    }
+                  onChange={e => {
+                    handleAddLocalImages(e.target.files);
+                    if (e.target.value) e.target.value = '';
                   }}
                 />
               </label>
+
               {imagenes.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div className={s.previewGrid}>
                   {imagenes.map((url, index) => (
-                    <div key={index} className={s.previewBox} style={{ width: '100px' }}>
-                      <img src={url} alt={`Ref ${index + 1}`} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '6px' }} />
-                      <button type="button" onClick={() => setImagenes(imagenes.filter((_, i) => i !== index))} className={s.removeImgBtn}>
-                        <span style={{ fontSize: '14px' }}>×</span>
-                      </button>
+                    <div key={index} className={s.previewBox} style={{ width: '100%' }}>
+                      <img src={url} alt={`Imagen ${index + 1}`} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                      <div style={{ position: 'absolute', top: '4px', right: '4px', display: 'flex', gap: '4px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrincipal(url)}
+                          style={{
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            background: imagenPrincipal === url ? 'var(--color-accent)' : 'rgba(0,0,0,0.5)',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                          }}
+                          title="Establecer como principal"
+                        >
+                          ★
+                        </button>
+                        <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn}>
+                          <span style={{ fontSize: '14px' }}>×</span>
+                        </button>
+                      </div>
+                      {imagenPrincipal === url && (
+                        <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--color-accent)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                          Principal
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -461,31 +560,34 @@ export const AdminProductosTerminados: React.FC = () => {
             </div>
           </div>
 
-          <div className={f.formGroup}>
+          <div className={f.field}>
+            <label className={f.label}>Estado</label>
+            <select className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo (Oculto)</option>
+            </select>
+          </div>
+
+          <div className={f.field}>
             <label className={f.label}>Etiquetas</label>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {[
-                { key: 'destacado', label: 'Destacado', value: destacado, set: setDestacado },
-                { key: 'oferta', label: 'Oferta', value: oferta, set: setOferta },
-                { key: 'nuevo', label: 'Nuevo', value: nuevo, set: setNuevo },
-                { key: 'masVendido', label: 'Más vendido', value: masVendido, set: setMasVendido },
-              ].map(({ key, label, value, set }) => (
-                <label key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text-secondary)', padding: '6px 12px', background: value ? 'rgba(244,162,97,0.15)' : 'rgba(255,255,255,0.04)', borderRadius: '8px', border: `1px solid ${value ? 'rgba(244,162,97,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
-                  <input type="checkbox" checked={value} onChange={e => set(e.target.checked)} />
+              {ETIQUETAS_PRODUCTO.map(({ key, label }) => {
+                const state = key === 'destacado' ? destacado : key === 'oferta' ? oferta : key === 'nuevo' ? nuevo : masVendido;
+                const set = key === 'destacado' ? setDestacado : key === 'oferta' ? setOferta : key === 'nuevo' ? setNuevo : setMasVendido;
+                return (
+                <label key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text-secondary)', padding: '6px 12px', background: state ? 'rgba(244,162,97,0.15)' : 'rgba(255,255,255,0.04)', borderRadius: '8px', border: `1px solid ${state ? 'rgba(244,162,97,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
+                  <input type="checkbox" checked={state} onChange={e => set(e.target.checked)} />
                   {label}
                 </label>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          <div className={f.formActions}>
-            <Button type="button" variant="secondary" onClick={closeModal} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving} leftIcon={<Save size={16} />}>
-              {editingId ? 'Guardar Cambios' : 'Crear Producto'}
-            </Button>
-          </div>
+          <ModalFooter
+            secondary={{ label: 'Cancelar', onClick: closeModal, disabled: saving, loading: saving }}
+            primary={{ label: editingId ? 'Guardar Cambios' : 'Crear Producto (Borrador)', type: 'submit', loading: saving }}
+          />
         </form>
       </Modal>
 
@@ -507,8 +609,7 @@ export const AdminProductosTerminados: React.FC = () => {
         title="Eliminar producto"
         description={`¿Estás seguro de que deseas eliminar "${deleteConfirm?.nombre}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
-        variant="danger"
-      />
+        variant="danger" />
     </div>
   );
 };

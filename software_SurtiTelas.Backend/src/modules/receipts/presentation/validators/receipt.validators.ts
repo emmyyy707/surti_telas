@@ -4,6 +4,7 @@ import { PositiveNumberSchema } from '../../../../shared/presentation/validators
 export const ReceiptFiltersSchema = z.object({
   customerId: z.string().optional(),
   orderId: z.string().optional(),
+  estado: z.enum(['BORRADOR', 'EMITIDO', 'ENVIADO', 'PAGADO', 'VENCIDO', 'CANCELADO']).optional(),
 });
 
 export const CreateReceiptSchema = z.object({
@@ -23,5 +24,5 @@ export const UpdateReceiptSchema = z.object({
 });
 
 export const UpdateReceiptStatusSchema = z.object({
-  estado: z.enum(['BORRADOR', 'ENVIADO', 'PAGADO', 'VENCIDO', 'CANCELADO']),
+  estado: z.enum(['BORRADOR', 'EMITIDO', 'ENVIADO', 'PAGADO', 'VENCIDO', 'CANCELADO']),
 });

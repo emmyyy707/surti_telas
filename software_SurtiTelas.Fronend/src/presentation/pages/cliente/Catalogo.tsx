@@ -49,14 +49,14 @@ export const CatalogoCliente: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const ordersData = await ordersApi.list();
-        setMisPedidos(ordersData.pedidos.slice(0, 2).map((p) => ({
-          id: p.id,
-          estado: p.estado === 'Entregado' ? 'Completado' : 'En Proceso',
-          fecha: p.fecha,
-          total: p.total,
-          items: `${p.items} artículos`,
-        })));
+      const ordersData = await ordersApi.me();
+      setMisPedidos(ordersData.pedidos.slice(0, 2).map((p) => ({
+        id: p.id,
+        estado: p.estado === 'Entregado' ? 'Completado' : 'En Proceso',
+        fecha: p.fecha,
+        total: p.total,
+        items: `${p.items} artículos`,
+      })));
         const asesorPedido = ordersData.pedidos.find((p) => p.asesor)?.asesor;
         if (asesorPedido) setAsesorNombre(asesorPedido);
         try {
@@ -105,13 +105,9 @@ export const CatalogoCliente: React.FC = () => {
         return;
       }
 
-      const clientsResult = await customersApi.list();
-      const myClient = clientsResult.data.find((c) => c.email === currentUser.email || c.nombre === currentUser.name || currentUser.email.includes(c.nombre));
-      const clienteId = myClient?.id || currentUser.uid;
-
       await ordersApi.create({
-        clienteId,
-        asesorId: myClient?.asesor || undefined,
+        clienteId: currentUser.role === 'cliente' ? undefined : currentUser.uid,
+        asesorId: undefined,
         itemsList: [],
         prioridad: pedidoData.urgencia === 'Prioritario' ? 'Prioritario' : 'Estándar',
         observaciones: pedidoData.detalle,
@@ -121,7 +117,7 @@ export const CatalogoCliente: React.FC = () => {
       setIsPedidoModalOpen(false);
       setPedidoData({ detalle: '', urgencia: 'Estándar' });
 
-      const ordersData = await ordersApi.list();
+      const ordersData = await ordersApi.me();
       setMisPedidos(ordersData.pedidos.slice(0, 2).map((p) => ({
         id: p.id,
         estado: p.estado === 'Entregado' ? 'Completado' : 'En Proceso',

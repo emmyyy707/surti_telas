@@ -1,0 +1,109 @@
+/* ============================================================
+   BANKING QR CODE  —  Llave bancaria con código QR
+   ============================================================ */
+
+.bq-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.bq-qr-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.bq-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bq-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.bq-row:not(.bq-row--highlight):not(.bq-row--total) {
+  border-bottom: 1px solid rgba(100, 116, 139, 0.06);
+}
+
+.bq-row--highlight {
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.bq-row--total {
+  background: rgba(22, 163, 74, 0.05);
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  font-weight: 600;
+}
+
+.bq-label {
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bq-value {
+  color: #0f172a;
+  text-align: right;
+  font-size: 13px;
+}
+
+.bq-value.font-mono {
+  font-family: 'Courier New', monospace;
+}
+
+.bq-row--total .bq-value {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.bq-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 116, 139, 0.1);
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.bq-copy-btn:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+.bq-hint {
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+  padding-top: 4px;
+  border-top: 1px solid rgba(100, 116, 139, 0.06);
+}

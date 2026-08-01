@@ -7,12 +7,16 @@ import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { usersApi, type Usuario } from '@/infrastructure/api/usersApi';
 import { authApi, type PermissionDTO } from '@/infrastructure/api/authApi';
 
 interface UsuarioConDatos extends Usuario {
   telefono?: string | null;
-  nit?: string | null;
+  direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
+  apellidos?: string | null;
 }
 
 export const AdminGestionUsuarios: React.FC = () => {
@@ -31,6 +35,41 @@ export const AdminGestionUsuarios: React.FC = () => {
   const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (formData: FormData): boolean => {
+    const newErrors: Record<string, string> = {};
+    const nombre = String(formData.get('nombre') ?? '').trim();
+    const apellidos = String(formData.get('apellidos') ?? '').trim();
+    const email = String(formData.get('email') ?? '').trim();
+    const telefono = String(formData.get('telefono') ?? '').trim();
+    const direccion = String(formData.get('direccion') ?? '').trim();
+    const tipoDocumento = String(formData.get('tipoDocumento') ?? '').trim();
+    const numeroDocumento = String(formData.get('numeroDocumento') ?? '').trim();
+
+    if (!nombre || nombre.length < 3) newErrors.nombre = 'El nombre debe tener al menos 3 caracteres';
+    if (!apellidos || apellidos.length < 3) newErrors.apellidos = 'Los apellidos deben tener al menos 3 caracteres';
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Email inválido';
+    if (telefono && !/^[0-9]{7,11}$/.test(telefono)) newErrors.telefono = 'Teléfono inválido (7-11 dígitos)';
+    if (!direccion || direccion.length < 5) newErrors.direccion = 'La dirección debe tener al menos 5 caracteres';
+
+    if (!selectedUsuario) {
+      if (!tipoDocumento) newErrors.tipoDocumento = 'Selecciona un tipo de documento';
+      if (!numeroDocumento || numeroDocumento.length < 1) newErrors.numeroDocumento = 'Número de documento es obligatorio';
+      const password = String(formData.get('password') ?? '');
+      const confirmPassword = String(formData.get('confirmPassword') ?? '');
+      if (!password) newErrors.password = 'La contraseña es obligatoria';
+      else if (password.length < 8) newErrors.password = 'Mínimo 8 caracteres';
+      else if (!/[A-Z]/.test(password)) newErrors.password = 'Debe contener una mayúscula';
+      else if (!/[a-z]/.test(password)) newErrors.password = 'Debe contener una minúscula';
+      else if (!/[0-9]/.test(password)) newErrors.password = 'Debe contener un número';
+      if (!confirmPassword) newErrors.confirmPassword = 'Confirma la contraseña';
+      else if (password !== confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const fetchUsuarios = async () => {
     setLoading(true);
@@ -85,32 +124,28 @@ export const AdminGestionUsuarios: React.FC = () => {
     if (!formRef.current) return;
     const fd = new FormData(formRef.current);
     const nombre = String(fd.get('nombre') ?? '').trim();
+    const apellidos = String(fd.get('apellidos') ?? '').trim();
     const email = String(fd.get('email') ?? '').trim();
     const telefono = String(fd.get('telefono') ?? '').trim();
-    const nit = String(fd.get('nit') ?? '').trim();
+    const direccion = String(fd.get('direccion') ?? '').trim();
+    const tipoDocumento = String(fd.get('tipoDocumento') ?? '').trim();
+    const numeroDocumento = String(fd.get('numeroDocumento') ?? '').trim();
     const role = String(fd.get('role') ?? 'CLIENTE').toUpperCase();
     const permisos = fd.getAll('permisos') as string[];
-    if (!nombre || !email) {
-      toast.error('Nombre y email son obligatorios');
-      return;
-    }
-    if (telefono && !/^[0-9]{1,11}$/.test(telefono)) {
-      toast.error('Teléfono inválido. Máximo 11 dígitos numéricos.');
-      return;
-    }
-    if (nit && !/^[0-9]{1,11}$/.test(nit)) {
-      toast.error('Documento inválido. Máximo 11 dígitos numéricos.');
+    const password = String(fd.get('password') ?? '');
+
+    if (!validateForm(fd)) {
+      toast.error('Corrige los errores en el formulario');
       return;
     }
     setSaving(true);
     try {
       if (selectedUsuario) {
-        await usersApi.update(selectedUsuario.id, { nombre, telefono, permisos });
-        setItems(prev => prev.map(it => it.id === selectedUsuario.id ? { ...it, nombre, telefono, permisos } : it));
+        await usersApi.update(selectedUsuario.id, { nombre, apellidos, telefono, direccion, permisos });
+        setItems(prev => prev.map(it => it.id === selectedUsuario.id ? { ...it, nombre, apellidos, telefono, direccion, permisos } : it));
         toast.success('Usuario actualizado');
       } else {
-        const randomPass = Math.random().toString(36).slice(-8);
-        const creado = await usersApi.create({ nombre, email, telefono, role: role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE', password: randomPass, permisos });
+        const creado = await usersApi.create({ nombre, apellidos, email, password, role: role as 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE', telefono, direccion, tipoDocumento, numeroDocumento, permisos });
         setItems(prev => [creado, ...prev]);
         toast.success('Usuario creado');
       }
@@ -127,7 +162,7 @@ export const AdminGestionUsuarios: React.FC = () => {
     { key: 'nombre', header: 'Nombre', sortable: true },
     { key: 'email', header: 'Email', sortable: true },
     { key: 'telefono', header: 'Teléfono', render: (c) => c.telefono ?? '—' },
-    { key: 'nit', header: 'Documento', render: (c) => c.nit ?? '—' },
+    { key: 'numeroDocumento', header: 'Documento', render: (c) => c.numeroDocumento ?? '—' },
     { key: 'rol', header: 'Rol', sortable: true },
     { key: 'estado', header: 'Estado', sortable: true },
   ];
@@ -147,7 +182,7 @@ export const AdminGestionUsuarios: React.FC = () => {
     kpis: item => [
       { label: 'Rol', value: item.rol, icon: <ShieldCheck size={16} />, tone: 'primary' },
       { label: 'Teléfono', value: item.telefono ?? '—', icon: <ShieldCheck size={16} />, tone: 'default' },
-      { label: 'Documento', value: item.nit ?? '—', icon: <ShieldCheck size={16} />, tone: 'default' },
+      { label: 'Documento', value: item.numeroDocumento ?? '—', icon: <ShieldCheck size={16} />, tone: 'default' },
       { label: 'Fecha registro', value: item.fechaRegistro, icon: <Calendar size={16} />, tone: 'default' },
       { label: 'Módulos', value: (item.permisos ?? []).join(', ') || 'Sin módulos', icon: <ShieldCheck size={16} />, tone: 'default' },
     ],
@@ -156,7 +191,7 @@ export const AdminGestionUsuarios: React.FC = () => {
         <div className={s.detailRow}><span>Email:</span> {item.email}</div>
         <div className={s.detailRow}><span>Rol:</span> {item.rol}</div>
         <div className={s.detailRow}><span>Teléfono:</span> {item.telefono ?? '—'}</div>
-        <div className={s.detailRow}><span>Documento:</span> {item.nit ?? '—'}</div>
+        <div className={s.detailRow}><span>Documento:</span> {item.numeroDocumento ?? '—'}</div>
         <div className={s.detailRow}><span>Fecha registro:</span> {item.fechaRegistro}</div>
         <div className={s.detailRow}><span>Módulos:</span> {(item.permisos ?? []).join(', ') || 'Sin módulos'}</div>
       </div>
@@ -230,12 +265,11 @@ export const AdminGestionUsuarios: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           toolbarLeft={null}
           maxVisibleColumns={5}
-          emptyMessage={loading ? 'Cargando usuarios...' : error ? error : 'No se encontraron usuarios'}
+          emptyMessage={loading ? 'Cargando usuarios...' : error ? error : 'No se encontraron usuarios'} enableExport={false} enableRowSelection={false}
         />
       </div>
 
@@ -246,28 +280,87 @@ export const AdminGestionUsuarios: React.FC = () => {
         size="lg"
       >
         <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitUsuario(); }}>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Nombre completo</label>
-              <input type="text" className={s.input} name="nombre" defaultValue={selectedUsuario?.nombre} />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Email</label>
-              <input type="email" className={s.input} name="email" defaultValue={selectedUsuario?.email} />
-            </div>
-          </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Teléfono</label>
-              <input type="tel" className={s.input} name="telefono" defaultValue={selectedUsuario?.telefono ?? ''} maxLength={11} inputMode="numeric" />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Documento (NIT)</label>
-              <input type="text" className={s.input} name="nit" defaultValue={selectedUsuario?.nit ?? ''} maxLength={10} inputMode="numeric" />
-            </div>
-          </div>
-          {!selectedUsuario && (
+          <div className={s.formSection}>
+            <h3 className={s.formSectionTitle}>Información personal</h3>
             <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Nombre completo</label>
+                <input type="text" className={`${s.input} ${errors.nombre ? s.inputError : ''}`} name="nombre" defaultValue={selectedUsuario?.nombre} minLength={3} />
+                {errors.nombre && <span className={s.errorText}>{errors.nombre}</span>}
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Apellidos</label>
+                <input type="text" className={`${s.input} ${errors.apellidos ? s.inputError : ''}`} name="apellidos" defaultValue={selectedUsuario?.apellidos ?? ''} minLength={3} />
+                {errors.apellidos && <span className={s.errorText}>{errors.apellidos}</span>}
+              </div>
+            </div>
+            <div className={s.formRow}>
+              <div className={s.field}>
+                <label className={s.label}>Correo electrónico</label>
+                <input type="email" className={`${s.input} ${errors.email ? s.inputError : ''}`} name="email" defaultValue={selectedUsuario?.email} />
+                {errors.email && <span className={s.errorText}>{errors.email}</span>}
+              </div>
+              <div className={s.field}>
+                <label className={s.label}>Teléfono</label>
+                <input type="tel" className={`${s.input} ${errors.telefono ? s.inputError : ''}`} name="telefono" defaultValue={selectedUsuario?.telefono ?? ''} maxLength={11} inputMode="numeric" />
+                {errors.telefono && <span className={s.errorText}>{errors.telefono}</span>}
+              </div>
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Dirección</label>
+              <input type="text" className={`${s.input} ${errors.direccion ? s.inputError : ''}`} name="direccion" defaultValue={selectedUsuario?.direccion ?? ''} placeholder="Calle, ciudad, código postal" minLength={5} />
+              {errors.direccion && <span className={s.errorText}>{errors.direccion}</span>}
+            </div>
+          </div>
+
+          {!selectedUsuario && (
+            <div className={s.formSection}>
+              <h3 className={s.formSectionTitle}>Documento</h3>
+              <div className={s.formRow}>
+                <div className={s.field}>
+                  <label className={s.label}>Tipo de documento</label>
+                  <select className={`${s.select} ${errors.tipoDocumento ? s.inputError : ''}`} name="tipoDocumento" defaultValue="">
+                    <option value="" disabled>Selecciona...</option>
+                    <option value="CC">C.C. - Cédula de ciudadanía</option>
+                    <option value="TI">T.I. - Tarjeta de identidad</option>
+                    <option value="CE">C.E. - Cédula de extranjería</option>
+                    <option value="PP">P.P. - Pasaporte</option>
+                    <option value="NIT">NIT</option>
+                    <option value="PPT">PPT - Pasaporte especial</option>
+                  </select>
+                  {errors.tipoDocumento && <span className={s.errorText}>{errors.tipoDocumento}</span>}
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Número de documento</label>
+                  <input type="text" className={`${s.input} ${errors.numeroDocumento ? s.inputError : ''}`} name="numeroDocumento" defaultValue="" maxLength={15} />
+                  {errors.numeroDocumento && <span className={s.errorText}>{errors.numeroDocumento}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedUsuario && (
+            <div className={s.formSection}>
+              <h3 className={s.formSectionTitle}>Seguridad</h3>
+              <div className={s.formRow}>
+                <div className={s.field}>
+                  <label className={s.label}>Contraseña</label>
+                  <input type="password" className={`${s.input} ${errors.password ? s.inputError : ''}`} name="password" minLength={8} />
+                  {errors.password && <span className={s.errorText}>{errors.password}</span>}
+                  <p className={s.hint}>Mínimo 8 caracteres, con mayúscula, minúscula y número</p>
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Confirmar contraseña</label>
+                  <input type="password" className={`${s.input} ${errors.confirmPassword ? s.inputError : ''}`} name="confirmPassword" minLength={8} />
+                  {errors.confirmPassword && <span className={s.errorText}>{errors.confirmPassword}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedUsuario && (
+            <div className={s.formSection}>
+              <h3 className={s.formSectionTitle}>Acceso y permisos</h3>
               <div className={s.field}>
                 <label className={s.label}>Rol</label>
                 <select className={s.select} name="role" defaultValue="CLIENTE">
@@ -280,43 +373,45 @@ export const AdminGestionUsuarios: React.FC = () => {
                   <option value="REPORTES">Reportes</option>
                 </select>
               </div>
-            </div>
-          )}
-          {!selectedUsuario && (
-            <div className={s.field}>
-              <label className={s.label}>Módulos</label>
-              <div className={s.permisosGrid}>
-                {Object.entries(
-                  permissions.reduce<Record<string, PermissionDTO[]>>((acc, perm) => {
-                    const module = perm.module || 'General';
-                    if (!acc[module]) acc[module] = [];
-                    acc[module].push(perm);
-                    return acc;
-                  }, {})
-                ).map(([module, modPermissions]) => (
-                  <div key={module} style={{ marginBottom: '8px' }}>
-                    <strong style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{module}</strong>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
-                      {modPermissions.map(perm => (
-                        <label key={perm.id} className={s.permisoCheckbox}>
-                          <input type="checkbox" name="permisos" value={perm.code} />
-                          <span>{perm.code}</span>
-                        </label>
-                      ))}
+              <div className={s.field}>
+                <label className={s.label}>Módulos</label>
+                <div className={s.permisosGrid}>
+                  {Object.entries(
+                    permissions.reduce<Record<string, PermissionDTO[]>>((acc, perm) => {
+                      const module = perm.module || 'General';
+                      if (!acc[module]) acc[module] = [];
+                      acc[module].push(perm);
+                      return acc;
+                    }, {})
+                  ).map(([module, modPermissions]) => (
+                    <div key={module} style={{ marginBottom: '8px' }}>
+                      <strong style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{module}</strong>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                        {modPermissions.map(perm => (
+                          <label key={perm.id} className={s.permisoCheckbox}>
+                            <input type="checkbox" name="permisos" value={perm.code} />
+                            <span>{perm.code}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
-          <div className={s.formActions}>
-            <Button variant="secondary" type="button" onClick={handleCloseModal}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Guardando...' : selectedUsuario ? 'Guardar cambios' : 'Crear usuario'}
-            </Button>
-          </div>
+
+          <ModalFooter
+            actions={[
+              { label: 'Cancelar', variant: 'secondary', type: 'button', onClick: handleCloseModal },
+              {
+                label: saving ? 'Guardando...' : selectedUsuario ? 'Guardar cambios' : 'Crear usuario',
+                type: 'submit',
+                loading: saving,
+                disabled: saving,
+              },
+            ]}
+          />
         </form>
       </Modal>
 
@@ -387,24 +482,10 @@ export const AdminGestionUsuarios: React.FC = () => {
               ))}
             </div>
           )}
-          <div className={s.formActions}>
-            <Button variant="secondary" onClick={() => setPermisosModalOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={async () => {
-                if (!selectedUsuarioPermisos) return;
-                try {
-                  await usersApi.update(selectedUsuarioPermisos.id, { permisos: userPermissions });
-                  setItems(prev => prev.map(u => u.id === selectedUsuarioPermisos.id ? { ...u, permisos: userPermissions } : u));
-                  toast.success('Permisos actualizados correctamente');
-                  setPermisosModalOpen(false);
-                } catch {
-                  toast.error('No se pudieron actualizar los permisos');
-                }
-              }}
-            >
-              Guardar permisos
-            </Button>
-          </div>
+
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setPermisosModalOpen(false) }]}
+          />
         </div>
       </Modal>
     </div>

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, MessageSquare, ShoppingBag, BadgeDollarSign, Users, UserCircle, Store } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
 import { useDashboardTheme } from '@/core/hooks/useDashboardTheme';
+import { useUserRole, clearUserRole } from '@/core/hooks/useUserRole';
 import { TopHeader } from '@/presentation/components/TopHeader';
 import { cn } from '@/shared/utils';
 import { useAuthStore } from '@/core/stores/authStore';
@@ -14,7 +15,7 @@ import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 
 const asesorMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard General', key: 'dashboard' },
-  { icon: Store, label: 'Catálogo Digital', key: 'catalogo' },
+  { icon: Store, label: 'CatÃ¡logo Digital', key: 'catalogo' },
   { icon: MessageSquare, label: 'Servicio al Cliente', key: 'AtencionCliente' },
   { icon: ShoppingBag, label: 'Pedidos', key: 'pedidos' },
   { icon: BadgeDollarSign, label: 'Comisiones', key: 'comisiones' },
@@ -23,6 +24,7 @@ const asesorMenu: SidebarItem[] = [
 ];
 
 export const AsesorLayout: React.FC = () => {
+  useUserRole('asesor');
   const [darkMode, toggleTheme] = useDashboardTheme();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -78,6 +80,7 @@ export const AsesorLayout: React.FC = () => {
       document.querySelectorAll<HTMLElement>('[data-dashboard-theme]').forEach(el => el.removeAttribute('data-theme'));
       document.documentElement.removeAttribute('data-theme');
       document.body?.removeAttribute('data-theme');
+      clearUserRole();
     } catch (_e) {
       // ignore
     }
@@ -127,3 +130,4 @@ export const AsesorLayout: React.FC = () => {
     </div>
   );
 };
+

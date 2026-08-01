@@ -1,7 +1,6 @@
-import { ReactNode, useRef, useEffect, useCallback, useState } from 'react';
+﻿import { ReactNode, useRef, useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/shared/utils';
-import { Tooltip } from '@/shared/components/Tooltip';
 import s from './TableActionsMenu.module.css';
 
 /* ------------------------------------------------------------------ */
@@ -22,7 +21,7 @@ export interface TableAction {
 export interface TableActionsMenuProps {
   trigger: ReactNode;
   actions: TableAction[];
-  primaryAction?: { label: string; icon?: ReactNode; onClick?: () => void; tooltip?: string };
+  primaryAction?: { label: string; icon?: ReactNode; onClick?: () => void; tooltip?: string; shortcut?: string };
   align?: 'left' | 'right';
 }
 
@@ -41,8 +40,13 @@ export const TableActionsMenu = ({
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const activeIndexRef = useRef<number>(-1);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    activeIndexRef.current = -1;
+  }, []);
 
   const updatePosition = useCallback(() => {
     if (!triggerRef.current) return;
@@ -50,33 +54,35 @@ export const TableActionsMenu = ({
     const rect = triggerRef.current.getBoundingClientRect();
     const menuWidth = 260;
     const menuHeight = menuRef.current?.offsetHeight ?? 280;
-    const viewportTop = window.scrollY;
-    const viewportBottom = viewportTop + window.innerHeight;
-    const maxMenuHeight = Math.max(160, window.innerHeight - 32);
+    const viewportHeight = window.innerHeight;
+    const maxMenuHeight = Math.max(160, viewportHeight - 32);
 
-    let top = rect.bottom + viewportTop + 8;
-    let left = rect.right + window.scrollX - menuWidth;
+    // getBoundingClientRect() returns viewport-relative coordinates.
+    // Since the menu uses position: fixed, we use these directly —
+    // adding window.scrollY would double-count the scroll offset.
+    let top = rect.bottom + 8;
+    let left = rect.right - menuWidth;
 
     if (align === 'left') {
-      left = rect.left + window.scrollX;
+      left = rect.left;
     }
 
     const vw = window.innerWidth;
     if (left + menuWidth > vw - 16) left = vw - menuWidth - 16;
     if (left < 16) left = 16;
 
-    const fitsBelow = top + menuHeight <= viewportBottom - 16;
-    const fitsAbove = rect.top + viewportTop - menuHeight - 8 >= viewportTop + 16;
+    const fitsBelow = top + menuHeight <= viewportHeight - 16;
+    const fitsAbove = rect.top - menuHeight - 8 >= 16;
 
     if (!fitsBelow && fitsAbove) {
-      top = rect.top + viewportTop - menuHeight - 8;
+      top = rect.top - menuHeight - 8;
     }
 
-    if (top + menuHeight > viewportBottom - 16) {
-      top = viewportBottom - maxMenuHeight - 16;
+    if (top + menuHeight > viewportHeight - 16) {
+      top = viewportHeight - maxMenuHeight - 16;
     }
-    if (top < viewportTop + 12) {
-      top = viewportTop + 12;
+    if (top < 12) {
+      top = 12;
     }
 
     setCoords({ top, left });
@@ -87,10 +93,34 @@ export const TableActionsMenu = ({
     setOpen((v) => !v);
   }, [open, updatePosition]);
 
-  /* ---------------- keyboard ---------------- */
-  const handleKeyDown = useCallback(
+  /* ---------------- keyboard: trigger ---------------- */
+  const handleTriggerKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleToggle();
+      }
+    },
+    [handleToggle]
+  );
+
+  /* ---------------- keyboard: menu (arrows + escape) ---------------- */
+  const handleMenuKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const items = itemRefs.current.filter(Boolean) as HTMLButtonElement[];
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (activeIndexRef.current + 1) % items.length;
+        activeIndexRef.current = next;
+        items[next]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (activeIndexRef.current - 1 + items.length) % items.length;
+        activeIndexRef.current = prev;
+        items[prev]?.focus();
+      } else if (e.key === 'Escape') {
         e.preventDefault();
         close();
         triggerRef.current?.focus();
@@ -144,7 +174,7 @@ export const TableActionsMenu = ({
     };
   }, [open, updatePosition]);
 
-  // Ensure portaled table actions menu uses dashboard theme when opened
+  // Theme sync — listener always active, not gated on open
   useEffect(() => {
     const applyTheme = (value?: string | null) => {
       try {
@@ -166,9 +196,13 @@ export const TableActionsMenu = ({
     return () => window.removeEventListener('dashboard-theme-changed', handler as EventListener);
   }, [open]);
 
-  const _primaryIndex = primaryAction ? 0 : -1;
   const regularActions = actions.filter((a) => !a.danger);
   const dangerActions = actions.filter((a) => a.danger);
+
+  const resetAndClose = useCallback(() => {
+    close();
+    triggerRef.current?.focus();
+  }, [close]);
 
   return (
     <div ref={triggerRef} className="relative inline-flex items-center">
@@ -177,16 +211,10 @@ export const TableActionsMenu = ({
         className="cursor-pointer"
         role="button"
         tabIndex={0}
-        data-bs-toggle="tooltip"
-        data-bs-title="Acciones"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleToggle();
-          }
-        }}
+        onKeyDown={handleTriggerKeyDown}
         aria-haspopup="true"
         aria-expanded={open}
+        aria-label="Abrir menú de acciones"
       >
         {trigger}
       </div>
@@ -207,27 +235,27 @@ export const TableActionsMenu = ({
               }}
               role="menu"
               aria-orientation="vertical"
+              aria-label="Acciones disponibles"
               tabIndex={-1}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleMenuKeyDown}
             >
               <div className={s.menuInner}>
                 {/* Primary action (View Detail) */}
                 {primaryAction && (
-                  <Tooltip title={primaryAction.tooltip ?? primaryAction.label} as="div" tabIndex={-1}>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={cn(s.item, s.primaryItem)}
-                      onClick={() => {
-                        primaryAction.onClick?.();
-                        close();
-                      }}
-                    >
-                      <span className={cn(s.icon, s.primaryIcon)}>{primaryAction.icon}</span>
-                      <span className={cn(s.label, s.primaryLabel)}>{primaryAction.label}</span>
-                      <span className={s.shortcut}>⌘V</span>
-                    </button>
-                  </Tooltip>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    ref={(el) => { itemRefs.current[0] = el; }}
+                    className={cn(s.item, s.primaryItem)}
+                    onClick={() => {
+                      primaryAction.onClick?.();
+                      resetAndClose();
+                    }}
+                  >
+                    {primaryAction.icon && <span className={cn(s.icon, s.primaryIcon)}>{primaryAction.icon}</span>}
+                    <span className={cn(s.label, s.primaryLabel)}>{primaryAction.label}</span>
+                    {primaryAction.shortcut && <kbd className={s.shortcut}>{primaryAction.shortcut}</kbd>}
+                  </button>
                 )}
 
                 {/* Divider after primary */}
@@ -236,23 +264,24 @@ export const TableActionsMenu = ({
                 )}
 
                 {/* Regular actions */}
-                {regularActions.map((action) => (
-                  <Tooltip key={action.key} title={action.tooltip ?? action.label} as="div" tabIndex={-1}>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={s.item}
-                      onClick={() => {
-                        action.onClick?.();
-                        close();
-                      }}
-                      disabled={action.disabled}
-                    >
-                      {action.icon && <span className={s.icon}>{action.icon}</span>}
-                      <span className={s.label}>{action.label}</span>
-                      {action.shortcut && <span className={s.shortcut}>{action.shortcut}</span>}
-                    </button>
-                  </Tooltip>
+                {regularActions.map((action, i) => (
+                  <button
+                    key={action.key}
+                    type="button"
+                    role="menuitem"
+                    ref={(el) => { itemRefs.current[primaryAction ? i + 1 : i] = el; }}
+                    className={s.item}
+                    aria-disabled={action.disabled}
+                    disabled={action.disabled}
+                    onClick={() => {
+                      action.onClick?.();
+                      resetAndClose();
+                    }}
+                  >
+                    {action.icon && <span className={s.icon}>{action.icon}</span>}
+                    <span className={s.label}>{action.label}</span>
+                    {action.shortcut && <kbd className={s.shortcut}>{action.shortcut}</kbd>}
+                  </button>
                 ))}
 
                 {/* Divider before danger */}
@@ -261,23 +290,28 @@ export const TableActionsMenu = ({
                 )}
 
                 {/* Danger actions */}
-                {dangerActions.map((action) => (
-                  <Tooltip key={action.key} title={action.tooltip ?? action.label} as="div" tabIndex={-1}>
+                {dangerActions.map((action, i) => {
+                  const baseIndex = (primaryAction ? 1 : 0) + regularActions.length;
+                  return (
                     <button
+                      key={action.key}
                       type="button"
                       role="menuitem"
+                      ref={(el) => { itemRefs.current[baseIndex + i] = el; }}
                       className={cn(s.item, s.dangerItem)}
+                      aria-disabled={action.disabled}
+                      disabled={action.disabled}
                       onClick={() => {
                         action.onClick?.();
-                        close();
+                        resetAndClose();
                       }}
-                      disabled={action.disabled}
                     >
-                      {action.icon && <span className={cn(s.icon)}>{action.icon}</span>}
+                      {action.icon && <span className={s.icon}>{action.icon}</span>}
                       <span className={cn(s.label, s.dangerLabel)}>{action.label}</span>
+                      {action.shortcut && <kbd className={s.shortcut}>{action.shortcut}</kbd>}
                     </button>
-                  </Tooltip>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </>,
@@ -286,4 +320,3 @@ export const TableActionsMenu = ({
     </div>
   );
 };
-

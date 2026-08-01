@@ -1,0 +1,121 @@
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.adminModalSm { max-width: 384px; }
+.adminModalMd { max-width: 560px; }
+.adminModalLg { max-width: 720px; }
+.adminModalXl { max-width: 960px; }
+
+.modalHeader {
+  padding: var(--modal-header-padding, 24px 24px 20px);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.headerText {
+  min-width: 0;
+  flex: 1;
+}
+
+.modalTitle {
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  font-weight: 760;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modalDescription {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 6px 0 0 0;
+  line-height: 1.5;
+}
+
+.closeBtn {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-normal);
+}
+
+.closeBtn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+.closeBtn:focus-visible {
+  outline: var(--ring-width) solid var(--btn-secondary-focus-ring);
+  outline-offset: var(--ring-offset);
+}
+
+.modalBody {
+  padding: var(--modal-body-padding, 24px);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modalBodyForm {
+  padding: var(--modal-body-padding, 24px);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: var(--modal-footer-padding, 20px 24px);
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}

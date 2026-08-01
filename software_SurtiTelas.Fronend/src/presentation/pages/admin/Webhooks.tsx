@@ -10,6 +10,7 @@ import { Modal } from '@/shared/ui/Modal';
 import { webhooksApi, type Webhook } from '@/infrastructure/api/webhooksApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { useServerPagination } from '@/hooks/useServerPagination';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 const WEBHOOK_EVENTS = [
   { value: 'order.created', label: 'Pedido creado' },
@@ -219,14 +220,13 @@ export const AdminWebhooks: React.FC = () => {
         </div>
       )}
 
-      <DataTable<Webhook>
+      <DataTable enableExport={false} enableRowSelection={false}
         data={webhooks}
         pageSize={pagination.limit}
         emptyMessage={loading ? 'Cargando webhooks...' : error ? error : 'No se encontraron webhooks'}
         enableSorting
         enableColumnFilters
-        enableRowSelection={false}
-        enableExport={false}
+
         serverMode
         currentPage={pagination.page}
         totalPages={pagination.totalPages}
@@ -307,14 +307,9 @@ export const AdminWebhooks: React.FC = () => {
             </div>
           )}
 
-          <div className={s.formActions}>
-            <Button type="button" variant="secondary" onClick={closeModal} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={saving}>
-              {editingWebhook ? 'Guardar cambios' : 'Crear webhook'}
-            </Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingWebhook ? 'Guardar cambios' : 'Crear webhook' , type: 'submit', loading: saving }]} />
+
         </form>
       </Modal>
 

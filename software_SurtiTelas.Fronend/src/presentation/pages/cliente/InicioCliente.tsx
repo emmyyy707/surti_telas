@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { StatCard } from '../admin/StatCard';
@@ -15,9 +15,8 @@ import { useAuthStore } from '@/core/stores/authStore';
 
 const statusVariant = (estado: Pedido['estado']) => {
   if (estado === 'Entregado') return 'success';
-  if (estado === 'En producción' || estado === 'Despachado' || estado === 'En camino') return 'info';
-  if (estado === 'Listo') return 'warning';
-  if (estado === 'Cancelado') return 'danger';
+  if (estado === 'En proceso' || estado === 'Enviado') return 'info';
+  if (estado === 'Rechazado') return 'danger';
   return 'default';
 };
 
@@ -48,9 +47,9 @@ export const InicioCliente: React.FC = () => {
     void load();
   }, []);
 
-  const pedidoActivo = pedidos.find(p => p.estado !== 'Entregado' && p.estado !== 'Cancelado') || pedidos[0] || null;
+  const pedidoActivo = pedidos.find(p => p.estado !== 'Entregado' && p.estado !== 'Rechazado') || pedidos[0] || null;
   const totalPedidos = pedidos.length;
-  const pedidosEnProceso = pedidos.filter(p => p.estado === 'En producción' || p.estado === 'Listo' || p.estado === 'Despachado' || p.estado === 'En camino').length;
+  const pedidosEnProceso = pedidos.filter(p => p.estado === 'En proceso' || p.estado === 'Enviado' || p.estado === 'Entregado').length;
   const pedidosEntregados = pedidos.filter(p => p.estado === 'Entregado').length;
 
   const totalComprado = pedidos.reduce((sum, p) => {
@@ -183,10 +182,10 @@ export const InicioCliente: React.FC = () => {
               </div>
               <div className={s.trackingStep}>
                 <div className={s.trackingLeft}>
-                  <div className={`${s.trackingDot} ${pedidoActivo?.estado === 'En producción' ? s['trackingDot--active'] : s['trackingDot--done']}`}>
-                    {pedidoActivo?.estado === 'En producción' ? '●' : '✓'}
+                  <div className={`${s.trackingDot} ${pedidoActivo?.estado === 'En proceso' ? s['trackingDot--active'] : s['trackingDot--done']}`}>
+                    {pedidoActivo?.estado === 'En proceso' ? '●' : '✓'}
                   </div>
-                  <div className={`${s.trackingLine} ${pedidoActivo && ['En producción', 'Listo', 'Despachado', 'En camino', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
+                  <div className={`${s.trackingLine} ${pedidoActivo && ['En proceso', 'Enviado', 'Enviado', 'Entregado', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
                 </div>
                 <div className={s.trackingContent}>
                   <div className={s.trackingLabel}>En producción</div>
@@ -195,10 +194,10 @@ export const InicioCliente: React.FC = () => {
               </div>
               <div className={s.trackingStep}>
                 <div className={s.trackingLeft}>
-                  <div className={`${s.trackingDot} ${pedidoActivo?.estado === 'Listo' ? s['trackingDot--done'] : s['trackingDot--pending']}`}>
-                    {pedidoActivo?.estado === 'Listo' ? '✓' : ''}
+                  <div className={`${s.trackingDot} ${pedidoActivo?.estado === 'Enviado' ? s['trackingDot--done'] : s['trackingDot--pending']}`}>
+                    {pedidoActivo?.estado === 'Enviado' ? '✓' : ''}
                   </div>
-                  <div className={`${s.trackingLine} ${pedidoActivo && ['Listo', 'Despachado', 'En camino', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
+                  <div className={`${s.trackingLine} ${pedidoActivo && ['Enviado', 'Enviado', 'Entregado', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
                 </div>
                 <div className={s.trackingContent}>
                   <div className={s.trackingLabel}>Listo para envío</div>

@@ -1,8 +1,8 @@
 import type { Order, OrderItem, OrderPriority, OrderStatus, OrderFlow } from '../entities/Order';
 
 export interface CreateOrderInput {
-  clienteId: string;
-  asesorId: string;
+  clienteId?: string;
+  asesorId?: string;
   tipoFlujo?: OrderFlow;
   itemsList?: OrderItem[];
   prioridad?: OrderPriority;
@@ -10,6 +10,10 @@ export interface CreateOrderInput {
   paymentMethod?: string;
   installments?: number;
   fecha?: string;
+  subtotal?: number;
+  impuestos?: number;
+  descuentos?: number;
+  comprobantePagoUrl?: string;
 }
 
 export interface OrderFilters {
@@ -32,6 +36,7 @@ export interface OrderFilters {
 export interface OrderRepository {
   list(filters?: OrderFilters): Promise<{ data: Order[]; meta: { total: number; page?: number; limit: number; nextCursor?: string } }>;
   getById(id: string): Promise<Order | null>;
+  getByNumero(numero: string): Promise<Order | null>;
   create(input: CreateOrderInput): Promise<Order>;
   updateStatus(id: string, estado: OrderStatus): Promise<Order>;
   updateFull(id: string, changes: { clienteId?: string; asesorId?: string; prioridad?: OrderPriority; observaciones?: string; itemsList?: OrderItem[] }): Promise<Order>;
@@ -46,12 +51,17 @@ export interface OrderRepository {
     estado: string;
     observaciones?: string;
   }): Promise<Order>;
-  updateValidationResult(id: string, data: {
+  updateValidation(id: string, data: {
     usuarioValidacionId: string;
     fechaValidacion: Date;
+    estado: OrderStatus;
     razonRechazo?: string;
     observacionesRechazo?: string;
+    medioPago?: string;
   }): Promise<Order>;
+  getWithPaymentProof(id: string): Promise<Order | null>;
+  createReceipt(input: { orderId: string; customerId: string; numero: string; total: number; concepto: string; emitidoPor?: string }): Promise<{ id: string }>;
+  findReceiptByOrderId(orderId: string): Promise<{ id: string } | null>;
   updateToAccepted(id: string, data: {
     usuarioValidacionId: string;
     fechaValidacion: Date;
@@ -64,6 +74,4 @@ export interface OrderRepository {
     observacionesRechazo?: string;
   }): Promise<Order>;
   updateReceiptSent(id: string, estadoEnvio: string, fechaEnvio: Date, intentos: number, ultimoError?: string): Promise<Order>;
-  getWithPaymentProof(id: string): Promise<Order | null>;
-  createReceipt(input: { orderId: string; customerId: string; numero: string; total: number; concepto: string; emitidoPor?: string }): Promise<{ id: string }>;
 }

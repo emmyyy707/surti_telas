@@ -6,6 +6,7 @@ import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { controlPrendaApi, type ControlPrenda } from '@/infrastructure/api/controlPrendaApi';
 import { productionApi } from '@/infrastructure/api/productionApi';
 import { ETAPAS_CONTROL, ESTADOS_CONTROL } from '@/shared/constants/options';
@@ -384,14 +385,9 @@ export const AdminControlPrendas: React.FC = () => {
               <div className={s.infoRow}><span className={s.infoLabel}>Creado:</span><span className={s.infoValue}>{new Date(r.createdAt).toLocaleString()}</span></div>
               <div className={s.infoRow}><span className={s.infoLabel}>Actualizado:</span><span className={s.infoValue}>{new Date(r.updatedAt).toLocaleString()}</span></div>
               {r.observaciones && <div className={s.infoRowFull}><span className={s.infoLabel}>Observaciones:</span><span className={s.infoValue}>{r.observaciones}</span></div>}
-              <div className={s.formActions}>
-                {r.estado === 'Proceso' && (
-                  <>
-                    <Button variant="primary" onClick={() => { handleReview(r); onClose(); }}>Revisar</Button>
-                  </>
-                )}
-                <Button variant="secondary" onClick={onClose}>Cerrar</Button>
-              </div>
+              <ModalFooter
+                actions={[{ label: 'Revisar', variant: 'primary', onClick: () => { handleReview(r); onClose(); } }, { label: 'Cerrar', variant: 'secondary', onClick: onClose }]}
+              />
             </div>
           ),
         }}
@@ -418,10 +414,10 @@ export const AdminControlPrendas: React.FC = () => {
                 <input type="number" className={s.input} value={reviewRechazada} onChange={e => setReviewRechazada(e.target.value)} min={0} />
               </div>
             </div>
-            <div className={s.formActions}>
-              <Button variant="secondary" onClick={() => { setModalOpen(false); setReviewingId(null); }}>Cancelar</Button>
-              <Button variant="success" onClick={submitReview}>Confirmar revisión</Button>
-            </div>
+            <ModalFooter
+              secondary={{ label: 'Cancelar', onClick: () => { setModalOpen(false); setReviewingId(null); } }}
+              primary={{ label: 'Confirmar revisión', onClick: submitReview, variant: 'success' }}
+            />
           </div>
         ) : (
           <form className={s.form} onSubmit={editingId ? handleUpdate : handleCreate}>
@@ -482,11 +478,9 @@ export const AdminControlPrendas: React.FC = () => {
                   placeholder="Opcional"
                 />
               </div>
-            </div>
-            <div className={s.formActions}>
-              <Button variant="secondary" type="button" onClick={() => { setModalOpen(false); setEditingId(null); }} disabled={saving}>Cancelar</Button>
-              <Button type="submit" disabled={saving}>{editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Guardando...' : 'Crear control')}</Button>
-            </div>
+            </div>            <ModalFooter
+              actions={[{ label: editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Guardando...' : 'Crear control') , type: 'submit', disabled: saving }]}
+            />
           </form>
         )}
       </Modal>
@@ -498,14 +492,9 @@ export const AdminControlPrendas: React.FC = () => {
         description="Esta acción no se puede deshacer."
         size="sm"
       >
-        <div className={s.formActions}>
-          <Button variant="secondary" onClick={() => setDeleteId(null)} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={saving}>
-            {saving ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </div>
+        <ModalFooter
+          actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setDeleteId(null), disabled: saving }, { label: saving ? 'Eliminando...' : 'Eliminar' , variant: 'danger', onClick: handleDelete, disabled: saving }]} />
+
       </Modal>
     </div>
   );

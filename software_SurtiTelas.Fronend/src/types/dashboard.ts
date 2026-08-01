@@ -1,13 +1,14 @@
 ﻿export type StatusState =
   | 'Pendiente'
-  | 'En producción'
+  | 'Aceptado'
+  | 'En proceso'
+  | 'Enviado'
+  | 'Entregado'
+  | 'Rechazado'
   | 'En corte'
   | 'En confección'
   | 'En estampado'
   | 'Empacado'
-  | 'Enviado'
-  | 'Entregado'
-  | 'Cancelado'
   | 'En ruta'
   | 'No entregado'
   | 'Reprogramado';

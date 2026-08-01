@@ -9,12 +9,12 @@ import { useAuthStore } from '@/core/stores/authStore';
 import type { Pedido, Cliente } from '@/core/types';
 
 const orderStatuses: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default' | null> = {
-  'Nuevo': 'default',
-  'En producción': 'info',
-  'Listo': 'warning',
-  'Despachado': 'default',
+  'Pendiente': 'warning',
+  'Aceptado': 'info',
+  'En proceso': 'info',
+  'Enviado': 'default',
   'Entregado': 'success',
-  'Cancelado': 'danger',
+  'Rechazado': 'danger',
 };
 
 export const AsesorDashboard: React.FC = () => {
@@ -118,7 +118,7 @@ export const AsesorDashboard: React.FC = () => {
       return [{ tipo: 'info' as const, texto: 'Sin actividad reciente', tiempo: '' }];
     }
     return misPedidos.slice(0, 4).map((p) => ({
-      tipo: p.estado === 'Entregado' ? ('success' as const) : p.estado === 'En producción' ? ('info' as const) : ('warning' as const),
+      tipo: p.estado === 'Entregado' ? ('success' as const) : p.estado === 'Rechazado' ? ('danger' as const) : p.estado === 'Enviado' ? ('info' as const) : ('warning' as const),
       texto: `Pedido ${p.id} — ${p.cliente}`,
       tiempo: p.fecha,
     }));

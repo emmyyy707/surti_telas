@@ -9,8 +9,10 @@ import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { productsApi } from '@/infrastructure/api/productsApi';
-import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
+import { customersApi } from '@/infrastructure/api/customersApi';
 import type { ProductTerminado } from '@/infrastructure/api/productsApi';
+import type { Cliente } from '@/core/types';
+import { useAuthStore } from '@/core/stores/authStore';
 
 const TASA_IVA = 0.19;
 
@@ -20,11 +22,13 @@ const formatCurrency = (value: number): string => {
 
 export const CrearPedido: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useAuthStore((state) => state.user);
+  const isCliente = currentUser?.role === 'cliente';
 
   const [products, setProducts] = useState<ProductTerminado[]>([]);
-  const [clients, setClients] = useState<BackendAuthUser[]>([]);
+  const [customers, setCustomers] = useState<Cliente[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [loadingClients, setLoadingClients] = useState(true);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,26 +47,26 @@ export const CrearPedido: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setLoadingProducts(true);
-      setLoadingClients(true);
+      setLoadingCustomers(true);
       try {
-        const [productsResult, clientsResult] = await Promise.all([
+        const [productsResult, customersResult] = await Promise.all([
           productsApi.list().catch(() => [] as ProductTerminado[]),
-          authApi.listUsers({ limit: 1000, role: 'CLIENTE' }).catch(() => ({ data: [] as BackendAuthUser[], meta: { totalRecords: 0, page: 1, limit: 10, totalPages: 1 } })),
+          customersApi.list().catch(() => ({ data: [] as Cliente[], meta: { totalRecords: 0, page: 1, limit: 10, totalPages: 1 } })),
         ]);
         setProducts(productsResult);
-        setClients(clientsResult.data ?? []);
+        setCustomers(customersResult.data ?? []);
       } catch {
         setError('No se pudieron cargar los datos iniciales');
         toast.error('No se pudieron cargar los datos iniciales');
       } finally {
         setLoadingProducts(false);
-        setLoadingClients(false);
+        setLoadingCustomers(false);
       }
     };
     void load();
   }, []);
 
-  const selectedClient = useMemo(() => clients.find(c => c.id === selectedClientId) ?? null, [clients, selectedClientId]);
+  const selectedClient = useMemo(() => customers.find(c => c.id === selectedClientId) ?? null, [customers, selectedClientId]);
 
   const productOptions = useMemo(() => {
     return products.map(p => ({
@@ -121,7 +125,7 @@ export const CrearPedido: React.FC = () => {
   const validateForm = useCallback((): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!selectedClientId) {
+    if (!isCliente && !selectedClientId) {
       errors.client = 'Debes seleccionar un cliente';
     }
 
@@ -144,7 +148,7 @@ export const CrearPedido: React.FC = () => {
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [selectedClientId, items]);
+  }, [isCliente, selectedClientId, items]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,7 +176,7 @@ export const CrearPedido: React.FC = () => {
       ].filter(Boolean).join(' ');
 
       const result = await ordersApi.create({
-        clienteId: selectedClientId,
+        clienteId: isCliente ? undefined : selectedClientId,
         itemsList: validItems,
         prioridad,
         observaciones: observacionesTexto,
@@ -192,7 +196,7 @@ export const CrearPedido: React.FC = () => {
     }
   };
 
-  if (loadingProducts || loadingClients) {
+  if (loadingProducts || loadingCustomers) {
     return (
       <div className={s.page}>
         <div className={s.loadingState}>
@@ -242,17 +246,25 @@ export const CrearPedido: React.FC = () => {
           </h2>
           <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>Cliente *</label>
-              <select
-                className={s.select}
-                value={selectedClientId}
-                onChange={e => setSelectedClientId(e.target.value)}
-              >
-                <option value="">Selecciona un cliente</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>{c.nombre}</option>
-                ))}
-              </select>
+              <label className={s.label}>{isCliente ? 'Cliente (tu cuenta)' : 'Cliente *'}</label>
+              {isCliente ? (
+                <input
+                  className={s.input}
+                  value={currentUser?.name || currentUser?.email || 'Tu cuenta'}
+                  disabled
+                />
+              ) : (
+                <select
+                  className={s.select}
+                  value={selectedClientId}
+                  onChange={e => setSelectedClientId(e.target.value)}
+                >
+                  <option value="">Selecciona un cliente</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+              )}
               {formErrors.client && <span className={s.fieldError}>{formErrors.client}</span>}
             </div>
             <div className={s.field}>
@@ -505,7 +517,7 @@ interface PreviewModalProps {
   open: boolean;
   onClose: () => void;
   items: Array<{ nombre: string; precio: number; cantidad: number }>;
-  selectedClient: BackendAuthUser | null;
+  selectedClient: Cliente | null;
   subtotal: number;
   descuento: number;
   iva: number;

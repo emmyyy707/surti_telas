@@ -70,6 +70,7 @@ export interface ProductTerminado {
   talla: string;
   color: string;
   stock: number;
+  cantidadStock: number;
   precio: number;
   precioAnterior: number;
   descuento: number;
@@ -82,6 +83,8 @@ export interface ProductTerminado {
   masVendido: boolean;
   fechaCreacion: string;
   estado: 'Activo' | 'Inactivo';
+  colores?: string[];
+  tallas?: string[];
 }
 
 export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): ProductTerminado {
@@ -99,6 +102,7 @@ export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): Produ
       talla: p.tallas.length > 0 ? p.tallas[0] : 'Única',
       color: p.colores.length > 0 ? p.colores[0] : 'Sin especificar',
       stock: p.cantidadStock ?? 0,
+      cantidadStock: p.cantidadStock ?? 0,
       precio: Number(p.precio) || 0,
       precioAnterior: Number(p.precioAnterior) || 0,
       descuento: Number(p.descuento) || 0,
@@ -111,6 +115,8 @@ export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): Produ
       masVendido: p.masVendido || false,
       fechaCreacion: new Date().toISOString().slice(0, 10),
       estado: (p.estado ?? 'Activo') as 'Activo' | 'Inactivo',
+      colores: p.colores,
+      tallas: p.tallas,
     };
   }
   const d = dto as ProductTerminadoDTO;
@@ -126,6 +132,7 @@ export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): Produ
     talla: Array.isArray(d.tallas) && d.tallas.length > 0 ? d.tallas[0] : 'Única',
     color: Array.isArray(d.colores) && d.colores.length > 0 ? d.colores[0] : 'Sin especificar',
     stock: d.cantidadStock ?? 0,
+    cantidadStock: d.cantidadStock ?? 0,
     precio: Number(d.precio) || 0,
     precioAnterior: Number(d.precioAnterior) || 0,
     descuento: Number(d.descuento) || 0,
@@ -138,6 +145,8 @@ export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): Produ
     masVendido: d.masVendido || false,
     fechaCreacion: d.fechaCreacion ?? new Date().toISOString().slice(0, 10),
     estado: (d.estado ?? 'Activo') as 'Activo' | 'Inactivo',
+    colores: d.colores,
+    tallas: d.tallas,
   };
 }
 
@@ -169,8 +178,8 @@ export const productsApi = {
       nuevo: p.nuevo,
       masVendido: p.masVendido,
       tela: p.tela,
-      colores: p.imagenes ? [] : [],
-      tallas: p.talla ? [p.talla] : [],
+      colores: p.colores,
+      tallas: p.tallas,
     } as Record<string, unknown>);
     const dto = await api.post<ProductDTO>('/catalog/products', body);
     return toProductTerminado(dto);
@@ -197,8 +206,8 @@ export const productsApi = {
       nuevo: changes.nuevo,
       masVendido: changes.masVendido,
       tela: changes.tela,
-      colores: changes.imagenes ? [] : [],
-      tallas: changes.talla ? [changes.talla] : [],
+      colores: changes.colores,
+      tallas: changes.tallas,
     } as Record<string, unknown>);
     const dto = await api.patch<ProductDTO>(`/catalog/products/${encodeURIComponent(id)}`, body);
     return toProductTerminado(dto);

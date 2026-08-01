@@ -10,6 +10,7 @@ import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
 import { authApi } from '@/infrastructure/api/authApi';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 interface Factura {
   id: string;
@@ -536,14 +537,9 @@ export const AdminPagos: React.FC = () => {
             </div>
           </div>
 
-          <div className={s.formActions}>
-            <Button variant="secondary" onClick={() => setModalAbonoOpen(false)}>
-              Cancelar
-            </Button>
-            <Button leftIcon={<DollarSign size={16} />} onClick={handleGuardarAbono}>
-              Guardar abono
-            </Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setModalAbonoOpen(false) }, { label: 'Guardar abono', onClick: handleGuardarAbono, leftIcon: <DollarSign size={16} /> }]} />
+
         </div>
       </Modal>
 
@@ -572,10 +568,9 @@ export const AdminPagos: React.FC = () => {
               <textarea className={s.textarea} value={paymentForm.notes} onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })} rows={3} />
             </div>
           </div>
-          <div className={s.formActions}>
-            <Button variant="secondary" type="button" onClick={() => setEditModalOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => setEditModalOpen(false), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , type: 'submit', disabled: saving }]} />
+
         </form>
       </Modal>
 

@@ -628,3 +628,8 @@
   }
 }
 
+
+.adminModalSm { max-width: 384px; }
+.adminModalMd { max-width: 560px; }
+.adminModalLg { max-width: 720px; }
+.adminModalXl { max-width: 960px; }

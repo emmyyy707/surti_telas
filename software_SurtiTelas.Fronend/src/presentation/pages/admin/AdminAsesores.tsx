@@ -7,13 +7,18 @@ import { Button } from '../../../shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '../../../shared/ui/DataTable';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { ESTADOS_GENERALES } from '@/shared/constants/options';
 
 interface Asesor {
   id: string;
   nombre: string;
+  apellidos?: string | null;
   email: string;
   tel: string | null;
+  direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
   clientes: number;
   comisiones: string | null;
   estado: 'Activo' | 'Inactivo';
@@ -38,8 +43,44 @@ export const AdminAsesores: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [deleteConfirm, setDeleteConfirm] = useState<Asesor | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  const validateAsesorForm = (formData: FormData): boolean => {
+    const newErrors: Record<string, string> = {};
+    const nombre = String(formData.get('nombre') ?? '').trim();
+    const apellidos = String(formData.get('apellidos') ?? '').trim();
+    const email = String(formData.get('email') ?? '').trim();
+    const tel = String(formData.get('tel') ?? '').trim();
+    const direccion = String(formData.get('direccion') ?? '').trim();
+    const tipoDocumento = String(formData.get('tipoDocumento') ?? '').trim();
+    const numeroDocumento = String(formData.get('numeroDocumento') ?? '').trim();
+
+    if (!nombre || nombre.length < 3) newErrors.nombre = 'El nombre debe tener al menos 3 caracteres';
+    if (!apellidos || apellidos.length < 3) newErrors.apellidos = 'Los apellidos deben tener al menos 3 caracteres';
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Email inválido';
+    if (tel && !/^[0-9]{7,11}$/.test(tel)) newErrors.tel = 'Teléfono inválido (7-11 dígitos)';
+    if (!direccion || direccion.length < 5) newErrors.direccion = 'La dirección debe tener al menos 5 caracteres';
+
+    if (!selectedAsesor) {
+      if (!tipoDocumento) newErrors.tipoDocumento = 'Selecciona un tipo de documento';
+      if (!numeroDocumento || numeroDocumento.length < 1) newErrors.numeroDocumento = 'Número de documento es obligatorio';
+      const password = String(formData.get('password') ?? '');
+      const confirmPassword = String(formData.get('confirmPassword') ?? '');
+      if (!password) newErrors.password = 'La contraseña es obligatoria';
+      else if (password.length < 8) newErrors.password = 'Mínimo 8 caracteres';
+      else if (!/[A-Z]/.test(password)) newErrors.password = 'Debe contener una mayúscula';
+      else if (!/[a-z]/.test(password)) newErrors.password = 'Debe contener una minúscula';
+      else if (!/[0-9]/.test(password)) newErrors.password = 'Debe contener un número';
+      if (!confirmPassword) newErrors.confirmPassword = 'Confirma la contraseña';
+      else if (password !== confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const fetchAsesores = async () => {
     setLoading(true);
@@ -71,22 +112,36 @@ export const AdminAsesores: React.FC = () => {
     if (!formRef.current) return;
     const fd = new FormData(formRef.current);
     const nombre = String(fd.get('nombre') ?? '').trim();
+    const apellidos = String(fd.get('apellidos') ?? '').trim();
     const email = String(fd.get('email') ?? '').trim();
     const tel = String(fd.get('tel') ?? '').trim();
+    const direccion = String(fd.get('direccion') ?? '').trim();
+    const tipoDocumento = String(fd.get('tipoDocumento') ?? '').trim();
+    const numeroDocumento = String(fd.get('numeroDocumento') ?? '').trim();
     const estado = (String(fd.get('estado') ?? 'Activo') || 'Activo') as Asesor['estado'];
+    const password = String(fd.get('password') ?? '');
+
+    if (!validateAsesorForm(fd)) {
+      toast.error('Corrige los errores en el formulario');
+      return;
+    }
+    setSaving(true);
     try {
       if (selectedAsesor) {
-        await authApi.updateUser(selectedAsesor.id, { nombre, email, telefono: tel || null });
-        setItems(prev => prev.map(it => it.id === selectedAsesor.id ? { ...it, nombre, email, tel: tel || null, estado } : it));
+        await authApi.updateUser(selectedAsesor.id, { nombre, apellidos, email, telefono: tel || null, direccion: direccion || null, tipoDocumento: tipoDocumento || null, numeroDocumento: numeroDocumento || null });
+        setItems(prev => prev.map(it => it.id === selectedAsesor.id ? { ...it, nombre, apellidos, tel: tel || null, direccion: direccion || null, tipoDocumento: tipoDocumento || null, numeroDocumento: numeroDocumento || null, estado } : it));
         toast.success('Asesor actualizado');
       } else {
-        const randomPass = Math.random().toString(36).slice(-8);
-        const created = await authApi.createUser({ email, password: randomPass, nombre, role: 'ASESOR' });
+        const created = await authApi.createUser({ email, password, nombre, apellidos, role: 'ASESOR', telefono: tel || undefined, direccion: direccion || undefined, tipoDocumento: tipoDocumento || undefined, numeroDocumento: numeroDocumento || undefined });
         const nuevo: Asesor = {
           id: created.id,
           nombre,
+          apellidos,
           email,
           tel: tel || null,
+          direccion: direccion || null,
+          tipoDocumento: tipoDocumento || null,
+          numeroDocumento: numeroDocumento || null,
           clientes: 0,
           comisiones: null,
           estado,
@@ -97,6 +152,7 @@ export const AdminAsesores: React.FC = () => {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al guardar asesor');
     } finally {
+      setSaving(false);
       setModalOpen(false);
       setSelectedAsesor(null);
       void fetchAsesores();
@@ -150,8 +206,7 @@ export const AdminAsesores: React.FC = () => {
           <h1 className={s.pageTitle}>Asesores</h1>
           <p className={s.pageSubtitle}>Gestión del equipo de asesores comerciales</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus size={16} />
+        <Button onClick={() => setModalOpen(true)} leftIcon={<Plus size={16} />} >
           Nuevo Asesor
         </Button>
       </div>
@@ -174,12 +229,12 @@ export const AdminAsesores: React.FC = () => {
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
-          enableSorting={true}
+          enableSorting
           toolbarLeft={null}
           maxVisibleColumns={5}
           emptyMessage={loading ? 'Cargando asesores...' : error ? error : 'No se encontraron asesores'}
+          enableExport={false}
+          enableRowSelection={false}
         />
       </div>
 
@@ -192,40 +247,109 @@ export const AdminAsesores: React.FC = () => {
               </h2>
               <button className={s.closeBtn} onClick={() => { setModalOpen(false); setSelectedAsesor(null); }}>×</button>
             </div>
-            <div className={s.modalBody}>
-              <form className={s.form} ref={formRef}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Nombre</label>
-                    <input type="text" className={s.input} name="nombre" defaultValue={selectedAsesor?.nombre} />
+             <div className={s.modalBody}>
+              <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitAsesor(); }}>
+                <div className={s.formSection}>
+                  <h3 className={s.formSectionTitle}>Información personal</h3>
+                  <div className={s.formRow}>
+                    <div className={s.field}>
+                      <label className={s.label}>Nombre</label>
+                      <input type="text" className={`${s.input} ${errors.nombre ? s.inputError : ''}`} name="nombre" defaultValue={selectedAsesor?.nombre} minLength={3} />
+                      {errors.nombre && <span className={s.errorText}>{errors.nombre}</span>}
+                    </div>
+                    <div className={s.field}>
+                      <label className={s.label}>Apellidos</label>
+                      <input type="text" className={`${s.input} ${errors.apellidos ? s.inputError : ''}`} name="apellidos" defaultValue={selectedAsesor?.apellidos ?? ''} minLength={3} />
+                      {errors.apellidos && <span className={s.errorText}>{errors.apellidos}</span>}
+                    </div>
+                  </div>
+                  <div className={s.formRow}>
+                    <div className={s.field}>
+                      <label className={s.label}>Correo electrónico</label>
+                      <input type="email" className={`${s.input} ${errors.email ? s.inputError : ''}`} name="email" defaultValue={selectedAsesor?.email} />
+                      {errors.email && <span className={s.errorText}>{errors.email}</span>}
+                    </div>
+                    <div className={s.field}>
+                      <label className={s.label}>Teléfono</label>
+                      <input type="tel" className={`${s.input} ${errors.tel ? s.inputError : ''}`} name="tel" defaultValue={selectedAsesor?.tel ?? ''} maxLength={11} inputMode="numeric" />
+                      {errors.tel && <span className={s.errorText}>{errors.tel}</span>}
+                    </div>
                   </div>
                   <div className={s.field}>
-                    <label className={s.label}>Email</label>
-                    <input type="email" className={s.input} name="email" defaultValue={selectedAsesor?.email} />
+                    <label className={s.label}>Dirección</label>
+                    <input type="text" className={`${s.input} ${errors.direccion ? s.inputError : ''}`} name="direccion" defaultValue={selectedAsesor?.direccion ?? ''} placeholder="Calle, ciudad, código postal" minLength={5} />
+                    {errors.direccion && <span className={s.errorText}>{errors.direccion}</span>}
                   </div>
                 </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Teléfono</label>
-                     <input type="text" className={s.input} name="tel" defaultValue={selectedAsesor?.tel ?? ''} />
+
+                {!selectedAsesor && (
+                  <div className={s.formSection}>
+                    <h3 className={s.formSectionTitle}>Documento</h3>
+                    <div className={s.formRow}>
+                      <div className={s.field}>
+                        <label className={s.label}>Tipo de documento</label>
+                        <select className={`${s.select} ${errors.tipoDocumento ? s.inputError : ''}`} name="tipoDocumento" defaultValue="">
+                          <option value="" disabled>Selecciona...</option>
+                          <option value="CC">C.C. - Cédula de ciudadanía</option>
+                          <option value="TI">T.I. - Tarjeta de identidad</option>
+                          <option value="CE">C.E. - Cédula de extranjería</option>
+                          <option value="PP">P.P. - Pasaporte</option>
+                          <option value="NIT">NIT</option>
+                          <option value="PPT">P.P.T. - Pasaporte especial</option>
+                        </select>
+                        {errors.tipoDocumento && <span className={s.errorText}>{errors.tipoDocumento}</span>}
+                      </div>
+                      <div className={s.field}>
+                        <label className={s.label}>Número de documento</label>
+                        <input type="text" className={`${s.input} ${errors.numeroDocumento ? s.inputError : ''}`} name="numeroDocumento" defaultValue="" maxLength={15} />
+                        {errors.numeroDocumento && <span className={s.errorText}>{errors.numeroDocumento}</span>}
+                      </div>
+                    </div>
                   </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Estado</label>
-                    <select className={s.select} name="estado" defaultValue={selectedAsesor?.estado}>
+                )}
+
+                {!selectedAsesor && (
+                  <div className={s.formSection}>
+                    <h3 className={s.formSectionTitle}>Seguridad</h3>
+                    <div className={s.formRow}>
+                      <div className={s.field}>
+                        <label className={s.label}>Contraseña</label>
+                        <input type="password" className={`${s.input} ${errors.password ? s.inputError : ''}`} name="password" minLength={8} />
+                        {errors.password && <span className={s.errorText}>{errors.password}</span>}
+                        <p className={s.hint}>Mínimo 8 caracteres, con mayúscula, minúscula y número</p>
+                      </div>
+                      <div className={s.field}>
+                        <label className={s.label}>Confirmar contraseña</label>
+                        <input type="password" className={`${s.input} ${errors.confirmPassword ? s.inputError : ''}`} name="confirmPassword" minLength={8} />
+                        {errors.confirmPassword && <span className={s.errorText}>{errors.confirmPassword}</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className={s.formSection}>
+                  <h3 className={s.formSectionTitle}>Estado</h3>
+                  <div className={s.field} style={{ maxWidth: '200px' }}>
+                    <label className={s.label}>Estado del asesor</label>
+                    <select className={s.select} name="estado" defaultValue={selectedAsesor?.estado ?? 'Activo'}>
                       {ESTADOS_GENERALES.map(es => (
                         <option key={es} value={es}>{es}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-                <div className={s.formActions}>
-                  <Button variant="secondary" onClick={() => { setModalOpen(false); setSelectedAsesor(null); }}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSubmitAsesor}>
-                    {selectedAsesor ? 'Guardar cambios' : 'Crear asesor'}
-                  </Button>
-                </div>
+
+                <ModalFooter
+                  actions={[
+                    { label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setModalOpen(false); setSelectedAsesor(null); } },
+                    {
+                      label: saving ? 'Guardando...' : selectedAsesor ? 'Guardar cambios' : 'Crear asesor',
+                      type: 'submit',
+                      loading: saving,
+                      disabled: saving,
+                    },
+                  ]}
+                />
               </form>
             </div>
           </div>

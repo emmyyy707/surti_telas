@@ -29,9 +29,9 @@ const trackingSteps: TrackingStep[] = [
 const getTrackingState = (pedido: Pedido) => {
   const hasNovedad = /novedad|problema|reclamo|fall|daño|ausente|pendiente de revisión/i.test(pedido.observaciones || '');
   if (hasNovedad) return { status: 'Con Novedad' as TrackingStatus, hasNovedad: true };
-  if (pedido.estado === 'Nuevo') return { status: 'Recibido / Pendiente' as TrackingStatus, hasNovedad: false };
-  if (pedido.estado === 'En producción') return { status: 'En Taller' as TrackingStatus, hasNovedad: false };
-  if (pedido.estado === 'Listo' || pedido.estado === 'Despachado' || pedido.estado === 'En camino') return { status: 'En Camino (Despachado)' as TrackingStatus, hasNovedad: false };
+  if (pedido.estado === 'Pendiente') return { status: 'Recibido / Pendiente' as TrackingStatus, hasNovedad: false };
+  if (pedido.estado === 'En proceso') return { status: 'En Taller' as TrackingStatus, hasNovedad: false };
+  if (pedido.estado === 'Enviado') return { status: 'En Camino (Despachado)' as TrackingStatus, hasNovedad: false };
   if (pedido.estado === 'Entregado') return { status: 'Entregado' as TrackingStatus, hasNovedad: false };
   return { status: 'Recibido / Pendiente' as TrackingStatus, hasNovedad: false };
 };

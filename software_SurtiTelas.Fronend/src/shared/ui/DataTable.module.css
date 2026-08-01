@@ -1,4 +1,4 @@
-.card {
+﻿.card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -401,8 +401,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
@@ -486,8 +486,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;

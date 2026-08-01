@@ -159,6 +159,20 @@ export const AdminRoles: React.FC = () => {
       },
     },
     {
+      label: (item: Rol) => item.estado === 'Activo' ? 'Desactivar' : 'Activar',
+      icon: <EyeOff size={14} aria-hidden="true" focusable="false" />,
+      onClick: async (item: Rol) => {
+        const nuevoEstado = item.estado === 'Activo' ? 'Inactivo' : 'Activo';
+        try {
+          await rolesApi.updateStatus(item.id, nuevoEstado);
+          setItems(prev => prev.map(it => it.id === item.id ? { ...it, estado: nuevoEstado } : it));
+          toast.success(`Rol ${nuevoEstado.toLowerCase()} correctamente`);
+        } catch {
+          toast.error('No se pudo actualizar el estado del rol');
+        }
+      },
+    },
+    {
       label: (item: Rol) => (isProtectedRole(item) ? 'Protegido' : 'Eliminar'),
       icon: <Trash2 size={14} aria-hidden="true" focusable="false" />,
       disabled: (item: Rol) => isProtectedRole(item),
@@ -174,20 +188,6 @@ export const AdminRoles: React.FC = () => {
           toast.success('Rol eliminado correctamente');
         } catch {
           toast.error('No se pudo eliminar el rol');
-        }
-      },
-    },
-    {
-      label: (item: Rol) => item.estado === 'Activo' ? 'Desactivar' : 'Activar',
-      icon: <EyeOff size={14} aria-hidden="true" focusable="false" />,
-      onClick: async (item: Rol) => {
-        const nuevoEstado = item.estado === 'Activo' ? 'Inactivo' : 'Activo';
-        try {
-          await rolesApi.updateStatus(item.id, nuevoEstado);
-          setItems(prev => prev.map(it => it.id === item.id ? { ...it, estado: nuevoEstado } : it));
-          toast.success(`Rol ${nuevoEstado.toLowerCase()} correctamente`);
-        } catch {
-          toast.error('No se pudo actualizar el estado del rol');
         }
       },
     },
@@ -212,8 +212,7 @@ export const AdminRoles: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
           debounceMs={100}
-          minChars={0}
-        />
+          minChars={0} />
       </div>
 
       <div className={s.tableWrapper} ref={tableRef}>
@@ -230,17 +229,15 @@ export const AdminRoles: React.FC = () => {
           </div>
         )}
         {!loading && !error && (
-          <DataTable<Rol>
+          <DataTable enableExport={false} enableRowSelection={false}
             data={filteredRoles}
             columns={columns}
             actions={actions}
-            enableExport={false}
-            enableRowSelection={false}
+
             enableSorting={true}
             enableColumnFilters={false}
             toolbarLeft={null}
-            maxVisibleColumns={6}
-          />
+            maxVisibleColumns={6} />
         )}
       </div>
 

@@ -101,6 +101,11 @@ export class PrismaOrderRepository implements OrderRepository {
     return row ? new Order(toOrderData(row)) : null;
   }
 
+  async getByNumero(numero: string): Promise<Order | null> {
+    const row = await this.prisma.order.findFirst({ where: { numero, deletedAt: null }, include });
+    return row ? new Order(toOrderData(row)) : null;
+  }
+
   async getWithPaymentProof(id: string): Promise<Order | null> {
     const row = await this.prisma.order.findFirst({
       where: { id, deletedAt: null, comprobantePagoUrl: { not: null } },
@@ -109,27 +114,81 @@ export class PrismaOrderRepository implements OrderRepository {
     return row ? new Order(toOrderData(row)) : null;
   }
 
-  async create(input: CreateOrderInput): Promise<Order> {
-    const customer = await this.prisma.customer.findFirst({
-      where: { id: input.clienteId, deletedAt: null },
+  async updateValidation(id: string, data: {
+    usuarioValidacionId: string;
+    fechaValidacion: Date;
+    estado: OrderStatus;
+    razonRechazo?: string;
+    observacionesRechazo?: string;
+    medioPago?: string;
+  }): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const order = new Order(toOrderData(existing));
+    if (!order.canBeAccepted() && !order.canBeRejected()) {
+      throw new BadRequestError('El pedido no puede ser validado en su estado actual');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        estado: orderStatusToDb(data.estado),
+        usuarioValidacionId: data.usuarioValidacionId,
+        fechaValidacion: data.fechaValidacion,
+        razonRechazo: data.razonRechazo,
+        observacionesRechazo: data.observacionesRechazo,
+        medioPago: data.medioPago,
+      },
+      include,
     });
-    if (!customer) throw new BadRequestError('Cliente no encontrado');
+    return new Order(toOrderData(updated));
+  }
 
-    const asesor = await this.prisma.user.findFirst({ where: { id: input.asesorId, deletedAt: null } });
-    if (!asesor) throw new BadRequestError('Asesor no encontrado');
+  async uploadPaymentProof(id: string, data: {
+    url: string;
+    nombreOriginal: string;
+    mime: string;
+    tamaño: number;
+    cargadoPorId: string;
+    estado: string;
+    observaciones?: string;
+  }): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
 
-    const itemsList = input.itemsList ?? [];
-    const itemsCount = itemsList.reduce((sum, i) => sum + i.cantidad, 0);
-    const subtotal = itemsList.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
-    const impuestos = 0;
-    const descuentos = 0;
+    const order = new Order(toOrderData(existing));
+    if (!order.canAcceptPaymentProof()) {
+      throw new BadRequestError('El pedido no puede recibir comprobantes de pago');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        comprobantePagoUrl: data.url,
+        comprobantePagoNombre: data.nombreOriginal,
+        comprobantePagoMime: data.mime,
+        comprobantePagoTamaño: data.tamaño,
+        comprobantePagoCargadoEn: new Date(),
+        comprobantePagoCargadoPorId: data.cargadoPorId,
+        comprobantePagoEstado: data.estado,
+        comprobantePagoObservaciones: data.observaciones,
+      },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
+  async create(input: CreateOrderInput): Promise<Order> {
+    const { clienteId, asesorId, itemsList, prioridad, observaciones, comprobantePagoUrl } = input;
+    const items = itemsList ?? [];
+    const descuentos = input.descuentos ?? 0;
+    const subtotal = input.subtotal ?? items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+    const impuestos = input.impuestos ?? subtotal * 0.19;
     const total = subtotal + impuestos - descuentos;
 
-    const tipoFlujo = input.tipoFlujo ?? 'PRODUCCION';
-    let estado: OrderStatus = 'Nuevo';
-    if (tipoFlujo === 'VENTAS') {
-      estado = 'Pendiente';
-    }
+    const tipoFlujo = input.tipoFlujo ?? 'VENTAS';
+    const estado: OrderStatus = 'Pendiente';
 
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('order_number'))`;
@@ -141,12 +200,20 @@ export class PrismaOrderRepository implements OrderRepository {
       const lastNum = lastOrder ? parseInt(lastOrder.numero.replace('PED-', ''), 10) : 0;
       const numero = `PED-${(lastNum + 1).toString().padStart(6, '0')}`;
 
+      const customer = await tx.customer.findUnique({ where: { id: clienteId } });
+      if (!customer) throw new NotFoundError('Cliente no encontrado');
+
+      const asesor = await tx.user.findUnique({ where: { id: asesorId } });
+      if (!asesor) throw new NotFoundError('Asesor no encontrado');
+
+      const itemsCount = itemsList.reduce((sum, i) => sum + i.cantidad, 0);
+
       const row = await tx.order.create({
         data: {
           numero,
-          clienteId: input.clienteId,
+          clienteId,
           clienteNombre: customer.nombre,
-          asesorId: input.asesorId,
+          asesorId,
           asesorNombre: asesor.nombre,
           tipoFlujo: tipoFlujo as OrderFlow,
           fecha: input.fecha ? new Date(input.fecha) : new Date(),
@@ -158,6 +225,7 @@ export class PrismaOrderRepository implements OrderRepository {
           estado: orderStatusToDb(estado),
           prioridad: input.prioridad ? orderPriorityToDb(input.prioridad) : 'ESTANDAR',
           observaciones: input.observaciones,
+          comprobantePagoUrl: comprobantePagoUrl ?? null,
           items: {
             create: itemsList.map((i) => ({
               productId: i.productId,
@@ -223,6 +291,43 @@ export class PrismaOrderRepository implements OrderRepository {
       include,
     });
     return new Order(toOrderData(updated));
+  }
+
+  async assignDomiciliario(id: string, domiciliarioId: string): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const order = new Order(toOrderData(existing));
+    if (!order.canBeAssigned()) {
+      throw new BadRequestError('El pedido no puede ser asignado a domiciliario en su estado actual');
+    }
+
+    const domiciliario = await this.prisma.user.findFirst({ where: { id: domiciliarioId, deletedAt: null, role: 'DOMICILIARIO' } });
+    if (!domiciliario) throw new BadRequestError('Domiciliario no encontrado');
+
+    const delivery = await this.prisma.delivery.findFirst({ where: { orderId: id, deletedAt: null } });
+    if (delivery) {
+      await this.prisma.delivery.update({
+        where: { id: delivery.id },
+        data: { domiciliarioId, estado: 'ASIGNADO' },
+      });
+    } else {
+      await this.prisma.delivery.create({
+        data: {
+          orderId: id,
+          domiciliarioId,
+          estado: 'ASIGNADO',
+          direccion: order.cliente || 'Dirección cliente',
+        },
+      });
+    }
+
+    const updatedOrder = await this.prisma.order.update({
+      where: { id },
+        data: { estado: orderStatusToDb('Enviado') },
+      include,
+    });
+    return new Order(toOrderData(updatedOrder));
   }
 
   async updateValidationResult(id: string, data: {
@@ -310,12 +415,6 @@ export class PrismaOrderRepository implements OrderRepository {
     });
 
     const updated = await this.prisma.$transaction<OrderRow>(async (tx) => {
-      await tx.order.update({
-        where: { id },
-        data: { estado: orderStatusToDb('Recibo enviado') },
-        include,
-      });
-
       if (receipt) {
         await tx.receipt.update({
           where: { id: receipt.id },
@@ -338,12 +437,13 @@ export class PrismaOrderRepository implements OrderRepository {
     const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
     if (!existing) throw new NotFoundError('Pedido no encontrado');
 
-    const domiciliario = await this.prisma.user.findFirst({
-      where: { id: domiciliarioId, role: 'DOMICILIARIO', deletedAt: null },
-    });
-    if (!domiciliario) throw new BadRequestError('Domiciliario no válido');
+    const order = new Order(toOrderData(existing));
+    if (!order.canBeAssigned()) {
+      throw new BadRequestError('El pedido no puede ser asignado a domiciliario en su estado actual');
+    }
 
-    const customer = existing.cliente as unknown as PrismaCustomer | null;
+    const domiciliario = await this.prisma.user.findFirst({ where: { id: domiciliarioId, deletedAt: null, role: 'DOMICILIARIO' } });
+    if (!domiciliario) throw new BadRequestError('Domiciliario no válido');
 
     await this.prisma.delivery.upsert({
       where: { orderId: id },
@@ -355,14 +455,24 @@ export class PrismaOrderRepository implements OrderRepository {
         orderId: id,
         domiciliarioId,
         estado: 'ASIGNADO',
-        direccion: customer?.direccion || customer?.direccionEnvio || '',
-        ciudad: customer?.ciudad || '',
+        direccion: order.cliente || 'Dirección cliente',
       },
     });
 
-    const updated = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
-    if (!updated) throw new NotFoundError('Pedido no encontrado');
-    return new Order(toOrderData(updated));
+    const updatedOrder = await this.prisma.order.update({
+      where: { id },
+        data: { estado: orderStatusToDb('Enviado') },
+      include,
+    });
+    return new Order(toOrderData(updatedOrder));
+  }
+
+  async findReceiptByOrderId(orderId: string): Promise<{ id: string } | null> {
+    const receipt = await this.prisma.receipt.findFirst({
+      where: { orderId, deletedAt: null },
+      select: { id: true },
+    });
+    return receipt;
   }
 
   async updateFull(id: string, changes: { clienteId?: string; asesorId?: string; prioridad?: OrderPriority; observaciones?: string; itemsList?: OrderItem[] }): Promise<Order> {
@@ -423,7 +533,7 @@ export class PrismaOrderRepository implements OrderRepository {
         total: input.total,
         concepto: input.concepto,
         emitidoPor: input.emitidoPor,
-        estado: 'EMITIDO',
+        estado: 'BORRADOR',
         estadoEnvio: 'PENDIENTE',
       },
       select: { id: true },

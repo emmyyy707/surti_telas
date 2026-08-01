@@ -54,7 +54,21 @@ const ROLE_MAP: Record<BackendRole, UserRole> = {
   REPORTES: 'reportes',
 };
 
-const mapRole = (role: BackendRole): UserRole => ROLE_MAP[role] ?? 'cliente';
+export const mapRole = (role: BackendRole): UserRole => ROLE_MAP[role] ?? 'cliente';
+
+function isTokenExpired(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return true;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload.exp) return true;
+    const now = Date.now() / 1000;
+    // 30-second safety margin
+    return payload.exp < now + 30;
+  } catch {
+    return true;
+  }
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -96,7 +110,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkSession: async () => {
-        if (!tokenStorage.getAccessToken()) {
+        const token = tokenStorage.getAccessToken();
+        if (!token) {
+          set({ user: null, isAuthenticated: false, sessionChecked: true });
+          return;
+        }
+        if (isTokenExpired(token)) {
+          tokenStorage.clear();
           set({ user: null, isAuthenticated: false, sessionChecked: true });
           return;
         }
@@ -130,7 +150,6 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-        sessionChecked: state.sessionChecked,
       }),
     },
   ),
@@ -138,7 +157,7 @@ export const useAuthStore = create<AuthState>()(
 
 // Cuando el backend responde 401 y no se puede refrescar, cerramos la sesión.
 setUnauthorizedHandler(() => {
-  useAuthStore.setState({ user: null, isAuthenticated: false });
+  useAuthStore.setState({ user: null, isAuthenticated: false, sessionChecked: true });
 });
 
 export const useAuth = useAuthStore;

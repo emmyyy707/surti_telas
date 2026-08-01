@@ -201,12 +201,11 @@ export const AdminSeguridadUsuarios: React.FC = () => {
           columns={columns}
           detailPanel={detailPanel}
           enableColumnFilters={false}
-          enableExport={false}
-          enableRowSelection={false}
+
           enableSorting={true}
           toolbarLeft={null}
           maxVisibleColumns={5}
-          emptyMessage={loading ? 'Cargando auditoría...' : error ? error : 'No se encontraron registros de auditoría'}
+          emptyMessage={loading ? 'Cargando auditoría...' : error ? error : 'No se encontraron registros de auditoría'} enableExport={false} enableRowSelection={false}
         />
       </div>
     </div>
