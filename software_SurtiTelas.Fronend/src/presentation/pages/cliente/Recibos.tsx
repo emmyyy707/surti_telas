@@ -5,6 +5,8 @@ import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { receiptsApi, type Receipt } from '@/infrastructure/api/receiptsApi';
+import { ordersApi } from '@/infrastructure/api/ordersApi';
+import type { Pedido } from '@/core/types';
 import s from './Recibos.module.css';
 
 type ReciboStatus = 'Aprobado' | 'Pendiente' | 'Rechazado';
@@ -79,6 +81,7 @@ export const Recibos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRecibo, setSelectedRecibo] = useState<Recibo | null>(null);
+  const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -100,8 +103,22 @@ export const Recibos: React.FC = () => {
     .filter(recibo => recibo.estado === 'Aprobado')
     .reduce((sum, recibo) => sum + recibo.monto, 0), [recibos]);
 
-  const openRecibo = (recibo: Recibo) => setSelectedRecibo(recibo);
-  const closeRecibo = () => setSelectedRecibo(null);
+  const openRecibo = async (recibo: Recibo) => {
+    setSelectedRecibo(recibo);
+    setSelectedPedido(null);
+    if (recibo.ordenId) {
+      try {
+        const pedido = await ordersApi.getById(recibo.ordenId);
+        setSelectedPedido(pedido);
+      } catch {
+        // no bloquear la apertura del modal si falla la carga del pedido
+      }
+    }
+  };
+  const closeRecibo = () => {
+    setSelectedRecibo(null);
+    setSelectedPedido(null);
+  };
 
   const handleDownload = () => {
     toast.success('Abre la ventana de impresión y selecciona "Guardar como PDF" para descargar tu recibo');
@@ -296,6 +313,20 @@ export const Recibos: React.FC = () => {
                 <strong>{formatCurrency(selectedRecibo.detalle.total)}</strong>
               </div>
             </div>
+
+            {selectedPedido?.comprobantePagoUrl && (
+              <div className={s.breakdown}>
+                <div>
+                  <span>Comprobante de pago</span>
+                  <a href={selectedPedido.comprobantePagoUrl} target="_blank" rel="noreferrer" className={s.proofLink}>
+                    Ver imagen del comprobante
+                  </a>
+                  <div className="mt-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+                    <img src={selectedPedido.comprobantePagoUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain" />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <p className={s.legalNote}>
               Este comprobante corresponde a un recibo de pago emitido para control del cliente. No reemplaza la documentación tributaria oficial cuando aplique.

@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useRef, useState, useEffect } from 'react'
+﻿import React, { useMemo, useRef, useState } from 'react'
 import { X, Upload, CreditCard, BadgePercent, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart, useAuth } from '@/app/providers/AppProviders'
@@ -356,26 +356,35 @@ clearCart();
               </div>
             )}
 
-            {/* Proof upload */}
-            <div className="ch-field">
-              <label className="ch-label">Comprobante de Pago *</label>
-              <div className="ch-upload-zone" onClick={handleUploadClick} role="button" tabIndex={0}>
-                <Upload size={22} />
-                <div>
-                  <p className="ch-upload-title">
-                    {proofFile ? proofFile.name : 'Haz clic para subir tu comprobante'}
-                  </p>
-                  <p className="ch-upload-sub">PNG, JPG o JPEG (máx. 10MB)</p>
-                </div>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg"
-                className="ch-file-input"
-                onChange={handleFileSelect}
-              />
-            </div>
+             {/* Proof upload */}
+             <div className="ch-field">
+               <label className="ch-label">Comprobante de Pago *</label>
+               <div className="ch-upload-zone" onClick={handleUploadClick} role="button" tabIndex={0}>
+                 <Upload size={22} />
+                 <div>
+                   <p className="ch-upload-title">
+                     {proofFile ? proofFile.name : 'Haz clic para subir tu comprobante'}
+                   </p>
+                   <p className="ch-upload-sub">PNG, JPG o JPEG (máx. 10MB)</p>
+                 </div>
+               </div>
+               <input
+                 ref={fileInputRef}
+                 type="file"
+                 accept="image/png,image/jpeg"
+                 className="ch-file-input"
+                 onChange={handleFileSelect}
+               />
+               {proofFile && (
+                 <div className="ch-proof-preview">
+                   <img
+                     src={URL.createObjectURL(proofFile)}
+                     alt="Vista previa del comprobante"
+                     className="ch-proof-img"
+                   />
+                 </div>
+               )}
+             </div>
 
             {/* Notice */}
             <div className="ch-notice">

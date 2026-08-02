@@ -161,7 +161,7 @@ export const ordersApi = {
   async updateStatus(id: string, estado: EstadoPedido): Promise<Pedido> {
     const dto = await api.patch<OrderDTO>(
       `/orders/${encodeURIComponent(id)}/status`,
-      { estado: ORDER_STATUS_BACKEND_MAP[estado] ?? estado },
+      { estado },
     );
     return toPedido(dto);
   },

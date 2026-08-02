@@ -93,6 +93,15 @@ export const ESTADOS_GENERALES = ['Activo', 'Inactivo'] as const;
 export const ESTADOS_PEDIDO = ['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado'] as const;
 export type EstadoPedido = (typeof ESTADOS_PEDIDO)[number];
 
+export const ESTADOS_PEDIDO_PERMITIDOS: Record<EstadoPedido, EstadoPedido[]> = {
+  Pendiente: ['Aceptado', 'Rechazado'],
+  Aceptado: ['En proceso', 'Enviado', 'Entregado'],
+  'En proceso': ['Enviado', 'Entregado'],
+  Enviado: ['Entregado'],
+  Entregado: [],
+  Rechazado: [],
+};
+
 export const ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default' | null> = {
   Pendiente: 'warning',
   Aceptado: 'info',

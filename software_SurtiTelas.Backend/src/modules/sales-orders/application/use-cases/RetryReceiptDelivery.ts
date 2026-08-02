@@ -17,8 +17,8 @@ export class RetryReceiptDelivery {
     const order = await this.orderRepo.getById(id);
     if (!order) throw new NotFoundError('Pedido no encontrado');
 
-    if (order.estado !== 'Recibo generado') {
-      throw new Error('Solo se puede reintentar el envío de recibos en estado RECIBO_GENERADO');
+    if (order.estado !== 'Aceptado') {
+      throw new Error('Solo se puede reintentar el envío de recibos en estado ACEPTADO');
     }
 
     const receipt = await this.receiptRepo.findByOrderId(id);

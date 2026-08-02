@@ -6,6 +6,7 @@ import {
   CreditCard,
   Package,
   AlertTriangle,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import s from "../admin/Pedidos.module.css";
@@ -15,14 +16,12 @@ import { DetailModal } from "@/shared/ui/DetailModal";
 import { ConfirmationModal } from "@/shared/ui/ConfirmationModal";
 import { Tooltip } from "@/shared/components/Tooltip";
 import { ordersApi } from "@/infrastructure/api/ordersApi";
+import { ESTADOS_PEDIDO_PERMITIDOS } from "@/shared/constants/options";
 import { useAuthStore } from "@/core/stores/authStore";
 import { useClientes } from "@/core/stores";
 import type { Pedido } from "@/core/types";
 
-const orderStatuses: Record<
-  string,
-  "success" | "warning" | "danger" | "info" | "default" | null
-> = {
+const orderStatuses: Record<string, "success" | "warning" | "danger" | "info" | "default" | null> = {
   Pendiente: "warning",
   Aceptado: "info",
   "En proceso": "info",
@@ -90,15 +89,14 @@ export const AsesorPedidos: React.FC = () => {
     }
   }, [user?.uid, user?.name]);
 
-  const misPedidos = pedidos;
-
   const filteredPedidos = useMemo(() => {
-    return misPedidos.filter(
+    const base = pedidos.filter((p) => p.estado !== "Entregado" && p.estado !== "Rechazado");
+    return base.filter(
       (p) =>
         p.id.toLowerCase().includes(search.toLowerCase()) ||
         p.cliente.toLowerCase().includes(search.toLowerCase()),
     );
-  }, [misPedidos, search]);
+  }, [pedidos, search]);
 
   const resetForm = () => {
     setForm({ ...emptyPedidoForm, asesor: user?.name || "" });
@@ -241,16 +239,26 @@ export const AsesorPedidos: React.FC = () => {
 
   const saveStatus = async () => {
     if (!selectedPedido) return;
-    const actualizado = await ordersApi.updateStatus(
-      selectedPedido.id,
-      statusValue,
-    );
-    setPedidos((prev) =>
-      prev.map((p) => (p.id === selectedPedido.id ? actualizado : p)),
-    );
-    toast.success(`Pedido ${actualizado.id} marcado como ${statusValue}`);
-    setIsStatusOpen(false);
-    setSelectedPedido(null);
+    try {
+      const actualizado = await ordersApi.updateStatus(
+        selectedPedido.id,
+        statusValue,
+      );
+      setPedidos((prev) =>
+        prev.map((p) => (p.id === selectedPedido.id ? actualizado : p)),
+      );
+      toast.success(`Pedido ${actualizado.id} marcado como ${statusValue}`);
+      setIsStatusOpen(false);
+      setSelectedPedido(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('401') || message.includes('No autorizado') || message.includes('Unauthorized')) {
+        toast.error('Tu sesión expiró o no es válida. Inicia sesión nuevamente.');
+        useAuthStore.getState().logout();
+      } else {
+        toast.error('No se pudo actualizar el estado');
+      }
+    }
   };
 
   const confirmDelete = async () => {
@@ -483,6 +491,24 @@ export const AsesorPedidos: React.FC = () => {
               </div>
             ),
           },
+          ...(selectedPedido?.comprobantePagoUrl
+            ? [
+                {
+                  title: "Comprobante de pago",
+                  children: (
+                    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
+                      <a href={selectedPedido.comprobantePagoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] hover:underline">
+                        <Eye size={14} />
+                        Ver comprobante
+                      </a>
+                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+                        <img src={selectedPedido.comprobantePagoUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain" />
+                      </div>
+                    </div>
+                  ),
+                }
+              ]
+            : []),
         ]}
         footer={
           <div className="flex justify-end gap-3">
@@ -683,12 +709,16 @@ export const AsesorPedidos: React.FC = () => {
                     setStatusValue(e.target.value as Pedido["estado"])
                   }
                 >
-                  {Object.keys(orderStatuses).map((estado) => (
+                  <option value="">Selecciona un estado</option>
+                  {(ESTADOS_PEDIDO_PERMITIDOS[statusValue] ?? []).map((estado) => (
                     <option key={estado} value={estado}>
                       {estado}
                     </option>
                   ))}
                 </select>
+                {(ESTADOS_PEDIDO_PERMITIDOS[statusValue] ?? []).length === 0 && (
+                  <span className="text-xs text-red-400">Este pedido no puede cambiar de estado.</span>
+                )}
               </label>
             ),
           },
@@ -698,7 +728,7 @@ export const AsesorPedidos: React.FC = () => {
             <Button variant="secondary" onClick={() => setIsStatusOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={saveStatus}>Aplicar cambio</Button>
+            <Button onClick={saveStatus} disabled={(ESTADOS_PEDIDO_PERMITIDOS[statusValue] ?? []).length === 0}>Aplicar cambio</Button>
           </div>
         }
       />

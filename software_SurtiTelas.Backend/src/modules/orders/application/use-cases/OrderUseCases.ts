@@ -17,6 +17,7 @@ import {
   OrderCanceledEvent,
 } from '../../../../shared/application/events';
 import { toOrderData } from '../../infrastructure/mappers/OrderMapper';
+import { logger } from '../../../../shared/infrastructure/logger';
 
 export class CreateOrder {
   constructor(
@@ -281,54 +282,91 @@ export class UpdateOrderStatus {
           asesorNombre: updated.asesor,
         }, requestId)
       );
+    } else {
+      logger.warn(`[UpdateOrderStatus] EventBus no disponible para pedido ${updated.id}`);
+    }
 
-      if (estado === 'Entregado') {
+    if (estado === 'Aceptado') {
+      try {
         const existingReceipt = await this.repo.findReceiptByOrderId(updated.id);
         if (!existingReceipt) {
           const receipt = await this.repo.createReceipt({
             orderId: updated.id,
             customerId: updated.clienteId,
-            numero: `REC-${updated.numero?.replace('PED-', '') || updated.id}`,
+            numero: updated.numero || updated.id,
             total: Number(updated.total),
             concepto: `Pedido ${updated.numero || updated.id} - ${updated.items} ítems`,
             emitidoPor: updated.asesor,
           });
-          this.eventBus.publish(
-            new OrderReceiptGeneratedEvent({
-              orderId: updated.id,
-              orderNumero: updated.numero || updated.id,
-              clienteId: updated.clienteId,
-              clienteNombre: updated.cliente,
-              asesorId: updated.asesorId,
-              asesorNombre: updated.asesor,
-              receiptId: receipt.id,
-              total: Number(updated.total),
-            }, requestId)
-          );
+          logger.info(`[UpdateOrderStatus] Recibo generado al aceptar pedido ${updated.id}: ${receipt.id}`);
+          if (this.eventBus) {
+            this.eventBus.publish(
+              new OrderReceiptGeneratedEvent({
+                orderId: updated.id,
+                orderNumero: updated.numero || updated.id,
+                clienteId: updated.clienteId,
+                clienteNombre: updated.cliente,
+                asesorId: updated.asesorId,
+                asesorNombre: updated.asesor,
+                receiptId: receipt.id,
+                total: Number(updated.total),
+              }, requestId)
+            );
+          }
+        } else {
+          logger.info(`[UpdateOrderStatus] Recibo ya existe para pedido ${updated.id}, no se crea duplicado.`);
         }
-        this.eventBus.publish(
-          new OrderDeliveredEvent({
-            orderId: updated.id,
-            clienteId: updated.clienteId,
-            clienteNombre: updated.cliente,
-            total: Number(updated.total),
-          }, requestId)
-        );
+      } catch (error) {
+        logger.error(`[UpdateOrderStatus] Error generando recibo para pedido ${updated.id}`, { error: (error as Error).message });
       }
+    }
 
-      if (estado === 'Rechazado') {
-        this.eventBus.publish(
-          new OrderRejectedEvent({
+    if (estado === 'Entregado') {
+      const existingReceipt = await this.repo.findReceiptByOrderId(updated.id);
+      if (!existingReceipt) {
+        const receipt = await this.repo.createReceipt({
+          orderId: updated.id,
+          customerId: updated.clienteId,
+          numero: `REC-${updated.numero?.replace('PED-', '') || updated.id}`,
+          total: Number(updated.total),
+          concepto: `Pedido ${updated.numero || updated.id} - ${updated.items} ítems`,
+          emitidoPor: updated.asesor,
+        });
+        this.eventBus?.publish(
+          new OrderReceiptGeneratedEvent({
             orderId: updated.id,
             orderNumero: updated.numero || updated.id,
             clienteId: updated.clienteId,
             clienteNombre: updated.cliente,
             asesorId: updated.asesorId,
             asesorNombre: updated.asesor,
-            razon: updated.razonRechazo || 'Pedido rechazado',
+            receiptId: receipt.id,
+            total: Number(updated.total),
           }, requestId)
         );
       }
+      this.eventBus?.publish(
+        new OrderDeliveredEvent({
+          orderId: updated.id,
+          clienteId: updated.clienteId,
+          clienteNombre: updated.cliente,
+          total: Number(updated.total),
+        }, requestId)
+      );
+    }
+
+    if (estado === 'Rechazado') {
+      this.eventBus?.publish(
+        new OrderRejectedEvent({
+          orderId: updated.id,
+          orderNumero: updated.numero || updated.id,
+          clienteId: updated.clienteId,
+          clienteNombre: updated.cliente,
+          asesorId: updated.asesorId,
+          asesorNombre: updated.asesor,
+          razon: updated.razonRechazo || 'Pedido rechazado',
+        }, requestId)
+      );
     }
 
     return updated;

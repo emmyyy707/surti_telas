@@ -10,8 +10,9 @@ import { DataTable } from '../../../shared/ui/DataTable';
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { useAuthStore } from '@/core/stores/authStore';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import { ESTADOS_PEDIDO, ORDER_STATUS_COLORS } from '@/shared/constants/options';
+import { ESTADOS_PEDIDO, ESTADOS_PEDIDO_PERMITIDOS, ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import type { Pedido, PedidoItem } from '@/core/types';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
@@ -74,7 +75,7 @@ export const AdminPedidos: React.FC = () => {
       setClientes(clientesResult.data ?? []);
       setAsesores(asesoresResult.data ?? []);
 
-      const pedidos = ordersResult.pedidos ?? [];
+      const pedidos = (ordersResult.pedidos ?? []).filter((p) => p.estado !== 'Entregado' && p.estado !== 'Rechazado');
       setPageData(pedidos);
       pagination.setTotalRecords(ordersResult.meta.totalRecords);
 
@@ -214,8 +215,14 @@ export const AdminPedidos: React.FC = () => {
       await hydrate();
       toast.success(`Pedido ${statusConfirm.id} actualizado a ${statusConfirm.estado}`);
       setStatusConfirm(null);
-    } catch {
-      toast.error('No se pudo actualizar el estado');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('401') || message.includes('No autorizado') || message.includes('Unauthorized')) {
+        toast.error('Tu sesión expiró o no es válida. Inicia sesión nuevamente.');
+        useAuthStore.getState().logout();
+      } else {
+        toast.error('No se pudo actualizar el estado');
+      }
     }
   };
 
@@ -470,17 +477,36 @@ export const AdminPedidos: React.FC = () => {
 
       <Modal open={!!statusConfirm} onClose={() => setStatusConfirm(null)} title="Cambiar estado del pedido" description="Selecciona el nuevo estado para el pedido." size="md" variant="form">
         <div className={f.form}>
-          <div className={f.field}>
-            <label className={f.label}>Estado</label>
-            <select className={f.select} value={statusConfirm?.estado ?? ''} onChange={(e) => setStatusConfirm((prev) => prev ? { ...prev, estado: e.target.value as Pedido['estado'] } : null)}>
-              {ESTADOS_PEDIDO.map((es) => (
-                <option key={es} value={es}>{es}</option>
-              ))}
-            </select>
-          </div>
+          {statusConfirm && (
+            <>
+              <div className={f.field}>
+                <label className={f.label}>Estado actual</label>
+                <div className={f.select} style={{ background: 'var(--color-bg-elevated)', opacity: 0.8 }}>{statusConfirm.estado}</div>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Nuevo estado *</label>
+                <select
+                  className={f.select}
+                  value={statusConfirm.estado}
+                  onChange={(e) => setStatusConfirm((prev) => prev ? { ...prev, estado: e.target.value as Pedido['estado'] } : null)}
+                >
+                  <option value="">Selecciona un estado</option>
+                  {ESTADOS_PEDIDO_PERMITIDOS[statusConfirm.estado].map((es) => (
+                    <option key={es} value={es}>{es}</option>
+                  ))}
+                </select>
+                {ESTADOS_PEDIDO_PERMITIDOS[statusConfirm.estado].length === 0 && (
+                  <span className={s.fieldError}>Este pedido no puede cambiar de estado.</span>
+                )}
+              </div>
+            </>
+          )}
           <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , onClick: handleChangeStatus, disabled: saving }]} />
-
+            actions={[
+              { label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving },
+              { label: saving ? 'Guardando...' : 'Guardar cambios', onClick: handleChangeStatus, disabled: saving || !statusConfirm || ESTADOS_PEDIDO_PERMITIDOS[statusConfirm.estado].length === 0 },
+            ]}
+          />
         </div>
       </Modal>
 
@@ -498,6 +524,18 @@ export const AdminPedidos: React.FC = () => {
                 <div className={s.detailItem}><span className={s.detailLabel}>Estado</span><span><Badge variant={orderStatuses[detailPedido.estado]}>{detailPedido.estado}</Badge></span></div>
               </div>
             </div>
+            {detailPedido.comprobantePagoUrl && (
+              <div className={s.detailSection}>
+                <h4 className={s.detailSectionTitle}>Comprobante de pago</h4>
+                <a href={detailPedido.comprobantePagoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] hover:underline">
+                  <Eye size={14} />
+                  Ver comprobante
+                </a>
+                <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+                  <img src={detailPedido.comprobantePagoUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain" />
+                </div>
+              </div>
+            )}
             {detailPedido.observaciones && (
               <div className={s.detailSection}>
                 <h4 className={s.detailSectionTitle}>Observaciones</h4>

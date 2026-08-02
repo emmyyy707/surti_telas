@@ -1,5 +1,6 @@
 import type { DomainEvent, EventBus } from '../../../../shared/application/events';
 import { prisma } from '../../../../config/database';
+import { logger } from '../../../../shared/infrastructure/logger';
 
 export class OrderReceiptPaymentSubscriber {
   constructor(private readonly eventBus: EventBus) {
@@ -78,30 +79,50 @@ export class OrderReceiptPaymentSubscriber {
         return;
       }
 
-      await prisma.receipt.create({
-        data: {
-          orderId: payload.orderId,
-          customerId: payload.clienteId,
-          numero: payload.orderNumero,
-          total: 0,
-          concepto: `Pedido ${payload.orderNumero}`,
-          emitidoPor: payload.asesorNombre,
-          estado: 'EMITIDO',
-          estadoEnvio: 'PENDIENTE',
-        },
-      });
+      try {
+        const existingReceipt = await prisma.receipt.findFirst({
+          where: { orderId: payload.orderId, deletedAt: null },
+        });
+
+        if (existingReceipt) {
+          logger.info(`[OrderReceiptPaymentSubscriber] Recibo ya existe para pedido ${payload.orderId}, no se crea duplicado.`);
+          return;
+        }
+
+        const order = await prisma.order.findFirst({
+          where: { id: payload.orderId, deletedAt: null },
+          select: { total: true, items: true },
+        });
+
+        const receipt = await prisma.receipt.create({
+          data: {
+            orderId: payload.orderId,
+            customerId: payload.clienteId,
+            numero: payload.orderNumero,
+            total: Number(order?.total ?? 0),
+            concepto: `Pedido ${payload.orderNumero}${order?.items ? ` - ${order.items} ítems` : ''}`,
+            emitidoPor: payload.asesorNombre,
+            estado: 'EMITIDO',
+            estadoEnvio: 'PENDIENTE',
+          },
+        });
 
       await prisma.payment.create({
         data: {
           orderId: payload.orderId,
           customerId: payload.clienteId,
           asesorId: payload.asesorId,
-          amount: 0,
+          amount: Number(order?.total ?? 0),
           method: 'OTHER',
           status: 'PENDING',
           notes: 'Pago a cuotas',
         },
       });
+
+        logger.info(`[OrderReceiptPaymentSubscriber] Recibo generado para pedido ${payload.orderId}: ${receipt.id}`);
+      } catch (error) {
+        logger.error(`[OrderReceiptPaymentSubscriber] Error generando recibo para pedido ${payload.orderId}`, { error: (error as Error).message });
+      }
     });
   }
 }

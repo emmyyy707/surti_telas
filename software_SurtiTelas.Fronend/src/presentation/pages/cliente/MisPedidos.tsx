@@ -279,6 +279,24 @@ export const MisPedidos: React.FC = () => {
               { label: 'Observaciones', value: selectedPedido?.observaciones || 'Sin observaciones', fullWidth: true, icon: <MessageCircle size={16} /> },
             ],
           },
+          ...(selectedPedido?.comprobantePagoUrl
+            ? [
+                {
+                  title: 'Comprobante de pago',
+                  children: (
+                    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
+                      <a href={selectedPedido.comprobantePagoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] hover:underline">
+                        <Archive size={16} />
+                        Ver comprobante de pago
+                      </a>
+                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+                        <img src={selectedPedido.comprobantePagoUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain" />
+                      </div>
+                    </div>
+                  ),
+                }
+              ]
+            : []),
           {
             title: 'Detalle de artículos',
             children: (

@@ -10,11 +10,14 @@ import { DataTable } from '../../../shared/ui/DataTable';
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import { receiptsApi, type Receipt } from '@/infrastructure/api/receiptsApi';
-import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
+import { customersApi } from '@/infrastructure/api/customersApi';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
+import type { Cliente } from '@/core/types';
+import { api } from '@/infrastructure/api/httpClient';
 
 interface Recibo {
   id: string;
+  orderId?: string;
   numeroRecibo: string;
   cliente: string;
   nitCliente: string;
@@ -53,13 +56,22 @@ const BACKEND_ESTADO_MAP: Record<string, Recibo['estado']> = {
   CANCELADO: 'Cancelado',
 };
 
-function toRecibo(dto: Receipt, clientesMap: Map<string, BackendAuthUser>): Recibo {
+const FRONTEND_TO_BACKEND_ESTADO: Record<Recibo['estado'], string> = {
+  Borrador: 'BORRADOR',
+  Enviado: 'ENVIADO',
+  Pagado: 'PAGADO',
+  Vencido: 'VENCIDO',
+  Cancelado: 'CANCELADO',
+};
+
+function toRecibo(dto: Receipt, clientesMap: Map<string, Cliente>): Recibo {
   const total = Number(dto.total) || 0;
-  const clienteUsuario = clientesMap.get(dto.customerId);
-  const clienteNombre = clienteUsuario?.nombre ?? 'Cliente';
-  const clienteEmail = clienteUsuario?.email ?? dto.customerId;
+  const cliente = clientesMap.get(dto.customerId);
+  const clienteNombre = cliente?.nombre ?? 'Cliente';
+  const clienteEmail = cliente?.email ?? dto.customerId;
   return {
     id: dto.id,
+    orderId: dto.orderId,
     numeroRecibo: dto.numero,
     cliente: clienteNombre,
     nitCliente: clienteEmail,
@@ -107,7 +119,7 @@ export const AdminRecibos: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const clientesResult = await authApi.listUsers({ limit: 100, role: 'CLIENTE' });
+      const clientesResult = await customersApi.list({ limit: 100 });
       const clientesMap = new Map((clientesResult.data ?? []).map(c => [c.id, c]));
       const data = await receiptsApi.list();
       const recibosFiltrados = data.filter(r => clientesMap.has(r.customerId));
@@ -262,7 +274,7 @@ export const AdminRecibos: React.FC = () => {
   const handleChangeStatus = async () => {
     if (!statusConfirm) return;
     try {
-      await receiptsApi.updateStatus(statusConfirm.id, statusConfirm.estado);
+      await receiptsApi.updateStatus(statusConfirm.id, FRONTEND_TO_BACKEND_ESTADO[statusConfirm.estado]);
       await loadRecibos();
       toast.success(`Recibo ${statusConfirm.id} actualizado a ${statusConfirm.estado}`);
       setStatusConfirm(null);
@@ -427,8 +439,23 @@ export const AdminRecibos: React.FC = () => {
             ]}
             actions={(r) => [
               ...(r.estado === 'Borrador' || r.estado === 'Enviado' ? [{ label: 'Editar', icon: <Edit size={14} />, onClick: () => openModal(r) }] : []),
-              ...(r.estado === 'Borrador' ? [{ label: 'Enviar', icon: <Send size={14} />, onClick: async () => { await receiptsApi.updateStatus(r.id, 'Enviado'); await loadRecibos(); toast.success(`Recibo ${r.numeroRecibo} enviado`); } }] : []),
-              ...(r.estado === 'Enviado' ? [{ label: 'Marcar pagado', icon: <CheckCircle size={14} />, onClick: async () => { await receiptsApi.updateStatus(r.id, 'Pagado'); await loadRecibos(); toast.success(`Recibo ${r.numeroRecibo} marcado como pagado`); } }] : []),
+              ...(r.estado === 'Borrador' ? [{
+                label: 'Enviar',
+                icon: <Send size={14} />,
+                onClick: async () => {
+                  try {
+                    await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Enviado']);
+                    if (r.orderId) {
+                      await api.post(`/sales-orders/${encodeURIComponent(r.orderId)}/retry-receipt`, {});
+                    }
+                    await loadRecibos();
+                    toast.success(`Recibo ${r.numeroRecibo} enviado`);
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : 'No se pudo enviar el recibo');
+                  }
+                }
+              }] : []),
+              ...(r.estado === 'Enviado' ? [{ label: 'Marcar pagado', icon: <CheckCircle size={14} />, onClick: async () => { await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Pagado']); await loadRecibos(); toast.success(`Recibo ${r.numeroRecibo} marcado como pagado`); } }] : []),
               { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(r), danger: true },
             ]}
             detailPanel={{

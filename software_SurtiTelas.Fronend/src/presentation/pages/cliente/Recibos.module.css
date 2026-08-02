@@ -327,6 +327,16 @@
   line-height: 1.55;
 }
 
+.proofLink {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.proofLink:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 900px) {
   .pageHeader,
   .tableHeader,

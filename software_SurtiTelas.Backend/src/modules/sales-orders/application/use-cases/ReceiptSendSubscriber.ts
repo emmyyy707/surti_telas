@@ -35,6 +35,44 @@ export class ReceiptSendSubscriber {
       await this.sendReceipt(payload.orderId, payload.orderNumero, payload.receiptId, event.requestId);
     });
 
+    this.eventBus.subscribe('order.status.updated', async (event: DomainEvent) => {
+      const payload = event.payload as {
+        orderId: string;
+        orderNumero: string;
+        previousStatus: string;
+        newStatus: string;
+        clienteId: string;
+        clienteNombre: string;
+        asesorId: string;
+        asesorNombre: string;
+      };
+
+      if (payload.newStatus !== 'Aceptado') {
+        return;
+      }
+
+      try {
+        const receipt = await this.receiptRepo.findByOrderId(payload.orderId);
+        if (!receipt) {
+          logger.warn('[ReceiptSendSubscriber] No se encontró recibo para enviar', {
+            requestId: event.requestId,
+            orderId: payload.orderId,
+            orderNumero: payload.orderNumero,
+          });
+          return;
+        }
+
+        await this.sendReceipt(payload.orderId, payload.orderNumero, receipt.id, event.requestId);
+      } catch (error) {
+        logger.error('[ReceiptSendSubscriber] Error preparando envío por order.status.updated', {
+          requestId: event.requestId,
+          orderId: payload.orderId,
+          orderNumero: payload.orderNumero,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+
     this.eventBus.subscribe('order.receipt.retry', async (event: DomainEvent) => {
       const payload = event.payload as {
         orderId: string;

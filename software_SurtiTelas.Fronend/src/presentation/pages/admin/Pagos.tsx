@@ -10,6 +10,7 @@ import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
 import { authApi } from '@/infrastructure/api/authApi';
+import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 interface Factura {
@@ -123,9 +124,55 @@ export const AdminPagos: React.FC = () => {
       const clientesResult = await authApi.listUsers({ limit: 100, role: 'CLIENTE' });
       const clientesIds = new Set((clientesResult.data ?? []).map(c => c.id));
 
-      const data = await paymentsApi.list();
-      const pagosFiltrados = data.filter(p => clientesIds.has(p.customerId));
-      setPayments(pagosFiltrados);
+      const [paymentsData, ordersData] = await Promise.all([
+        paymentsApi.list(),
+        ordersApi.list(),
+      ]);
+
+      const pagosFiltrados = paymentsData.filter(p => clientesIds.has(p.customerId));
+      const allOrders = (ordersData.pedidos ?? []).filter(o => typeof o.clienteId === 'string' && o.clienteId.trim().length > 0 && clientesIds.has(o.clienteId));
+
+      const pagosPorPedido = new Map(pagosFiltrados.map(p => [p.orderId, p]));
+      const acceptedOrders = allOrders.filter(o => o.estado === 'Aceptado');
+      const deliveredOrders = allOrders.filter(o => o.estado === 'Entregado');
+      const ordersSinPago = acceptedOrders.filter(o => !pagosPorPedido.has(o.id));
+      const deliveredSinPago = deliveredOrders.filter(o => !pagosPorPedido.has(o.id));
+
+      const pagosDesdePedidos: Payment[] = [
+        ...ordersSinPago.map((o): Payment => ({
+          id: o.id,
+          orderId: o.id,
+          customerId: o.clienteId ?? '',
+          asesorId: o.asesorId,
+          amount: Number(o.total),
+          method: 'Transferencia',
+          status: 'Pendiente',
+          reference: o.observaciones ?? undefined,
+          notes: 'Pago pendiente por pedido aceptado',
+          paidAt: undefined,
+          createdAt: o.fecha,
+          updatedAt: o.fecha,
+        })),
+        ...deliveredSinPago.map((o): Payment => ({
+          id: o.id,
+          orderId: o.id,
+          customerId: o.clienteId ?? '',
+          asesorId: o.asesorId,
+          amount: Number(o.total),
+          method: 'Transferencia',
+          status: 'Aprobado',
+          reference: o.observaciones ?? undefined,
+          notes: 'Pago completado por pedido entregado',
+          paidAt: o.fecha,
+          createdAt: o.fecha,
+          updatedAt: o.fecha,
+        })),
+        ...allOrders
+          .filter(o => (o.estado === 'Aceptado' || o.estado === 'Entregado') && pagosPorPedido.has(o.id))
+          .map((o): Payment => pagosPorPedido.get(o.id)!),
+      ];
+
+      setPayments([...pagosFiltrados, ...pagosDesdePedidos]);
     } catch {
       setError('No se pudieron cargar los pagos. Intenta nuevamente.');
       toast.error('Error al cargar los pagos');
