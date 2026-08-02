@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Eye, CheckCircle2, MapPin, Clock, Package, Phone, MessageCircle } from 'lucide-react';
+import { Eye, CheckCircle2, MapPin, Clock, Package, Phone, MessageCircle, RefreshCw, X } from 'lucide-react';
 import s from './MisEntregas.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -34,6 +34,13 @@ const deliveryStatusVariant: Record<Entrega['estado'], 'success' | 'warning' | '
   'Fallido': 'danger',
 };
 
+const estadoConfig: Record<Entrega['estado'], { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'default'; color: string }> = {
+  'Pendiente': { label: 'Pendiente', variant: 'warning', color: '#f59e0b' },
+  'En camino': { label: 'En camino', variant: 'info', color: '#3b82f6' },
+  'Entregado': { label: 'Entregado', variant: 'success', color: '#10b981' },
+  'Fallido': { label: 'Fallido', variant: 'danger', color: '#ef4444' },
+};
+
 export const DomiciliarioEntregas: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const [entregas, setEntregas] = useState<Entrega[]>([]);
@@ -44,6 +51,7 @@ export const DomiciliarioEntregas: React.FC = () => {
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
   const [statusEntrega, setStatusEntrega] = useState<Entrega | null>(null);
   const [nextEstado, setNextEstado] = useState<Entrega['estado']>('Pendiente');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -52,7 +60,7 @@ export const DomiciliarioEntregas: React.FC = () => {
       try {
         const result = await deliveriesApi.list(user?.uid ? { domiciliarioId: user.uid } : undefined);
         const mapped: Entrega[] = result.map((d) => ({
-          id: d.orderId || d.id,
+          id: d.id,
           pedido: d.orderId || d.id,
           cliente: d.clienteNombre || '',
           direccion: d.direccion || '',
@@ -91,6 +99,7 @@ export const DomiciliarioEntregas: React.FC = () => {
 
   const saveStatus = async () => {
     if (!statusEntrega) return;
+    setUpdatingId(statusEntrega.id);
     try {
       const backendEstado = nextEstado === 'Pendiente' ? 'ASIGNADO' : nextEstado === 'En camino' ? 'EN_RUTA' : nextEstado === 'Entregado' ? 'ENTREGADO' : 'FALLIDO';
       await deliveriesApi.updateStatus(statusEntrega.id, backendEstado);
@@ -99,6 +108,8 @@ export const DomiciliarioEntregas: React.FC = () => {
       setStatusEntrega(null);
     } catch {
       toast.error('No se pudo actualizar el estado de la entrega');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -113,197 +124,227 @@ export const DomiciliarioEntregas: React.FC = () => {
     window.open(`https://wa.me/${entrega.telefono}?text=${texto}`, '_blank', 'noopener');
   };
 
+  const estadosDisponibles = (estadoActual: Entrega['estado']): Entrega['estado'][] => {
+    switch (estadoActual) {
+      case 'Pendiente':
+        return ['En camino'];
+      case 'En camino':
+        return ['Entregado', 'Fallido'];
+      default:
+        return [];
+    }
+  };
+
   if (loading) {
     return (
-      <div>
-        <h1 className={s.pageTitle}>Entregas de Hoy</h1>
-        <p className={s.pageSubtitle}>Cargando...</p>
+      <div className={s.pageWrap}>
+        <div className={s.header}>
+          <div>
+            <h1 className={s.pageTitle}>Entregas de Hoy</h1>
+            <p className={s.pageSubtitle}>Cargando...</p>
+          </div>
+        </div>
+        <div className={s.stateEmpty}>
+          <div className={s.spinner} />
+          <div className={s.stateText}>Cargando entregas...</div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div>
-        <h1 className={s.pageTitle}>Entregas de Hoy</h1>
-        <p className={s.pageSubtitle}>{error}</p>
+      <div className={s.pageWrap}>
+        <div className={s.header}>
+          <div>
+            <h1 className={s.pageTitle}>Entregas de Hoy</h1>
+            <p className={s.pageSubtitle}>{error}</p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw size={14} /> Reintentar
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className={s.pageTitle}>Entregas de Hoy</h1>
-      <p className={s.pageSubtitle}>Gestión de tus entregas del día</p>
+    <div className={s.pageWrap}>
+      <div className={s.header}>
+        <div>
+          <h1 className={s.pageTitle}>Entregas de Hoy</h1>
+          <p className={s.pageSubtitle}>Tus entregas asignadas y su estado actual</p>
+        </div>
+        <div className={s.headerActions}>
+          <div className={s.summaryChips}>
+            {entregas.length > 0 && (
+              <>
+                <Badge variant="default">{entregas.length} total</Badge>
+                <Badge variant="warning">{counts['Pendiente']} pendientes</Badge>
+                <Badge variant="success">{counts['Entregado']} entregadas</Badge>
+              </>
+            )}
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw size={14} /> Actualizar
+          </Button>
+        </div>
+      </div>
 
       <div className={s.filterBar}>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {(['Todas', 'Pendiente', 'En camino', 'Entregado'] as const).map((filtro) => (
-            <button
-              key={filtro}
-              className={`${s.filterBtn} ${activeFilter === filtro ? s.filterBtnActive : ''}`}
-              onClick={() => setActiveFilter(filtro)}
-              title={filtro === 'Todas' ? 'Mostrar todas las entregas' : filtro === 'Pendiente' ? 'Mostrar entregas pendientes' : filtro === 'En camino' ? 'Mostrar entregas en camino' : 'Mostrar entregas entregadas'}
-            >
-              <span>{filtro}</span>
-              <span className={s.filterCount}>{counts[filtro]}</span>
-            </button>
-          ))}
+        <div className={s.filterPills}>
+          {(['Todas', 'Pendiente', 'En camino', 'Entregado'] as const).map((filtro) => {
+            const cfg = filtro === 'Todas' ? { label: 'Todas', variant: 'default' as const } : estadoConfig[filtro];
+            return (
+              <button
+                key={filtro}
+                className={`${s.filterPill} ${activeFilter === filtro ? s.filterPillActive : ''}`}
+                onClick={() => setActiveFilter(filtro)}
+              >
+                <span>{cfg.label}</span>
+                <span className={s.filterCount}>{counts[filtro]}</span>
+              </button>
+            );
+          })}
         </div>
         <div className={s.viewToggle}>
-          <button className={`${s.viewToggleBtn} ${viewMode === 'grid' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('grid')} title="Vista en cuadrícula">⊡</button>
-          <button className={`${s.viewToggleBtn} ${viewMode === 'list' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('list')} title="Vista en lista">☰</button>
+          <button className={`${s.viewToggleBtn} ${viewMode === 'grid' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('grid')} title="Vista en cuadrícula">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+          </button>
+          <button className={`${s.viewToggleBtn} ${viewMode === 'list' ? s.viewToggleBtnActive : ''}`} onClick={() => setViewMode('list')} title="Vista en lista">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
+          </button>
         </div>
       </div>
 
-      <div className={`${s.entregasGrid} ${viewMode === 'list' ? s.entregasGridList : ''}`}>
-        {filteredEntregas.map((entrega) => (
-          <div key={entrega.id} className={`${s.entregaCard} ${entrega.estado === 'Entregado' ? s.entregaCardEntregado : entrega.estado === 'En camino' ? s.entregaCardEncamino : entrega.estado === 'Fallido' ? s.entregaCardFallido : s.entregaCardPendiente}`}>
-            <div className={s.entregaCardHeader}>
-              <div className={s.entregaNumero}>
-                <div className={s.entregaNumeroCircle}>{entrega.id.split('-')[1]}</div>
-              </div>
-              <Badge variant={deliveryStatusVariant[entrega.estado]}>
-                {entrega.estado}
-              </Badge>
-            </div>
-            <div className={s.entregaCardBody}>
-              <div className={s.entregaCliente}>{entrega.cliente}</div>
-              <div className={s.entregaDireccion}>{entrega.direccion} - {entrega.barrio}</div>
-              <div className={s.entregaMetaRow}>
-                <div className={s.entregaMeta}>
-                  <div className={s.entregaMetaLabel}>Pedido</div>
-                  <div className={s.entregaMetaValue}>{entrega.pedido}</div>
+      {filteredEntregas.length === 0 ? (
+        <div className={s.stateEmpty}>
+          <Package size={32} />
+          <div className={s.stateText}>Sin entregas para este filtro</div>
+        </div>
+      ) : (
+        <div className={`${s.entregasGrid} ${viewMode === 'list' ? s.entregasGridList : ''}`}>
+          {filteredEntregas.map((entrega) => {
+            const cfg = estadoConfig[entrega.estado];
+            return (
+              <div key={entrega.id} className={`${s.entregaCard} ${s[`entregaCard${entrega.estado === 'Pendiente' ? 'Pendiente' : entrega.estado === 'En camino' ? 'Encamino' : entrega.estado === 'Entregado' ? 'Entregado' : 'Fallido'}`]}`}>
+                <div className={s.entregaCardHeader}>
+                  <div className={s.entregaNumero}>
+                    <div className={s.entregaNumeroCircle}>{entrega.id.split('-')[1]}</div>
+                    <div>
+                      <div className={s.entregaCliente}>{entrega.cliente}</div>
+                      <div className={s.entregaPedido}>Pedido #{entrega.pedido}</div>
+                    </div>
+                  </div>
+                  <Badge variant={cfg.variant}>{cfg.label}</Badge>
                 </div>
-                <div className={s.entregaMeta}>
-                  <div className={s.entregaMetaLabel}>Hora</div>
-                  <div className={s.entregaMetaValue}>{entrega.horaEstimada}</div>
+                <div className={s.entregaCardBody}>
+                  <div className={s.entregaDireccion}><MapPin size={14} /> {entrega.direccion} - {entrega.barrio}</div>
+                  <div className={s.entregaMetaRow}>
+                    <div className={s.entregaMeta}>
+                      <div className={s.entregaMetaLabel}>Hora estimada</div>
+                      <div className={s.entregaMetaValue}>{entrega.horaEstimada}</div>
+                    </div>
+                    <div className={s.entregaMeta}>
+                      <div className={s.entregaMetaLabel}>Ciudad</div>
+                      <div className={s.entregaMetaValue}>{entrega.ciudad}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className={s.entregaCardFooter}>
+                  <Button size="sm" variant="secondary" onClick={() => setSelectedEntrega(entrega)} title={`Ver detalle de entrega ${entrega.id}`}>
+                    <Eye size={14} /> Ver detalle
+                  </Button>
+                  {entrega.estado !== 'Entregado' && (
+                    <Button size="sm" variant="primary" onClick={() => openStatus(entrega)} title={`Cambiar estado de entrega ${entrega.id}`}>
+                      <CheckCircle2 size={14} /> Cambiar estado
+                    </Button>
+                  )}
+                  {entrega.telefono && (
+                    <>
+                      <Button size="sm" variant="secondary" onClick={() => llamarCliente(entrega)} title={`Llamar a ${entrega.cliente}`}>
+                        <Phone size={14} />
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(entrega)} title={`Abrir WhatsApp con ${entrega.cliente}`}>
+                        <MessageCircle size={14} />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedEntrega && (
+        <div className={s.overlay} onClick={() => setSelectedEntrega(null)}>
+          <div className={s.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={s.modalHeader}>
+              <div>
+                <div className={s.modalTitle}>Entrega {selectedEntrega.id}</div>
+                <div className={s.modalSubtitle}>{selectedEntrega.cliente}</div>
+              </div>
+              <div className={s.modalHeaderActions}>
+                <Badge variant={deliveryStatusVariant[selectedEntrega.estado]}>{selectedEntrega.estado}</Badge>
+                <button className={s.iconButton} onClick={() => setSelectedEntrega(null)}><X size={18} /></button>
+              </div>
             </div>
-            <div className={s.entregaCardFooter}>
-              <Button size="sm" style={{ flex: 1 }} onClick={() => setSelectedEntrega(entrega)} title={`Ver detalle de entrega ${entrega.id}`}>
-                <Eye size={14} />
-                Ver detalle
-              </Button>
-              {entrega.estado !== 'Entregado' && (
-                <Button variant="secondary" size="sm" style={{ flex: 1 }} onClick={() => openStatus(entrega)} title={`Cambiar estado de entrega ${entrega.id}`}>
-                  <CheckCircle2 size={14} />
-                  Cambiar estado
-                </Button>
-              )}
-              {entrega.telefono && (
+            <div className={s.modalBody}>
+              <div className={s.modalRow}><MapPin size={18} /> {selectedEntrega.direccion} - {selectedEntrega.barrio}</div>
+              <div className={s.modalRow}><Package size={18} /> Pedido #{selectedEntrega.pedido}</div>
+              <div className={s.modalRow}><Clock size={18} /> {selectedEntrega.horaEstimada}</div>
+              <div className={s.modalRow}><MapPin size={18} /> {selectedEntrega.ciudad}</div>
+              {selectedEntrega.telefono && <div className={s.modalRow}><Phone size={18} /> {selectedEntrega.telefono}</div>}
+            </div>
+            <div className={s.modalActions}>
+              {selectedEntrega.telefono && (
                 <>
-                  <Button size="sm" variant="secondary" onClick={() => llamarCliente(entrega)} title={`Llamar a ${entrega.cliente}`}>
-                    <Phone size={14} />
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(entrega)} title={`Abrir WhatsApp con ${entrega.cliente}`}>
-                    <MessageCircle size={14} />
-                  </Button>
+                  <Button size="sm" onClick={() => llamarCliente(selectedEntrega)}><Phone size={14} /> Llamar</Button>
+                  <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(selectedEntrega)}><MessageCircle size={14} /> WhatsApp</Button>
                 </>
               )}
+              {selectedEntrega.estado !== 'Entregado' && (
+                <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
+              )}
+              <Button variant="ghost" onClick={() => setSelectedEntrega(null)}>Cerrar</Button>
             </div>
           </div>
-        ))}
-        {filteredEntregas.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-[var(--color-border)] p-8 text-center text-[var(--color-text-muted)]">
-            No hay entregas en este filtro.
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <DetailModal
-        children={null}
-        open={Boolean(selectedEntrega)}
-        onClose={() => setSelectedEntrega(null)}
-        title={selectedEntrega ? `Entrega ${selectedEntrega.id}` : 'Entrega'}
-        subtitle={selectedEntrega?.horaEstimada}
-        size="lg"
-        header={{
-          icon: <MapPin size={18} />,
-          status: selectedEntrega ? <Badge variant={deliveryStatusVariant[selectedEntrega.estado]}>{selectedEntrega.estado}</Badge> : undefined,
-        }}
-        sections={[
-          {
-            title: 'Información de entrega',
-            fields: [
-              { label: 'Cliente', value: selectedEntrega?.cliente, icon: <Package size={16} /> },
-              { label: 'Pedido', value: selectedEntrega?.pedido, icon: <Package size={16} /> },
-              { label: 'Dirección', value: selectedEntrega?.direccion, icon: <MapPin size={16} /> },
-              { label: 'Barrio', value: selectedEntrega?.barrio, icon: <MapPin size={16} /> },
-              { label: 'Ciudad', value: selectedEntrega?.ciudad, icon: <MapPin size={16} /> },
-              { label: 'Hora estimada', value: selectedEntrega?.horaEstimada, icon: <Clock size={16} /> },
-              { label: 'Teléfono', value: selectedEntrega?.telefono, icon: <Phone size={16} /> },
-            ],
-          },
-        ]}
-        footer={
-          <div className="flex flex-wrap justify-end gap-3">
-            <Button variant="secondary" onClick={() => setSelectedEntrega(null)}>Cerrar</Button>
-            {selectedEntrega && (
-              <>
-                {selectedEntrega.telefono && (
-                  <>
-                    <Button size="sm" onClick={() => llamarCliente(selectedEntrega)} title={`Llamar a ${selectedEntrega.cliente}`}>
-                      <Phone size={14} />
-                      Llamar
-                    </Button>
-                    <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(selectedEntrega)} title={`Abrir WhatsApp con ${selectedEntrega.cliente}`}>
-                      <MessageCircle size={14} />
-                      WhatsApp
-                    </Button>
-                  </>
-                )}
-                {selectedEntrega.estado !== 'Entregado' && (
-                  <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
-                )}
-              </>
-            )}
+      {statusEntrega && (
+        <div className={s.overlay} onClick={() => setStatusEntrega(null)}>
+          <div className={s.statusModal} onClick={(e) => e.stopPropagation()}>
+            <div className={s.statusModalHeader}>
+              <div>
+                <div className={s.statusModalTitle}>Cambiar estado de entrega</div>
+                <div className={s.statusModalSubtitle}>{statusEntrega.cliente} · Pedido #{statusEntrega.pedido}</div>
+              </div>
+              <button className={s.iconButton} onClick={() => setStatusEntrega(null)}><X size={18} /></button>
+            </div>
+            <div className={s.statusGrid}>
+              {estadosDisponibles(statusEntrega.estado).map((estado) => {
+                const cfg = estadoConfig[estado];
+                return (
+                  <button
+                    key={estado}
+                    className={s.statusCard}
+                    onClick={() => { setNextEstado(estado); saveStatus(); }}
+                  >
+                    <div className={s.statusDot} style={{ background: cfg.color }} />
+                    <div className={s.statusLabel}>{cfg.label}</div>
+                    <div className={s.statusHint}>Cambiar a {cfg.label.toLowerCase()}</div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className={s.statusModalFooter}>
+              <Button variant="ghost" onClick={() => setStatusEntrega(null)}>Cancelar</Button>
+            </div>
           </div>
-        }
-      />
-
-      <DetailModal
-        children={null}
-        open={Boolean(statusEntrega)}
-        onClose={() => setStatusEntrega(null)}
-        title="Cambiar estado de entrega"
-        subtitle={statusEntrega ? `${statusEntrega.id} - ${statusEntrega.cliente}` : undefined}
-        sections={[
-          {
-            title: 'Nuevo estado',
-            children: (
-              <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                Estado
-                <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={nextEstado} onChange={(e) => setNextEstado(e.target.value as Entrega['estado'])}>
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="En camino">En camino</option>
-                  <option value="Entregado">Entregado</option>
-                  <option value="Fallido">Fallido</option>
-                </select>
-              </label>
-            ),
-          },
-        ]}
-        footer={
-          <div className="flex flex-wrap justify-end gap-3">
-            <Button variant="secondary" onClick={() => setStatusEntrega(null)}>Cancelar</Button>
-            {statusEntrega && statusEntrega.telefono && (
-              <>
-                <Button size="sm" onClick={() => llamarCliente(statusEntrega)} title={`Llamar a ${statusEntrega.cliente}`}>
-                  <Phone size={14} />
-                  Llamar
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => abrirWhatsApp(statusEntrega)} title={`Abrir WhatsApp con ${statusEntrega.cliente}`}>
-                  <MessageCircle size={14} />
-                  WhatsApp
-                </Button>
-              </>
-            )}
-            <Button onClick={saveStatus}>Aplicar estado</Button>
-          </div>
-        }
-      />
+        </div>
+      )}
     </div>
   );
 };

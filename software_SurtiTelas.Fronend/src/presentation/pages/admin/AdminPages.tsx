@@ -19,6 +19,8 @@ import { AdminReportesInventario } from './ReportesInventario';
 import { AdminReportesProduccion } from './ReportesProduccion';
 import { AdminReportesVentas } from './ReportesVentas';
 import { AdminReportesUsuarios } from './ReportesUsuarios';
+import { AdminWebhooks } from './Webhooks';
+import { RutaDelDiaAdmin } from './RutaDelDiaAdmin';
 
 export { AdminProductosTerminados };
 export { AdminProveedores };
@@ -40,6 +42,8 @@ export { AdminReportesInventario };
 export { AdminReportesProduccion };
 export { AdminReportesVentas };
 export { AdminReportesUsuarios };
+export { AdminWebhooks };
+export { RutaDelDiaAdmin };
 
 export const AdminUsuarios: React.FC = () => (
   <div>

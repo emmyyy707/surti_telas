@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
@@ -91,6 +91,7 @@ const adminMenu: SidebarItem[] = [
   },
   { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
   { icon: Webhook, label: adminContent.layout.menu.webhooks.label, key: 'webhooks' },
+  { icon: MapPin, label: adminContent.layout.menu.rutaDelDia.label, key: 'ruta-del-dia' },
 ];
 
 export const AdminLayout: React.FC = () => {

@@ -96,6 +96,29 @@ export function aggregateDomiciliarios(deliveries: DeliveryDTO[]): Domiciliario[
   return Array.from(map.values());
 }
 
+export interface DeliveryRutaItem {
+  id: string;
+  orderId: string;
+  estado: 'ASIGNADO' | 'EN_RUTA' | 'ENTREGADO' | 'FALLIDO';
+  domiciliarioId?: string;
+  domiciliarioNombre?: string;
+  domiciliarioTelefono?: string;
+  direccion?: string;
+  ciudad?: string;
+  telefono?: string;
+  notas?: string;
+  asignadoEn?: string;
+  entregadoEn?: string;
+  order?: {
+    numero?: string;
+    cliente?: string;
+    telefono?: string;
+    direccion?: string;
+    ciudad?: string;
+    total?: number;
+  };
+}
+
 export const deliveriesApi = {
   async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<DeliveryDTO[]> {
     try {
@@ -106,8 +129,24 @@ export const deliveriesApi = {
     }
   },
 
+  async rutaDelDia(query?: Record<string, string | number | boolean | undefined | null>): Promise<DeliveryRutaItem[]> {
+    try {
+      const items = await api.get<DeliveryRutaItem[]>('/deliveries/ruta-del-dia', { query });
+      console.log('[deliveriesApi] rutaDelDia response', items);
+      return items ?? [];
+    } catch (error) {
+      console.error('[deliveriesApi] rutaDelDia error', error);
+      return [];
+    }
+  },
+
   async updateStatus(id: string, estado: DeliveryDTO['estado']): Promise<DeliveryDTO> {
     const dto = await api.patch<DeliveryDTO>(`/deliveries/${encodeURIComponent(id)}/status`, { estado });
+    return dto;
+  },
+
+  async update(id: string, changes: Partial<DeliveryDTO>): Promise<DeliveryDTO> {
+    const dto = await api.patch<DeliveryDTO>(`/deliveries/${encodeURIComponent(id)}`, changes);
     return dto;
   },
 };

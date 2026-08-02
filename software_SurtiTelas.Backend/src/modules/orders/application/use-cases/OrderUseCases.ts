@@ -16,6 +16,7 @@ import {
   OrderRejectedEvent,
   OrderReceiptGeneratedEvent,
   OrderCanceledEvent,
+  OrderDispatchedEvent,
 } from '../../../../shared/application/events';
 import { toOrderData } from '../../infrastructure/mappers/OrderMapper';
 import { logger } from '../../../../shared/infrastructure/logger';
@@ -286,6 +287,25 @@ export class UpdateOrderStatus {
       );
     } else {
       logger.warn(`[UpdateOrderStatus] EventBus no disponible para pedido ${updated.id}`);
+    }
+
+    if (estado === 'Enviado') {
+      if (this.eventBus) {
+        this.eventBus.publish(
+          new OrderDispatchedEvent({
+            orderId: updated.id,
+            orderNumero: updated.numero || updated.id,
+            clienteId: updated.clienteId,
+            clienteNombre: updated.cliente,
+            domiciliarioId: undefined,
+            domiciliarioNombre: undefined,
+            direccion: '',
+            ciudad: '',
+            telefono: '',
+            total: Number(updated.total),
+          }, requestId)
+        );
+      }
     }
 
     if (estado === 'Aceptado') {

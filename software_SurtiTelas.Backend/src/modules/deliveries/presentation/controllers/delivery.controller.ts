@@ -33,6 +33,24 @@ export const listDeliveries = async (req: Request, res: Response) => {
   }
 };
 
+export const listRutaDelDia = async (req: Request, res: Response) => {
+  try {
+    const filters = parseDto(DeliveryFiltersSchema, req.query);
+    console.log('[listRutaDelDia] req.user', req.user);
+    console.log('[listRutaDelDia] filters before override', filters);
+    if (req.user?.role === 'DOMICILIARIO') {
+      filters.domiciliarioId = req.user.id;
+    }
+    console.log('[listRutaDelDia] filters after override', filters);
+    const result = await deliveriesUseCases.listRutaDelDia.execute(filters);
+    console.log('[listRutaDelDia] result length', Array.isArray(result) ? result.length : 'n/a');
+    return ok(res, result);
+  } catch (error) {
+    console.error('listRutaDelDia error', error);
+    throw error;
+  }
+};
+
 export const getDelivery = async (req: Request, res: Response) => {
   const delivery = await deliveriesUseCases.getDelivery.execute(req.params.id);
   const links = buildHateoasLinks('/api/v1/deliveries', delivery.id);
@@ -55,7 +73,7 @@ export const updateDelivery = async (req: Request, res: Response) => {
 
 export const changeDeliveryStatus = async (req: Request, res: Response) => {
   const { estado } = parseDto(z.object({ estado: DeliveryStatusEnum }), req.body);
-  const delivery = await deliveriesUseCases.changeDeliveryStatus.execute(req.params.id, estado);
+  const delivery = await deliveriesUseCases.changeDeliveryStatus.execute(req.params.id, estado, req.user?.role);
   clearCache('/api/v1/deliveries');
   return ok(res, delivery.toDTO(), 'Estado de entrega actualizado');
 };

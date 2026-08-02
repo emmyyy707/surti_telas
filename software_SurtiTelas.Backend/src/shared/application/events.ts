@@ -43,6 +43,27 @@ export class OrderStatusUpdatedEvent implements DomainEvent {
   ) {}
 }
 
+export class OrderDispatchedEvent implements DomainEvent {
+  readonly type = 'order.dispatched';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      domiciliarioId?: string;
+      domiciliarioNombre?: string;
+      direccion: string;
+      ciudad?: string;
+      telefono?: string;
+      total: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
 export class StockReservedEvent implements DomainEvent {
   readonly type = 'stock.reserved';
   readonly occurredAt = new Date();

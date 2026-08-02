@@ -52,6 +52,7 @@ export const adminContent = {
       },
       catalogo: { label: import.meta.env.VITE_ADMIN_MENU_CATALOGO?.trim() || 'Catálogo Digital' },
       webhooks: { label: import.meta.env.VITE_ADMIN_MENU_WEBHOOKS?.trim() || 'Webhooks' },
+      rutaDelDia: { label: import.meta.env.VITE_ADMIN_MENU_RUTA_DEL_DIA?.trim() || 'Ruta del Día' },
     },
   },
   dashboard: {

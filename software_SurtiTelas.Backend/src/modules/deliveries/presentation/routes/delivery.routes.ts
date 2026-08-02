@@ -73,6 +73,12 @@ deliveryRouter.get(
   asyncHandler(controller.listDeliveries)
 );
 
+deliveryRouter.get(
+  '/ruta-del-dia',
+  requirePermission('orders:read'),
+  asyncHandler(controller.listRutaDelDia)
+);
+
 /**
  * @openapi
  * /api/v1/deliveries/{id}:

@@ -48,6 +48,7 @@ const AdminReportesUsuarios = React.lazy(() => import('@/presentation/pages/admi
 const AdminReportesProduccion = React.lazy(() => import('@/presentation/pages/admin/ReportesProduccion').then(m => ({ default: m.AdminReportesProduccion })));
 const AdminReportesInventario = React.lazy(() => import('@/presentation/pages/admin/ReportesInventario').then(m => ({ default: m.AdminReportesInventario })));
 const AdminWebhooks = React.lazy(() => import('@/presentation/pages/admin/Webhooks').then(m => ({ default: m.AdminWebhooks })));
+const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/RutaDelDiaAdmin').then(m => ({ default: m.RutaDelDiaAdmin })));
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
 const AsesorDashboard = React.lazy(() => import('@/presentation/pages/asesor/Dashboard').then(m => ({ default: m.AsesorDashboard })));
 const AsesorClientes = React.lazy(() => import('@/presentation/pages/asesor/MisClientes').then(m => ({ default: m.AsesorClientes })));
@@ -144,6 +145,7 @@ const App: React.FC = () => {
             <Route path="reportes-produccion" element={<AdminReportesProduccion />} />
             <Route path="reportes-inventario" element={<AdminReportesInventario />} />
             <Route path="webhooks" element={<AdminWebhooks />} />
+            <Route path="ruta-del-dia" element={<AdminRutaDelDia />} />
           </Route>
 
           {/* ASESOR - Protected routes for asesor role */}

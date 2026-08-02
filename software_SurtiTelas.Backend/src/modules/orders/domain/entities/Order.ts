@@ -234,7 +234,7 @@ export class Order {
   }
 
   canBeAssigned(): boolean {
-    return this.estado === 'Aceptado' || this.estado === 'En proceso';
+    return this.estado === 'Aceptado' || this.estado === 'En proceso' || this.estado === 'Enviado';
   }
 
   canBeDelivered(): boolean {

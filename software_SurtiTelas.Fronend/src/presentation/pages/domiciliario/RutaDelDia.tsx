@@ -1,13 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Map, MapPin, Clock, CheckCircle2, Navigation, Phone, MessageCircle } from 'lucide-react';
+import { Phone, MessageCircle, RefreshCw, Navigation, PackageCheck, User, MapPin } from 'lucide-react';
 import s from './RutaDelDia.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
 import { DetailModal } from '@/shared/ui/DetailModal';
 import { deliveriesApi } from '@/infrastructure/api/deliveriesApi';
 import { useAuthStore } from '@/core/stores/authStore';
-import { DeliveryMap } from './DeliveryMap';
+import { RouteMap } from './DeliveryMap';
+import { cn } from '@/shared/utils';
 
 export interface Entrega {
   id: string;
@@ -37,43 +38,52 @@ export const RutaDelDia: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
   const [statusEntrega, setStatusEntrega] = useState<Entrega | null>(null);
   const [nextEstado, setNextEstado] = useState<Entrega['estado']>('Pendiente');
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const filters = user?.uid ? { domiciliarioId: user.uid } : undefined;
+      const result = await deliveriesApi.rutaDelDia(filters);
+      const mapped: Entrega[] = result.map((d) => ({
+        id: d.id,
+        cliente: d.order?.cliente || d.domiciliarioNombre || '',
+        direccion: d.order?.direccion || d.direccion || '',
+        barrio: d.order?.ciudad || d.ciudad || '',
+        telefono: d.order?.telefono || d.telefono || '',
+        horaEstimada: d.asignadoEn ? new Date(d.asignadoEn).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+        estado: deliveryStatusMap[d.estado] || 'Pendiente',
+      }));
+      setEntregas(mapped);
+    } catch {
+      toast.error('No se pudieron cargar las entregas');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.uid]);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const result = await deliveriesApi.list(user?.uid ? { domiciliarioId: user.uid } : undefined);
-        const mapped: Entrega[] = result.map((d) => ({
-          id: d.orderId || d.id,
-          cliente: d.clienteNombre || '',
-          direccion: d.direccion || '',
-          barrio: d.ciudad || '',
-          telefono: (d as unknown as { telefono?: string }).telefono || '',
-          horaEstimada: d.asignadoEn ? new Date(d.asignadoEn).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
-          estado: deliveryStatusMap[d.estado] || 'Pendiente',
-        }));
-        setEntregas(mapped);
-      } catch {
-        toast.error('No se pudieron cargar las entregas');
-      } finally {
-        setLoading(false);
-      }
-    };
     if (user?.uid) void load();
-  }, [user?.uid]);
+  }, [user?.uid, load]);
+
+  const sync = async () => {
+    setSyncing(true);
+    try {
+      await load();
+      toast.success('Ruta sincronizada');
+    } catch {
+      toast.error('No se pudo sincronizar la ruta');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const completed = entregas.filter(e => e.estado === 'Entregado').length;
   const pending = entregas.length - completed;
-
-  const pins = useMemo(() => entregas.slice(0, 5).map((entrega, index) => ({
-    entrega,
-    index,
-    top: 60 + index * 80,
-    left: [80, 200, 150, 260, 120][index],
-  })), [entregas]);
 
   const openStatus = (entrega: Entrega) => {
     setStatusEntrega(entrega);
@@ -102,11 +112,6 @@ export const RutaDelDia: React.FC = () => {
     toast.success('Ruta optimizada: pendientes primero, entregados al final');
   };
 
-  const irAEntrega = (entrega: Entrega) => {
-    const query = encodeURIComponent(`${entrega.direccion}, ${entrega.barrio}`);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank', 'noopener');
-  };
-
   const llamarCliente = (entrega: Entrega) => {
     if (!entrega.telefono) return;
     window.open(`tel:${entrega.telefono}`, '_self');
@@ -116,6 +121,11 @@ export const RutaDelDia: React.FC = () => {
     if (!entrega.telefono) return;
     const texto = encodeURIComponent(`Hola ${entrega.cliente}, soy tu domiciliario de SurtiTelas. Estoy en camino con tu pedido.`);
     window.open(`https://wa.me/${entrega.telefono}?text=${texto}`, '_blank', 'noopener');
+  };
+
+  const abrirNavegacion = (entrega: Entrega) => {
+    const query = encodeURIComponent(`${entrega.direccion}, ${entrega.barrio}`);
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank', 'noopener');
   };
 
   if (loading) {
@@ -141,8 +151,22 @@ export const RutaDelDia: React.FC = () => {
 
   return (
     <div>
-      <h1 className={s.pageTitle}>Ruta del Día</h1>
-      <p className={s.pageSubtitle}>{entregas.length} entregas programadas</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className={s.pageTitle}>Ruta del Día</h1>
+          <p className={s.pageSubtitle}>{entregas.length} entregas programadas</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onClick={optimizarRuta}>
+            <Navigation size={14} />
+            Optimizar ruta
+          </Button>
+          <Button size="sm" variant="secondary" onClick={sync} disabled={syncing}>
+            <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+            Sincronizar
+          </Button>
+        </div>
+      </div>
 
       <div className={s.rutaLayout}>
         <div className={s.rutaPanel}>
@@ -157,7 +181,20 @@ export const RutaDelDia: React.FC = () => {
 
           <div className={s.rutaTimeline}>
             {entregas.map((entrega, i) => (
-              <button type="button" key={entrega.id} className={`${s.rutaStop} ${selectedEntrega?.id === entrega.id ? s.rutaStopActive : ''} ${entrega.estado === 'Entregado' ? s.rutaStopDone : ''}`} onClick={() => setSelectedEntrega(entrega)} title={`Parada ${i + 1}: ${entrega.cliente}`}>
+              <div
+                key={entrega.id}
+                className={`${s.rutaStop} ${selectedEntrega?.id === entrega.id ? s.rutaStopActive : ''} ${entrega.estado === 'Entregado' ? s.rutaStopDone : ''}`}
+                onClick={() => setSelectedEntrega(entrega)}
+                title={`Parada ${i + 1}: ${entrega.cliente}`}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedEntrega(entrega);
+                  }
+                }}
+              >
                 <div className={s.rutaStopLeft}>
                   <div className={s.rutaStopNumber}>{i + 1}</div>
                   <div className={s.rutaStopLine} />
@@ -169,8 +206,26 @@ export const RutaDelDia: React.FC = () => {
                     <span className={s.rutaStopHora}>{entrega.horaEstimada}</span>
                     <Badge variant={statusVariant(entrega.estado)}>{entrega.estado}</Badge>
                   </div>
+                  <div className="flex gap-2 mt-2">
+                    <Button size="xs" variant="secondary" onClick={(e) => { e.stopPropagation(); abrirNavegacion(entrega); }} title="Abrir navegación">
+                      <Navigation size={12} />
+                      Navegar
+                    </Button>
+                    {entrega.telefono && (
+                      <>
+                        <Button size="xs" variant="secondary" onClick={(e) => { e.stopPropagation(); llamarCliente(entrega); }} title="Llamar">
+                          <Phone size={12} />
+                          Llamar
+                        </Button>
+                        <Button size="xs" variant="secondary" onClick={(e) => { e.stopPropagation(); abrirWhatsApp(entrega); }} title="WhatsApp">
+                          <MessageCircle size={12} />
+                          WhatsApp
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -178,9 +233,13 @@ export const RutaDelDia: React.FC = () => {
         <div className={s.mapPanel}>
           <div className={s.mapHeader}>
             <div className={s.mapTitle}>Mapa de ruta</div>
-            <Button size="sm" variant="secondary" onClick={optimizarRuta}>Optimizar ruta</Button>
+            <div className="flex gap-2">
+              <Badge variant={entregas.some(e => e.estado === 'Pendiente') ? 'warning' : 'success'}>
+                {entregas.some(e => e.estado === 'Pendiente') ? 'Tienes entregas pendientes' : 'Todas las entregas completadas'}
+              </Badge>
+            </div>
           </div>
-          <DeliveryMap entregas={entregas} onSelect={setSelectedEntrega} selectedId={selectedEntrega?.id} />
+          <RouteMap entregas={entregas} onSelect={setSelectedEntrega} selectedId={selectedEntrega?.id} isNavigating={isNavigating} onToggleNavigation={setIsNavigating} />
         </div>
       </div>
 
@@ -188,21 +247,29 @@ export const RutaDelDia: React.FC = () => {
         children={null}
         open={Boolean(selectedEntrega)}
         onClose={() => setSelectedEntrega(null)}
-        title={selectedEntrega ? `Ruta ${selectedEntrega.id}` : 'Ruta'}
+        title={selectedEntrega ? `Parada ${entregas.findIndex(e => e.id === selectedEntrega.id) + 1}` : 'Ruta'}
         subtitle={selectedEntrega?.horaEstimada}
         header={{
-          icon: <MapPin size={18} />,
+          icon: <PackageCheck size={18} />,
           status: selectedEntrega ? <Badge variant={statusVariant(selectedEntrega.estado)}>{selectedEntrega.estado}</Badge> : undefined,
         }}
+        kpis={
+          selectedEntrega ? [
+            { label: 'Pedido', value: selectedEntrega.id, icon: <PackageCheck size={16} />, monospace: true },
+            { label: 'Estado', value: selectedEntrega.estado, icon: <PackageCheck size={16} />, tone: statusVariant(selectedEntrega.estado) },
+            { label: 'Hora estimada', value: selectedEntrega.horaEstimada, icon: <PackageCheck size={16} /> },
+          ] : undefined
+        }
         sections={[
           {
-            title: 'Parada seleccionada',
+            title: 'Información del cliente',
+            icon: <User size={16} />,
+            description: 'Datos de contacto y ubicación de entrega',
             fields: [
-              { label: 'Cliente', value: selectedEntrega?.cliente, icon: <MapPin size={16} /> },
-              { label: 'Dirección', value: selectedEntrega?.direccion, icon: <MapPin size={16} /> },
-              { label: 'Barrio', value: selectedEntrega?.barrio, icon: <MapPin size={16} /> },
-              { label: 'Hora estimada', value: selectedEntrega?.horaEstimada, icon: <Clock size={16} /> },
-              { label: 'Teléfono', value: selectedEntrega?.telefono, icon: <Phone size={16} /> },
+              { label: 'Cliente', value: selectedEntrega?.cliente, icon: <User size={16} />, fullWidth: true },
+              { label: 'Dirección', value: selectedEntrega?.direccion, icon: <MapPin size={16} />, fullWidth: true },
+              { label: 'Barrio / Ciudad', value: selectedEntrega?.barrio, icon: <MapPin size={16} /> },
+              { label: 'Teléfono', value: selectedEntrega?.telefono, icon: <Phone size={16} />, helper: selectedEntrega?.telefono ? 'Toca para llamar' : undefined },
             ],
           },
         ]}
@@ -223,6 +290,10 @@ export const RutaDelDia: React.FC = () => {
                     </Button>
                   </>
                 )}
+                <Button size="sm" variant="secondary" onClick={() => abrirNavegacion(selectedEntrega)}>
+                  <Navigation size={14} />
+                  Navegar
+                </Button>
                 {selectedEntrega.estado !== 'Entregado' && (
                   <Button onClick={() => { setSelectedEntrega(null); openStatus(selectedEntrega); }}>Cambiar estado</Button>
                 )}
@@ -236,21 +307,48 @@ export const RutaDelDia: React.FC = () => {
         children={null}
         open={Boolean(statusEntrega)}
         onClose={() => setStatusEntrega(null)}
-        title="Actualizar parada de ruta"
+        title="Actualizar estado"
         subtitle={statusEntrega ? `${statusEntrega.id} - ${statusEntrega.cliente}` : undefined}
+        header={{
+          icon: <PackageCheck size={18} />,
+          status: statusEntrega ? <Badge variant={statusVariant(statusEntrega.estado)}>{statusEntrega.estado}</Badge> : undefined,
+        }}
         sections={[
           {
-            title: 'Estado de entrega',
+            title: 'Selecciona el nuevo estado',
+            description: 'Actualiza el progreso de esta entrega',
             children: (
-              <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                Estado
-                <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={nextEstado} onChange={e => setNextEstado(e.target.value as Entrega['estado'])}>
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="En camino">En camino</option>
-                  <option value="Entregado">Entregado</option>
-                  <option value="Fallido">Fallido</option>
-                </select>
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(['Pendiente', 'En camino', 'Entregado', 'Fallido'] as const).map((estado) => {
+                  const selected = nextEstado === estado;
+                  const tone = statusVariant(estado);
+                  return (
+                    <button
+                      key={estado}
+                      type="button"
+                      onClick={() => setNextEstado(estado)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all',
+                        selected ? 'border-[var(--color-primary)] bg-[var(--color-bg-elevated)] shadow-sm' : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)]'
+                      )}
+                    >
+                      <span className={cn('flex h-10 w-10 items-center justify-center rounded-lg text-white', tone === 'success' && 'bg-emerald-500', tone === 'info' && 'bg-sky-500', tone === 'warning' && 'bg-amber-500', tone === 'danger' && 'bg-red-500')}>
+                        <PackageCheck size={18} />
+                      </span>
+                      <div>
+                        <div className="text-sm font-semibold text-[var(--color-text-primary)]">{estado}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">
+                          {estado === 'Pendiente' && 'Queda pendiente para ruta'}
+                          {estado === 'En camino' && 'El domiciliario va al cliente'}
+                          {estado === 'Entregado' && 'Se confirmó la entrega'}
+                          {estado === 'Fallido' && 'No se pudo entregar'}
+                        </div>
+                      </div>
+                      {selected && <span className="ml-auto text-[var(--color-primary)]">●</span>}
+                    </button>
+                  );
+                })}
+              </div>
             ),
           },
         ]}

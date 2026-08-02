@@ -45,7 +45,7 @@ export const DomiciliarioDashboard: React.FC = () => {
       try {
         const result = await deliveriesApi.list(user?.uid ? { domiciliarioId: user.uid } : undefined);
         const mapped: Entrega[] = result.map((d) => ({
-          id: d.orderId || d.id,
+          id: d.id,
           cliente: d.clienteNombre || '',
           direccion: d.direccion || '',
           barrio: d.ciudad || '',

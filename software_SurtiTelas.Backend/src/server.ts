@@ -21,11 +21,13 @@ import { PrismaReceiptRepository } from './modules/sales-orders/infrastructure/r
 import { PrismaCompanyConfigRepository } from './modules/company/infrastructure/repositories/PrismaCompanyConfigRepository';
 import { receiptSender } from './modules/sales-orders/infrastructure/container/salesOrderContainer';
 import { ReceiptPaymentSubscriber } from './modules/receipts/application/use-cases/ReceiptPaymentSubscriber';
+import { OrderDeliverySubscriber } from './modules/orders/application/use-cases/OrderDeliverySubscriber';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
 new SalesOrderNotificationSubscriber(eventBus);
 new ReceiptPaymentSubscriber(eventBus);
+new OrderDeliverySubscriber(eventBus);
 
 const orderRepository = new PrismaOrderRepository(prisma);
 const saleRepository = new PrismaSaleRepository(prisma);

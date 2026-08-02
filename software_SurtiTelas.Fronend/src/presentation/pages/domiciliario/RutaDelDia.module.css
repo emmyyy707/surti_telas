@@ -140,6 +140,12 @@
   justify-content: space-between;
 }
 
+.rutaStopActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .rutaStopHora {
   font-size: 0.75rem;
   color: var(--color-text-muted);
