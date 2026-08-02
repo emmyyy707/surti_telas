@@ -9,8 +9,9 @@ import { DataTable } from '../../../shared/ui/DataTable';
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
-import { authApi } from '@/infrastructure/api/authApi';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { authApi } from '@/infrastructure/api/authApi';
+import { useAuthStore } from '@/core/stores/authStore';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 interface Factura {
@@ -121,16 +122,24 @@ export const AdminPagos: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const clientesResult = await authApi.listUsers({ limit: 100, role: 'CLIENTE' });
-      const clientesIds = new Set((clientesResult.data ?? []).map(c => c.id));
+      const user = useAuthStore.getState().user;
+      const isAdmin = user?.role === 'admin';
+
+      let clientesIds = new Set<string>();
+      if (!isAdmin) {
+        const clientesResult = await authApi.listUsers({ limit: 100, role: 'CLIENTE' });
+        clientesIds = new Set((clientesResult.data ?? []).map(c => c.id));
+      }
 
       const [paymentsData, ordersData] = await Promise.all([
         paymentsApi.list(),
         ordersApi.list(),
       ]);
 
-      const pagosFiltrados = paymentsData.filter(p => clientesIds.has(p.customerId));
-      const allOrders = (ordersData.pedidos ?? []).filter(o => typeof o.clienteId === 'string' && o.clienteId.trim().length > 0 && clientesIds.has(o.clienteId));
+      const pagosFiltrados = isAdmin ? paymentsData : paymentsData.filter(p => clientesIds.has(p.customerId));
+      const allOrders = isAdmin
+        ? (ordersData.pedidos ?? []).filter(o => typeof o.clienteId === 'string' && o.clienteId.trim().length > 0)
+        : (ordersData.pedidos ?? []).filter(o => typeof o.clienteId === 'string' && o.clienteId.trim().length > 0 && clientesIds.has(o.clienteId));
 
       const pagosPorPedido = new Map(pagosFiltrados.map(p => [p.orderId, p]));
       const acceptedOrders = allOrders.filter(o => o.estado === 'Aceptado');
@@ -183,6 +192,14 @@ export const AdminPagos: React.FC = () => {
 
   useEffect(() => {
     void loadPayments();
+  }, [loadPayments]);
+
+  useEffect(() => {
+    const handler = () => {
+      void loadPayments();
+    };
+    window.addEventListener('receipt:paid', handler as EventListener);
+    return () => window.removeEventListener('receipt:paid', handler as EventListener);
   }, [loadPayments]);
 
   const facturas = useMemo(() => facturasFromPayments(payments), [payments]);

@@ -278,6 +278,9 @@ export const AdminRecibos: React.FC = () => {
       await loadRecibos();
       toast.success(`Recibo ${statusConfirm.id} actualizado a ${statusConfirm.estado}`);
       setStatusConfirm(null);
+      if (statusConfirm.estado === 'Pagado') {
+        window.dispatchEvent(new CustomEvent('receipt:paid', { detail: { receiptId: statusConfirm.id } }));
+      }
     } catch {
       toast.error('No se pudo actualizar el estado');
     }
@@ -445,13 +448,19 @@ export const AdminRecibos: React.FC = () => {
                 onClick: async () => {
                   try {
                     await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Enviado']);
-                    if (r.orderId) {
-                      await api.post(`/sales-orders/${encodeURIComponent(r.orderId)}/retry-receipt`, {});
-                    }
                     await loadRecibos();
-                    toast.success(`Recibo ${r.numeroRecibo} enviado`);
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : 'No se pudo enviar el recibo');
+                    if (r.orderId) {
+                      try {
+                        await api.post(`/sales-orders/${encodeURIComponent(r.orderId)}/retry-receipt`, {});
+                        toast.success(`Recibo ${r.numeroRecibo} enviado`);
+                      } catch {
+                        toast.error(`Recibo ${r.numeroRecibo} enviado, pero no tienes permiso para reintentar el envío`);
+                      }
+                    } else {
+                      toast.success(`Recibo ${r.numeroRecibo} enviado`);
+                    }
+                  } catch {
+                    toast.error('No se pudo enviar el recibo');
                   }
                 }
               }] : []),

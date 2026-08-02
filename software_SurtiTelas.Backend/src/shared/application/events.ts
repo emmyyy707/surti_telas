@@ -63,8 +63,11 @@ export class OrderDeliveredEvent implements DomainEvent {
   constructor(
     public readonly payload: {
       orderId: string;
+      orderNumero: string;
       clienteId: string;
       clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
       total: number;
     },
     public readonly requestId?: string
@@ -85,6 +88,22 @@ export class OrderReceiptGeneratedEvent implements DomainEvent {
       asesorNombre: string;
       receiptId: string;
       total: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ReceiptPaidEvent implements DomainEvent {
+  readonly type = 'receipt.paid';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      receiptId: string;
+      orderId?: string;
+      customerId: string;
+      total: number;
+      estado: string;
     },
     public readonly requestId?: string
   ) {}

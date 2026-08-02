@@ -12,6 +12,7 @@ import {
   OrderStatusUpdatedEvent,
   StockReservedEvent,
   OrderDeliveredEvent,
+  OrderAcceptedEvent,
   OrderRejectedEvent,
   OrderReceiptGeneratedEvent,
   OrderCanceledEvent,
@@ -257,6 +258,7 @@ export class UpdateOrderStatus {
   constructor(
     private readonly repo: OrderRepository,
     private readonly eventBus?: EventBus,
+    private readonly prisma?: PrismaClient,
   ) {}
 
   async execute(id: string, estado: OrderStatus, requestId?: string) {
@@ -345,14 +347,56 @@ export class UpdateOrderStatus {
           }, requestId)
         );
       }
+      logger.info(`[UpdateOrderStatus] Publicando evento order.delivered para pedido ${updated.id}`);
       this.eventBus?.publish(
         new OrderDeliveredEvent({
           orderId: updated.id,
+          orderNumero: updated.numero || updated.id,
           clienteId: updated.clienteId,
           clienteNombre: updated.cliente,
+          asesorId: updated.asesorId,
+          asesorNombre: updated.asesor,
           total: Number(updated.total),
         }, requestId)
       );
+
+      if (this.prisma) {
+        try {
+          const existingPayment = await this.prisma.payment.findFirst({
+            where: { orderId: updated.id, deletedAt: null },
+          });
+
+          if (existingPayment) {
+            if (existingPayment.status !== 'APPROVED') {
+              await this.prisma.payment.update({
+                where: { id: existingPayment.id },
+                data: {
+                  status: 'APPROVED',
+                  amount: Number(updated.total),
+                  paidAt: new Date(),
+                },
+              });
+              logger.info(`[UpdateOrderStatus] Pago actualizado a APPROVED para pedido ${updated.id}: ${existingPayment.id}`);
+            }
+          } else {
+            await this.prisma.payment.create({
+              data: {
+                orderId: updated.id,
+                customerId: updated.clienteId,
+                asesorId: updated.asesorId || undefined,
+                amount: Number(updated.total),
+                method: 'OTHER',
+                status: 'APPROVED',
+                paidAt: new Date(),
+                notes: 'Pago completado por entrega del pedido',
+              },
+            });
+            logger.info(`[UpdateOrderStatus] Pago generado por entrega para pedido ${updated.id}`);
+          }
+        } catch (error) {
+          logger.error(`[UpdateOrderStatus] Error generando pago por entrega para pedido ${updated.id}`, { error: (error as Error).message });
+        }
+      }
     }
 
     if (estado === 'Rechazado') {

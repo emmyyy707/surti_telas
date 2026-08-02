@@ -26,7 +26,7 @@ export const orderUseCases = {
   createOrder: new CreateOrder(orderRepository, customerRepository, productRepository, prisma, eventBus),
   getOrders: new GetOrders(orderRepository),
   getOrderById: new GetOrderById(orderRepository),
-  updateOrderStatus: new UpdateOrderStatus(orderRepository, eventBus),
+  updateOrderStatus: new UpdateOrderStatus(orderRepository, eventBus, prisma),
   updateOrderFull: new UpdateOrderFull(orderRepository),
   deleteOrder: new DeleteOrder(orderRepository),
   assignDomiciliario: new AssignDomiciliario(orderRepository),

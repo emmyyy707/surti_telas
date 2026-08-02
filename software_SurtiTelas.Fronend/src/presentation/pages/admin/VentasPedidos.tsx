@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus, Eye, Trash2, Save, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Eye, Trash2, Save, Loader2, AlertCircle } from 'lucide-react';
 import s from './VentasPedidos.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
@@ -13,6 +13,7 @@ import type { Pedido, PedidoItem } from '@/core/types';
 import type { BackendAuthUser } from '@/infrastructure/api/authApi';
 import f from '@/styles/Form.module.css';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
+import { OrderStatusSelector } from '@/shared/ui/OrderStatusSelector';
 
 const ESTADOS_ORDEN = [
   'Pendiente',
@@ -50,6 +51,7 @@ export const AdminVentasPedidos: React.FC = () => {
 
   const [deleteConfirm, setDeleteConfirm] = useState<Pedido | null>(null);
   const [statusConfirm, setStatusConfirm] = useState<{ id: string; estado: Pedido['estado'] } | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<Pedido['estado'] | null>(null);
 
   const fetchPedidos = async () => {
     setLoading(true);
@@ -60,7 +62,7 @@ export const AdminVentasPedidos: React.FC = () => {
       setClientes(clientesResult.data ?? []);
 
       const result = await ordersApi.list();
-      const pedidos = (result.pedidos ?? []).filter(p => p.clienteId && clientesIds.has(p.clienteId));
+      const pedidos = (result.pedidos ?? []).filter(p => p.clienteId && clientesIds.has(p.clienteId) && p.estado !== 'Entregado');
       setItems(pedidos);
     } catch {
       setError('No se pudieron cargar los pedidos');
@@ -190,12 +192,13 @@ const resetForm = () => {
   };
 
   const handleChangeStatus = async () => {
-    if (!statusConfirm) return;
+    if (!statusConfirm || !selectedStatus) return;
     try {
-      await ordersApi.updateStatus(statusConfirm.id, statusConfirm.estado);
+      await ordersApi.updateStatus(statusConfirm.id, selectedStatus);
       await fetchPedidos();
-      toast.success(`Pedido ${statusConfirm.id} actualizado a ${statusConfirm.estado}`);
+      toast.success(`Pedido ${statusConfirm.id} actualizado a ${selectedStatus}`);
       setStatusConfirm(null);
+      setSelectedStatus(null);
     } catch {
       toast.error('No se pudo actualizar el estado');
     }
@@ -285,7 +288,7 @@ const resetForm = () => {
                       <button className={s.actionBtn} title="Ver detalle" onClick={() => setDetailId(pedido.id)}>
                         <Eye size={14} />
                       </button>
-                      <button className={s.actionBtn} title="Cambiar estado" onClick={() => setStatusConfirm({ id: pedido.id, estado: pedido.estado })}>
+                       <button className={s.actionBtn} title="Cambiar estado" onClick={() => { setStatusConfirm({ id: pedido.id, estado: pedido.estado }); setSelectedStatus(null); }}>
                         <span title="Cambiar estado" style={{ fontSize: 12 }}>✎</span>
                       </button>
                       <button className={s.actionBtn} title="Editar" onClick={() => openEdit(pedido)}>
@@ -452,27 +455,21 @@ const resetForm = () => {
         variant="danger"
       />
 
-      <Modal open={!!statusConfirm} onClose={() => setStatusConfirm(null)} title="Cambiar estado del pedido" description="Selecciona el nuevo estado para el pedido." size="md" variant="form">
+      <Modal open={!!statusConfirm} onClose={() => { setStatusConfirm(null); setSelectedStatus(null); }} title="Cambiar estado del pedido" description="Actualiza el estado del pedido." size="md" variant="form">
         <div className={f.form}>
-          {detailPedido && detailPedido.estado === 'Pendiente' && (
-            <div className={f.formRow}>
-              <Button variant="success" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Aceptado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} aceptado`); setStatusConfirm(null); } }}>
-                <CheckCircle size={14} /> Aceptar
-              </Button>
-              <Button variant="danger" onClick={async () => { if (statusConfirm) { await ordersApi.updateStatus(statusConfirm.id, 'Rechazado'); await fetchPedidos(); toast.success(`Pedido ${statusConfirm.id} rechazado`); setStatusConfirm(null); } }}>
-                <XCircle size={14} /> Rechazar
-              </Button>
-            </div>
+          {statusConfirm && (
+            <OrderStatusSelector
+              currentStatus={statusConfirm.estado}
+              selectedStatus={selectedStatus ?? statusConfirm.estado}
+              onSelectedStatusChange={setSelectedStatus}
+            />
           )}
-          <div className={f.field}>
-            <label className={f.label}>Estado</label>
-            <select className={f.select} value={statusConfirm?.estado ?? ''} onChange={e => setStatusConfirm(prev => prev ? { ...prev, estado: e.target.value as Pedido['estado'] } : null)}>
-              {ESTADOS_ORDEN.map(e => <option key={e} value={e}>{e}</option>)}
-            </select>
-          </div>
           <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , onClick: handleChangeStatus, disabled: saving }]} />
-
+            actions={[
+              { label: 'Cancelar', variant: 'secondary', onClick: () => { setStatusConfirm(null); setSelectedStatus(null); }, disabled: saving },
+              { label: saving ? 'Guardando...' : 'Guardar cambios', onClick: handleChangeStatus, disabled: saving || !selectedStatus || selectedStatus === statusConfirm?.estado },
+            ]}
+          />
         </div>
       </Modal>
     </div>

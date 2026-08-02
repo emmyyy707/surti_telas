@@ -89,6 +89,11 @@ export const MODULOS_SISTEMA = ['Usuarios', 'Inventario', 'Reportes', 'ProducciÃ
 // Estados generales
 export const ESTADOS_GENERALES = ['Activo', 'Inactivo'] as const;
 
+// Regla de negocio: los pedidos en estado Entregado o Rechazado no deben aparecer
+// en las listas de pedidos activos de admin y asesor. Siempre que se cargue la lista
+// de pedidos se debe filtrar por estos estados finales.
+// Ver: AdminPedidos, AsesorPedidos, AdminVentasPedidos
+
 // Pedidos (frontend) -> se mapean desde/hacia el backend OrderStatus
 export const ESTADOS_PEDIDO = ['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado'] as const;
 export type EstadoPedido = (typeof ESTADOS_PEDIDO)[number];

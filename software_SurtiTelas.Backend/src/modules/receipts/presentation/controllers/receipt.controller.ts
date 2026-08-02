@@ -5,6 +5,8 @@ import { parseDto } from '../../../../shared/presentation/http/validate';
 import { ReceiptFiltersSchema, CreateReceiptSchema, UpdateReceiptSchema, UpdateReceiptStatusSchema } from '../validators/receipt.validators';
 import { PrismaClient } from '@prisma/client';
 import type { Receipt } from '../../domain/entities/Receipt';
+import { eventBus } from '../../../../shared/infrastructure/eventBus';
+import { ReceiptPaidEvent } from '../../../../shared/application/events';
 
 const prisma = new PrismaClient();
 
@@ -369,6 +371,23 @@ export const updateReceipt = async (req: Request, res: Response) => {
 export const updateReceiptStatus = async (req: Request, res: Response) => {
   const { estado } = parseDto(UpdateReceiptStatusSchema, req.body);
   const receipt = await receiptUseCases.updateReceiptStatus.execute(req.params.id, estado);
+
+  if (estado === 'PAGADO') {
+    try {
+      eventBus.publish(
+        new ReceiptPaidEvent({
+          receiptId: receipt.id,
+          orderId: receipt.orderId,
+          customerId: receipt.customerId,
+          total: Number(receipt.total),
+          estado: receipt.estado,
+        }, req.requestId)
+      );
+    } catch (error) {
+      console.error('[Receipt] Error publicando ReceiptPaidEvent', error);
+    }
+  }
+
   return ok(res, receipt, 'Estado del recibo actualizado');
 };
 
