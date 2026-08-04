@@ -26,9 +26,6 @@ export const InicioCliente: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pedidoActivoState, setPedidoActivoState] = useState<Pedido | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -76,28 +73,6 @@ export const InicioCliente: React.FC = () => {
   };
 
   const ultimosPedidos = pedidos.slice(0, 5);
-
-  const enviarMensaje = async () => {
-    if (!chatMessage.trim()) {
-      toast.error('Escribe un mensaje para tu asesor');
-      return;
-    }
-    setSendingMessage(true);
-    try {
-      await notificationsApi.create({
-        titulo: `Mensaje de ${user?.name || 'cliente'}`,
-        mensaje: chatMessage,
-        tipo: 'INFO',
-      });
-      toast.success('Mensaje enviado a tu asesor');
-      setChatMessage('');
-      setChatOpen(false);
-    } catch {
-      toast.error('No fue posible enviar el mensaje');
-    } finally {
-      setSendingMessage(false);
-    }
-  };
 
   const openPedido = (pedido: Pedido) => setPedidoActivoState(pedido);
 
@@ -225,9 +200,6 @@ export const InicioCliente: React.FC = () => {
             <User size={14} className={s.asesorContactIcon} />
             {asesorAsignado.email || 'Sin asignar'}
           </div>
-          <button className={s.asesorChatBtn} type="button" onClick={() => setChatOpen(true)}>
-            💬 Chatear con {asesorAsignado.nombre === 'Sin asignar' ? 'tu asesor' : asesorAsignado.nombre.split(' ')[0]}
-          </button>
         </div>
       </div>
 
@@ -322,16 +294,6 @@ export const InicioCliente: React.FC = () => {
           },
         ]}
       />
-
-      <Modal open={chatOpen} onClose={() => setChatOpen(false)} title={`Chatear con ${asesorAsignado.nombre.split(' ')[0]}`} size="sm">
-        <div className="grid gap-4">
-          <textarea className="min-h-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" placeholder="Escribe tu consulta..." value={chatMessage} onChange={e => setChatMessage(e.target.value)} />
-          <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setChatOpen(false)} disabled={sendingMessage}>Cancelar</Button>
-            <Button onClick={enviarMensaje} loading={sendingMessage}><MessageCircle size={14} /> Enviar mensaje</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };

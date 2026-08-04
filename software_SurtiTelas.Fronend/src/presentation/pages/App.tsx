@@ -57,6 +57,7 @@ const AsesorPedidos = React.lazy(() => import('@/presentation/pages/asesor/Pedid
 const AsesorCatalogo = React.lazy(() => import('@/presentation/pages/asesor/Catalogo').then(m => ({ default: m.AsesorCatalogo })));
 const AsesorComisiones = React.lazy(() => import('@/presentation/pages/asesor/Comisiones').then(m => ({ default: m.AsesorComisiones })));
 const AsesorPerfil = React.lazy(() => import('@/presentation/pages/asesor/PerfilAsesor').then(m => ({ default: m.AsesorPerfil })));
+
 const DomiciliarioLayout = React.lazy(() => import('@/presentation/pages/domiciliario/DomiciliarioLayout').then(m => ({ default: m.DomiciliarioLayout })));
 const DomiciliarioDashboard = React.lazy(() => import('@/presentation/pages/domiciliario/Dashboard').then(m => ({ default: m.DomiciliarioDashboard })));
 const DomiciliarioEntregas = React.lazy(() => import('@/presentation/pages/domiciliario/MisEntregas').then(m => ({ default: m.DomiciliarioEntregas })));

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Send, Package, User, Paperclip, CheckCircle2, Clock, CreditCard, FileText, Archive, MessageCircle } from 'lucide-react';
+import { Send, Package, User, CheckCircle2, Clock, CreditCard, FileText, Archive } from 'lucide-react';
 import s from './Catalogo.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
@@ -31,112 +31,11 @@ export const CatalogoCliente: React.FC = () => {
   const navigate = useNavigate();
   const [isPedidoModalOpen, setIsPedidoModalOpen] = useState(false);
   const [pedidoData, setPedidoData] = useState({ detalle: '', urgencia: 'Estándar' });
-  const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [selectedPedido, setSelectedPedido] = useState<PedidoActivo | null>(null);
   const [misPedidos, setMisPedidos] = useState<PedidoActivo[]>([]);
   const [saldoPendiente, setSaldoPendiente] = useState<number | null>(null);
   const [asesorNombre, setAsesorNombre] = useState<string>('Tu asesora de cuenta');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
-
-  const mensajesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    mensajesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [mensajes]);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-      const ordersData = await ordersApi.me();
-      setMisPedidos(ordersData.pedidos.slice(0, 2).map((p) => ({
-        id: p.id,
-        estado: p.estado === 'Entregado' ? 'Completado' : 'En Proceso',
-        fecha: p.fecha,
-        total: p.total,
-        items: `${p.items} artículos`,
-      })));
-        const asesorPedido = ordersData.pedidos.find((p) => p.asesor)?.asesor;
-        if (asesorPedido) setAsesorNombre(asesorPedido);
-        try {
-          const clientsResult = await customersApi.list();
-          const currentUser = useAuthStore.getState().user;
-          const myClient = clientsResult.data.find((c) => c.email === currentUser?.email || c.nombre === currentUser?.name);
-          if (myClient) {
-            setSaldoPendiente((myClient.cupoTotal ?? 0) - (myClient.cupoUsado ?? 0) + (myClient.deudaVencida ?? 0));
-          }
-        } catch {
-          setSaldoPendiente(null);
-        }
-      } catch {
-        toast.error('No se pudieron cargar los datos');
-      }
-    };
-    void load();
-  }, []);
-
-  const enviarMensaje = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nuevoMensaje.trim()) return;
-
-    const mensaje: Mensaje = {
-      id: Date.now(),
-      texto: nuevoMensaje,
-      remitente: 'cliente',
-      hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMensajes([...mensajes, mensaje]);
-    setNuevoMensaje('');
-    toast.success('Mensaje enviado a tu asesor');
-  };
-
-  const handleCrearPedido = async () => {
-    if (!pedidoData.detalle.trim()) {
-      toast.error('Describe tu requerimiento');
-      return;
-    }
-
-    try {
-      const currentUser = useAuthStore.getState().user;
-      if (!currentUser?.email) {
-        toast.error('No se pudo identificar tu cuenta para crear el pedido');
-        return;
-      }
-
-      await ordersApi.create({
-        clienteId: currentUser.role === 'cliente' ? undefined : currentUser.uid,
-        asesorId: undefined,
-        itemsList: [],
-        prioridad: pedidoData.urgencia === 'Prioritario' ? 'Prioritario' : 'Estándar',
-        observaciones: pedidoData.detalle,
-      });
-
-      toast.success('Pedido enviado a tu asesor para cotización');
-      setIsPedidoModalOpen(false);
-      setPedidoData({ detalle: '', urgencia: 'Estándar' });
-
-      const ordersData = await ordersApi.me();
-      setMisPedidos(ordersData.pedidos.slice(0, 2).map((p) => ({
-        id: p.id,
-        estado: p.estado === 'Entregado' ? 'Completado' : 'En Proceso',
-        fecha: p.fecha,
-        total: p.total,
-        items: `${p.items} artículos`,
-      })));
-    } catch {
-      toast.error('No se pudo crear el pedido. Intenta nuevamente.');
-    }
-  };
-
-  const handleAttach = () => fileInputRef.current?.click();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) toast.success(`Archivo adjunto: ${file.name}`);
-    e.target.value = '';
-  };
 
   const pedidosActivos = misPedidos;
 
@@ -150,50 +49,6 @@ export const CatalogoCliente: React.FC = () => {
       </header>
 
       <div className={s.dashboardGrid}>
-        <div className={s.chatContainer}>
-          <div className={s.chatHeader}>
-            <div className={s.asesorProfile}>
-              <div className={s.avatarWrapper}>
-                <User size={20} />
-                <span className={s.statusDot}></span>
-              </div>
-              <div className={s.asesorMeta}>
-                <h3>{asesorNombre}</h3>
-                <span>Asesor de Cuenta • En línea</span>
-              </div>
-            </div>
-          </div>
-
-          <div className={s.chatBody}>
-            {mensajes.map((msg) => (
-              <div key={msg.id} className={`${s.messageWrapper} ${msg.remitente === 'cliente' ? s.messageRight : s.messageLeft}`}>
-                <div className={s.messageBubble}>
-                  <p>{msg.texto}</p>
-                  <span className={s.messageTime}>{msg.hora}</span>
-                </div>
-              </div>
-            ))}
-            <div ref={mensajesEndRef} />
-          </div>
-
-            <form className={s.chatInputArea} onSubmit={enviarMensaje}>
-              <Tooltip title="Adjuntar archivo"><button type="button" className={s.attachBtn} onClick={handleAttach}>
-                <Paperclip size={20} />
-              </button></Tooltip>
-            <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
-            <input
-              type="text"
-              className={s.chatInput}
-              placeholder="Escribe tu mensaje aquí..."
-              value={nuevoMensaje}
-              onChange={(e) => setNuevoMensaje(e.target.value)}
-            />
-            <Button type="submit" className={s.sendBtn}>
-              <Send size={18} />
-            </Button>
-          </form>
-        </div>
-
         <div className={s.sidebar}>
           <div className={s.widgetCard}>
             <div className={s.widgetHeader}>

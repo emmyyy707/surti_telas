@@ -26,7 +26,6 @@ export const AtencionCliente: React.FC = () => {
   const [isHistorialOpen, setIsHistorialOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
   const [pedidoData, setPedidoData] = useState({ detalle: '', urgencia: 'Estándar' as 'Estándar' | 'Prioritario' });
-  const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [clienteActualId, setClienteActualId] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,74 +41,7 @@ export const AtencionCliente: React.FC = () => {
     }
   }, [clienteActualId, clienteInicial]);
 
-  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
-
-  const mensajesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    mensajesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [mensajes]);
-
   const historialCliente = pedidos.filter(p => p.cliente === clienteActual?.nombre).slice(0, 8);
-
-  const enviarMensaje = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nuevoMensaje.trim()) return;
-    const mensaje: Mensaje = {
-      id: Date.now(),
-      texto: nuevoMensaje,
-      remitente: 'asesor',
-      hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-    setMensajes([...mensajes, mensaje]);
-    setNuevoMensaje('');
-  };
-
-  const handleGenerarPedido = async () => {
-    if (!clienteActual) {
-      toast.error('Selecciona un cliente antes de generar el pedido.');
-      return;
-    }
-    if (!pedidoData.detalle.trim()) {
-      toast.error('Describe las cantidades y referencias del pedido.');
-      return;
-    }
-
-    try {
-      const pedido = await useAppStore.getState().createPedido({
-        cliente: clienteActual.nombre,
-        asesor: asesorActual,
-        fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
-        items: 1,
-        total: '0',
-        estado: 'Pendiente',
-        prioridad: pedidoData.urgencia,
-        observaciones: pedidoData.detalle,
-        itemsList: [],
-      });
-
-      useAppStore.getState().addNotificacion({
-        tipo: 'success',
-        titulo: 'Pedido generado',
-        mensaje: `Pedido ${pedido.id} enviado a bodega para ${clienteActual.nombre}`,
-      });
-      toast.success(`Pedido ${pedido.id} enviado a bodega`);
-      setIsPedidoModalOpen(false);
-      setPedidoData({ detalle: '', urgencia: 'Estándar' });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No fue posible generar el pedido.');
-    }
-  };
-
-  const handleAttach = () => fileInputRef.current?.click();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      toast.success(`Archivo adjunto: ${file.name}`);
-    }
-    e.target.value = '';
-  };
 
   const openPedidoDetail = (pedido: Pedido) => {
     setSelectedPedido(pedido);

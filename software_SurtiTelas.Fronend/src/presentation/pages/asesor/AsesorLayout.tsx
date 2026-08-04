@@ -15,7 +15,7 @@ import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 
 const asesorMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard General', key: 'dashboard' },
-  { icon: Store, label: 'CatÃ¡logo Digital', key: 'catalogo' },
+  { icon: Store, label: 'Catálogo Digital', key: 'catalogo' },
   { icon: MessageSquare, label: 'Servicio al Cliente', key: 'AtencionCliente' },
   { icon: ShoppingBag, label: 'Pedidos', key: 'pedidos' },
   { icon: BadgeDollarSign, label: 'Comisiones', key: 'comisiones' },

@@ -17,6 +17,8 @@ vi.stubGlobal('localStorage', {
   },
 });
 
+Element.prototype.scrollIntoView = () => {};
+
 afterEach(() => {
   cleanup();
 });

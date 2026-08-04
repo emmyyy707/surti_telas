@@ -22,6 +22,7 @@ import { PrismaCompanyConfigRepository } from './modules/company/infrastructure/
 import { receiptSender } from './modules/sales-orders/infrastructure/container/salesOrderContainer';
 import { ReceiptPaymentSubscriber } from './modules/receipts/application/use-cases/ReceiptPaymentSubscriber';
 import { OrderDeliverySubscriber } from './modules/orders/application/use-cases/OrderDeliverySubscriber';
+import { setupChatServer } from './modules/chat/infrastructure/websocket/chatServer';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
@@ -66,6 +67,9 @@ async function bootstrap() {
     const server = app.listen(env.PORT, () => {
       console.log(`🚀 SurtiTelas API en http://localhost:${env.PORT} (${env.NODE_ENV})`);
     });
+
+    setupChatServer(server);
+    console.log('💬 Chat WebSocket server iniciado');
 
     async function shutdown(signal: string) {
       console.log(`${signal} recibido, cerrando servidor...`);

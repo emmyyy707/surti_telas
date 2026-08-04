@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import '../styles/CatalogPage.css';
 import { Tooltip } from '@/shared/components/Tooltip';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
+import { favoritesApi } from '@/infrastructure/api/favoritesApi';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import type { Producto as ProductoCore } from '@/core/types';
 
@@ -131,14 +132,20 @@ const CatalogPage: React.FC = () => {
   const handleApplyFilters = (filters: FilterState) => setFiltrosAvanzados(filters);
   const handleResetFilters = () => { setCategoriaActiva('Todas'); setMarcaActiva('Todas'); setFiltrosAvanzados({ tallas: [], marcas: [], categoriasEspeciales: [] }); setSearchTerm(''); };
   const handleLoadMore = () => pagination.setPage(pagination.page + 1);
-  const toggleFavorite = (producto: Producto) => {
+  const toggleFavorite = async (producto: Producto) => {
+    let exists = false;
     setFavoriteIds(current => {
-      const exists = current.includes(producto.id);
+      exists = current.includes(producto.id);
       const next = exists ? current.filter(id => id !== producto.id) : [...current, producto.id];
       writeFavoriteIds(next);
-      toast.success(exists ? 'Producto eliminado de favoritos' : 'Producto agregado a favoritos');
       return next;
     });
+    try {
+      await favoritesApi.toggle(producto.id);
+      toast.success(exists ? 'Producto eliminado de favoritos' : 'Producto agregado a favoritos');
+    } catch {
+      toast.error('No se pudo sincronizar el favorito con el servidor');
+    }
   };
 
   const countFiltrosActivos = () => { let count = 0; if (categoriaActiva !== 'Todas') count++; if (marcaActiva !== 'Todas') count++; count += filtrosAvanzados.tallas.length; count += filtrosAvanzados.marcas.length; count += filtrosAvanzados.categoriasEspeciales.length; return count; };

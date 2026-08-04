@@ -330,6 +330,7 @@ model Order {
   payments                Payment[]
   receipts                Receipt[]
   deliveries              Delivery[]
+  conversationOrders      ConversationOrder[]
   returns                 Return[]
   historial               OrderHistory[]
   venta                   Sale?
@@ -481,6 +482,20 @@ model Notification {
   @@index([usuarioId, leida])
   @@index([deletedAt])
   @@map("notifications")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  endpoint   String   @unique
+  keysP256dh String   @map("keys_p256dh")
+  keysAuth   String   @map("keys_auth")
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  deletedAt  DateTime? @map("deleted_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // ------------- Webhooks -------------
@@ -799,18 +814,22 @@ model Return {
 
 // ------------- Chat -------------
 model Conversation {
-  id        String   @id @default(cuid())
-  clientId  String   @map("client_id")
-  advisorId String?  @map("advisor_id")
-  status    String   @default("OPEN")
-  subject   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime? @map("deleted_at")
+  id            String   @id @default(cuid())
+  clientId      String   @map("client_id")
+  advisorId     String?  @map("advisor_id")
+  status        String   @default("OPEN")
+  subject       String?
+  lastMessageAt DateTime? @map("last_message_at")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime? @map("deleted_at")
 
   client  User    @relation("ClientConversations", fields: [clientId], references: [id])
   advisor User?   @relation("AdvisorConversations", fields: [advisorId], references: [id])
   messages Message[]
+  conversationOrders ConversationOrder[]
+  surveys ChatSatisfactionSurvey[]
+  tickets ChatTicket[]
 
   @@index([clientId])
   @@index([advisorId])
@@ -824,19 +843,115 @@ model Message {
   id             String   @id @default(cuid())
   conversationId String   @map("conversation_id")
   senderId       String   @map("sender_id")
+  senderRole     String   @default("CLIENTE") @map("sender_role")
   content        String
+  messageType    String   @default("text") @map("message_type")
+  status         String   @default("sent")
   read           Boolean  @default(false)
+  referenceId    String?  @map("reference_id")
+  referenceType  String?  @map("reference_type")
+  quotedMessageId String? @map("quoted_message_id")
+  editedAt       DateTime? @map("edited_at")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   deletedAt      DateTime? @map("deleted_at")
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User          @relation(fields: [senderId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User          @relation(fields: [senderId], references: [id])
+  quotedMessage  Message?      @relation("MessageQuotes", fields: [quotedMessageId], references: [id])
+  quotes         Message[]     @relation("MessageQuotes")
+  attachments    MessageAttachment[]
+  reactions      MessageReaction[]
 
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
   @@index([deletedAt])
   @@map("messages")
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String   @map("message_id")
+  url       String
+  mimeType  String   @map("mime_type")
+  size      Int
+  filename  String
+  createdAt DateTime @default(now())
+  deletedAt DateTime? @map("deleted_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  emoji     String
+  createdAt DateTime @default(now())
+  deletedAt DateTime? @map("deleted_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("message_reactions")
+}
+
+model ConversationOrder {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  orderId        String   @map("order_id")
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, orderId])
+  @@index([conversationId])
+  @@index([orderId])
+  @@map("conversation_orders")
+}
+
+model ChatSatisfactionSurvey {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  userId         String   @map("user_id")
+  userRole       String   @map("user_role")
+  rating         Int
+  comment        String?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([userId])
+  @@map("chat_satisfaction_surveys")
+}
+
+model ChatTicket {
+  id             String      @id @default(cuid())
+  conversationId String      @map("conversation_id")
+  userId         String      @map("user_id")
+  userRole       String      @map("user_role")
+  subject        String
+  description    String?
+  priority       String      @default("MEDIA")
+  status         String      @default("ABIERTO")
+  assignedTo     String?
+  resolvedAt     DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?   @map("deleted_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([userId])
+  @@index([status])
+  @@map("chat_tickets")
 }
 

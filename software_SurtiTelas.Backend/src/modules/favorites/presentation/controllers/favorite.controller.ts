@@ -11,7 +11,14 @@ export const listMyFavorites = async (req: Request, res: Response) => {
   const favoriteRows = await repository.listByUser(req.user!.id);
   const productIds = favoriteRows.map((fav) => fav.productId);
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, estado: 'ACTIVO', publicado: true },
+    where: {
+      OR: [
+        { id: { in: productIds } },
+        { ref: { in: productIds } },
+      ],
+      estado: 'ACTIVO',
+      publicado: true,
+    },
     select: {
       id: true,
       ref: true,
@@ -38,8 +45,13 @@ export const listMyFavorites = async (req: Request, res: Response) => {
       updatedAt: true,
     },
   });
-  const productsMap = new Map(products.map((p) => [p.id, p]));
-  const orderedProducts = productIds.map((id) => productsMap.get(id)).filter(Boolean);
+
+  const productsById = new Map(products.map(p => [p.id, p]));
+  const productsByRef = new Map(products.map(p => [p.ref, p]));
+  const orderedProducts = productIds
+    .map(id => productsById.get(id) || productsByRef.get(id))
+    .filter(Boolean);
+
   return ok(res, orderedProducts);
 };
 
