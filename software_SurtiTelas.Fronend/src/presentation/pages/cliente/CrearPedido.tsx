@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Send, ShoppingCart, AlertCircle, Loader2, Package, FileText } from 'lucide-react';
+import { Plus, Trash2, Save, Send, ShoppingCart, AlertCircle, Loader2, Package, FileText, Tag } from 'lucide-react';
 import s from './CrearPedido.module.css';
 import { FileUpload } from '@/shared/ui/FileUpload';
 import { Button } from '@/shared/ui/Button';
@@ -42,6 +42,12 @@ export const CrearPedido: React.FC = () => {
   const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(0);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  const [isTrustedCustomer, setIsTrustedCustomer] = useState(false);
+  const [diasCredito, setDiasCredito] = useState(0);
+  const [descuentoEspecial, setDescuentoEspecial] = useState(0);
+  const [envioGratis, setEnvioGratis] = useState(false);
+  const [prioridadEnvio, setPrioridadEnvio] = useState<'Normal' | 'Express' | 'Urgente'>('Normal');
+
   const [submitConfirm, setSubmitConfirm] = useState(false);
 
   useEffect(() => {
@@ -55,6 +61,15 @@ export const CrearPedido: React.FC = () => {
         ]);
         setProducts(productsResult);
         setCustomers(customersResult.data ?? []);
+
+        if (isCliente) {
+          try {
+            const trusted = await customersApi.getTrustedStatus();
+            setIsTrustedCustomer(trusted.isTrustedCustomer);
+          } catch {
+            setIsTrustedCustomer(false);
+          }
+        }
       } catch {
         setError('No se pudieron cargar los datos iniciales');
         toast.error('No se pudieron cargar los datos iniciales');
@@ -64,7 +79,17 @@ export const CrearPedido: React.FC = () => {
       }
     };
     void load();
-  }, []);
+  }, [isCliente]);
+
+  useEffect(() => {
+    if (!isCliente && selectedClientId) {
+      const client = customers.find(c => c.id === selectedClientId);
+      setIsTrustedCustomer(client?.isTrustedCustomer ?? false);
+      if (client?.cupoTotal && client.cupoTotal > 0) {
+        setDiasCredito(5);
+      }
+    }
+  }, [selectedClientId, isCliente, customers]);
 
   const selectedClient = useMemo(() => customers.find(c => c.id === selectedClientId) ?? null, [customers, selectedClientId]);
 
@@ -183,6 +208,10 @@ export const CrearPedido: React.FC = () => {
         paymentMethod,
         installments,
         comprobantePago: comprobantePago ?? undefined,
+        diasCredito: isTrustedCustomer && diasCredito > 0 ? diasCredito : undefined,
+        descuentoEspecial: isTrustedCustomer ? descuentoEspecial || undefined : undefined,
+        envioGratis: isTrustedCustomer ? envioGratis : undefined,
+        prioridadEnvio: isTrustedCustomer && prioridadEnvio !== 'Normal' ? prioridadEnvio : undefined,
       });
 
       toast.success(`Pedido ${result.pedido.numero ?? result.pedido.id} creado correctamente`);
@@ -274,10 +303,11 @@ export const CrearPedido: React.FC = () => {
                 value={paymentMethod}
                 onChange={e => setPaymentMethod(e.target.value as typeof paymentMethod)}
               >
-                <option value="CASH">Efectivo</option>
-                <option value="TRANSFER">Transferencia</option>
-                <option value="CARD">Tarjeta</option>
-                <option value="OTHER">Otro</option>
+                 <option value="CASH">Efectivo</option>
+                 <option value="TRANSFER">Transferencia</option>
+                 <option value="CARD">Tarjeta</option>
+                 <option value="OTHER">Otro</option>
+                 {isTrustedCustomer && <option value="INSTALLMENTS">A crédito</option>}
               </select>
             </div>
           </div>
@@ -327,6 +357,62 @@ export const CrearPedido: React.FC = () => {
               placeholder="Notas adicionales del pedido..."
             />
           </div>
+
+          {isTrustedCustomer && (
+            <div className={s.trustedSection}>
+              <h3 className={s.trustedTitle}>
+                <Tag size={16} /> Opciones de cliente de confianza
+              </h3>
+              <div className={s.formRow}>
+                <div className={s.field}>
+                  <label className={s.label}>Días de crédito</label>
+                  <input
+                    className={s.input}
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={diasCredito}
+                    onChange={e => setDiasCredito(Math.max(0, Math.min(60, Number(e.target.value) || 0)))}
+                  />
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Descuento especial (%)</label>
+                  <input
+                    className={s.input}
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="0.01"
+                    value={descuentoEspecial}
+                    onChange={e => setDescuentoEspecial(Math.max(0, Math.min(50, Number(e.target.value) || 0)))}
+                  />
+                </div>
+              </div>
+              <div className={s.formRow}>
+                <div className={s.field} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 24 }}>
+                  <input
+                    type="checkbox"
+                    id="envioGratis"
+                    checked={envioGratis}
+                    onChange={e => setEnvioGratis(e.target.checked)}
+                  />
+                  <label htmlFor="envioGratis" className={s.label} style={{ margin: 0 }}>Envío gratis</label>
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Prioridad de envío</label>
+                  <select
+                    className={s.select}
+                    value={prioridadEnvio}
+                    onChange={e => setPrioridadEnvio(e.target.value as typeof prioridadEnvio)}
+                  >
+                    <option value="Normal">Normal</option>
+                    <option value="Express">Express</option>
+                    <option value="Urgente">Urgente</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className={s.section}>
@@ -496,6 +582,11 @@ export const CrearPedido: React.FC = () => {
         paymentMethod={paymentMethod}
         installments={installments}
         comprobantePago={comprobantePago}
+        isTrustedCustomer={isTrustedCustomer}
+        diasCredito={diasCredito > 0 ? diasCredito : undefined}
+        descuentoEspecial={descuentoEspecial > 0 ? descuentoEspecial : undefined}
+        envioGratis={envioGratis}
+        prioridadEnvio={prioridadEnvio}
       />
 
       <ConfirmationModal
@@ -527,6 +618,11 @@ interface PreviewModalProps {
   paymentMethod: string;
   installments: number;
   comprobantePago: File | null;
+  isTrustedCustomer: boolean;
+  diasCredito?: number;
+  descuentoEspecial?: number;
+  envioGratis?: boolean;
+  prioridadEnvio?: 'Normal' | 'Express' | 'Urgente';
 }
 
 const PreviewModal: React.FC<PreviewModalProps> = ({
@@ -543,6 +639,11 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
   paymentMethod,
   installments,
   comprobantePago,
+  isTrustedCustomer,
+  diasCredito,
+  descuentoEspecial,
+  envioGratis,
+  prioridadEnvio,
 }) => {
   const metodoLabels: Record<string, string> = {
     CASH: 'Efectivo',
@@ -558,11 +659,19 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
           <h4 className={s.previewTitle}>Cliente</h4>
           <p>{selectedClient?.nombre ?? 'No seleccionado'}</p>
         </div>
-        <div className={s.previewSection}>
+         <div className={s.previewSection}>
           <h4 className={s.previewTitle}>Pago</h4>
           <p>Método: {metodoLabels[paymentMethod] ?? paymentMethod}</p>
           <p>Cuotas: {installments}</p>
           <p>Prioridad: {prioridad}</p>
+          {isTrustedCustomer && (
+            <>
+              {diasCredito && diasCredito > 0 && <p>Días de crédito: {diasCredito}</p>}
+              {descuentoEspecial && descuentoEspecial > 0 && <p>Descuento especial: {descuentoEspecial}%</p>}
+              {envioGratis && <p>Envío gratis: Sí</p>}
+              {prioridadEnvio && prioridadEnvio !== 'Normal' && <p>Envío: {prioridadEnvio}</p>}
+            </>
+          )}
         </div>
         <div className={s.previewSection}>
           <h4 className={s.previewTitle}>Productos</h4>

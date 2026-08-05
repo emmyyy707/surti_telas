@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, User } from 'lucide-react';
+import { Plus, Edit, Trash2, User, ShieldCheck } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '../../../shared/ui/Badge';
 import { Button } from '../../../shared/ui/Button';
@@ -8,12 +8,12 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import s from './Clientes.module.css';
-import { authApi, type BackendAuthUser, type BackendRole, type CreateUserRequest } from '@/infrastructure/api/authApi';
+import { authApi, type BackendAuthUser, type CreateUserRequest } from '@/infrastructure/api/authApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
 import type { Cliente } from '@/core/types';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 
-interface ClienteUI extends BackendAuthUser {
+  interface ClienteUI extends BackendAuthUser {
   telefono?: string | null;
   nit?: string | null;
   isTrustedCustomer?: boolean;
@@ -23,23 +23,11 @@ interface ClienteUI extends BackendAuthUser {
   direccion?: string | null;
   tipoDocumento?: string | null;
   numeroDocumento?: string | null;
+  cupoTotal?: number;
+  cupoUsado?: number;
+  deudaVencida?: number;
+  pedidosCount?: number;
 }
-
-const toClienteUI = (c: Cliente): ClienteUI => ({
-  id: c.id,
-  nombre: c.nombre,
-  email: c.email ?? '',
-  role: 'CLIENTE' as BackendRole,
-  telefono: c.tel ?? null,
-  nit: c.nit ?? null,
-  isTrustedCustomer: c.isTrustedCustomer ?? false,
-  estadoCliente: c.estado ?? 'Activo',
-  customerId: c.id,
-  apellidos: c.apellidos ?? null,
-  direccion: c.direccion ?? null,
-  tipoDocumento: c.tipoDocumento ?? null,
-  numeroDocumento: c.numeroDocumento ?? null,
-});
 
 export const AdminClientes: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -58,7 +46,8 @@ export const AdminClientes: React.FC = () => {
   const [tipoDocumento, setTipoDocumento] = useState('');
   const [numeroDocumento, setNumeroDocumento] = useState('');
   const [isTrustedCustomer, setIsTrustedCustomer] = useState(false);
-  const [estado, setEstado] = useState('Activo');
+  const [showTrustedOnly, setShowTrustedOnly] = useState(false);
+  const [estado, setEstado] = useState<'Activo' | 'Inactivo'>('Activo');
   const [password, setPassword] = useState('');
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -83,16 +72,20 @@ export const AdminClientes: React.FC = () => {
           telefono: user?.telefono ?? c.tel ?? null,
           nit: user?.numeroDocumento ?? c.nit ?? null,
           isTrustedCustomer: c.isTrustedCustomer ?? false,
-          estadoCliente: c.estado === 'INACTIVO' ? 'Inactivo' : 'Activo',
+          estadoCliente: c.estado === 'Inactivo' ? 'Inactivo' : 'Activo',
           customerId: c.id,
           apellidos: c.apellidos ?? user?.apellidos ?? null,
           direccion: user?.direccion ?? c.ciudad ?? null,
           tipoDocumento: user?.tipoDocumento ?? null,
           numeroDocumento: user?.numeroDocumento ?? c.nit ?? null,
+          cupoTotal: c.cupoTotal,
+          cupoUsado: c.cupoUsado,
+          deudaVencida: c.deudaVencida,
+          pedidosCount: c.pedidos,
         } as ClienteUI;
       });
       setItems(clientesConDatos);
-    } catch (e) {
+    } catch (_e) {
       setError('No se pudo cargar la lista de clientes');
     } finally {
       setLoading(false);
@@ -103,10 +96,13 @@ export const AdminClientes: React.FC = () => {
     void reload();
   }, []);
 
-  const filteredClientes = items.filter((c) =>
-    c.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredClientes = items.filter((c) => {
+    if (showTrustedOnly && !c.isTrustedCustomer) return false;
+    return (
+      c.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   const openCreate = () => {
     setSelectedCliente(null);
@@ -320,6 +316,14 @@ export const AdminClientes: React.FC = () => {
             <div className={s.detailItem}><span className={s.detailLabel}>NIT</span><span>{item.nit || '—'}</span></div>
             <div className={s.detailItem}><span className={s.detailLabel}>Rol</span><span>{item.role}</span></div>
             <div className={s.detailItem}><span className={s.detailLabel}>Cliente de confianza</span><span>{item.isTrustedCustomer ? 'Sí' : 'No'}</span></div>
+            {item.isTrustedCustomer && (
+              <>
+                <div className={s.detailItem}><span className={s.detailLabel}>Cupo total</span><span>${(item.cupoTotal ?? 0).toLocaleString('es-CO')}</span></div>
+                <div className={s.detailItem}><span className={s.detailLabel}>Cupo usado</span><span>${(item.cupoUsado ?? 0).toLocaleString('es-CO')}</span></div>
+                <div className={s.detailItem}><span className={s.detailLabel}>Deuda vencida</span><span>${(item.deudaVencida ?? 0).toLocaleString('es-CO')}</span></div>
+                <div className={s.detailItem}><span className={s.detailLabel}>Pedidos</span><span>{item.pedidosCount ?? 0}</span></div>
+              </>
+            )}
           </div>
         </div>
         <ModalFooter
@@ -356,6 +360,14 @@ export const AdminClientes: React.FC = () => {
           debounceMs={100}
           minChars={0}
         />
+        <label className={s.trustedFilterLabel} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={showTrustedOnly}
+            onChange={(e) => setShowTrustedOnly(e.target.checked)}
+          />
+          <ShieldCheck size={16} /> Clientes de confianza
+        </label>
       </div>
 
       <DataTable enableExport={false} enableRowSelection={false}
@@ -433,7 +445,7 @@ export const AdminClientes: React.FC = () => {
           <div className={s.formRow}>
             <div className={s.field}>
               <label className={s.label} htmlFor="estado">Estado</label>
-              <select id="estado" className={s.input} name="estado" value={estado} onChange={(e) => setEstado(e.target.value)}>
+              <select id="estado" className={s.input} name="estado" value={estado} onChange={(e) => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
                 <option value="Activo">Activo</option>
                 <option value="Inactivo">Inactivo</option>
               </select>

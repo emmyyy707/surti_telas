@@ -23,6 +23,10 @@ export interface OrderDTO {
   comprobantePagoUrl?: string;
   createdAt: string;
   updatedAt: string;
+  diasCredito?: number;
+  descuentoEspecial?: number;
+  envioGratis?: boolean;
+  prioridadEnvio?: 'Normal' | 'Express' | 'Urgente';
 }
 
 export interface CreateOrderInput {
@@ -32,8 +36,12 @@ export interface CreateOrderInput {
   prioridad?: Pedido['prioridad'];
   observaciones?: string;
   comprobantePago?: File;
-  paymentMethod?: 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER';
+  paymentMethod?: 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER' | 'INSTALLMENTS';
   installments?: number;
+  diasCredito?: number;
+  descuentoEspecial?: number;
+  envioGratis?: boolean;
+  prioridadEnvio?: 'Normal' | 'Express' | 'Urgente';
 }
 
 function formatCurrency(value: number): string {
@@ -68,7 +76,7 @@ export function toPedido(dto: OrderDTO): Pedido {
     fecha: formatDate(dto.fecha),
     items: dto.items,
     total: formatCurrency(dto.total),
-    estado: ORDER_STATUS_FRONTEND_MAP[dto.estado] ?? dto.estado,
+    estado: (ORDER_STATUS_FRONTEND_MAP as Record<string, Pedido['estado']>)[dto.estado] ?? dto.estado,
     prioridad: dto.prioridad,
     observaciones: dto.observaciones,
     itemsList: dto.itemsList ?? [],
@@ -76,6 +84,10 @@ export function toPedido(dto: OrderDTO): Pedido {
     asesorId: dto.asesorId,
     comprobantePagoUrl: dto.comprobantePagoUrl,
     createdAt: dto.createdAt,
+    diasCredito: dto.diasCredito,
+    descuentoEspecial: dto.descuentoEspecial,
+    envioGratis: dto.envioGratis,
+    prioridadEnvio: dto.prioridadEnvio,
   };
 }
 
@@ -145,6 +157,10 @@ export const ordersApi = {
       observaciones: observaciones || undefined,
       paymentMethod: input.paymentMethod,
       installments: input.installments,
+      diasCredito: input.diasCredito,
+      descuentoEspecial: input.descuentoEspecial,
+      envioGratis: input.envioGratis,
+      prioridadEnvio: input.prioridadEnvio,
     };
     if (input.clienteId) {
       body.clienteId = input.clienteId;

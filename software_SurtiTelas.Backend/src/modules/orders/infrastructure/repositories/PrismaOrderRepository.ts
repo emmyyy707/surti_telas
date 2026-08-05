@@ -3,7 +3,6 @@ import { BadRequestError, NotFoundError } from '../../../../shared/domain/errors
 import { Order, type OrderItem, type OrderPriority, type OrderStatus, type OrderFlow } from '../../domain/entities/Order';
 import type { OrderFilters, OrderRepository, CreateOrderInput } from '../../domain/repositories/OrderRepository';
 import { orderPriorityToDb, orderStatusToDb, toOrderData, type OrderRow } from '../mappers/OrderMapper';
-
 const include = {
   cliente: true,
   asesor: true,
@@ -11,14 +10,6 @@ const include = {
   comprobantePagoCargadoPor: true,
   items: true,
 } satisfies Prisma.OrderInclude;
-
-type PrismaOrderRelation = {
-  cliente: { nombre: string };
-  asesor: { nombre: string };
-  usuarioValidacion: { nombre: string } | null;
-  comprobantePagoCargadoPor: { nombre: string } | null;
-  items: { cantidad: number }[];
-};
 
 export class PrismaOrderRepository implements OrderRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -210,11 +201,11 @@ export class PrismaOrderRepository implements OrderRepository {
       const itemsCount = items.reduce((sum, i) => sum + i.cantidad, 0);
 
       const row = await tx.order.create({
-        data: {
-          numero,
-          clienteId,
-          clienteNombre: customer.nombre,
-          asesorId: asesorId ?? undefined,
+      data: {
+        numero,
+        clienteId: clienteId!,
+        clienteNombre: customer.nombre,
+          asesorId: asesorId ?? '',
           asesorNombre: asesor.nombre,
           tipoFlujo: tipoFlujo as OrderFlow,
           fecha: input.fecha ? new Date(input.fecha) : new Date(),
@@ -228,6 +219,10 @@ export class PrismaOrderRepository implements OrderRepository {
           observaciones,
           comprobantePagoUrl: comprobantePagoUrl ?? null,
           medioPago: paymentMethod ?? undefined,
+          diasCredito: input.diasCredito,
+          descuentoEspecial: input.descuentoEspecial,
+          envioGratis: input.envioGratis,
+          prioridadEnvio: input.prioridadEnvio,
           items: {
             create: items.map((i) => ({
               productId: i.productId,
@@ -240,7 +235,7 @@ export class PrismaOrderRepository implements OrderRepository {
         include,
       });
 
-      return new Order(toOrderData(row));
+      return new Order(toOrderData(row as unknown as OrderRow));
     });
   }
 
@@ -293,43 +288,6 @@ export class PrismaOrderRepository implements OrderRepository {
       include,
     });
     return new Order(toOrderData(updated));
-  }
-
-  async assignDomiciliario(id: string, domiciliarioId: string): Promise<Order> {
-    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
-    if (!existing) throw new NotFoundError('Pedido no encontrado');
-
-    const order = new Order(toOrderData(existing));
-    if (!order.canBeAssigned()) {
-      throw new BadRequestError('El pedido no puede ser asignado a domiciliario en su estado actual');
-    }
-
-    const domiciliario = await this.prisma.user.findFirst({ where: { id: domiciliarioId, deletedAt: null, role: 'DOMICILIARIO' } });
-    if (!domiciliario) throw new BadRequestError('Domiciliario no encontrado');
-
-    const delivery = await this.prisma.delivery.findFirst({ where: { orderId: id, deletedAt: null } });
-    if (delivery) {
-      await this.prisma.delivery.update({
-        where: { id: delivery.id },
-        data: { domiciliarioId, estado: 'ASIGNADO' },
-      });
-    } else {
-      await this.prisma.delivery.create({
-        data: {
-          orderId: id,
-          domiciliarioId,
-          estado: 'ASIGNADO',
-          direccion: order.cliente || 'Dirección cliente',
-        },
-      });
-    }
-
-    const updatedOrder = await this.prisma.order.update({
-      where: { id },
-        data: { estado: orderStatusToDb('Enviado') },
-      include,
-    });
-    return new Order(toOrderData(updatedOrder));
   }
 
   async updateValidationResult(id: string, data: {
@@ -421,7 +379,7 @@ export class PrismaOrderRepository implements OrderRepository {
         await tx.receipt.update({
           where: { id: receipt.id },
           data: {
-            estadoEnvio: estadoEnvio as any,
+            estadoEnvio: estadoEnvio as string,
             fechaEnvio,
             intentosEnvio: intentos,
             ultimoErrorEnvio: ultimoError,
@@ -429,7 +387,7 @@ export class PrismaOrderRepository implements OrderRepository {
         });
       }
 
-      return tx.order.findFirst({ where: { id, deletedAt: null }, include }) as any as OrderRow;
+      return tx.order.findFirst({ where: { id, deletedAt: null }, include }) as unknown as OrderRow;
     });
 
     return new Order(toOrderData(updated));

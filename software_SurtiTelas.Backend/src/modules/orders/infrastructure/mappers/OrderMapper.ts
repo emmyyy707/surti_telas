@@ -1,5 +1,5 @@
 import { OrderPriority as DbPriority, OrderStatus as DbStatus } from '@prisma/client';
-import type { OrderData, OrderItem, OrderPriority, OrderStatus, OrderFlow } from '../../domain/entities/Order';
+import type { OrderData, OrderItem, OrderPriority, OrderStatus, OrderFlow, EnvioPrioridad } from '../../domain/entities/Order';
 
 const STATUS_TO_DB: Record<OrderStatus, DbStatus> = {
   Pendiente: 'PENDIENTE',
@@ -71,6 +71,10 @@ export type OrderRow = {
   comprobantePagoEstado: string | null;
   comprobantePagoObservaciones: string | null;
   items: Array<{ productId: string | null; nombre: string; precio: { toNumber(): number }; cantidad: number }>;
+  diasCredito: number | null;
+  descuentoEspecial: { toNumber(): number } | null;
+  envioGratis: boolean | null;
+  prioridadEnvio: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -110,6 +114,10 @@ export function toOrderData(row: OrderRow): OrderData {
     comprobantePagoCargadoPorNombre: row.comprobantePagoCargadoPor?.nombre,
     comprobantePagoEstado: row.comprobantePagoEstado ?? undefined,
     comprobantePagoObservaciones: row.comprobantePagoObservaciones ?? undefined,
+    diasCredito: row.diasCredito ?? undefined,
+    descuentoEspecial: row.descuentoEspecial ? Number(row.descuentoEspecial.toNumber()) : undefined,
+    envioGratis: row.envioGratis ?? undefined,
+    prioridadEnvio: (row.prioridadEnvio ?? undefined) as EnvioPrioridad | undefined,
     itemsList: row.items.map(
       (i): OrderItem => ({
         productId: i.productId ?? undefined,

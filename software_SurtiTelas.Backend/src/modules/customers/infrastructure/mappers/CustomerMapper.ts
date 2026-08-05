@@ -22,7 +22,7 @@ export function toCustomerData(row: CustomerRow): CustomerData {
   return {
     id: row.id,
     nombre: row.nombre,
-    apellidos: row.apellidos ?? null,
+    apellidos: row.apellidos ?? undefined,
     email: row.email ?? undefined,
     ciudad: row.ciudad ?? '',
     tel: row.telefono ?? '',

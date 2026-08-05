@@ -8,6 +8,7 @@ export type OrderStatus =
 
 export type OrderPriority = 'Estándar' | 'Prioritario';
 export type OrderFlow = 'PRODUCCION' | 'VENTAS';
+export type EnvioPrioridad = 'Normal' | 'Express' | 'Urgente';
 
 export type RejectionReason =
   | 'COMPROBANTE_FALSO'
@@ -60,6 +61,10 @@ export interface OrderData {
   comprobantePagoObservaciones?: string;
   usuarioValidacionNombre?: string;
   comprobantePagoCargadoPorNombre?: string;
+  diasCredito?: number;
+  descuentoEspecial?: number;
+  envioGratis?: boolean;
+  prioridadEnvio?: EnvioPrioridad;
   itemsList?: OrderItem[];
   createdAt?: string;
   updatedAt?: string;
@@ -99,6 +104,10 @@ export class Order {
   readonly comprobantePagoCargadoPorNombre?: string;
   readonly asesorTelefono?: string;
   readonly asesorEmail?: string;
+  readonly diasCredito?: number;
+  readonly descuentoEspecial?: number;
+  readonly envioGratis?: boolean;
+  readonly prioridadEnvio?: EnvioPrioridad;
   readonly itemsList?: OrderItem[];
   readonly createdAt?: string;
   readonly updatedAt?: string;
@@ -139,6 +148,10 @@ export class Order {
     this.comprobantePagoCargadoPorNombre = data.comprobantePagoCargadoPorNombre;
     this.asesorTelefono = data.asesorTelefono;
     this.asesorEmail = data.asesorEmail;
+    this.diasCredito = data.diasCredito;
+    this.descuentoEspecial = data.descuentoEspecial;
+    this.envioGratis = data.envioGratis;
+    this.prioridadEnvio = data.prioridadEnvio;
     this.itemsList = data.itemsList;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
@@ -250,6 +263,10 @@ export class Order {
 
   paymentProofRequired(): boolean {
     return this.estado === 'Pendiente';
+  }
+
+  hasPaymentProof(): boolean {
+    return !!this.comprobantePagoUrl;
   }
 
   receiptRequired(): boolean {

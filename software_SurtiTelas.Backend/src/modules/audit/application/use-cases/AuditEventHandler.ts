@@ -1,3 +1,4 @@
+
 import { prisma } from '../../../../config/database';
 import { logger } from '../../../../shared/infrastructure/logger';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
@@ -38,7 +39,8 @@ export function registerAuditEventHandlers(): void {
             referenciaId: (payload.resourceId as string | undefined) ?? '',
             ip: payload.ipAddress as string | undefined,
             userAgent: payload.userAgent as string | undefined,
-            metadata,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            metadata: metadata as any,
           },
         });
       } catch (err) {

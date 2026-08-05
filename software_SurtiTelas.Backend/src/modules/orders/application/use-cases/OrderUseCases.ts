@@ -2,6 +2,7 @@ import { NotFoundError, BadRequestError } from '../../../../shared/domain/errors
 import type { CustomerRepository } from '../../../customers/domain/repositories/CustomerRepository';
 import type { ProductRepository } from '../../../catalog/domain/repositories/ProductRepository';
 import type { OrderFilters, OrderRepository, CreateOrderInput } from '../../domain/repositories/OrderRepository';
+import { type OrderRow } from '../../infrastructure/mappers/OrderMapper';
 import { Order, type OrderItem, type OrderPriority, type OrderStatus } from '../../domain/entities/Order';
 import type { EventBus } from '../../../../shared/application/events';
 import { PrismaClient, StockStatus } from '@prisma/client';
@@ -473,7 +474,7 @@ export class ApproveOrder {
   async execute(id: string, usuarioValidacionId: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Pedido no encontrado');
-    const order = new Order(toOrderData(existing as any));
+    const order = new Order(toOrderData(existing as unknown as OrderRow));
     if (!order.canBeAccepted()) {
       throw new BadRequestError('El pedido no puede ser aceptado en su estado actual');
     }
@@ -509,7 +510,7 @@ export class RejectOrder {
   async execute(id: string, usuarioValidacionId: string, razonRechazo: string, observacionesRechazo?: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Pedido no encontrado');
-    const order = new Order(toOrderData(existing as any));
+    const order = new Order(toOrderData(existing as unknown as OrderRow));
     if (!order.canBeRejected()) {
       throw new BadRequestError('El pedido no puede ser rechazado en su estado actual');
     }
@@ -543,7 +544,7 @@ export class RejectOrder {
 export class UploadPaymentProof {
   constructor(private readonly repo: OrderRepository, private readonly eventBus?: EventBus) {}
   async execute(id: string, data: { url: string; nombreOriginal: string; mime: string; tamaño: number; cargadoPorId: string; estado: string; observaciones?: string }, requestId?: string) {
-    const updated = await this.repo.uploadPaymentProof(id, data);
+    const updated = await this.repo.updatePaymentProof(id, data);
     if (this.eventBus) {
       this.eventBus.publish(
         new OrderStatusUpdatedEvent({
@@ -567,7 +568,7 @@ export class CancelOrder {
   async execute(id: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Pedido no encontrado');
-    const order = new Order(toOrderData(existing as any));
+    const order = new Order(toOrderData(existing as unknown as OrderRow));
     if (!order.canBeCanceled()) {
       throw new BadRequestError('El pedido no puede ser cancelado en su estado actual');
     }
@@ -594,3 +595,4 @@ export class CancelOrder {
     return updated;
   }
 }
+

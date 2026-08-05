@@ -89,6 +89,10 @@ export interface Pedido {
   asesorId?: string;
   comprobantePagoUrl?: string;
   createdAt?: string;
+  diasCredito?: number;
+  descuentoEspecial?: number;
+  envioGratis?: boolean;
+  prioridadEnvio?: 'Normal' | 'Express' | 'Urgente';
 }
 
 export interface OrdenProduccion {

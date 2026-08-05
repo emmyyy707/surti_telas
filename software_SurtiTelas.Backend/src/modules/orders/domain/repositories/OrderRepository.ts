@@ -1,4 +1,4 @@
-import type { Order, OrderItem, OrderPriority, OrderStatus, OrderFlow } from '../entities/Order';
+import type { Order, OrderItem, OrderPriority, OrderStatus, OrderFlow, EnvioPrioridad } from '../entities/Order';
 
 export interface CreateOrderInput {
   clienteId?: string;
@@ -14,6 +14,10 @@ export interface CreateOrderInput {
   impuestos?: number;
   descuentos?: number;
   comprobantePagoUrl?: string;
+  diasCredito?: number;
+  descuentoEspecial?: number;
+  envioGratis?: boolean;
+  prioridadEnvio?: EnvioPrioridad;
 }
 
 export interface OrderFilters {

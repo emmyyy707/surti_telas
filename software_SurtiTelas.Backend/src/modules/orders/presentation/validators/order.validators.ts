@@ -17,12 +17,16 @@ export const CreateOrderSchema = z.object({
     .optional(),
   prioridad: z.enum(['Estándar', 'Prioritario']).optional(),
   observaciones: z.string().optional(),
-  paymentMethod: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER']).optional(),
+  paymentMethod: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER', 'INSTALLMENTS']).optional(),
   installments: z.coerce.number().int().positive().max(12).optional(),
   subtotal: PositiveNumberSchema.optional(),
   impuestos: z.number().min(0).optional(),
   descuentos: z.number().min(0).optional(),
   comprobantePagoUrl: z.string().optional(),
+  diasCredito: z.coerce.number().int().min(0).max(60).optional(),
+  descuentoEspecial: z.number().min(0).max(100).optional(),
+  envioGratis: z.boolean().optional(),
+  prioridadEnvio: z.enum(['Normal', 'Express', 'Urgente']).optional(),
 });
 
 export const UpdateOrderStatusSchema = z.object({

@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import { OptionalPhoneSchema, OptionalNitSchema, NonNegativeNumberSchema } from '../../../../shared/presentation/validators';
 
-const trimString = (val: unknown) => (typeof val === 'string' ? val.trim() : val);
-const nullableTrimString = (val: unknown) => (typeof val === 'string' ? val.trim() : undefined);
-
 const BaseCustomerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
   apellidos: z.string().min(1, 'El apellido es obligatorio'),
+  email: z.string().email('Email inválido').optional(),
   ciudad: z.string().min(1).optional(),
   telefono: OptionalPhoneSchema,
   tel: z.string().min(1).optional(),
@@ -23,10 +21,9 @@ export const CreateCustomerSchema = BaseCustomerSchema.transform((data) => ({
   ...data,
   telefono: data.telefono ?? data.tel,
   apellidos: (data.apellidos ?? '').trim(),
-  ciudad: data.ciudad?.trim() ?? undefined,
-  email: data.email?.trim() ?? undefined,
-  nit: data.nit?.trim() ?? undefined,
-  telefono: data.telefono?.trim() ?? undefined,
+  ciudad: data.ciudad?.trim() ?? '',
+  email: data.email?.trim(),
+  nit: data.nit?.trim(),
   direccion: (data as Record<string, unknown>).direccion ? String((data as Record<string, unknown>).direccion).trim() : undefined,
 }));
 
@@ -36,10 +33,9 @@ export const UpdateCustomerSchema = BaseCustomerSchema.partial()
     ...data,
     telefono: data.telefono ?? data.tel,
     apellidos: (data.apellidos ?? '').trim(),
-    ciudad: data.ciudad?.trim() ?? undefined,
-    email: data.email?.trim() ?? undefined,
-    nit: data.nit?.trim() ?? undefined,
-    telefono: data.telefono?.trim() ?? undefined,
+    ciudad: data.ciudad?.trim(),
+    email: data.email?.trim(),
+    nit: data.nit?.trim(),
     direccion: (data as Record<string, unknown>).direccion ? String((data as Record<string, unknown>).direccion).trim() : undefined,
   }));
 

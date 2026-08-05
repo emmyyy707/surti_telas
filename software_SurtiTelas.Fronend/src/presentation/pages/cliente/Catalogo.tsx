@@ -1,23 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Send, Package, User, CheckCircle2, Clock, CreditCard, FileText, Archive } from 'lucide-react';
+import { Package, CheckCircle2, Clock, CreditCard, FileText, Archive, MessageCircle } from 'lucide-react';
 import s from './Catalogo.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { DetailModal } from '@/shared/ui/DetailModal';
 import { Badge } from '@/shared/ui/Badge';
-import { Tooltip } from '@/shared/components/Tooltip';
-import { ordersApi } from '@/infrastructure/api/ordersApi';
-import { customersApi } from '@/infrastructure/api/customersApi';
-import { useAuthStore } from '@/core/stores/authStore';
-
-interface Mensaje {
-  id: number;
-  texto: string;
-  remitente: 'asesor' | 'cliente';
-  hora: string;
-}
 
 interface PedidoActivo {
   id: string;
@@ -32,12 +21,20 @@ export const CatalogoCliente: React.FC = () => {
   const [isPedidoModalOpen, setIsPedidoModalOpen] = useState(false);
   const [pedidoData, setPedidoData] = useState({ detalle: '', urgencia: 'Estándar' });
   const [selectedPedido, setSelectedPedido] = useState<PedidoActivo | null>(null);
-  const [misPedidos, setMisPedidos] = useState<PedidoActivo[]>([]);
-  const [saldoPendiente, setSaldoPendiente] = useState<number | null>(null);
-  const [asesorNombre, setAsesorNombre] = useState<string>('Tu asesora de cuenta');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [misPedidos] = useState<PedidoActivo[]>([]);
+  const saldoPendiente = 0;
 
   const pedidosActivos = misPedidos;
+
+  const handleCrearPedido = () => {
+    if (!pedidoData.detalle.trim()) {
+      toast.error('Debes describir tu requerimiento');
+      return;
+    }
+    setIsPedidoModalOpen(false);
+    setPedidoData({ detalle: '', urgencia: 'Estándar' });
+    toast.success('Pedido solicitado, un asesor te contactará pronto');
+  };
 
   return (
     <div className={s.container}>

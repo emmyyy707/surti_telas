@@ -325,7 +325,11 @@ model Order {
   comprobantePagoCargadoPorId String?  @map("comprobante_pago_cargado_por_id")
   comprobantePagoCargadoPor User?     @relation("OrderComprobanteCargadoPor", fields: [comprobantePagoCargadoPorId], references: [id])
   comprobantePagoEstado   String?      @map("comprobante_pago_estado")
-  comprobantePagoObservaciones String? @map("comprobante_pago_observaciones")
+  comprobantePagoObservaciones String?      @map("comprobante_pago_observaciones")
+  diasCredito                Int?           @map("dias_credito") @default(0)
+  descuentoEspecial          Decimal?       @map("descuento_especial") @db.Decimal(5, 2) @default(0)
+  envioGratis                Boolean?       @map("envio_gratis") @default(false)
+  prioridadEnvio             String?        @map("prioridad_envio") @default("Normal")
   items                   OrderItem[]
   production              ProductionOrder?
   commissions             Commission[]

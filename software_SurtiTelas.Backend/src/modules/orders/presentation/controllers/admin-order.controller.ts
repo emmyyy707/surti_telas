@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
-import { BadRequestError, ForbiddenError, NotFoundError } from '../../../../shared/domain/errors';
-import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
+import { NotFoundError } from '../../../../shared/domain/errors';
+import { ok } from '../../../../shared/presentation/http/HttpResponse';
 import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { z } from 'zod';
-import { prisma } from '../../../../config/database';
-import { orderUseCases } from '../../infrastructure/container/orderContainer';
-import { canView, canUpdateStatus } from '../../application/policies/orderPolicy';
-import { SalesOrderUseCases } from '../../../sales-orders/infrastructure/container/salesOrderContainer';
+import { Prisma } from "@prisma/client"; import { prisma } from '../../../../config/database';
 
 const AdminOrderFiltersSchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
@@ -58,13 +55,15 @@ export const getAdminOrders = async (req: Request, res: Response) => {
     ];
   }
 
-  const skip = (filters.page - 1) * filters.limit;
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 10;
+  const skip = (page - 1) * limit;
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
       where,
       skip,
-      take: filters.limit,
+      take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
         cliente: true,
@@ -75,14 +74,13 @@ export const getAdminOrders = async (req: Request, res: Response) => {
     }),
     prisma.order.count({ where }),
   ]);
-
-  const totalPages = Math.ceil(total / filters.limit);
+  
   const data = orders.map((o) => ({
     id: o.id,
     numero: o.numero,
-    cliente: o.cliente,
+    cliente: o.cliente?.nombre ?? '',
     clienteId: o.clienteId,
-    asesor: o.asesor,
+    asesor: o.asesor?.nombre ?? '',
     asesorId: o.asesorId,
     fecha: o.createdAt.toISOString(),
     estado: o.estado,
@@ -90,16 +88,15 @@ export const getAdminOrders = async (req: Request, res: Response) => {
     observaciones: o.observaciones,
     total: o.total,
     items: o.items,
-    itemsList: o.itemsList,
+    itemsList: o.items,
     medioPago: o.medioPago,
-    estadoPago: o.estadoPago,
-    comprobantePago: o.comprobantePago,
+    comprobantePagoUrl: o.comprobantePagoUrl,
     usuarioValidacionId: o.usuarioValidacionId,
     fechaValidacion: o.fechaValidacion,
     razonRechazo: o.razonRechazo,
   }));
 
-  return ok(res, buildApiPaginatedResponse(data, total, filters.page, filters.limit));
+  return ok(res, buildApiPaginatedResponse(data, total, page, limit));
 };
 
 export const getAdminOrderById = async (req: Request, res: Response) => {
@@ -122,9 +119,9 @@ export const getAdminOrderById = async (req: Request, res: Response) => {
   return ok(res, {
     id: order.id,
     numero: order.numero,
-    cliente: order.cliente,
+    cliente: order.cliente?.nombre ?? '',
     clienteId: order.clienteId,
-    asesor: order.asesor,
+    asesor: order.asesor?.nombre ?? '',
     asesorId: order.asesorId,
     fecha: order.createdAt.toISOString(),
     estado: order.estado,
@@ -132,10 +129,9 @@ export const getAdminOrderById = async (req: Request, res: Response) => {
     observaciones: order.observaciones,
     total: order.total,
     items: order.items,
-    itemsList: order.itemsList,
+    itemsList: order.items,
     medioPago: order.medioPago,
-    estadoPago: order.estadoPago,
-    comprobantePago: order.comprobantePago,
+    comprobantePagoUrl: order.comprobantePagoUrl,
     usuarioValidacionId: order.usuarioValidacionId,
     fechaValidacion: order.fechaValidacion,
     razonRechazo: order.razonRechazo,
@@ -152,16 +148,16 @@ export const updateOrderAdmin = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateOrderAdminSchema, req.body);
   const updated = await prisma.order.update({
     where: { id: req.params.id },
-    data: changes,
-    include: { cliente: true, asesor: true },
+    data: changes as Prisma.OrderUpdateInput,
+    include: { cliente: true, asesor: true, items: true },
   });
 
   return ok(res, {
     id: updated.id,
     numero: updated.numero,
-    cliente: updated.cliente,
+    cliente: updated.cliente?.nombre ?? '',
     clienteId: updated.clienteId,
-    asesor: updated.asesor,
+    asesor: updated.asesor?.nombre ?? '',
     asesorId: updated.asesorId,
     fecha: updated.createdAt.toISOString(),
     estado: updated.estado,
@@ -169,10 +165,9 @@ export const updateOrderAdmin = async (req: Request, res: Response) => {
     observaciones: updated.observaciones,
     total: updated.total,
     items: updated.items,
-    itemsList: updated.itemsList,
+    itemsList: updated.items,
     medioPago: updated.medioPago,
-    estadoPago: updated.estadoPago,
-    comprobantePago: updated.comprobantePago,
+    comprobantePagoUrl: updated.comprobantePagoUrl,
     usuarioValidacionId: updated.usuarioValidacionId,
     fechaValidacion: updated.fechaValidacion,
     razonRechazo: updated.razonRechazo,
@@ -203,7 +198,7 @@ export const getAdminSalesSummary = async (req: Request, res: Response) => {
     if (parsed.hasta) (where.fecha as Record<string, Date>).lte = new Date(parsed.hasta);
   }
 
-  const orders = await prisma.order.findMany({ where, include: { items: true } });
+  const orders = await prisma.order.findMany({ where, include: { items: true, asesor: true } });
   const sales = await prisma.sale.findMany({
     where: {
       fechaVenta: parsed.desde || parsed.hasta
@@ -232,7 +227,7 @@ export const getAdminSalesSummary = async (req: Request, res: Response) => {
       existing.cantidad += 1;
       existing.total += Number(o.total);
     } else {
-      acc.push({ asesorId: o.asesorId, asesorNombre: o.asesor || 'Sin nombre', cantidad: 1, total: Number(o.total) });
+      acc.push({ asesorId: o.asesorId, asesorNombre: o.asesor?.nombre || 'Sin nombre', cantidad: 1, total: Number(o.total) });
     }
     return acc;
   }, []);

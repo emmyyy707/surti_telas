@@ -1,12 +1,10 @@
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.resolve();
 
 const storage = multer.diskStorage({
-  destination: (req, _file, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = path.join(__dirname, '../../../../uploads');
     cb(null, uploadDir);
   },
@@ -17,7 +15,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
   if (allowed.includes(file.mimetype)) {
     cb(null, true);

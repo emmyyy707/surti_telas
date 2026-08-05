@@ -18,7 +18,7 @@ export class StartValidation {
       throw new Error('El pedido no puede iniciar validación en su estado actual');
     }
 
-    const updatedOrder = await this.orderRepo.updateStatus(id, 'En validación');
+    const updatedOrder = await this.orderRepo.updateStatus(id, 'Pendiente');
 
     await this.historyRepo.create({
       pedidoId: id,

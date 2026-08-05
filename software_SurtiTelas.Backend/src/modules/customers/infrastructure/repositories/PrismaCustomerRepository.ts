@@ -128,7 +128,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
       if (input.ciudad !== undefined) userUpdates.direccion = input.ciudad;
       if (input.tel !== undefined) userUpdates.telefono = input.tel;
       if (input.nit !== undefined) userUpdates.numeroDocumento = input.nit;
-      if ((input as Record<string, unknown>).tipoDocumento !== undefined) userUpdates.tipoDocumento = (input as Record<string, unknown>).tipoDocumento;
+      if ((input as unknown as Record<string, unknown>).tipoDocumento !== undefined) userUpdates.tipoDocumento = (input as unknown as Record<string, unknown>).tipoDocumento;
       if (Object.keys(userUpdates).length > 0) {
         await this.prisma.user.updateMany({
           where: { email: data.email, deletedAt: null },

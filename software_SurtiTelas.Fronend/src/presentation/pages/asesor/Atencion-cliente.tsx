@@ -5,7 +5,7 @@ import s from './Atencion-cliente.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { DetailModal } from '@/shared/ui/DetailModal';
-import { useAppStore, useClientes, usePedidos } from '@/core/stores';
+import { useClientes, usePedidos } from '@/core/stores';
 import { Badge } from '@/shared/ui/Badge';
 import { Tooltip } from '@/shared/components/Tooltip';
 import { useAuthStore } from '@/core/stores/authStore';
@@ -27,7 +27,10 @@ export const AtencionCliente: React.FC = () => {
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
   const [pedidoData, setPedidoData] = useState({ detalle: '', urgencia: 'Estándar' as 'Estándar' | 'Prioritario' });
   const [clienteActualId, setClienteActualId] = useState<string>('');
+  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
+  const [nuevoMensaje, setNuevoMensaje] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mensajesEndRef = useRef<HTMLDivElement>(null);
 
   const clientes = clientesStore.clientes;
   const pedidos = pedidosStore.pedidos;
@@ -47,6 +50,40 @@ export const AtencionCliente: React.FC = () => {
     setSelectedPedido(pedido);
     setIsHistorialOpen(true);
   };
+
+  const enviarMensaje = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoMensaje.trim()) return;
+    setMensajes(prev => [
+      ...prev,
+      { id: prev.length + 1, texto: nuevoMensaje, remitente: 'asesor', hora: new Date().toLocaleTimeString() },
+    ]);
+    setNuevoMensaje('');
+    mensajesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleAttach = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (file) {
+      setMensajes(prev => [
+        ...prev,
+        { id: prev.length + 1, texto: `Archivo adjunto: ${file.name}`, remitente: 'asesor', hora: new Date().toLocaleTimeString() },
+      ]);
+    }
+  };
+
+  const handleGenerarPedido = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPedidoModalOpen(false);
+    setPedidoData({ detalle: '', urgencia: 'Estándar' });
+    toast.success('Pedido generado correctamente');
+  };
+
+  useEffect(() => { mensajesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [mensajes]);
 
   return (
     <div className={s.container}>
