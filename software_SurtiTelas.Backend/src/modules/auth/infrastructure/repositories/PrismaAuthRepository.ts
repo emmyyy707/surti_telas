@@ -8,6 +8,7 @@ const toRecord = (u: {
   email: string;
   passwordHash: string;
   nombre: string;
+  apellidos?: string | null;
   telefono?: string | null;
   direccion?: string | null;
   tipoDocumento?: string | null;
@@ -27,6 +28,7 @@ const toRecord = (u: {
   id: u.id,
   email: u.email,
   nombre: u.nombre,
+  apellidos: u.apellidos ?? undefined,
   telefono: u.telefono,
   direccion: u.direccion,
   tipoDocumento: u.tipoDocumento,
@@ -66,6 +68,7 @@ export class PrismaAuthRepository implements AuthRepository {
       data: {
         email: input.email,
         nombre: input.nombre,
+        apellidos: input.apellidos,
         passwordHash: input.passwordHash,
         role: input.role,
         telefono: input.telefono,

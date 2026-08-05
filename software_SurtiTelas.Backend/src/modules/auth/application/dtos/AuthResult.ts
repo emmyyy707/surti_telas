@@ -4,6 +4,7 @@ export interface PublicUser {
   id: string;
   email: string;
   nombre: string;
+  apellidos?: string | null;
   telefono?: string | null;
   direccion?: string | null;
   tipoDocumento?: string | null;

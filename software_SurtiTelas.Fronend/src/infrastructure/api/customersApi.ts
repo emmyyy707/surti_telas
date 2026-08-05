@@ -52,8 +52,11 @@ function toCustomerBody(c: Partial<Cliente>): Record<string, unknown> {
   if (c.cupoUsado !== undefined) body.cupoUsado = c.cupoUsado;
   if (c.deudaVencida !== undefined) body.deudaVencida = c.deudaVencida;
   if (c.isTrustedCustomer !== undefined) body.isTrustedCustomer = c.isTrustedCustomer;
-  if (c.estado !== undefined) body.estado = c.estado === 'Inactivo' ? 'INACTIVO' : 'ACTIVO';
+  if (c.estado !== undefined) body.estado = c.estado === 'Inactivo' ? 'Inactivo' : 'Activo';
   if ((c as Record<string, unknown>).asesorId !== undefined) body.asesorId = (c as Record<string, unknown>).asesorId;
+  if (c.direccion !== undefined) body.direccion = c.direccion;
+  if ((c as Record<string, unknown>).tipoDocumento !== undefined) body.tipoDocumento = (c as Record<string, unknown>).tipoDocumento;
+  if (c.numeroDocumento !== undefined) body.numeroDocumento = c.numeroDocumento;
   return body;
 }
 
@@ -91,5 +94,9 @@ export const customersApi = {
 
   async remove(id: string): Promise<void> {
     await api.delete(`/customers/${encodeURIComponent(id)}`);
+  },
+
+  async getTrustedStatus(): Promise<{ isTrustedCustomer: boolean }> {
+    return api.get('/customers/me/trusted-status');
   },
 };

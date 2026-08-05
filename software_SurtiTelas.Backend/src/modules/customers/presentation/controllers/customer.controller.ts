@@ -30,6 +30,14 @@ export const getCustomer = async (req: Request, res: Response) => {
   return ok(res, { ...customer, _links: hateoas });
 };
 
+export const getCustomerTrustedStatus = async (req: Request, res: Response) => {
+  const result = await customerUseCases.getCustomerTrustedStatus.execute(req.user!.id);
+  if (!result) {
+    return ok(res, { isTrustedCustomer: false });
+  }
+  return ok(res, result);
+};
+
 export const createCustomer = async (req: Request, res: Response) => {
   const input = parseDto(CreateCustomerSchema, req.body);
   const customer = await customerUseCases.createCustomer.execute(input);

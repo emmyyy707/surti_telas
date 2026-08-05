@@ -50,6 +50,7 @@ export const UpdateProfileSchema = z.object({
 
 export const CreateUserSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
+  apellidos: z.string().optional(),
   email: z.string().email('Correo inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
   role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),

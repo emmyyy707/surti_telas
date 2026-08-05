@@ -147,6 +147,10 @@ export class CreateOrder {
     const customer = await this.customerRepo.getById(customerId);
     if (!customer) throw new NotFoundError('Cliente no encontrado');
 
+    if ((input.paymentMethod === 'OTHER' || input.paymentMethod === 'INSTALLMENTS') && !customer.isTrustedCustomer) {
+      throw new BadRequestError('Solo los clientes de confianza pueden seleccionar pago a cuotas');
+    }
+
     try {
       const itemsList = input.itemsList ?? [];
       const total = itemsList.reduce((sum, item) => sum + item.precio * item.cantidad, 0);

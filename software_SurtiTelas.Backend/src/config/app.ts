@@ -47,8 +47,6 @@ import { deliveryTrackingRouter } from '../modules/delivery/presentation/routes/
 import { commissionRouter } from '../modules/commission/presentation/routes/commission.routes';
 import { alertInventoryRouter } from '../modules/alert/presentation/routes/alert-inventory.routes';
 import { financialRouter } from '../modules/financial/presentation/routes/financial.routes';
-import { chatRouter } from '../modules/chat/presentation/routes/chat.routes';
-import { chatOrderRouter } from '../modules/chat/presentation/routes/chatOrder.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -231,8 +229,6 @@ app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/admin/commissions', commissionRouter);
   app.use('/api/v1/admin/alerts', alertInventoryRouter);
   app.use('/api/v1/admin/financial', financialRouter);
-  app.use('/api/v1/chat', chatRouter);
-  app.use('/api/v1/chat', chatOrderRouter);
   app.use('/api/v1/catalog', catalogRouter);
   app.use('/api/v1/customers', customerRouter);
   app.use('/api/v1/orders', orderRouter);

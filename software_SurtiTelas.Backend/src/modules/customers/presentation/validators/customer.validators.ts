@@ -1,8 +1,12 @@
 import { z } from 'zod';
 import { OptionalPhoneSchema, OptionalNitSchema, NonNegativeNumberSchema } from '../../../../shared/presentation/validators';
 
+const trimString = (val: unknown) => (typeof val === 'string' ? val.trim() : val);
+const nullableTrimString = (val: unknown) => (typeof val === 'string' ? val.trim() : undefined);
+
 const BaseCustomerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
+  apellidos: z.string().min(1, 'El apellido es obligatorio'),
   ciudad: z.string().min(1).optional(),
   telefono: OptionalPhoneSchema,
   tel: z.string().min(1).optional(),
@@ -18,6 +22,12 @@ const BaseCustomerSchema = z.object({
 export const CreateCustomerSchema = BaseCustomerSchema.transform((data) => ({
   ...data,
   telefono: data.telefono ?? data.tel,
+  apellidos: (data.apellidos ?? '').trim(),
+  ciudad: data.ciudad?.trim() ?? undefined,
+  email: data.email?.trim() ?? undefined,
+  nit: data.nit?.trim() ?? undefined,
+  telefono: data.telefono?.trim() ?? undefined,
+  direccion: (data as Record<string, unknown>).direccion ? String((data as Record<string, unknown>).direccion).trim() : undefined,
 }));
 
 export const UpdateCustomerSchema = BaseCustomerSchema.partial()
@@ -25,6 +35,12 @@ export const UpdateCustomerSchema = BaseCustomerSchema.partial()
   .transform((data) => ({
     ...data,
     telefono: data.telefono ?? data.tel,
+    apellidos: (data.apellidos ?? '').trim(),
+    ciudad: data.ciudad?.trim() ?? undefined,
+    email: data.email?.trim() ?? undefined,
+    nit: data.nit?.trim() ?? undefined,
+    telefono: data.telefono?.trim() ?? undefined,
+    direccion: (data as Record<string, unknown>).direccion ? String((data as Record<string, unknown>).direccion).trim() : undefined,
   }));
 
 export const AssignAsesorSchema = z.object({
@@ -45,4 +61,4 @@ export const CustomerFiltersSchema = z.object({
   cursor: z.string().optional(),
   sort: z.enum(['nombre', 'ciudad', 'createdAt']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
-});
+}).catchall(z.any());

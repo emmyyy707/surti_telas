@@ -55,6 +55,7 @@ function buildUrl(path: string, query?: RequestOptions['query']): string {
       }
     }
   }
+  url.searchParams.set('_t', Date.now().toString());
   return url.toString();
 }
 
@@ -109,9 +110,10 @@ async function doFetch<T>(path: string, options: RequestOptions, retrying = fals
       body: body !== undefined ? JSON.stringify(body) : undefined,
       credentials: 'include',
     });
-  } catch {
+  } catch (err) {
+    const url = buildUrl(path, query);
     throw new ApiError(
-      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+      `No se pudo conectar con el servidor (${url}). Verifica que el backend esté en ejecución y que accedas desde http://localhost:5173`,
       0,
       'network_error',
     );

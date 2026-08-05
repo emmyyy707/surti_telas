@@ -4,6 +4,7 @@ export interface UserRecord {
   id: string;
   email: string;
   nombre: string;
+  apellidos?: string;
   telefono?: string | null;
   direccion?: string | null;
   tipoDocumento?: string | null;

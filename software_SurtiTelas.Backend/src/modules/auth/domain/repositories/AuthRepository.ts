@@ -4,6 +4,7 @@ import type { UserRecord } from '../entities/User';
 export interface CreateUserInput {
   email: string;
   nombre: string;
+  apellidos?: string;
   passwordHash: string;
   role: Role;
   telefono?: string;

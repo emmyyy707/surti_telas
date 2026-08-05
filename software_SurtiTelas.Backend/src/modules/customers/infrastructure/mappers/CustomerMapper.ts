@@ -3,6 +3,7 @@ import type { CustomerData, CustomerStatus } from '../../domain/entities/Custome
 type CustomerRow = {
   id: string;
   nombre: string;
+  apellidos: string | null;
   email: string | null;
   ciudad: string | null;
   telefono: string | null;
@@ -21,6 +22,7 @@ export function toCustomerData(row: CustomerRow): CustomerData {
   return {
     id: row.id,
     nombre: row.nombre,
+    apellidos: row.apellidos ?? null,
     email: row.email ?? undefined,
     ciudad: row.ciudad ?? '',
     tel: row.telefono ?? '',

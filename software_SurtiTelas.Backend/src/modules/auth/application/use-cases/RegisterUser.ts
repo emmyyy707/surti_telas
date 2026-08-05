@@ -17,6 +17,7 @@ export class RegisterUser {
 
   async execute(input: {
     nombre: string;
+    apellidos?: string;
     email: string;
     password: string;
     role: Role;
@@ -34,6 +35,7 @@ export class RegisterUser {
     const user = await this.repo.create({
       email: input.email,
       nombre: input.nombre,
+      apellidos: input.apellidos,
       passwordHash,
       role: input.role,
       telefono: input.telefono,

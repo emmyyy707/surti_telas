@@ -33,6 +33,7 @@ import { ResetPassword } from '../../application/use-cases/ResetPassword';
 import { ChangePassword } from '../../application/use-cases/ChangePassword';
 import { GoogleAuth } from '../../application/use-cases/GoogleAuth';
 import { UpdateUserStatus, DeleteUser } from '../../application/use-cases/UserManagement';
+import { GetUserById } from '../../application/use-cases/GetUserById';
 import { env } from '../../../../config/env';
 
 const authRepository = new PrismaAuthRepository(prisma);
@@ -80,6 +81,7 @@ export const authUseCases = {
   changePassword: new ChangePassword(authRepository, passwordHasher),
   updateUserStatus: new UpdateUserStatus(authRepository),
   deleteUser: new DeleteUser(authRepository, prisma),
+  getUserById: new GetUserById(authRepository),
 };
 
 export { tokenService };

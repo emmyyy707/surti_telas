@@ -58,3 +58,10 @@ export class DeleteCustomer {
     await this.repo.delete(id);
   }
 }
+
+export class GetCustomerTrustedStatus {
+  constructor(private readonly repo: CustomerRepository) {}
+  async execute(userId: string) {
+    return this.repo.getTrustedStatusByUserId(userId);
+  }
+}

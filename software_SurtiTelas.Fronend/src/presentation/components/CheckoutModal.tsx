@@ -1,9 +1,10 @@
-﻿import React, { useMemo, useRef, useState } from 'react'
+﻿import React, { useMemo, useRef, useState, useEffect } from 'react'
 import { X, Upload, CreditCard, BadgePercent, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart, useAuth } from '@/app/providers/AppProviders'
 import { useClientes } from '@/core/stores'
 import { ordersApi } from '@/infrastructure/api/ordersApi'
+import { customersApi } from '@/infrastructure/api/customersApi'
 import { AuthRequiredModal } from './AuthRequiredModal'
 import { BankingQrCode } from './BankingQrCode'
 import { appContent } from '@/shared/config/appContent'
@@ -28,6 +29,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null)
+  const [isTrustedCustomer, setIsTrustedCustomer] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const clienteActual = useMemo(() => {
@@ -35,7 +37,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
     return clientes.find(c => c.email === user.email || c.nombre === user.name || c.nombre === user.email) || null;
   }, [user?.email, user?.name, clientes]);
 
-  const isTrustedCustomer = clienteActual?.isTrustedCustomer ?? false;
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { isTrustedCustomer: trusted } = await customersApi.getTrustedStatus();
+        if (!cancelled) setIsTrustedCustomer(!!trusted);
+      } catch {
+        if (!cancelled) setIsTrustedCustomer(clienteActual?.isTrustedCustomer ?? false);
+      }
+    })();
+    return () => { cancelled = true };
+  }, [isOpen, clienteActual?.isTrustedCustomer]);
 
   const handlePaymentTypeChange = (type: PaymentType) => {
     if (type === 'installments' && !isTrustedCustomer) return;
@@ -113,21 +127,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
          form.append('itemsList', JSON.stringify(itemsList));
          form.append('prioridad', 'Estándar');
          form.append('observaciones', observaciones);
-          form.append('paymentMethod', 'TRANSFER');
+          form.append('paymentMethod', paymentType === 'installments' ? 'OTHER' : 'TRANSFER');
          if (paymentType === 'installments') form.append('installments', String(installments));
          form.append('comprobantePago', proofFile);
          await ordersApi.createForm(form);
        } else {
          await ordersApi.create({
            clienteId: clienteActual?.id,
-          asesorId: clienteActual?.asesorId,
-          itemsList,
-          prioridad: 'Estándar',
-          observaciones,
-          paymentMethod: 'TRANSFER',
-          installments: paymentType === 'installments' ? installments : undefined,
-        });
-      }
+           asesorId: clienteActual?.asesorId,
+           itemsList,
+           prioridad: 'Estándar',
+           observaciones,
+           paymentMethod: paymentType === 'installments' ? 'OTHER' : 'TRANSFER',
+           installments: paymentType === 'installments' ? installments : undefined,
+         });
+       }
 
 clearCart();
        setPaymentResult('success');

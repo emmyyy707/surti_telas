@@ -71,9 +71,11 @@ const RegisterPage: React.FC = () => {
     submittedRef.current = true;
     setLoading(true);
     try {
-      const nombre = `${firstName.trim()} ${lastName.trim()}`.trim();
+      const nombre = firstName.trim();
+      const apellidos = lastName.trim();
       const createdUser = await authApi.createUser({
         nombre,
+        apellidos,
         email: email.trim(),
         password,
         role: 'CLIENTE',
@@ -85,7 +87,8 @@ const RegisterPage: React.FC = () => {
 
       if (createdUser.role === 'CLIENTE') {
         await customersApi.create({
-          nombre: createdUser.nombre,
+          nombre,
+          apellidos,
           email: createdUser.email,
           tel: phone.trim() || undefined,
           direccion: address.trim() || undefined,
@@ -103,8 +106,15 @@ const RegisterPage: React.FC = () => {
       } else {
         toast.error('No se pudo iniciar sesión automáticamente');
       }
-    } catch {
-      toast.error('No se pudo crear la cuenta. Revise los datos');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo crear la cuenta';
+      if (message.toLowerCase().includes('ya está registrado') || message.toLowerCase().includes('ya existe') || message.toLowerCase().includes('duplicado')) {
+        toast.error(`No se puede crear la cuenta: ${message}`);
+      } else if (message.includes('422')) {
+        toast.error(`No se puede crear la cuenta: datos inválidos - ${message}`);
+      } else {
+        toast.error(`No se puede crear la cuenta: ${message}`);
+      }
     } finally {
       setLoading(false);
       submittedRef.current = false;

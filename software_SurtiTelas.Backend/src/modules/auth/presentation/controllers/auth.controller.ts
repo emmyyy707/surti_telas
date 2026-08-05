@@ -142,6 +142,14 @@ export const updateProfile = async (req: Request, res: Response) => {
   return ok(res, user, 'Perfil actualizado');
 };
 
+export const getUser = async (req: Request, res: Response) => {
+  const user = await authUseCases.getUserById.execute(req.params.id);
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'not_found', message: 'Usuario no encontrado' });
+  }
+  return ok(res, user);
+};
+
 export const listUsers = async (req: Request, res: Response) => {
   const filters = parseDto(UserFiltersSchema, req.query);
   const result = await authUseCases.listUsers.execute(filters);

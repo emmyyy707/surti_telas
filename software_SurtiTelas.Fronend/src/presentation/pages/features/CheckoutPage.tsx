@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useCart, useAuth } from '@/app/providers/AppProviders';
 import { useClientes } from '@/core/stores';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { customersApi } from '@/infrastructure/api/customersApi';
 import { BankingQrCode } from '@/presentation/components/BankingQrCode';
 import type { PedidoItem } from '@/core/types';
 import { appContent } from '@/shared/config/appContent';
@@ -35,6 +36,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentType, setPaymentType] = useState<PaymentType>('immediate');
   const [installments, setInstallments] = useState(2);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTrustedCustomer, setIsTrustedCustomer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const clienteActual = useMemo(() => {
@@ -42,7 +44,18 @@ const CheckoutPage: React.FC = () => {
     return clientes.find(c => c.email === user.email || c.nombre === user.name || c.nombre === user.email) || null;
   }, [user?.email, user?.name, clientes]);
 
-  const isTrustedCustomer = clienteActual?.isTrustedCustomer ?? false;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { isTrustedCustomer: trusted } = await customersApi.getTrustedStatus();
+        if (!cancelled) setIsTrustedCustomer(!!trusted);
+      } catch {
+        if (!cancelled) setIsTrustedCustomer(clienteActual?.isTrustedCustomer ?? false);
+      }
+    })();
+    return () => { cancelled = true };
+  }, [clienteActual?.isTrustedCustomer]);
 
   const handlePaymentTypeChange = useCallback((type: PaymentType) => {
     if (type === 'installments' && !isTrustedCustomer) {
@@ -120,7 +133,7 @@ const CheckoutPage: React.FC = () => {
         itemsList,
         prioridad: undefined,
         observaciones,
-        paymentMethod: 'TRANSFER',
+        paymentMethod: paymentType === 'installments' ? 'OTHER' : 'TRANSFER',
         installments: paymentType === 'installments' ? installments : undefined,
         comprobantePago: proofFile ?? undefined,
       } as Parameters<typeof ordersApi.create>[0];

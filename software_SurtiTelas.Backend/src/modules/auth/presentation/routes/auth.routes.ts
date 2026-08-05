@@ -271,6 +271,7 @@ authRouter.post('/logout', authenticate, asyncHandler(controller.logout));
  *                       role: { type: string, example: ADMIN }
  */
 authRouter.get('/users', authenticate, requireRole('ADMIN'), asyncHandler(controller.listUsers));
+authRouter.get('/users/:id', authenticate, requireRole('ADMIN'), asyncHandler(controller.getUser));
 
 /**
  * @swagger

@@ -25,6 +25,22 @@ interface ClienteUI extends BackendAuthUser {
   numeroDocumento?: string | null;
 }
 
+const toClienteUI = (c: Cliente): ClienteUI => ({
+  id: c.id,
+  nombre: c.nombre,
+  email: c.email ?? '',
+  role: 'CLIENTE' as BackendRole,
+  telefono: c.tel ?? null,
+  nit: c.nit ?? null,
+  isTrustedCustomer: c.isTrustedCustomer ?? false,
+  estadoCliente: c.estado ?? 'Activo',
+  customerId: c.id,
+  apellidos: c.apellidos ?? null,
+  direccion: c.direccion ?? null,
+  tipoDocumento: c.tipoDocumento ?? null,
+  numeroDocumento: c.numeroDocumento ?? null,
+});
+
 export const AdminClientes: React.FC = () => {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -34,49 +50,57 @@ export const AdminClientes: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ClienteUI | null>(null);
 
+  const [nombre, setNombre] = useState('');
+  const [apellidos, setApellidos] = useState('');
+  const [email, setEmail] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [direccion, setDireccion] = useState('');
+  const [tipoDocumento, setTipoDocumento] = useState('');
+  const [numeroDocumento, setNumeroDocumento] = useState('');
+  const [isTrustedCustomer, setIsTrustedCustomer] = useState(false);
+  const [estado, setEstado] = useState('Activo');
+  const [password, setPassword] = useState('');
+
   const formRef = useRef<HTMLFormElement>(null);
 
-  const fetchClientes = async () => {
+  const reload = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await authApi.listUsers({ limit: 100 });
-      const soloClientes = result.data.filter((u) => u.role === 'CLIENTE');
-
       const customers = await customersApi.list({ limit: 100 });
-      const byEmail = new Map<string, typeof customers.data[0]>();
-      const byNombre = new Map<string, typeof customers.data[0]>();
-      for (const c of customers.data) {
-        if (c.email) byEmail.set(c.email.toLowerCase(), c);
-        byNombre.set(c.nombre.toLowerCase(), c);
+      const usersResult = await authApi.listUsers({ limit: 100 });
+      const usersByEmail = new Map<string, BackendAuthUser>();
+      const usersByNombre = new Map<string, BackendAuthUser>();
+      for (const u of usersResult.data) {
+        if (u.email) usersByEmail.set(u.email.toLowerCase(), u);
+        usersByNombre.set(u.nombre.toLowerCase(), u);
       }
-
-      const clientesConDatos = soloClientes.map((u) => {
-        const match = byEmail.get(u.email.toLowerCase()) ?? byNombre.get(u.nombre.toLowerCase());
+      const clientesConDatos = customers.data.map((c) => {
+        const user = usersByEmail.get(c.email?.toLowerCase() ?? '') ?? usersByNombre.get(c.nombre.toLowerCase());
         return {
-          ...u,
-          telefono: match?.tel ?? null,
-          nit: match?.nit ?? null,
-          isTrustedCustomer: match?.isTrustedCustomer ?? false,
-          estadoCliente: (match?.estado ?? 'Activo') === 'Inactivo' ? 'Inactivo' : 'Activo',
-          customerId: match?.id,
-          apellidos: match?.apellidos ?? null,
-          direccion: match?.direccion ?? null,
-          tipoDocumento: match?.tipoDocumento ?? null,
-          numeroDocumento: match?.numeroDocumento ?? null,
+          ...c,
+          ...user,
+          telefono: user?.telefono ?? c.tel ?? null,
+          nit: user?.numeroDocumento ?? c.nit ?? null,
+          isTrustedCustomer: c.isTrustedCustomer ?? false,
+          estadoCliente: c.estado === 'INACTIVO' ? 'Inactivo' : 'Activo',
+          customerId: c.id,
+          apellidos: c.apellidos ?? user?.apellidos ?? null,
+          direccion: user?.direccion ?? c.ciudad ?? null,
+          tipoDocumento: user?.tipoDocumento ?? null,
+          numeroDocumento: user?.numeroDocumento ?? c.nit ?? null,
         } as ClienteUI;
       });
       setItems(clientesConDatos);
-    } catch {
-      setError('No se pudieron cargar los clientes');
-      toast.error('No se pudieron cargar los clientes');
+    } catch (e) {
+      setError('No se pudo cargar la lista de clientes');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    void fetchClientes();
+    void reload();
   }, []);
 
   const filteredClientes = items.filter((c) =>
@@ -86,24 +110,44 @@ export const AdminClientes: React.FC = () => {
 
   const openCreate = () => {
     setSelectedCliente(null);
+    setNombre('');
+    setApellidos('');
+    setEmail('');
+    setTelefono('');
+    setDireccion('');
+    setTipoDocumento('');
+    setNumeroDocumento('');
+    setIsTrustedCustomer(false);
+    setEstado('Activo');
     setModalOpen(true);
   };
 
   const openEdit = (cliente: ClienteUI) => {
     setSelectedCliente(cliente);
+    setNombre(cliente.nombre ?? '');
+    setApellidos(cliente.apellidos ?? '');
+    setEmail(cliente.email ?? '');
+    setTelefono(cliente.telefono ?? '');
+    setDireccion(cliente.direccion ?? '');
+    setTipoDocumento(cliente.tipoDocumento ?? '');
+    setNumeroDocumento(cliente.numeroDocumento ?? '');
+    setIsTrustedCustomer(cliente.isTrustedCustomer ?? false);
+    setEstado(cliente.estadoCliente ?? 'Activo');
     setModalOpen(true);
   };
 
   const closeModal = () => {
     setModalOpen(false);
     setSelectedCliente(null);
+    setPassword('');
   };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
     try {
-      await authApi.deleteUser(deleteConfirm.id);
-      setItems((prev) => prev.filter((it) => it.id !== deleteConfirm.id));
+      const customerId = deleteConfirm.customerId || deleteConfirm.id;
+      await customersApi.remove(customerId);
+      setItems((prev) => prev.filter((it) => (it.customerId || it.id) !== customerId));
       toast.success('Cliente eliminado');
       setDeleteConfirm(null);
     } catch {
@@ -113,31 +157,20 @@ export const AdminClientes: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    const nombre = String(formData.get('nombre') ?? '').trim();
-    const apellidos = String(formData.get('apellidos') ?? '').trim() || undefined;
-    const email = String(formData.get('email') ?? '').trim() || undefined;
-    const telefono = String(formData.get('telefono') ?? '').trim() || undefined;
-    const direccion = String(formData.get('direccion') ?? '').trim() || undefined;
-    const tipoDocumento = String(formData.get('tipoDocumento') ?? '').trim() || undefined;
-    const numeroDocumento = String(formData.get('numeroDocumento') ?? '').trim() || undefined;
-    const password = String(formData.get('password') ?? '').trim();
-    const confirmPassword = String(formData.get('confirmPassword') ?? '').trim();
-    const isTrustedCustomer = (formData.get('isTrustedCustomer') as string) === 'on';
-    const estado = (formData.get('estado') as string) === 'Inactivo' ? 'Inactivo' : 'Activo';
-
     if (!nombre) {
       toast.error('El nombre es obligatorio');
       return;
     }
+    if (!apellidos) {
+      toast.error('El apellido es obligatorio');
+      return;
+    }
 
-    try {
-      if (selectedCliente) {
+    if (selectedCliente) {
+      try {
         const customerId = selectedCliente.customerId;
         if (customerId) {
-          const updated = await customersApi.update(customerId, {
+          await customersApi.update(customerId, {
             nombre,
             apellidos,
             email,
@@ -149,13 +182,22 @@ export const AdminClientes: React.FC = () => {
             estado,
           });
           setItems((prev) =>
-            prev.map((it) =>
-              it.id === updated.id ? { ...it, nombre: updated.nombre, email: updated.email ?? '', telefono: updated.tel, nit: updated.nit, isTrustedCustomer: updated.isTrustedCustomer, estadoCliente: updated.estado, apellidos, direccion, tipoDocumento, numeroDocumento } : it
-            )
+            prev.map((it) => (it.id === customerId ? {
+              ...it,
+              nombre,
+              apellidos,
+              email: email ?? it.email,
+              telefono: telefono ?? it.telefono,
+              nit: numeroDocumento ?? it.nit,
+              direccion: direccion ?? it.direccion,
+              tipoDocumento: tipoDocumento ?? it.tipoDocumento,
+              isTrustedCustomer,
+              estadoCliente: estado,
+            } : it))
           );
           toast.success('Cliente actualizado');
         } else {
-          const created = await customersApi.create({
+          await customersApi.create({
             nombre,
             apellidos,
             email,
@@ -166,67 +208,75 @@ export const AdminClientes: React.FC = () => {
             isTrustedCustomer,
             estado,
           });
-          setItems((prev) => [...prev, { ...created, email: created.email ?? '', role: 'CLIENTE' as BackendRole, apellidos, direccion, tipoDocumento, numeroDocumento }]);
+          await reload();
           toast.success('Cliente creado');
         }
-      } else {
-        if (!email || !password) {
-          toast.error('Correo y contraseña son obligatorios');
-          return;
-        }
-        if (password.length < 8) {
-          toast.error('La contraseña debe tener al menos 8 caracteres');
-          return;
-        }
-        if (password !== confirmPassword) {
-          toast.error('Las contraseñas no coinciden');
-          return;
-        }
-        if (!tipoDocumento || !numeroDocumento) {
-          toast.error('Tipo y número de documento son obligatorios');
-          return;
-        }
-
-        const userPayload: CreateUserRequest = {
-          nombre,
-          apellidos,
-          email,
-          password,
-          role: 'CLIENTE',
-          telefono,
-          direccion,
-          tipoDocumento,
-          numeroDocumento,
-        };
-        const _userResult = await authApi.createUser(userPayload);
-
-        const created = await customersApi.create({
-          nombre,
-          apellidos,
-          email,
-          tel: telefono,
-          nit: numeroDocumento,
-          direccion,
-          tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
-          isTrustedCustomer,
-          estado,
-        });
-
-        setItems((prev) => [...prev, { ...created, email: created.email ?? '', role: 'CLIENTE' as BackendRole, apellidos, direccion, tipoDocumento, numeroDocumento }]);
-        toast.success('Cliente creado con usuario de acceso');
+        closeModal();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'No se pudo guardar el cliente';
+        toast.error(message);
       }
+      return;
+    }
+
+    if (!email) {
+      toast.error('Correo es obligatorio');
+      return;
+    }
+    if (!password) {
+      toast.error('Contraseña es obligatoria');
+      return;
+    }
+
+    try {
+      const userPayload: CreateUserRequest = {
+        nombre,
+        apellidos,
+        email,
+        password,
+        role: 'CLIENTE',
+        telefono,
+        direccion,
+        tipoDocumento,
+        numeroDocumento,
+      };
+      const _userResult = await authApi.createUser(userPayload);
+
+      await customersApi.create({
+        nombre,
+        apellidos,
+        email,
+        tel: telefono,
+        nit: numeroDocumento,
+        direccion,
+        tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
+        isTrustedCustomer,
+        estado,
+      });
+
+      await reload();
+      toast.success('Cliente creado con usuario de acceso');
       closeModal();
-    } catch {
-      toast.error('No se pudo guardar el cliente');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo crear la cuenta';
+      if (message.toLowerCase().includes('ya está registrado') || message.toLowerCase().includes('ya existe') || message.toLowerCase().includes('duplicado')) {
+        toast.error(`No se puede crear la cuenta: ${message}`);
+      } else if (message.includes('422')) {
+        toast.error(`No se puede crear la cuenta: datos inválidos - ${message}`);
+      } else {
+        toast.error(`No se puede crear la cuenta: ${message}`);
+      }
     }
   };
 
   const columns: DataTableColumn<ClienteUI>[] = [
     { key: 'id', header: 'ID', sortable: true },
     { key: 'nombre', header: 'Nombre', sortable: true },
+    { key: 'apellidos', header: 'Apellido', render: (c) => c.apellidos ?? '—' },
     { key: 'email', header: 'Email', sortable: true, render: (c) => c.email ?? '—' },
     { key: 'telefono', header: 'Teléfono', render: (c) => c.telefono ?? '—' },
-    { key: 'nit', header: 'Documento', render: (c) => c.nit ?? '—' },
+    { key: 'tipoDocumento', header: 'Tipo documento', render: (c) => c.tipoDocumento ?? '—' },
+    { key: 'nit', header: 'Número documento', render: (c) => c.nit ?? '—' },
     {
       key: 'isTrustedCustomer',
       header: 'Cliente de confianza',
@@ -264,6 +314,7 @@ export const AdminClientes: React.FC = () => {
           <div className={s.detailGrid}>
             <div className={s.detailItem}><span className={s.detailLabel}>ID</span><span>{item.id}</span></div>
             <div className={s.detailItem}><span className={s.detailLabel}>Nombre</span><span>{item.nombre}</span></div>
+            <div className={s.detailItem}><span className={s.detailLabel}>Apellido</span><span>{item.apellidos || '—'}</span></div>
             <div className={s.detailItem}><span className={s.detailLabel}>Email</span><span>{item.email || '—'}</span></div>
             <div className={s.detailItem}><span className={s.detailLabel}>Teléfono</span><span>{item.telefono || '—'}</span></div>
             <div className={s.detailItem}><span className={s.detailLabel}>NIT</span><span>{item.nit || '—'}</span></div>
@@ -328,28 +379,28 @@ export const AdminClientes: React.FC = () => {
         <form className={s.form} ref={formRef} onSubmit={handleSubmit}>
           <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>Nombre *</label>
-              <input type="text" className={s.input} name="nombre" defaultValue={selectedCliente?.nombre} required maxLength={100} />
+              <label className={s.label} htmlFor="nombre">Nombre *</label>
+              <input id="nombre" type="text" className={s.input} name="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required maxLength={100} autoComplete="given-name" />
             </div>
             <div className={s.field}>
-              <label className={s.label}>Apellidos</label>
-              <input type="text" className={s.input} name="apellidos" defaultValue={selectedCliente?.apellidos ?? ''} maxLength={100} />
-            </div>
-          </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Email {selectedCliente ? '' : '*'}</label>
-              <input type="email" className={s.input} name="email" defaultValue={selectedCliente?.email ?? ''} required={!selectedCliente} maxLength={100} />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Teléfono</label>
-              <input type="tel" className={s.input} name="telefono" defaultValue={selectedCliente?.telefono ?? ''} maxLength={11} pattern="[0-9]*" inputMode="numeric" />
+              <label className={s.label} htmlFor="apellidos">Apellidos *</label>
+              <input id="apellidos" type="text" className={s.input} name="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required maxLength={100} autoComplete="family-name" />
             </div>
           </div>
           <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>Tipo de documento *</label>
-              <select className={s.select} name="tipoDocumento" defaultValue={selectedCliente?.tipoDocumento ?? ''} required>
+              <label className={s.label} htmlFor="email">Email {selectedCliente ? '' : '*'}</label>
+              <input id="email" type="email" className={s.input} name="email" value={email} onChange={(e) => setEmail(e.target.value)} required={!selectedCliente} maxLength={100} autoComplete="email" />
+            </div>
+            <div className={s.field}>
+              <label className={s.label} htmlFor="telefono">Teléfono</label>
+              <input id="telefono" type="tel" className={s.input} name="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value)} maxLength={11} pattern="[0-9]*" inputMode="numeric" autoComplete="tel" />
+            </div>
+          </div>
+          <div className={s.formRow}>
+            <div className={s.field}>
+              <label className={s.label} htmlFor="tipoDocumento">Tipo de documento *</label>
+              <select id="tipoDocumento" className={s.select} name="tipoDocumento" value={tipoDocumento} onChange={(e) => setTipoDocumento(e.target.value)} required>
                 <option value="">Selecciona...</option>
                 <option value="CC">Cédula de ciudadanía</option>
                 <option value="NIE">NIE</option>
@@ -359,36 +410,36 @@ export const AdminClientes: React.FC = () => {
               </select>
             </div>
             <div className={s.field}>
-              <label className={s.label}>Número de documento *</label>
-              <input type="text" className={s.input} name="numeroDocumento" defaultValue={selectedCliente?.numeroDocumento ?? ''} required maxLength={20} inputMode="numeric" />
+              <label className={s.label} htmlFor="numeroDocumento">Número de documento *</label>
+              <input id="numeroDocumento" type="text" className={s.input} name="numeroDocumento" value={numeroDocumento} onChange={(e) => setNumeroDocumento(e.target.value)} required maxLength={20} inputMode="numeric" />
             </div>
           </div>
           <div className={s.field}>
-            <label className={s.label}>Dirección</label>
-            <input type="text" className={s.input} name="direccion" defaultValue={selectedCliente?.direccion ?? ''} maxLength={200} />
+            <label className={s.label} htmlFor="direccion">Dirección</label>
+            <input id="direccion" type="text" className={s.input} name="direccion" value={direccion} onChange={(e) => setDireccion(e.target.value)} maxLength={200} autoComplete="street-address" />
           </div>
           {!selectedCliente && (
             <div className={s.formRow}>
               <div className={s.field}>
-                <label className={s.label}>Contraseña *</label>
-                <input type="password" className={s.input} name="password" required minLength={8} placeholder="Mínimo 8 caracteres" />
+                <label className={s.label} htmlFor="password">Contraseña *</label>
+                <input id="password" type="password" className={s.input} name="password" required minLength={8} placeholder="Mínimo 8 caracteres" autoComplete="new-password" />
               </div>
               <div className={s.field}>
-                <label className={s.label}>Confirmar contraseña *</label>
-                <input type="password" className={s.input} name="confirmPassword" required minLength={8} placeholder="Repite la contraseña" />
+                <label className={s.label} htmlFor="confirmPassword">Confirmar contraseña *</label>
+                <input id="confirmPassword" type="password" className={s.input} name="confirmPassword" required minLength={8} placeholder="Repite la contraseña" autoComplete="new-password" />
               </div>
             </div>
           )}
           <div className={s.formRow}>
             <div className={s.field}>
-              <label className={s.label}>Estado</label>
-              <select className={s.input} name="estado" defaultValue={selectedCliente?.estadoCliente ?? 'Activo'}>
+              <label className={s.label} htmlFor="estado">Estado</label>
+              <select id="estado" className={s.input} name="estado" value={estado} onChange={(e) => setEstado(e.target.value)}>
                 <option value="Activo">Activo</option>
                 <option value="Inactivo">Inactivo</option>
               </select>
             </div>
             <div className={s.field} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 24 }}>
-              <input type="checkbox" id="isTrustedCustomer" name="isTrustedCustomer" defaultChecked={selectedCliente?.isTrustedCustomer ?? false} />
+              <input type="checkbox" id="isTrustedCustomer" name="isTrustedCustomer" checked={isTrustedCustomer} onChange={(e) => setIsTrustedCustomer(e.target.checked)} />
               <label htmlFor="isTrustedCustomer" className={s.label} style={{ margin: 0 }}>Cliente de confianza</label>
             </div>
           </div>

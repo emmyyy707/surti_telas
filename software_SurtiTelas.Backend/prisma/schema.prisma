@@ -117,6 +117,7 @@ model User {
   email                 String      @unique
   passwordHash          String      @map("password_hash")
   nombre                String
+  apellidos             String?
   telefono              String?
   direccion             String?
   tipoDocumento         String?     @map("tipo_documento")
@@ -137,7 +138,7 @@ model User {
   movements             InventoryMovement[] @relation("UsuarioMovements")
   notifications         Notification[]
   payments              Payment[]   @relation("AsesorPayments")
-  commissions           Commission[] @relation("AsesorCommissions")
+   commissions           Commission[] @relation("AsesorCommissions")
   alertsLeidas          Alert[]     @relation("AlertLeidaPor")
   alertsResueltas       Alert[]     @relation("AlertResueltaPor")
   controlPrendasCreadas ControlPrenda[] @relation("ControlPrendaCreadoPor")
@@ -265,6 +266,7 @@ model Product {
 model Customer {
   id                String      @id @default(cuid())
   nombre            String
+  apellidos         String?
   email             String?     @db.VarChar(255)
   ciudad            String?
   telefono          String?     @map("telefono")

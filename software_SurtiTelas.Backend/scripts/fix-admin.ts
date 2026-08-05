@@ -8,7 +8,12 @@ async function main() {
   const hash = await bcrypt.hash('SurtiTelas2025*', 12);
   const updated = await prisma.user.update({
     where: { email },
-    data: { passwordHash: hash, role: Role.ADMIN },
+    data: {
+      passwordHash: hash,
+      role: Role.ADMIN,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
   });
   console.log(`Admin ${updated.email} actualizado con password del doc`);
   const ok = await bcrypt.compare('SurtiTelas2025*', updated.passwordHash);

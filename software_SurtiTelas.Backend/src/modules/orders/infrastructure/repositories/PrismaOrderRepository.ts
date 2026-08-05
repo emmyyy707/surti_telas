@@ -12,11 +12,12 @@ const include = {
   items: true,
 } satisfies Prisma.OrderInclude;
 
-type PrismaCustomer = {
-  direccion?: string | null;
-  direccionEnvio?: string | null;
-  ciudad?: string | null;
-  nombre?: string | null;
+type PrismaOrderRelation = {
+  cliente: { nombre: string };
+  asesor: { nombre: string };
+  usuarioValidacion: { nombre: string } | null;
+  comprobantePagoCargadoPor: { nombre: string } | null;
+  items: { cantidad: number }[];
 };
 
 export class PrismaOrderRepository implements OrderRepository {
@@ -180,7 +181,7 @@ export class PrismaOrderRepository implements OrderRepository {
   }
 
   async create(input: CreateOrderInput): Promise<Order> {
-    const { clienteId, asesorId, itemsList, prioridad, observaciones, comprobantePagoUrl } = input;
+    const { clienteId, asesorId, itemsList, prioridad, observaciones, comprobantePagoUrl, paymentMethod } = input;
     const items = itemsList ?? [];
     const descuentos = input.descuentos ?? 0;
     const subtotal = input.subtotal ?? items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
@@ -206,14 +207,14 @@ export class PrismaOrderRepository implements OrderRepository {
       const asesor = await tx.user.findUnique({ where: { id: asesorId } });
       if (!asesor) throw new NotFoundError('Asesor no encontrado');
 
-      const itemsCount = itemsList.reduce((sum, i) => sum + i.cantidad, 0);
+      const itemsCount = items.reduce((sum, i) => sum + i.cantidad, 0);
 
       const row = await tx.order.create({
         data: {
           numero,
           clienteId,
           clienteNombre: customer.nombre,
-          asesorId,
+          asesorId: asesorId ?? undefined,
           asesorNombre: asesor.nombre,
           tipoFlujo: tipoFlujo as OrderFlow,
           fecha: input.fecha ? new Date(input.fecha) : new Date(),
@@ -223,11 +224,12 @@ export class PrismaOrderRepository implements OrderRepository {
           total,
           itemsCount,
           estado: orderStatusToDb(estado),
-          prioridad: input.prioridad ? orderPriorityToDb(input.prioridad) : 'ESTANDAR',
-          observaciones: input.observaciones,
+          prioridad: prioridad ? orderPriorityToDb(prioridad) : 'ESTANDAR',
+          observaciones,
           comprobantePagoUrl: comprobantePagoUrl ?? null,
+          medioPago: paymentMethod ?? undefined,
           items: {
-            create: itemsList.map((i) => ({
+            create: items.map((i) => ({
               productId: i.productId,
               nombre: i.nombre,
               precio: i.precio,

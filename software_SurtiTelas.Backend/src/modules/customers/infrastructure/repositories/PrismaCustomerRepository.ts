@@ -92,11 +92,19 @@ export class PrismaCustomerRepository implements CustomerRepository {
     return row ? new Customer(toCustomerData(row)) : null;
   }
 
+  async getTrustedStatusByUserId(userId: string): Promise<{ isTrustedCustomer: boolean } | null> {
+    const user = await this.prisma.user.findFirst({ where: { id: userId, deletedAt: null }, select: { email: true } });
+    if (!user?.email) return null;
+    const row = await this.prisma.customer.findFirst({ where: { email: user.email, deletedAt: null }, select: { isTrustedCustomer: true } });
+    return row ? { isTrustedCustomer: row.isTrustedCustomer } : null;
+  }
+
   async create(input: CreateCustomerInput): Promise<Customer> {
     const data = toCustomerData(
       await this.prisma.customer.create({
         data: {
           nombre: input.nombre,
+          apellidos: input.apellidos,
           email: input.email,
           ciudad: input.ciudad,
           telefono: input.tel,
@@ -111,6 +119,24 @@ export class PrismaCustomerRepository implements CustomerRepository {
         include,
       })
     );
+
+    if (data.email) {
+      const userUpdates: Record<string, unknown> = {};
+      if (input.nombre !== undefined) userUpdates.nombre = input.nombre;
+      if (input.apellidos !== undefined) userUpdates.apellidos = input.apellidos;
+      if (input.email !== undefined) userUpdates.email = input.email;
+      if (input.ciudad !== undefined) userUpdates.direccion = input.ciudad;
+      if (input.tel !== undefined) userUpdates.telefono = input.tel;
+      if (input.nit !== undefined) userUpdates.numeroDocumento = input.nit;
+      if ((input as Record<string, unknown>).tipoDocumento !== undefined) userUpdates.tipoDocumento = (input as Record<string, unknown>).tipoDocumento;
+      if (Object.keys(userUpdates).length > 0) {
+        await this.prisma.user.updateMany({
+          where: { email: data.email, deletedAt: null },
+          data: userUpdates,
+        });
+      }
+    }
+
     return new Customer(data);
   }
 
@@ -118,23 +144,67 @@ export class PrismaCustomerRepository implements CustomerRepository {
     const existing = await this.getById(id);
     if (!existing) throw new NotFoundError('Cliente no encontrado');
 
+    const updateData: Record<string, unknown> = {
+      nombre: changes.nombre,
+      apellidos: changes.apellidos,
+      email: changes.email,
+      ciudad: changes.ciudad,
+      telefono: changes.tel,
+      nit: changes.nit,
+      cupoTotal: changes.cupoTotal,
+      cupoUsado: changes.cupoUsado,
+      deudaVencida: changes.deudaVencida,
+      isTrustedCustomer: changes.isTrustedCustomer,
+      estado: changes.estado ? STATUS_TO_DB[changes.estado] : undefined,
+      asesorId: changes.asesorId,
+    };
+
     const row = await this.prisma.customer.update({
       where: { id },
-      data: {
-        nombre: changes.nombre,
-        email: changes.email,
-        ciudad: changes.ciudad,
-        telefono: changes.tel,
-        nit: changes.nit,
-        cupoTotal: changes.cupoTotal,
-        cupoUsado: changes.cupoUsado,
-        deudaVencida: changes.deudaVencida,
-        isTrustedCustomer: changes.isTrustedCustomer,
-        estado: changes.estado ? STATUS_TO_DB[changes.estado] : undefined,
-        asesorId: changes.asesorId,
-      },
+      data: updateData,
       include,
     });
+
+    const responsePayload = {
+      id: row.id,
+      nombre: row.nombre,
+      apellidos: row.apellidos,
+      email: row.email,
+      ciudad: row.ciudad,
+      telefono: row.telefono,
+      nit: row.nit,
+      cupoTotal: row.cupoTotal,
+      cupoUsado: row.cupoUsado,
+      deudaVencida: row.deudaVencida,
+      isTrustedCustomer: row.isTrustedCustomer,
+      estado: row.estado,
+      asesorId: row.asesorId,
+    };
+    console.log('UPDATE_CUSTOMER_RESPONSE', JSON.stringify(responsePayload));
+
+    const userUpdates: Record<string, unknown> = {};
+    if (changes.nombre !== undefined) userUpdates.nombre = changes.nombre;
+    if (changes.apellidos !== undefined) userUpdates.apellidos = changes.apellidos;
+    if (changes.email !== undefined) userUpdates.email = changes.email;
+    if (changes.ciudad !== undefined) userUpdates.direccion = changes.ciudad;
+    if (changes.tel !== undefined) userUpdates.telefono = changes.tel;
+    if (changes.nit !== undefined) userUpdates.numeroDocumento = changes.nit;
+    if ((changes as Record<string, unknown>).tipoDocumento !== undefined) userUpdates.tipoDocumento = (changes as Record<string, unknown>).tipoDocumento;
+
+    if (row.email && Object.keys(userUpdates).length > 0) {
+      await this.prisma.user.updateMany({
+        where: { email: row.email, deletedAt: null },
+        data: userUpdates,
+      });
+    }
+
+    if (!row.email && existing.email && Object.keys(userUpdates).length > 0) {
+      await this.prisma.user.updateMany({
+        where: { email: existing.email, deletedAt: null },
+        data: userUpdates,
+      });
+    }
+
     return new Customer(toCustomerData(row));
   }
 
