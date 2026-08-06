@@ -10,6 +10,7 @@ import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { usersApi, type Usuario } from '@/infrastructure/api/usersApi';
 import { authApi, type PermissionDTO } from '@/infrastructure/api/authApi';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface UsuarioConDatos extends Usuario {
   telefono?: string | null;
@@ -21,6 +22,7 @@ interface UsuarioConDatos extends Usuario {
 
 export const AdminGestionUsuarios: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUsuario, setSelectedUsuario] = useState<UsuarioConDatos | null>(null);
   const [items, setItems] = useState<UsuarioConDatos[]>([]);
@@ -109,11 +111,11 @@ export const AdminGestionUsuarios: React.FC = () => {
 
   const filteredUsuarios = useMemo(() => {
     return items.filter(u =>
-      u.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      u.rol.toLowerCase().includes(search.toLowerCase())
+      u.nombre.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      u.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      u.rol.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [search, items]);
+  }, [debouncedSearch, items]);
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -253,7 +255,7 @@ export const AdminGestionUsuarios: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

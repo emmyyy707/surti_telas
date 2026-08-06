@@ -8,6 +8,7 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { stockApi, type RawMaterial } from '@/infrastructure/api/stockApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { CATEGORIAS_INSUMO, UNIDADES_MEDIDA_INSUMO } from '@/shared/constants/options';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Insumo {
   id: string;
@@ -32,7 +33,7 @@ function toInsumo(m: RawMaterial): Insumo {
     medida: m.unidadMedida,
     stock: m.stockActual,
     stockMin: m.stockMinimo,
-    stockMax: m.stockMinimo ?? 0,
+    stockMax: 'stockMaximo' in m ? (m as { stockMaximo?: number }).stockMaximo ?? m.stockMinimo ?? 0 : m.stockMinimo ?? 0,
     precio: m.precioUnitario,
     proveedor: '',
     estado: m.stockActual > 0 ? 'Activo' : 'Inactivo',
@@ -41,6 +42,7 @@ function toInsumo(m: RawMaterial): Insumo {
 
 export const AdminInsumos: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [items, setItems] = useState<Insumo[]>([]);
@@ -84,11 +86,11 @@ export const AdminInsumos: React.FC = () => {
 
   const filteredInsumos = useMemo(() => {
     return items.filter(i =>
-      i.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      i.codigo.toLowerCase().includes(search.toLowerCase()) ||
-      i.categoria.toLowerCase().includes(search.toLowerCase())
+      i.nombre.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      i.codigo.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      i.categoria.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [search, items]);
+  }, [debouncedSearch, items]);
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -237,7 +239,7 @@ export const AdminInsumos: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0} />
       </div>
 

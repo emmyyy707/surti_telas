@@ -1,3 +1,4 @@
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface ContactMessageData {
   id?: string;
   nombre: string;
@@ -53,10 +54,10 @@ export class ContactMessage {
   }
 
   static validate(data: ContactMessageData): void {
-    if (!data.nombre.trim()) throw new Error('El nombre es obligatorio');
-    if (!data.email.trim()) throw new Error('El email es obligatorio');
-    if (!data.asunto.trim()) throw new Error('El asunto es obligatorio');
-    if (!data.mensaje.trim()) throw new Error('El mensaje es obligatorio');
+    if (!data.nombre.trim()) throw new BadRequestError('El nombre es obligatorio');
+    if (!data.email.trim()) throw new BadRequestError('El email es obligatorio');
+    if (!data.asunto.trim()) throw new BadRequestError('El asunto es obligatorio');
+    if (!data.mensaje.trim()) throw new BadRequestError('El mensaje es obligatorio');
   }
 
   markAsRead(): ContactMessage {
@@ -84,3 +85,5 @@ export class ContactMessage {
     });
   }
 }
+
+

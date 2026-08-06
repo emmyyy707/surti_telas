@@ -4,6 +4,7 @@ import type { OrderHistoryRepository } from '../../domain/repositories/OrderHist
 import type { RejectionReason } from '../../../orders/domain/entities/Order';
 import type { EventBus } from '../../../../shared/application/events';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export class RejectOrder {
   constructor(
     private readonly orderRepo: OrderRepository,
@@ -20,11 +21,11 @@ export class RejectOrder {
     if (!order) throw new NotFoundError('Pedido no encontrado');
 
     if (!order.canBeRejected()) {
-      throw new Error('El pedido no puede ser rechazado en su estado actual');
+      throw new BadRequestError('El pedido no puede ser rechazado en su estado actual');
     }
 
     if (data.razon === 'OTRA' && !data.observaciones?.trim()) {
-      throw new Error('Las observaciones son obligatorias cuando la razón es OTRA');
+      throw new BadRequestError('Las observaciones son obligatorias cuando la razón es OTRA');
     }
 
     const fechaValidacion = new Date();
@@ -65,3 +66,5 @@ export class RejectOrder {
     return updatedOrder;
   }
 }
+
+

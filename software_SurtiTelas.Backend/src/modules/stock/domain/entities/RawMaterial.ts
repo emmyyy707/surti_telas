@@ -9,6 +9,8 @@ export interface RawMaterialData {
   precioUnitario: number;
 }
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export class RawMaterial {
   readonly id?: string;
   readonly nombre: string;
@@ -32,15 +34,15 @@ export class RawMaterial {
   }
 
   static validate(data: RawMaterialData): void {
-    if (!data.nombre.trim()) throw new Error('El insumo debe tener un nombre');
-    if (!data.unidadMedida.trim()) throw new Error('El insumo debe tener una unidad de medida');
+    if (!data.nombre.trim()) throw new BadRequestError('El insumo debe tener un nombre');
+    if (!data.unidadMedida.trim()) throw new BadRequestError('El insumo debe tener una unidad de medida');
     if (!Number.isInteger(data.stockActual) || data.stockActual < 0) {
-      throw new Error('El stock actual no puede ser negativo');
+      throw new BadRequestError('El stock actual no puede ser negativo');
     }
     if (!Number.isInteger(data.stockMinimo) || data.stockMinimo < 0) {
-      throw new Error('El stock mínimo no puede ser negativo');
+      throw new BadRequestError('El stock mínimo no puede ser negativo');
     }
-    if (data.precioUnitario < 0) throw new Error('El precio unitario no puede ser negativo');
+    if (data.precioUnitario < 0) throw new BadRequestError('El precio unitario no puede ser negativo');
   }
 
   necesitaReposicion(): boolean {
@@ -52,3 +54,4 @@ export class RawMaterial {
     return new RawMaterial({ ...this, stockActual: next });
   }
 }
+

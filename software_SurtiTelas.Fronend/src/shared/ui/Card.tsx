@@ -12,7 +12,8 @@ export const Card = ({ children, className, padding = 'md', hover = false }: Car
   const padMap = { none: '', sm: 'p-4', md: 'p-6', lg: 'p-8' };
   return (
     <div className={cn(
-      'bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm',
+      'rounded-2xl border shadow-sm',
+      'bg-[var(--color-bg-card)] border-[var(--color-border)]',
       hover && 'hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer',
       padMap[padding],
       className

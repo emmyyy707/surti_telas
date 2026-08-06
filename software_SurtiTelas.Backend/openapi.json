@@ -303,30 +303,30 @@
       "Paginated": {
         "type": "object",
         "properties": {
-          "data": {
+          "items": {
             "type": "array",
             "items": {}
           },
-          "meta": {
-            "type": "object",
-            "properties": {
-              "total": {
-                "type": "number",
-                "example": 50
-              },
-              "page": {
-                "type": "number",
-                "example": 1
-              },
-              "limit": {
-                "type": "number",
-                "example": 10
-              },
-              "nextCursor": {
-                "type": "string",
-                "example": "cursorABC"
-              }
-            }
+          "totalRecords": {
+            "type": "number",
+            "example": 50
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 10
+          },
+          "totalPages": {
+            "type": "number",
+            "example": 5
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "example": "cursorABC"
           }
         }
       },
@@ -515,6 +515,179 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "Domiciliario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "dom-123"
+          },
+          "userId": {
+            "type": "string",
+            "example": "user-123"
+          },
+          "zona": {
+            "type": "string",
+            "nullable": true,
+            "example": "Norte"
+          },
+          "vehiculo": {
+            "type": "string",
+            "nullable": true,
+            "example": "Moto"
+          },
+          "capacidad": {
+            "type": "integer",
+            "nullable": true,
+            "example": 50
+          },
+          "activo": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CmsPage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cms-123"
+          },
+          "slug": {
+            "type": "string",
+            "example": "inicio"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Inicio"
+          },
+          "contenido": {
+            "type": "string",
+            "nullable": true,
+            "example": "<p>Bienvenido</p>"
+          },
+          "publicado": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateDomiciliario": {
+        "type": "object",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "user-123"
+          },
+          "zona": {
+            "type": "string",
+            "nullable": true,
+            "example": "Norte"
+          },
+          "vehiculo": {
+            "type": "string",
+            "nullable": true,
+            "example": "Moto"
+          },
+          "capacidad": {
+            "type": "integer",
+            "nullable": true,
+            "example": 50
+          }
+        }
+      },
+      "UpdateDomiciliario": {
+        "type": "object",
+        "properties": {
+          "zona": {
+            "type": "string",
+            "nullable": true,
+            "example": "Sur"
+          },
+          "vehiculo": {
+            "type": "string",
+            "nullable": true,
+            "example": "Camioneta"
+          },
+          "capacidad": {
+            "type": "integer",
+            "nullable": true,
+            "example": 100
+          },
+          "activo": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateCmsPage": {
+        "type": "object",
+        "required": [
+          "slug",
+          "titulo"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "inicio"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Inicio"
+          },
+          "contenido": {
+            "type": "string",
+            "nullable": true,
+            "example": "<p>Bienvenido</p>"
+          },
+          "publicado": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UpdateCmsPage": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "inicio"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Inicio"
+          },
+          "contenido": {
+            "type": "string",
+            "nullable": true,
+            "example": "<p>Bienvenido</p>"
+          },
+          "publicado": {
+            "type": "boolean",
+            "example": true
           }
         }
       }
@@ -832,7 +1005,7 @@
       }
     },
     "/api/v1/returns/{id}/status": {
-      "post": {
+      "patch": {
         "summary": "Cambiar estado de devolución",
         "tags": [
           "Returns"
@@ -1530,6 +1703,188 @@
         }
       }
     },
+    "/domiciliarios": {
+      "get": {
+        "tags": [
+          "Domiciliarios"
+        ],
+        "summary": "Lista domiciliarios",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "zona",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "activo",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de domiciliarios"
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "403": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Domiciliarios"
+        ],
+        "summary": "Crea un domiciliario",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDomiciliario"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Domiciliario creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Domiciliario"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "403": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      }
+    },
+    "/domiciliarios/{id}": {
+      "get": {
+        "tags": [
+          "Domiciliarios"
+        ],
+        "summary": "Obtiene un domiciliario por ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domiciliario encontrado"
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "403": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "404": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Domiciliarios"
+        ],
+        "summary": "Actualiza un domiciliario",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDomiciliario"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Domiciliario actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Domiciliario"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "403": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "404": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      }
+    },
     "/api/v1/deliveries": {
       "get": {
         "summary": "Listar entregas/domicilios",
@@ -1797,7 +2152,7 @@
       }
     },
     "/api/v1/deliveries/{id}/status": {
-      "post": {
+      "patch": {
         "summary": "Cambiar estado de entrega",
         "tags": [
           "Deliveries"
@@ -1854,6 +2209,175 @@
           },
           "404": {
             "description": "No encontrada"
+          }
+        }
+      }
+    },
+    "/cms": {
+      "get": {
+        "tags": [
+          "CMS"
+        ],
+        "summary": "Lista páginas CMS",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de páginas CMS"
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CMS"
+        ],
+        "summary": "Crea una página CMS",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCmsPage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Página CMS creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CmsPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "403": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      }
+    },
+    "/cms/{id}": {
+      "get": {
+        "tags": [
+          "CMS"
+        ],
+        "summary": "Obtiene una página CMS por ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página CMS encontrada"
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "404": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "CMS"
+        ],
+        "summary": "Actualiza una página CMS",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCmsPage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Página CMS actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CmsPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "403": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "404": {
+            "$ref": "#/components/schemas/Error"
           }
         }
       }
@@ -2306,6 +2830,50 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/catalog/products/{ref}/images": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Upload product image",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image uploaded successfully"
           }
         }
       }
@@ -3192,6 +3760,83 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/auth/permissions/:id/status": {
+      "patch": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Toggle permission status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "estado": "ACTIVO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permission status updated"
+          }
+        }
+      }
+    },
+    "/auth/roles/:id/status": {
+      "patch": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Toggle role status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ADMIN"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "estado": "Activo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role status updated"
           }
         }
       }

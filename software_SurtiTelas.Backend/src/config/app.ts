@@ -47,6 +47,7 @@ import { deliveryTrackingRouter } from '../modules/delivery/presentation/routes/
 import { commissionRouter } from '../modules/commission/presentation/routes/commission.routes';
 import { alertInventoryRouter } from '../modules/alert/presentation/routes/alert-inventory.routes';
 import { financialRouter } from '../modules/financial/presentation/routes/financial.routes';
+import { domiciliarioRouter } from '../modules/domiciliarios/presentation/routes/domiciliario.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -209,7 +210,6 @@ export function createApp(): Express {
   app.use('/api/v1/commissions', commissionsRoutes);
   app.use('/api/v1/company', companyRoutes);
   app.use('/api/v1/deliveries', deliveryRouter);
-  app.use('/api/v1/domiciliarios', deliveryRouter);
   app.use('/api/v1/cms', cmsRoutes);
   app.use('/api/v1/contact', contactRoutes);
   app.use('/api/v1/audit', auditRouter);
@@ -229,6 +229,7 @@ app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/admin/commissions', commissionRouter);
   app.use('/api/v1/admin/alerts', alertInventoryRouter);
   app.use('/api/v1/admin/financial', financialRouter);
+  app.use('/api/v1/domiciliarios', domiciliarioRouter);
   app.use('/api/v1/catalog', catalogRouter);
   app.use('/api/v1/customers', customerRouter);
   app.use('/api/v1/orders', orderRouter);

@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { Role } from '@prisma/client';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
@@ -201,7 +200,7 @@ export const deletePermission = async (req: Request, res: Response) => {
 };
 
 export const listRolePermissions = async (req: Request, res: Response) => {
-  const role = req.params.role as Role;
+  const role = req.params.role;
   const filters = parseDto(RolePermissionFiltersSchema, req.query);
   const result = await authUseCases.listRolePermissions.execute(role, filters);
   const response = buildApiPaginatedResponse(
@@ -215,14 +214,14 @@ export const listRolePermissions = async (req: Request, res: Response) => {
 };
 
 export const assignPermissionToRole = async (req: Request, res: Response) => {
-  const role = req.params.role as Role;
+  const role = req.params.role;
   const { permissionId } = parseDto(AssignPermissionSchema, req.body);
   await authUseCases.assignPermissionToRole.execute(role, permissionId);
   return ok(res, null, 'Permiso asignado al rol');
 };
 
 export const removePermissionFromRole = async (req: Request, res: Response) => {
-  const role = req.params.role as Role;
+  const role = req.params.role;
   const { permissionId } = parseDto(AssignPermissionSchema, req.body);
   await authUseCases.removePermissionFromRole.execute(role, permissionId);
   return noContent(res);

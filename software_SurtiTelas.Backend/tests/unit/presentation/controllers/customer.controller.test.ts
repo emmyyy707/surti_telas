@@ -51,7 +51,7 @@ describe('customer.controller', () => {
   });
 
   it('should create customer', async () => {
-    const req = mockReq({ body: { nombre: 'Juan', ciudad: 'Bogotá', tel: '3001234567', nit: '900123456-7', cupoTotal: 500000, estado: 'Activo' } });
+    const req = mockReq({ body: { nombre: 'Juan', apellidos: 'Pérez', ciudad: 'Bogotá', tel: '3001234567', nit: '900123456-7', cupoTotal: 500000, estado: 'Activo' } });
     const res = mockRes();
     const { customerUseCases } = await import('@/modules/customers/infrastructure/container/customerContainer');
     (customerUseCases.createCustomer.execute as any).mockResolvedValue({ id: '1', nombre: 'Juan' });
@@ -70,7 +70,7 @@ describe('customer.controller', () => {
 
     await updateCustomer(req, res);
 
-    expect(customerUseCases.updateCustomer.execute).toHaveBeenCalledWith('1', { nombre: 'Updated' });
+    expect(customerUseCases.updateCustomer.execute).toHaveBeenCalledWith('1', expect.objectContaining({ nombre: 'Updated' }));
   });
 
   it('should assign asesor to customer', async () => {

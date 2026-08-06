@@ -1,5 +1,6 @@
 export type NotificationType = 'INFO' | 'WARNING' | 'SUCCESS' | 'DANGER';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface NotificationData {
   id?: string;
   tipo: NotificationType;
@@ -31,8 +32,8 @@ export class Notification {
   }
 
   static validate(data: NotificationData): void {
-    if (!data.titulo.trim()) throw new Error('La notificación debe tener un título');
-    if (!data.mensaje.trim()) throw new Error('La notificación debe tener un mensaje');
+    if (!data.titulo.trim()) throw new BadRequestError('La notificación debe tener un título');
+    if (!data.mensaje.trim()) throw new BadRequestError('La notificación debe tener un mensaje');
   }
 
   markAsRead(): Notification {
@@ -40,3 +41,5 @@ export class Notification {
     return new Notification({ ...this, leida: true });
   }
 }
+
+

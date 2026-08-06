@@ -12,7 +12,19 @@ vi.mock('@/modules/orders/infrastructure/container/orderContainer', () => ({
   },
 }));
 
-const mockReq = (overrides = {}) => ({ user: { id: 'user-1', role: 'ADMIN', nombre: 'Admin' }, body: {}, params: {}, query: {}, ...overrides }) as unknown as Request;
+vi.mock('@/config/database', () => ({
+  prisma: {
+    customer: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    user: {
+      findFirst: vi.fn(),
+    },
+  },
+}));
+
+const mockReq = (overrides = {}) => ({ user: { id: 'user-1', role: 'ADMIN', nombre: 'Admin' }, body: {}, params: {}, query: {}, requestId: 'test-request-id', ...overrides }) as unknown as Request;
 const mockRes = () => {
   const res: Partial<Response> = {
     status: vi.fn().mockReturnThis(),
@@ -35,12 +47,14 @@ describe('order.controller', () => {
 
   it('getOrdersMe should call getOrders with clienteId filter and parsed query params', async () => {
     const req = mockReq({ 
-      user: { id: 'cli-1', role: 'CLIENTE', nombre: 'Cliente' }, 
-      query: { page: 2, limit: 10, estado: 'Nuevo', sort: 'fecha', order: 'asc' } 
+      user: { id: 'cli-1', role: 'CLIENTE', nombre: 'Cliente', email: 'cli@test.com' }, 
+      query: { page: 2, limit: 10, estado: 'Pendiente', sort: 'fecha', order: 'asc' } 
     });
     const res = mockRes();
     const { orderUseCases } = await import('@/modules/orders/infrastructure/container/orderContainer');
     (orderUseCases.getOrders.execute as any).mockResolvedValue({ data: [], meta: { total: 0, page: 2, limit: 10 } });
+    const { prisma } = await import('@/config/database');
+    (prisma.customer.findFirst as any).mockResolvedValue({ id: 'cli-1', nombre: 'Cliente', email: 'cli@test.com' });
 
     await getOrdersMe(req, res);
 
@@ -48,7 +62,7 @@ describe('order.controller', () => {
       clienteId: 'cli-1',
       page: 2,
       limit: 10,
-      estado: 'Nuevo',
+      estado: 'Pendiente',
       sort: 'fecha',
       order: 'asc'
     }));
@@ -86,12 +100,12 @@ describe('order.controller', () => {
 
     await createOrder(req, res);
 
-    expect(orderUseCases.createOrder.execute).toHaveBeenCalledWith({ clienteId: 'cli-1', itemsList: [{ nombre: 'Item', precio: 1000, cantidad: 1 }], asesorId: 'asesor-1' }, undefined);
+    expect(orderUseCases.createOrder.execute).toHaveBeenCalledWith({ clienteId: 'cli-1', itemsList: [{ nombre: 'Item', precio: 1000, cantidad: 1 }], asesorId: 'asesor-1' }, expect.any(String), { id: 'asesor-1', email: undefined, nombre: 'Asesor', role: 'ASESOR' });
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
   it('updateOrderStatus should throw 403 if user is not owner or admin', async () => {
-    const req = mockReq({ user: { id: 'user-1', role: 'ASESOR', nombre: 'Asesor X' }, params: { id: '1' }, body: { estado: 'En producción' } });
+    const req = mockReq({ user: { id: 'user-1', role: 'ASESOR', nombre: 'Asesor X' }, params: { id: '1' }, body: { estado: 'Aceptado' } });
     const res = mockRes();
     const { orderUseCases } = await import('@/modules/orders/infrastructure/container/orderContainer');
     (orderUseCases.getOrderById.execute as any).mockResolvedValue({ id: '1', cliente: 'Cliente', asesor: 'other-asesor' });

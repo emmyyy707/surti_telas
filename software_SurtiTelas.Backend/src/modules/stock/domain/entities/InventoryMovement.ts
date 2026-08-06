@@ -1,5 +1,7 @@
 export type StockMovementType = 'ENTRADA' | 'SALIDA' | 'AJUSTE';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface InventoryMovementData {
   id?: string;
   tipo: StockMovementType;
@@ -37,10 +39,11 @@ export class InventoryMovement {
   }
 
   static validate(data: InventoryMovementData): void {
-    if (!data.motivo.trim()) throw new Error('El movimiento debe tener un motivo');
-    if (!data.cantidad || data.cantidad <= 0) throw new Error('La cantidad debe ser mayor a cero');
+    if (!data.motivo.trim()) throw new BadRequestError('El movimiento debe tener un motivo');
+    if (!data.cantidad || data.cantidad <= 0) throw new BadRequestError('La cantidad debe ser mayor a cero');
     if (!data.productId && !data.rawMaterialId) {
-      throw new Error('El movimiento debe estar asociado a un producto o insumo');
+      throw new BadRequestError('El movimiento debe estar asociado a un producto o insumo');
     }
   }
 }
+

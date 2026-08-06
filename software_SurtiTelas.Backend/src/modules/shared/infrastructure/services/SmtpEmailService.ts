@@ -10,6 +10,8 @@ export interface SmtpConfig {
   fromEmail: string;
 }
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export class SmtpEmailService {
   private readonly config: SmtpConfig;
   private transporter: nodemailer.Transporter<SendMailOptions> | null = null;
@@ -86,7 +88,7 @@ Si no solicitaste este cambio, ignora este correo.`,
     try {
       const transporter = await this.getTransporter();
       const result = await transporter.sendMail(mailOptions);
-      const rawPreviewUrl = getTestMessageUrl(result as any);
+      const rawPreviewUrl = getTestMessageUrl(result as any); // eslint-disable-line @typescript-eslint/no-explicit-any
       const previewUrl = typeof rawPreviewUrl === 'string' ? rawPreviewUrl : undefined;
       if (previewUrl) {
         console.log(`[EMAIL] Password reset email sent to ${email}`);
@@ -97,8 +99,10 @@ Si no solicitaste este cambio, ignora este correo.`,
       return { previewUrl };
     } catch (error) {
       console.error(`[EMAIL] Failed to send password reset to ${email}:`, error);
-      throw new Error('No se pudo enviar el correo de recuperación');
+      throw new BadRequestError('No se pudo enviar el correo de recuperación');
     }
   }
 }
+
+
 

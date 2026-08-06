@@ -6,11 +6,9 @@ import { ShoppingBag, Clock, CheckCircle2, DollarSign, ArrowRight, Package, User
 import s from './InicioCliente.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { DetailModal } from '@/shared/ui/DetailModal';
-import { Modal } from '@/shared/ui/Modal';
 import { Button } from '@/shared/ui/Button';
 import type { Pedido } from '@/core/types';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
-import { notificationsApi } from '@/infrastructure/api/notificationsApi';
 import { useAuthStore } from '@/core/stores/authStore';
 
 const statusVariant = (estado: Pedido['estado']) => {

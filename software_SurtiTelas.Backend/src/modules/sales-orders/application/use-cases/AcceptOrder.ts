@@ -9,6 +9,7 @@ import { prisma } from '../../../../config/database';
 import { toOrderData } from '../../../orders/infrastructure/mappers/OrderMapper';
 import { logger } from '../../../../shared/infrastructure/logger';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export class AcceptOrder {
   constructor(
     private readonly orderRepo: OrderRepository,
@@ -26,18 +27,18 @@ export class AcceptOrder {
     if (!order) throw new NotFoundError('Pedido no encontrado');
 
     if (!order.canBeAccepted()) {
-      throw new Error('El pedido no puede ser aceptado en su estado actual');
+      throw new BadRequestError('El pedido no puede ser aceptado en su estado actual');
     }
 
     if (!order.hasPaymentProof()) {
-      throw new Error('El pedido debe tener un comprobante de pago válido');
+      throw new BadRequestError('El pedido debe tener un comprobante de pago válido');
     }
 
     const fechaValidacion = new Date();
     const medioPago = data.medioPago ?? order.medioPago;
 
     if (!medioPago) {
-      throw new Error('El pedido debe tener un medio de pago definido');
+      throw new BadRequestError('El pedido debe tener un medio de pago definido');
     }
 
     const updatedOrder = await this.orderRepo.updateToAccepted(id, {
@@ -164,3 +165,5 @@ export class AcceptOrder {
     }
   }
 }
+
+

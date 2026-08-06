@@ -214,6 +214,10 @@ export const AdminSeguimientoProduccion: React.FC = () => {
 
   const handleActualizarAvance = async () => {
     if (!selectedOrden || nuevoAvance === '') return;
+    if (selectedOrden.estado === 'Completada') {
+      toast.error('La orden ya está completada');
+      return;
+    }
     try {
       setSaving(true);
       const producidas = Number(nuevoAvance);
@@ -247,7 +251,12 @@ export const AdminSeguimientoProduccion: React.FC = () => {
   };
 
   const handleCompletarOrden = async (orden: OrdenProduccion) => {
+    if (orden.estado === 'Completada') {
+      toast.error('La orden ya está completada');
+      return;
+    }
     try {
+      setSaving(true);
       await productionApi.complete(orden.id);
       setOrdenes(prev => prev.map(o => o.id === orden.id
         ? { ...o, cantidadProducida: o.cantidad, avance: 100, estado: 'Completada' as const }
@@ -256,6 +265,8 @@ export const AdminSeguimientoProduccion: React.FC = () => {
       toast.success(`Orden ${orden.numeroOrden} marcada como entregada`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error completando orden');
+    } finally {
+      setSaving(false);
     }
   };
 

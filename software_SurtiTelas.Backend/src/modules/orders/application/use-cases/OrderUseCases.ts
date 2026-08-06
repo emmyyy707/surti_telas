@@ -156,7 +156,7 @@ export class CreateOrder {
       const itemsList = input.itemsList ?? [];
       const total = itemsList.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
       if (!customer.isTrustedCustomer && !customer.tieneCupoDisponible(total)) {
-        throw new Error('El cliente no tiene cupo disponible para este pedido');
+        throw new BadRequestError('El cliente no tiene cupo disponible para este pedido');
       }
 
       const stockItems: { productId: string; productRef: string; cantidad: number }[] = [];
@@ -595,4 +595,6 @@ export class CancelOrder {
     return updated;
   }
 }
+
+
 

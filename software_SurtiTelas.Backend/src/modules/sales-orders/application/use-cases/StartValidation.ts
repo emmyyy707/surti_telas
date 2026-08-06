@@ -3,6 +3,7 @@ import type { OrderRepository } from '../../../orders/domain/repositories/OrderR
 import type { OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
 import type { EventBus } from '../../../../shared/application/events';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export class StartValidation {
   constructor(
     private readonly orderRepo: OrderRepository,
@@ -15,7 +16,7 @@ export class StartValidation {
     if (!order) throw new NotFoundError('Pedido no encontrado');
 
     if (!order.canBeValidated()) {
-      throw new Error('El pedido no puede iniciar validación en su estado actual');
+      throw new BadRequestError('El pedido no puede iniciar validación en su estado actual');
     }
 
     const updatedOrder = await this.orderRepo.updateStatus(id, 'Pendiente');
@@ -49,3 +50,5 @@ export class StartValidation {
     return updatedOrder;
   }
 }
+
+

@@ -4,7 +4,6 @@ import { Eye, CheckCircle2, MapPin, Clock, Package, Phone, MessageCircle, Refres
 import s from './MisEntregas.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
-import { DetailModal } from '@/shared/ui/DetailModal';
 import { deliveriesApi } from '@/infrastructure/api/deliveriesApi';
 import { useAuthStore } from '@/core/stores/authStore';
 
@@ -51,7 +50,7 @@ export const DomiciliarioEntregas: React.FC = () => {
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
   const [statusEntrega, setStatusEntrega] = useState<Entrega | null>(null);
   const [nextEstado, setNextEstado] = useState<Entrega['estado']>('Pendiente');
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [_updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {

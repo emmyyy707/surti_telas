@@ -1,3 +1,4 @@
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface CompanyConfigData {
   id?: string;
   nombre: string;
@@ -42,7 +43,9 @@ export class CompanyConfig {
 
   static validate(data: CompanyConfigData): void {
     if (!data.nombre.trim()) {
-      throw new Error('El nombre de la empresa es obligatorio');
+      throw new BadRequestError('El nombre de la empresa es obligatorio');
     }
   }
 }
+
+

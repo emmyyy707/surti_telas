@@ -1,9 +1,8 @@
-import { Role } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import { ForbiddenError, UnauthorizedError } from '../../../../shared/domain/errors';
 
 export const requireRole =
-  (...roles: Role[]) =>
+  (...roles: string[]) =>
   (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) throw new UnauthorizedError();
     if (!roles.includes(req.user.role)) throw new ForbiddenError('Rol no autorizado');

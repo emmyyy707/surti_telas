@@ -4,6 +4,7 @@ import { salesOrderUseCases } from '../../infrastructure/container/salesOrderCon
 import { canViewSalesReport } from '../../application/policies/orderApprovalPolicy';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { z } from 'zod';
+import { ForbiddenError } from '../../../../shared/domain/errors';
 
 const SalesReportQuerySchema = z.object({
   asesorId: z.string().optional(),
@@ -14,10 +15,11 @@ const SalesReportQuerySchema = z.object({
 
 export const getSalesOrdersReport = async (req: Request, res: Response) => {
   if (!canViewSalesReport(req.user!)) {
-    throw new Error('No tienes permiso para ver reportes');
+    throw new ForbiddenError('No tienes permiso para ver reportes');
   }
 
   const filters = parseDto(SalesReportQuerySchema, req.query);
   const report = await salesOrderUseCases.getSalesReport.execute(filters);
   return ok(res, report);
 };
+

@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { BadRequestError, NotFoundError } from '../../../../shared/domain/errors';
 import { Product } from '../../domain/entities/Product';
+import { computeStockStatus } from '../../domain/entities/Product';
 import type {
   CreateProductInput,
   ProductFilters,
@@ -101,7 +102,8 @@ export class PrismaProductRepository implements ProductRepository {
   async create(input: CreateProductInput): Promise<Product> {
     const categoriaId = await this.resolveCategoriaId(input);
     const ref = input.ref?.trim() || `REF-${Date.now()}`;
-    const product = new Product({ ...input, ref });
+    const stock = input.stock ?? computeStockStatus(input.cantidadStock);
+    const product = new Product({ ...input, stock, ref });
     const row = await this.prisma.product.create({
       data: toCreateInput(product, categoriaId, ref) as Prisma.ProductCreateInput,
       include: { categoria: true },

@@ -11,6 +11,7 @@ import {
   ProductSchema,
   ProductUpdateSchema,
 } from '../validators/catalog.validators';
+import { computeStockStatus } from '../../domain/entities/Product';
 
 export const listProducts = async (req: Request, res: Response) => {
   const filters = parseDto(ProductFiltersSchema, req.query);
@@ -33,7 +34,8 @@ export const getProduct = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   const input = parseDto(ProductSchema, req.body);
-  const product = await catalogUseCases.createProduct.execute(input);
+  const stock = input.stock ?? computeStockStatus(input.cantidadStock);
+  const product = await catalogUseCases.createProduct.execute({ ...input, stock });
   clearCache('/api/v1/catalog/products');
   return created(res, product, 'Producto creado');
 };

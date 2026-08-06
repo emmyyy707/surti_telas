@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Edit, Trash2, UserPlus, Package, CheckCircle2, Clock, XCircle, User } from 'lucide-react';
+import { Edit, Trash2, UserPlus, Package, CheckCircle2, Clock, XCircle, User, MapPin } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import s from './AdminDomicilios.module.css';
 import f from '@/styles/Form.module.css';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '../../../shared/ui/DataTable';
-import { usersApi, type Usuario } from '../../../infrastructure/api/usersApi';
+import { domiciliariosApi, type Domiciliario } from '@/infrastructure/api/domiciliariosApi';
+import { usersApi, type Usuario } from '@/infrastructure/api/usersApi';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import { Badge } from '@/shared/ui/Badge';
 
 export const AdminDomicilios: React.FC = () => {
   const [search, setSearch] = useState('');
-  const [domiciliarios, setDomiciliarios] = useState<Usuario[]>([]);
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const [domiciliarios, setDomiciliarios] = useState<Domiciliario[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,107 +25,71 @@ export const AdminDomicilios: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [formNombre, setFormNombre] = useState('');
-  const [formApellidos, setFormApellidos] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPassword, setFormPassword] = useState('');
-  const [formConfirmPassword, setFormConfirmPassword] = useState('');
-  const [formTelefono, setFormTelefono] = useState('');
-  const [formDireccion, setFormDireccion] = useState('');
-  const [formTipoDocumento, setFormTipoDocumento] = useState('');
-  const [formNumeroDocumento, setFormNumeroDocumento] = useState('');
+  const [formUserId, setFormUserId] = useState('');
+  const [formZona, setFormZona] = useState('');
+  const [formVehiculo, setFormVehiculo] = useState('');
+  const [formCapacidad, setFormCapacidad] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchDomiciliarios() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await usersApi.list({ role: 'DOMICILIARIO' });
-        if (!cancelled) {
-          setDomiciliarios(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Error al cargar domiciliarios');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+  const fetchDomiciliarios = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await domiciliariosApi.list({ limit: 100 });
+      setDomiciliarios(result?.items ?? []);
+    } catch {
+      setError('No se pudieron cargar los domiciliarios');
+      toast.error('No se pudieron cargar los domiciliarios');
+    } finally {
+      setLoading(false);
     }
-
-    fetchDomiciliarios();
-    return () => { cancelled = true; };
   }, []);
+
+  const fetchUsuarios = useCallback(async () => {
+    try {
+      const data = await usersApi.list({ limit: 100, role: 'DOMICILIARIO' });
+      setUsuarios(data);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchDomiciliarios();
+    void fetchUsuarios();
+  }, [fetchDomiciliarios, fetchUsuarios]);
 
   const openCreate = () => {
     setEditingId(null);
-    setFormNombre('');
-    setFormApellidos('');
-    setFormEmail('');
-    setFormPassword('');
-    setFormConfirmPassword('');
-    setFormTelefono('');
-    setFormDireccion('');
-    setFormTipoDocumento('');
-    setFormNumeroDocumento('');
+    setFormUserId('');
+    setFormZona('');
+    setFormVehiculo('');
+    setFormCapacidad('');
     setCreateOpen(true);
   };
 
-  const openEdit = (item: Usuario) => {
+  const openEdit = (item: Domiciliario) => {
     setEditingId(item.id);
-    setFormNombre(item.nombre);
-    setFormApellidos('');
-    setFormEmail(item.email);
-    setFormPassword('');
-    setFormConfirmPassword('');
-    setFormTelefono('');
-    setFormDireccion('');
-    setFormTipoDocumento('');
-    setFormNumeroDocumento('');
+    setFormUserId(item.userId);
+    setFormZona(item.zona ?? '');
+    setFormVehiculo(item.vehiculo ?? '');
+    setFormCapacidad(item.capacidad?.toString() ?? '');
     setEditOpen(true);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nombre = formNombre.trim();
-    const email = formEmail.trim();
-    const password = formPassword;
-    const confirmPassword = formConfirmPassword;
-
-    if (!nombre || !email || !password) {
-      toast.error('Nombre, correo y contraseña son obligatorios');
+    if (!formUserId) {
+      toast.error('Selecciona un usuario');
       return;
     }
-    if (password.length < 8) {
-      toast.error('La contraseña debe tener al menos 8 caracteres');
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error('Las contraseñas no coinciden');
-      return;
-    }
-    if (!formTipoDocumento || !formNumeroDocumento.trim()) {
-      toast.error('Tipo y número de documento son obligatorios');
-      return;
-    }
-
     setSaving(true);
     try {
-      const created = await usersApi.create({
-        nombre,
-        apellidos: formApellidos.trim() || undefined,
-        email,
-        password,
-        role: 'DOMICILIARIO',
-        telefono: formTelefono.trim() || undefined,
-        direccion: formDireccion.trim() || undefined,
-        tipoDocumento: formTipoDocumento || undefined,
-        numeroDocumento: formNumeroDocumento.trim() || undefined,
+      const created = await domiciliariosApi.create({
+        userId: formUserId,
+        zona: formZona || undefined,
+        vehiculo: formVehiculo || undefined,
+        capacidad: formCapacidad ? Number(formCapacidad) : undefined,
       });
       setDomiciliarios(prev => [...prev, created]);
       toast.success('Domiciliario creado');
@@ -134,18 +103,15 @@ export const AdminDomicilios: React.FC = () => {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingId || !formNombre.trim()) return;
+    if (!editingId) return;
     setSaving(true);
     try {
-      const updated = await usersApi.update(editingId, {
-        nombre: formNombre.trim(),
-        apellidos: formApellidos.trim() || undefined,
-        telefono: formTelefono.trim() || undefined,
-        direccion: formDireccion.trim() || undefined,
-        tipoDocumento: formTipoDocumento || undefined,
-        numeroDocumento: formNumeroDocumento.trim() || undefined,
+      const updated = await domiciliariosApi.update(editingId, {
+        zona: formZona || undefined,
+        vehiculo: formVehiculo || undefined,
+        capacidad: formCapacidad ? Number(formCapacidad) : undefined,
       });
-      setDomiciliarios(prev => prev.map(d => d.id === editingId ? { ...d, ...updated } : d));
+      setDomiciliarios(prev => prev.map(d => (d.id === editingId ? updated : d)));
       toast.success('Domiciliario actualizado');
       setEditOpen(false);
       setEditingId(null);
@@ -160,7 +126,7 @@ export const AdminDomicilios: React.FC = () => {
     if (!deleteId) return;
     setSaving(true);
     try {
-      await usersApi.remove(deleteId);
+      await domiciliariosApi.update(deleteId, { activo: false });
       setDomiciliarios(prev => prev.filter(d => d.id !== deleteId));
       toast.success('Domiciliario eliminado');
       setDeleteId(null);
@@ -171,54 +137,71 @@ export const AdminDomicilios: React.FC = () => {
     }
   };
 
-  const filteredDomiciliarios = domiciliarios.filter(d =>
-    d.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    d.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredDomiciliarios = domiciliarios.filter(d => {
+    const usuario = usuarios.find(u => u.id === d.userId);
+    const nombre = usuario?.nombre ?? '';
+    const email = usuario?.email ?? '';
+    return nombre.toLowerCase().includes(debouncedSearch.toLowerCase()) || email.toLowerCase().includes(debouncedSearch.toLowerCase());
+  });
 
   const stats = {
     total: domiciliarios.length,
-    activos: domiciliarios.filter(d => d.estado === 'Activo').length,
-    inactivos: domiciliarios.filter(d => d.estado === 'Inactivo').length,
-    pendientes: domiciliarios.filter(d => d.estado === 'Pendiente').length,
+    activos: domiciliarios.filter(d => d.activo).length,
+    inactivos: domiciliarios.filter(d => !d.activo).length,
+    pendientes: domiciliarios.filter(d => !d.zona).length,
   };
 
-  const columns: DataTableColumn<Usuario>[] = [
-    { key: 'id', header: 'ID', sortable: true },
-    { key: 'nombre', header: 'Nombre', sortable: true },
-    { key: 'email', header: 'Email', sortable: true },
-    { key: 'estado', header: 'Estado', sortable: true },
+  const columns: DataTableColumn<Domiciliario>[] = [
+    { key: 'userId', header: 'Usuario', sortable: true, render: (item) => {
+      const usuario = usuarios.find(u => u.id === item.userId);
+      return usuario?.nombre ?? item.userId;
+    }},
+    { key: 'zona', header: 'Zona', sortable: true },
+    { key: 'vehiculo', header: 'Vehículo', sortable: true },
+    { key: 'capacidad', header: 'Capacidad', sortable: true },
+    {
+      key: 'activo',
+      header: 'Estado',
+      render: (item) => (
+        <Badge variant={item.activo ? 'success' : 'default'}>
+          {item.activo ? 'Activo' : 'Inactivo'}
+        </Badge>
+      ),
+    },
   ];
 
-  const detailPanel: DataTableDetailPanel<Usuario> = {
-    title: item => `Detalle: ${item.nombre}`,
+  const detailPanel: DataTableDetailPanel<Domiciliario> = {
+    title: (item) => `Domiciliario ${item.id}`,
     size: 'lg',
-    header: item => ({
+    header: (item) => ({
       icon: <User size={18} />,
       title: 'Domiciliario',
       code: item.id,
-      subtitle: item.email,
-      meta: item.rol,
-      status: item.estado,
-      badgeVariant: item.estado === 'Activo' ? 'success' : item.estado === 'Pendiente' ? 'warning' : 'default',
+      subtitle: item.zona ?? 'Sin zona',
+      meta: item.vehiculo ?? 'Sin vehículo',
+      status: item.activo ? 'Activo' : 'Inactivo',
+      badgeVariant: item.activo ? 'success' : 'default',
     }),
-    kpis: item => [
-      { label: 'Rol', value: item.rol, icon: <Package size={16} />, tone: 'primary' as const },
-      { label: 'Registro', value: item.fechaRegistro, icon: <Clock size={16} />, tone: 'info' as const },
+    kpis: (item) => [
+      { label: 'Capacidad', value: item.capacidad?.toString() ?? 'N/A', icon: <Package size={16} />, tone: 'primary' as const },
+      { label: 'Zona', value: item.zona ?? 'N/A', icon: <MapPin size={16} />, tone: 'info' as const },
     ],
-    render: (item) => (
-      <div className={s.detailPanel}>
-        <div className={s.detailRow}><span>Email:</span> {item.email || '—'}</div>
-        <div className={s.detailRow}><span>Rol:</span> {item.rol}</div>
-        <div className={s.detailRow}><span>Estado:</span> {item.estado}</div>
-        <div className={s.detailRow}><span>Fecha registro:</span> {item.fechaRegistro}</div>
-      </div>
-    ),
+    render: (item) => {
+      const usuario = usuarios.find(u => u.id === item.userId);
+      return (
+        <div className={s.detailPanel}>
+          <div className={s.detailRow}><span>Usuario:</span> {usuario?.nombre ?? item.userId}</div>
+          <div className={s.detailRow}><span>Email:</span> {usuario?.email ?? '-'}</div>
+          <div className={s.detailRow}><span>Vehículo:</span> {item.vehiculo ?? '-'}</div>
+          <div className={s.detailRow}><span>Capacidad:</span> {item.capacidad ?? '-'}</div>
+        </div>
+      );
+    },
   };
 
-  const actions: DataTableAction<Usuario>[] = [
-    { label: 'Editar', icon: <Edit size={14} />, onClick: (item) => openEdit(item) },
-    { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: (item) => setDeleteId(item.id) },
+  const actions: DataTableAction<Domiciliario>[] = [
+    { label: 'Editar', icon: <Edit size={14} />, onClick: openEdit },
+    { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: (item) => setDeleteId(item.id), danger: true },
   ];
 
   if (loading) {
@@ -254,13 +237,7 @@ export const AdminDomicilios: React.FC = () => {
         </div>
         <div className={s.statCard} style={{ textAlign: 'center', color: 'var(--color-danger)' }}>
           <p>{error}</p>
-          <button
-            className={s.actionBtn}
-            style={{ marginTop: 12 }}
-            onClick={() => window.location.reload()}
-          >
-            Reintentar
-          </button>
+          <button className={s.actionBtn} style={{ marginTop: 12 }} onClick={fetchDomiciliarios}>Reintentar</button>
         </div>
       </div>
     );
@@ -285,7 +262,7 @@ export const AdminDomicilios: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>
@@ -314,78 +291,42 @@ export const AdminDomicilios: React.FC = () => {
       </div>
 
       <div className={s.tableWrapper}>
-        <DataTable
+        <DataTable<Domiciliario>
           data={filteredDomiciliarios}
           columns={columns}
           detailPanel={detailPanel}
           actions={actions}
           enableColumnFilters={false}
-
           enableSorting={true}
           toolbarLeft={null}
           maxVisibleColumns={5} enableExport={false} enableRowSelection={false}
         />
       </div>
 
-      <Modal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Nuevo domiciliario"
-        description="Crea un nuevo usuario domiciliario."
-        size="lg"
-        variant="form"
-      >
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo domiciliario" description="Asocia un usuario existente como domiciliario." size="lg" variant="form">
         <form id="createDomiciliarioForm" className={f.form} onSubmit={handleCreate}>
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Nombre *</label>
-              <input type="text" className={f.input} value={formNombre} onChange={e => setFormNombre(e.target.value)} placeholder="Ej: Juan" required />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Apellidos</label>
-              <input type="text" className={f.input} value={formApellidos} onChange={e => setFormApellidos(e.target.value)} placeholder="Ej: Pérez García" />
-            </div>
+          <div className={f.field}>
+            <label className={f.label}>Usuario *</label>
+            <select className={f.select} value={formUserId} onChange={e => setFormUserId(e.target.value)} required>
+              <option value="">Selecciona un usuario...</option>
+              {usuarios.filter(u => u.rol === 'domiciliario').map(u => (
+                <option key={u.id} value={u.id}>{u.nombre} ({u.email})</option>
+              ))}
+            </select>
           </div>
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Correo electrónico *</label>
-              <input type="email" className={f.input} value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="Ej: juan@example.com" required />
+              <label className={f.label}>Zona</label>
+              <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} placeholder="Ej: Norte" />
             </div>
             <div className={f.field}>
-              <label className={f.label}>Teléfono</label>
-              <input type="tel" className={f.input} value={formTelefono} onChange={e => setFormTelefono(e.target.value)} placeholder="Opcional" inputMode="numeric" />
-            </div>
-          </div>
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Tipo de documento *</label>
-              <select className={f.select} value={formTipoDocumento} onChange={e => setFormTipoDocumento(e.target.value)} required>
-                <option value="">Selecciona...</option>
-                <option value="CC">Cédula de ciudadanía</option>
-                <option value="NIE">NIE</option>
-                <option value="PASSPORT">Pasaporte</option>
-                <option value="CE">Cédula de extranjería</option>
-                <option value="OTHER">Otro</option>
-              </select>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Número de documento *</label>
-              <input type="text" className={f.input} value={formNumeroDocumento} onChange={e => setFormNumeroDocumento(e.target.value)} placeholder="Ej: 123456789" required inputMode="numeric" />
+              <label className={f.label}>Vehículo</label>
+              <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} placeholder="Ej: Moto, Camioneta" />
             </div>
           </div>
           <div className={f.field}>
-            <label className={f.label}>Dirección</label>
-            <input type="text" className={f.input} value={formDireccion} onChange={e => setFormDireccion(e.target.value)} placeholder="Calle, número, ciudad..." />
-          </div>
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Contraseña *</label>
-              <input type="password" className={f.input} value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Confirmar contraseña *</label>
-              <input type="password" className={f.input} value={formConfirmPassword} onChange={e => setFormConfirmPassword(e.target.value)} placeholder="Repite la contraseña" required minLength={8} />
-            </div>
+            <label className={f.label}>Capacidad</label>
+            <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} placeholder="Ej: 50" min={1} />
           </div>
           <div className={f.formActions}>
             <Button variant="secondary" type="button" onClick={() => setCreateOpen(false)} disabled={saving}>Cancelar</Button>
@@ -394,55 +335,25 @@ export const AdminDomicilios: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal
-        open={editOpen}
-        onClose={() => { setEditOpen(false); setEditingId(null); }}
-        title="Editar domiciliario"
-        description="Modifica los datos del domiciliario."
-        size="lg"
-        variant="form"
-      >
+      <Modal open={editOpen} onClose={() => { setEditOpen(false); setEditingId(null); }} title="Editar domiciliario" description="Modifica los datos del domiciliario." size="lg" variant="form">
         <form id="editDomiciliarioForm" className={f.form} onSubmit={handleUpdate}>
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Nombre *</label>
-              <input type="text" className={f.input} value={formNombre} onChange={e => setFormNombre(e.target.value)} required />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Apellidos</label>
-              <input type="text" className={f.input} value={formApellidos} onChange={e => setFormApellidos(e.target.value)} />
-            </div>
+          <div className={f.field}>
+            <label className={f.label}>Usuario</label>
+            <input type="text" className={f.input} value={usuarios.find(u => u.id === formUserId)?.nombre ?? ''} disabled />
           </div>
           <div className={f.formRow}>
             <div className={f.field}>
-              <label className={f.label}>Correo electrónico</label>
-              <input type="email" className={f.input} value={formEmail} disabled />
+              <label className={f.label}>Zona</label>
+              <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} />
             </div>
             <div className={f.field}>
-              <label className={f.label}>Teléfono</label>
-              <input type="tel" className={f.input} value={formTelefono} onChange={e => setFormTelefono(e.target.value)} placeholder="Opcional" />
-            </div>
-          </div>
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Tipo de documento</label>
-              <select className={f.select} value={formTipoDocumento} onChange={e => setFormTipoDocumento(e.target.value)}>
-                <option value="">Selecciona...</option>
-                <option value="CC">Cédula de ciudadanía</option>
-                <option value="NIE">NIE</option>
-                <option value="PASSPORT">Pasaporte</option>
-                <option value="CE">Cédula de extranjería</option>
-                <option value="OTHER">Otro</option>
-              </select>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Número de documento</label>
-              <input type="text" className={f.input} value={formNumeroDocumento} onChange={e => setFormNumeroDocumento(e.target.value)} inputMode="numeric" />
+              <label className={f.label}>Vehículo</label>
+              <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} />
             </div>
           </div>
           <div className={f.field}>
-            <label className={f.label}>Dirección</label>
-            <input type="text" className={f.input} value={formDireccion} onChange={e => setFormDireccion(e.target.value)} />
+            <label className={f.label}>Capacidad</label>
+            <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} min={1} />
           </div>
           <div className={f.formActions}>
             <Button variant="secondary" type="button" onClick={() => { setEditOpen(false); setEditingId(null); }} disabled={saving}>Cancelar</Button>
@@ -451,13 +362,7 @@ export const AdminDomicilios: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal
-        open={!!deleteId}
-        onClose={() => setDeleteId(null)}
-        title="Eliminar domiciliario"
-        description="Esta acción no se puede deshacer. El usuario será eliminado permanentemente."
-        size="sm"
-      >
+      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} title="Eliminar domiciliario" description="Esta acción no se puede deshacer. El registro de domiciliario será eliminado." size="sm">
         <div className={f.formActions}>
           <Button variant="secondary" onClick={() => setDeleteId(null)} disabled={saving}>Cancelar</Button>
           <Button variant="danger" onClick={handleDelete} disabled={saving}>{saving ? 'Eliminando...' : 'Eliminar'}</Button>

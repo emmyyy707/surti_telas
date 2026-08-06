@@ -6,6 +6,7 @@ import { DataTable } from '@/shared/ui/DataTable';
 import { paymentsApi } from '@/infrastructure/api/paymentsApi';
 import { Badge } from '@/shared/ui/Badge';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface PaymentRow {
   id: string;
@@ -26,6 +27,7 @@ function formatDate(iso: string): string {
 
 export const AdminHistorialPagos: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,12 +61,12 @@ export const AdminHistorialPagos: React.FC = () => {
 
   const filtered = useMemo(() => {
     return payments.filter(p =>
-      p.id.toLowerCase().includes(search.toLowerCase()) ||
-      p.cliente.toLowerCase().includes(search.toLowerCase()) ||
-      p.asesor.toLowerCase().includes(search.toLowerCase()) ||
-      p.referencia?.toLowerCase().includes(search.toLowerCase())
+      p.id.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.cliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.asesor.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.referencia?.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [payments, search]);
+  }, [payments, debouncedSearch]);
 
   const formatCurrency = (valor: number) => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(valor);
@@ -95,7 +97,7 @@ export const AdminHistorialPagos: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

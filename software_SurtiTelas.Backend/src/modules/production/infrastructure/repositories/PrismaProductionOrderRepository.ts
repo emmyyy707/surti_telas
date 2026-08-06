@@ -183,6 +183,10 @@ export class PrismaProductionOrderRepository implements ProductionOrderRepositor
     const existing = await this.getById(id);
     if (!existing) throw new NotFoundError('Orden de producción no encontrada');
 
+    if (existing.estado === 'TERMINADO') {
+      return existing;
+    }
+
     if (!existing.puedeTerminar()) {
       throw new BadRequestError('La orden debe tener avance 100 para completarse');
     }

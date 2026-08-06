@@ -93,6 +93,8 @@ describe('errorHandler', () => {
   });
 
   it('should handle generic Error as 500', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
     const err = new Error('Something went wrong');
     const res = mockRes();
 
@@ -105,6 +107,7 @@ describe('errorHandler', () => {
       message: 'Error interno del servidor',
       requestId: 'test-request-id',
     });
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('should include requestId in 500 responses', () => {

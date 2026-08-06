@@ -1,5 +1,6 @@
 export type WebhookEventType = string;
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface WebhookSubscriptionData {
   id?: string;
   url: string;
@@ -38,10 +39,10 @@ export class WebhookSubscription {
 
   static validate(data: WebhookSubscriptionData): void {
     if (!data.url || !data.url.startsWith('http')) {
-      throw new Error('La URL del webhook debe ser válida');
+      throw new BadRequestError('La URL del webhook debe ser válida');
     }
     if (!data.events || data.events.length === 0) {
-      throw new Error('El webhook debe estar suscrito a al menos un evento');
+      throw new BadRequestError('El webhook debe estar suscrito a al menos un evento');
     }
   }
 
@@ -49,3 +50,5 @@ export class WebhookSubscription {
     return this.active && this.events.includes(eventType);
   }
 }
+
+

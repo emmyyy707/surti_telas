@@ -7,6 +7,7 @@ import { DataTable, DataTableColumn, DataTableDetailPanel } from '@/shared/ui/Da
 import { inventoryApi, type InventoryMovement } from '@/infrastructure/api/inventoryApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { TIPOS_MOVIMIENTO, MOTIVOS_MOVIMIENTO } from '@/shared/constants/options';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface MovimientoFila {
   id: string;
@@ -36,6 +37,7 @@ function toFila(m: InventoryMovement): MovimientoFila {
 
 export const AdminInventario: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [ajusteModalOpen, setAjusteModalOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<MovimientoFila | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -68,11 +70,11 @@ export const AdminInventario: React.FC = () => {
 
   const filtered = useMemo(() => {
     return movimientos.filter(p =>
-      p.ref.toLowerCase().includes(search.toLowerCase()) ||
-      p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      p.motivo.toLowerCase().includes(search.toLowerCase())
+      p.ref.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.nombre.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.motivo.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [movimientos, search]);
+  }, [movimientos, debouncedSearch]);
 
   const tableData = useMemo(() => filtered.map(p => ({ ...p, id: p.ref })), [filtered]);
 
@@ -170,7 +172,7 @@ export const AdminInventario: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

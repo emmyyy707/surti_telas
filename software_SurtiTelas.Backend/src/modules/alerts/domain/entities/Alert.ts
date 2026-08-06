@@ -2,6 +2,7 @@ export type AlertType = 'INFO' | 'WARNING' | 'SUCCESS' | 'DANGER';
 export type AlertState = 'PENDIENTE' | 'LEIDA' | 'RESUELTA' | 'CANCELADA';
 export type AlertPriority = 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface AlertData {
   id?: string;
   tipo: AlertType;
@@ -57,9 +58,9 @@ export class Alert {
   }
 
   static validate(data: AlertData): void {
-    if (!data.tipo) throw new Error('La alerta debe tener un tipo');
-    if (!data.modulo.trim()) throw new Error('La alerta debe tener un módulo');
-    if (!data.mensaje.trim()) throw new Error('La alerta debe tener un mensaje');
+    if (!data.tipo) throw new BadRequestError('La alerta debe tener un tipo');
+    if (!data.modulo.trim()) throw new BadRequestError('La alerta debe tener un módulo');
+    if (!data.mensaje.trim()) throw new BadRequestError('La alerta debe tener un mensaje');
   }
 
   markAsRead(usuarioId: string): Alert {
@@ -82,3 +83,4 @@ export class Alert {
     return new Alert({ ...this, estado: 'CANCELADA' });
   }
 }
+

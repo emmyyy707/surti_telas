@@ -1,4 +1,3 @@
-import { Role } from '@prisma/client';
 import { ConflictError } from '../../../../shared/domain/errors';
 import type { AuthUser } from '../../domain/entities/User';
 import type { AuthRepository } from '../../domain/repositories/AuthRepository';
@@ -20,7 +19,7 @@ export class RegisterUser {
     apellidos?: string;
     email: string;
     password: string;
-    role: Role;
+    role: string;
     telefono?: string;
     direccion?: string;
     tipoDocumento?: string;

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { PackageCheck, MapPin, Phone, User, Filter, RefreshCw, ChevronRight, X } from 'lucide-react';
+import { PackageCheck, MapPin, Phone, User, Filter, RefreshCw, X } from 'lucide-react';
 import s from './DomiciliarioEntregas.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
@@ -225,7 +225,6 @@ export const DomiciliarioEntregas: React.FC = () => {
             <div className={s.statusGrid}>
               {estadosDisponibles(statusEntrega.estado).map(estado => {
                 const cfg = estadoConfig[estado];
-                const isActive = false;
                 return (
                   <button
                     key={estado}

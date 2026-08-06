@@ -1,7 +1,7 @@
 ﻿import { useEffect } from 'react';
 
-const ROLES = ['admin', 'asesor', 'domiciliario', 'cliente'] as const;
-type Role = (typeof ROLES)[number];
+const _ROLES = ['admin', 'asesor', 'domiciliario', 'cliente'] as const;
+type Role = (typeof _ROLES)[number];
 
 export const useUserRole = (role: Role): void => {
   useEffect(() => {

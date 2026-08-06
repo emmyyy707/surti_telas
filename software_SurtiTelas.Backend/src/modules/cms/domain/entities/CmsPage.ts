@@ -1,3 +1,4 @@
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface CmsPageData {
   id?: string;
   slug: string;
@@ -33,10 +34,12 @@ export class CmsPage {
 
   static validate(data: CmsPageData): void {
     if (!data.slug.trim()) {
-      throw new Error('El slug es obligatorio');
+      throw new BadRequestError('El slug es obligatorio');
     }
     if (!data.titulo.trim()) {
-      throw new Error('El título es obligatorio');
+      throw new BadRequestError('El título es obligatorio');
     }
   }
 }
+
+

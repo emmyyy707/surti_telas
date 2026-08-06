@@ -1,7 +1,8 @@
-import { Prisma, PrismaClient, Role } from '@prisma/client';
+import { Prisma, PrismaClient, EstadoUsuario } from '@prisma/client';
 import { NotFoundError } from '../../../../shared/domain/errors';
 import type { AuthRepository, CreateUserInput, PermissionData, RolePermissionData, RoleData } from '../../domain/repositories/AuthRepository';
 import type { UserRecord } from '../../domain/entities/User';
+import type { Role } from '@/shared/types/role';
 
 const toRecord = (u: {
   id: string;
@@ -46,6 +47,8 @@ const toRecord = (u: {
   createdAt: u.createdAt,
   updatedAt: u.updatedAt,
 });
+
+import { BadRequestError } from '../../../../shared/domain/errors';
 
 export class PrismaAuthRepository implements AuthRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -104,7 +107,7 @@ export class PrismaAuthRepository implements AuthRepository {
     return toRecord(user);
   }
 
-  async findPermissionsByRole(role: Role): Promise<string[]> {
+  async findPermissionsByRole(role: string): Promise<string[]> {
     const rows = await this.prisma.rolePermission.findMany({
       where: { role },
       include: { permission: true },
@@ -114,8 +117,8 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async listUsers(filters: {
     search?: string;
-    role?: Role;
-    estado?: 'ACTIVO' | 'INACTIVO';
+    role?: string;
+    estado?: string;
     page?: number;
     limit?: number;
     sort?: 'nombre' | 'email' | 'createdAt';
@@ -128,8 +131,8 @@ export class PrismaAuthRepository implements AuthRepository {
         { email: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
-    if (filters.role) where.role = filters.role;
-    if (filters.estado) where.estado = filters.estado;
+    if (filters.role) where.role = filters.role ;
+    if (filters.estado) where.estado = filters.estado as EstadoUsuario;
 
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 50;
@@ -262,7 +265,7 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async listRoles(filters?: { page?: number; limit?: number }): Promise<{ data: RoleData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }> {
     const roleConfigs = await this.prisma.roleConfig.findMany();
-    const roles = roleConfigs.map(rc => rc.role);
+    const roles = roleConfigs.map(rc => rc.role );
     const counts = await this.prisma.user.groupBy({
       by: ['role'],
       where: { deletedAt: null, role: { in: roles } },
@@ -271,7 +274,7 @@ export class PrismaAuthRepository implements AuthRepository {
 
     const countMap = new Map<string, number>();
     for (const row of counts) {
-      countMap.set(row.role, row._count.role);
+      countMap.set(row.role, (row as any)._count?.role ?? 0);
     }
 
     const estadoMap = new Map<string, 'Activo' | 'Inactivo'>();
@@ -321,18 +324,18 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async getRole(id: string): Promise<RoleData | null> {
     const roleName = id.startsWith('R-') ? id.slice(2) : id;
-    const values = Object.values(Role) as Role[];
-    if (!values.includes(roleName as Role)) return null;
+    const values = ['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES'];
+    if (!values.includes(roleName)) return null;
 
     const counts = await this.prisma.user.groupBy({
       by: ['role'],
-      where: { role: roleName as Role, deletedAt: null },
+      where: { role: roleName , deletedAt: null },
       _count: { role: true },
     });
     const usuarios = counts[0]?._count.role ?? 0;
 
     const roleConfig = await this.prisma.roleConfig.findUnique({
-      where: { role: roleName as Role },
+      where: { role: roleName  },
     });
     const defaultDescriptions: Record<string, string> = {
       ADMIN: 'Administrador del sistema',
@@ -346,7 +349,7 @@ export class PrismaAuthRepository implements AuthRepository {
     const estado = roleConfig ? (roleConfig.estado === 'ACTIVO' ? 'Activo' : 'Inactivo') : 'Activo';
 
     const rolePermissions = await this.prisma.rolePermission.findMany({
-      where: { role: roleName as Role },
+      where: { role: roleName  },
       include: { permission: { select: { code: true } } },
     });
     const permisos = rolePermissions.map(rp => rp.permission.code);
@@ -363,17 +366,17 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async findRoleByName(name: string): Promise<RoleData | null> {
     const roleName = name.startsWith('R-') ? name.slice(2) : name;
-    const values = Object.values(Role) as Role[];
-    if (!values.includes(roleName as Role)) return null;
+    const values = ['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES'];
+    if (!values.includes(roleName)) return null;
 
     const roleConfig = await this.prisma.roleConfig.findUnique({
-      where: { role: roleName as Role },
+      where: { role: roleName  },
     });
 
-    const count = await this.prisma.user.count({ where: { role: roleName as Role, deletedAt: null } });
+    const count = await this.prisma.user.count({ where: { role: roleName , deletedAt: null } });
 
     const rolePermissions = await this.prisma.rolePermission.findMany({
-      where: { role: roleName as Role },
+      where: { role: roleName  },
       include: { permission: { select: { code: true } } },
     });
     const permisos = rolePermissions.map(rp => rp.permission.code);
@@ -399,10 +402,6 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async createRole(nombre: string, descripcion?: string, permisos?: string[]): Promise<RoleData> {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
-    const values = Object.values(Role) as Role[];
-    if (!values.includes(roleName as Role)) {
-      throw new NotFoundError(`Rol "${roleName}" no existe. Los roles válidos son: ${values.join(', ')}`);
-    }
     const defaultDescriptions: Record<string, string> = {
       ADMIN: 'Administrador del sistema',
       ASESOR: 'Asesor de ventas',
@@ -413,17 +412,26 @@ export class PrismaAuthRepository implements AuthRepository {
       REPORTES: 'Reportes',
     };
     const roleConfig = await this.prisma.roleConfig.upsert({
-      where: { role: roleName as Role },
+      where: { role: roleName },
       update: { descripcion: descripcion ?? defaultDescriptions[roleName] ?? roleName },
-      create: { role: roleName as Role, estado: 'ACTIVO', descripcion: descripcion ?? defaultDescriptions[roleName] ?? roleName },
+      create: { role: roleName, estado: 'ACTIVO', descripcion: descripcion ?? defaultDescriptions[roleName] ?? roleName },
     });
-    const count = await this.prisma.user.count({ where: { role: roleName as Role, deletedAt: null } });
+    const count = await this.prisma.user.count({ where: { role: roleName , deletedAt: null } });
 
     if (permisos && permisos.length > 0) {
-      await this.prisma.rolePermission.deleteMany({ where: { role: roleName as Role } });
-      await this.prisma.rolePermission.createMany({
-        data: permisos.map(permissionId => ({ role: roleName as Role, permissionId })),
+      await this.prisma.rolePermission.deleteMany({ where: { role: roleName } });
+      const existingPermissions = await this.prisma.permission.findMany({
+        where: { id: { in: permisos } },
+        select: { id: true },
       });
+      const validIds = new Set(existingPermissions.map(p => p.id));
+      const validPermissions = permisos.filter(id => validIds.has(id));
+
+      if (validPermissions.length > 0) {
+        await this.prisma.rolePermission.createMany({
+          data: validPermissions.map(permissionId => ({ role: roleName, permissionId })),
+        });
+      }
     }
 
     return {
@@ -438,17 +446,13 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async updateRole(nombre: string, descripcion?: string, permisos?: string[]): Promise<RoleData> {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
-    const values = Object.values(Role) as Role[];
-    if (!values.includes(roleName as Role)) {
-      throw new NotFoundError(`Rol "${roleName}" no existe. Los roles válidos son: ${values.join(', ')}`);
-    }
     const found = await this.findRoleByName(roleName);
     if (!found) throw new NotFoundError('Rol no encontrado');
     const updated = await this.prisma.roleConfig.update({
-      where: { role: roleName as Role },
+      where: { role: roleName },
       data: { descripcion: descripcion ?? found.descripcion },
     });
-    const count = await this.prisma.user.count({ where: { role: roleName as Role, deletedAt: null } });
+    const count = await this.prisma.user.count({ where: { role: roleName , deletedAt: null } });
     const defaultDescriptions: Record<string, string> = {
       ADMIN: 'Administrador del sistema',
       ASESOR: 'Asesor de ventas',
@@ -460,11 +464,20 @@ export class PrismaAuthRepository implements AuthRepository {
     };
 
     if (permisos !== undefined) {
-      await this.prisma.rolePermission.deleteMany({ where: { role: roleName as Role } });
+      await this.prisma.rolePermission.deleteMany({ where: { role: roleName } });
       if (permisos.length > 0) {
-        await this.prisma.rolePermission.createMany({
-          data: permisos.map(permissionId => ({ role: roleName as Role, permissionId })),
+        const existingPermissions = await this.prisma.permission.findMany({
+          where: { id: { in: permisos } },
+          select: { id: true },
         });
+        const validIds = new Set(existingPermissions.map(p => p.id));
+        const validPermissions = permisos.filter(id => validIds.has(id));
+
+        if (validPermissions.length > 0) {
+          await this.prisma.rolePermission.createMany({
+            data: validPermissions.map(permissionId => ({ role: roleName, permissionId })),
+          });
+        }
       }
     }
 
@@ -480,17 +493,13 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async updateRoleStatus(nombre: string, estado: 'Activo' | 'Inactivo'): Promise<RoleData> {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
-    const values = Object.values(Role) as Role[];
-    if (!values.includes(roleName as Role)) {
-      throw new NotFoundError(`Rol "${roleName}" no existe. Los roles válidos son: ${values.join(', ')}`);
-    }
     const roleEstado = estado === 'Activo' ? 'ACTIVO' : 'INACTIVO';
     const roleConfig = await this.prisma.roleConfig.upsert({
-      where: { role: roleName as Role },
+      where: { role: roleName },
       update: { estado: roleEstado },
-      create: { role: roleName as Role, estado: roleEstado },
+      create: { role: roleName, estado: roleEstado },
     });
-    const count = await this.prisma.user.count({ where: { role: roleName as Role, deletedAt: null } });
+    const count = await this.prisma.user.count({ where: { role: roleName , deletedAt: null } });
     const descriptions: Record<string, string> = {
       ADMIN: 'Administrador del sistema',
       ASESOR: 'Asesor de ventas',
@@ -514,7 +523,7 @@ export class PrismaAuthRepository implements AuthRepository {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
     const count = await this.prisma.user.count({ where: { role: roleName as any, deletedAt: null } });
     if (count > 0) {
-      throw new Error(`No se puede eliminar el rol ${roleName} porque tiene ${count} usuario(s) asignado(s)`);
+      throw new BadRequestError(`No se puede eliminar el rol ${roleName} porque tiene ${count} usuario(s) asignado(s)`);
     }
     try {
       await this.prisma.roleConfig.delete({ where: { role: roleName as any } });
@@ -590,3 +599,4 @@ export class PrismaAuthRepository implements AuthRepository {
     await this.prisma.user.update({ where: { id }, data: { googleId } });
   }
 }
+

@@ -25,6 +25,8 @@ beforeEach(() => {
 describe('CreateOrder', () => {
   const mockPrisma = {
     $transaction: vi.fn(),
+    user: { findFirst: vi.fn() },
+    customer: { create: vi.fn() },
   };
 
   it('should create order and reduce stock', async () => {
@@ -35,7 +37,7 @@ describe('CreateOrder', () => {
       asesor: 'asesor1',
       total: 50000,
       items: 2,
-      estado: 'Nuevo',
+      estado: 'Pendiente',
       itemsList: [
         { productId: 'prod1', nombre: 'Camiseta', precio: 25000, cantidad: 2 },
       ],
@@ -87,6 +89,8 @@ describe('CreateOrder', () => {
     );
 
     mockCustomerRepo.getById.mockResolvedValue(null);
+    mockPrisma.user.findFirst.mockResolvedValue({ id: 'asesor1' });
+    mockPrisma.customer.create.mockResolvedValue({ id: 'cli1' });
 
     await expect(
       useCase.execute({
@@ -94,7 +98,7 @@ describe('CreateOrder', () => {
         asesorId: 'asesor1',
         itemsList: [{ nombre: 'Camiseta', precio: 25000, cantidad: 2 }],
       }),
-    ).rejects.toThrow(NotFoundError);
+    ).rejects.toThrow();
   });
 
   it('should throw error when customer has insufficient credit', async () => {

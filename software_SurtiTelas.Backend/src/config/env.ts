@@ -10,7 +10,7 @@ if (nodeEnv === 'production') {
 }
 
 const schema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(['development', 'staging', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().url(),
   JWT_ACCESS_SECRET: z.string().min(16),
@@ -31,6 +31,7 @@ const schema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_FROM_NAME: z.string().default('SurtiTelas'),
   SMTP_FROM_EMAIL: z.string().email().optional(),
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
 });
 
 export const env = schema.parse(process.env);

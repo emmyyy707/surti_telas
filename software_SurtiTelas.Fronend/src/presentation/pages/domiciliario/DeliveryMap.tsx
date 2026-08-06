@@ -28,6 +28,21 @@ const createIcon = (label: string, color: string, isSelected: boolean) => {
   return icon;
 };
 
+interface OsrmStep {
+  maneuver?: { type?: string };
+  name?: string;
+  distance?: number;
+  duration?: number;
+}
+
+interface OsrmLeg {
+  steps?: OsrmStep[];
+}
+
+interface OsrmRoute {
+  legs: OsrmLeg[];
+}
+
 const statusColor = (estado: Entrega['estado']) => {
   if (estado === 'Entregado') return '#10b981';
   if (estado === 'En camino') return '#3b82f6';
@@ -185,9 +200,9 @@ export const RouteMap: React.FC<RouteMapProps> = ({ entregas, selectedId, onSele
         const res = await fetch(url);
         const data = await res.json();
         if (!cancelled && data.routes && data.routes[0]) {
-          const steps = data.routes[0].legs.flatMap((leg: any) => leg.steps || []);
+          const steps = (data.routes[0] as OsrmRoute).legs.flatMap((leg) => leg.steps || []);
           setInstructions(
-            steps.map((step: any) => ({
+            steps.map((step: OsrmStep) => ({
               text: step.maneuver?.type || step.name || 'Continúa',
               distance: step.distance ? `${(step.distance / 1000).toFixed(1)} km` : undefined,
               duration: step.duration ? `${Math.round(step.duration / 60)} min` : undefined,

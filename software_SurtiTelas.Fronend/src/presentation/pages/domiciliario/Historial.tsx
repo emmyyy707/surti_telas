@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Eye, MapPin, Clock, Package, AlertCircle, Phone, MessageCircle } from 'lucide-react';
 import s from './Historial.module.css';
@@ -30,7 +30,7 @@ export const DomiciliarioHistorial: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const setRange = (range: typeof filterRange) => {
+  const setRange = useCallback((range: typeof filterRange) => {
     setFilterRange(range);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -50,11 +50,11 @@ export const DomiciliarioHistorial: React.FC = () => {
       setDesde(start.toISOString().slice(0, 10));
       setHasta(end.toISOString().slice(0, 10));
     }
-  };
+  }, [setFilterRange, setDesde, setHasta]);
 
   useEffect(() => {
     setRange('mes');
-  }, []);
+  }, [setRange]);
 
   useEffect(() => {
     const load = async () => {

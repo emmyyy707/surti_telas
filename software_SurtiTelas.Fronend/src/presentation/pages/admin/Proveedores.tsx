@@ -14,6 +14,7 @@ import type { Proveedor } from '@/core/types';
 import { isValidPhone } from '@/shared/utils/phone';
 import { isValidNit } from '@/shared/utils/document';
 import { useServerPagination } from '@/hooks/useServerPagination';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 export const AdminProveedores: React.FC = () => {
   const [formModalOpen, setFormModalOpen] = useState(false);
@@ -22,6 +23,7 @@ export const AdminProveedores: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [pageData, setPageData] = useState<Proveedor[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<Proveedor | null>(null);
 
@@ -37,7 +39,7 @@ export const AdminProveedores: React.FC = () => {
         sort: 'nombre',
         order: 'asc',
       };
-      if (search.trim()) query.search = search.trim();
+      if (debouncedSearch.trim()) query.search = debouncedSearch.trim();
       const result = await stockApi.suppliers.list(query);
       setPageData(result.data);
       pagination.setTotalRecords(result.meta.totalRecords);
@@ -47,7 +49,7 @@ export const AdminProveedores: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination, search]);
+  }, [pagination, debouncedSearch]);
 
   useEffect(() => {
     void fetchProveedores();
@@ -263,7 +265,7 @@ export const AdminProveedores: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => { setSearch(value); pagination.setPage(1); }}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

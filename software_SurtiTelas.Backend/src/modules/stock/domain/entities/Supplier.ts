@@ -1,5 +1,7 @@
 export type SupplierStatus = 'ACTIVO' | 'INACTIVO';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface SupplierData {
   id?: string;
   nombre: string;
@@ -46,10 +48,10 @@ export class Supplier {
   }
 
   static validate(data: SupplierData): void {
-    if (!data.nombre.trim()) throw new Error('El proveedor debe tener un nombre');
-    if (!data.nit.trim()) throw new Error('El proveedor debe tener un NIT');
+    if (!data.nombre.trim()) throw new BadRequestError('El proveedor debe tener un nombre');
+    if (!data.nit.trim()) throw new BadRequestError('El proveedor debe tener un NIT');
     if (data.calificacion < 0 || data.calificacion > 5) {
-      throw new Error('La calificación debe estar entre 0 y 5');
+      throw new BadRequestError('La calificación debe estar entre 0 y 5');
     }
   }
 
@@ -63,3 +65,4 @@ export class Supplier {
     return new Supplier({ ...this, estado: 'INACTIVO' });
   }
 }
+

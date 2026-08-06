@@ -1,12 +1,11 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
 import { useAuthStore } from '@/core/stores/authStore';
-import { filterMenuByPermissions } from '@/shared/config/menuPermissions';
 import { useDashboardTheme } from '@/core/hooks/useDashboardTheme';
 import { useUserRole, clearUserRole } from '@/core/hooks/useUserRole';
 import { TopHeader } from '@/presentation/components/TopHeader';
@@ -93,6 +92,7 @@ const adminMenu: SidebarItem[] = [
   { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
   { icon: Webhook, label: adminContent.layout.menu.webhooks.label, key: 'webhooks' },
   { icon: MapPin, label: adminContent.layout.menu.rutaDelDia.label, key: 'ruta-del-dia' },
+  { icon: DollarSign, label: adminContent.layout.menu.finanzas.label, key: 'finanzas' },
 ];
 
 
@@ -208,8 +208,6 @@ export const AdminLayout: React.FC = () => {
     initial: (authUser?.name ?? authUser?.email ?? '?').charAt(0).toUpperCase(),
   };
   const roleLabel = userDisplay.role === 'admin' ? adminContent.layout.userRoleLabels.admin : adminContent.layout.userRoleLabels.default;
-
-  const debugPermissions = import.meta.env.DEV && authUser;
 
   return (
     <div data-dashboard-theme className={cn(s.appLayout, isCollapsed && s.collapsed)}>

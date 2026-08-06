@@ -5,6 +5,8 @@ export interface CategoryData {
   parentId?: string | null;
 }
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export class Category {
   readonly id?: string;
   readonly nombre: string;
@@ -12,11 +14,12 @@ export class Category {
   readonly parentId?: string | null;
 
   constructor(data: CategoryData) {
-    if (data.nombre.trim() === '') throw new Error('La categoría debe tener un nombre');
-    if (data.slug.trim() === '') throw new Error('La categoría debe tener un slug');
+    if (data.nombre.trim() === '') throw new BadRequestError('La categoría debe tener un nombre');
+    if (data.slug.trim() === '') throw new BadRequestError('La categoría debe tener un slug');
     this.id = data.id;
     this.nombre = data.nombre;
     this.slug = data.slug;
     this.parentId = data.parentId;
   }
 }
+

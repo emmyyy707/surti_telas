@@ -1,6 +1,8 @@
 export type ControlPrendaEtapa = 'CORTE' | 'CONFECCION' | 'ACABADO' | 'CONTROL_CALIDAD' | 'EMPAQUE';
 export type ControlPrendaEstado = 'PROCESO' | 'APROBADO' | 'RECHAZADO';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface ControlPrendaData {
   id?: string;
   produccionId: string;
@@ -53,14 +55,14 @@ export class ControlPrenda {
   }
 
   static validate(data: ControlPrendaData): void {
-    if (!data.produccionId) throw new Error('La producción es obligatoria');
-    if (data.cantidadTotal <= 0) throw new Error('La cantidad total debe ser mayor a cero');
-    if (data.cantidadRevisada < 0) throw new Error('La cantidad revisada no puede ser negativa');
-    if (data.cantidadAprobada < 0) throw new Error('La cantidad aprobada no puede ser negativa');
-    if (data.cantidadRechazada < 0) throw new Error('La cantidad rechazada no puede ser negativa');
-    if (data.cantidadRevisada > data.cantidadTotal) throw new Error('La cantidad revisada no puede exceder la cantidad total');
-    if (data.cantidadAprobada + data.cantidadRechazada > data.cantidadRevisada) throw new Error('La suma de aprobadas y rechazadas no puede exceder la cantidad revisada');
-    if (!data.creadoPorId) throw new Error('El usuario creador es obligatorio');
+    if (!data.produccionId) throw new BadRequestError('La producción es obligatoria');
+    if (data.cantidadTotal <= 0) throw new BadRequestError('La cantidad total debe ser mayor a cero');
+    if (data.cantidadRevisada < 0) throw new BadRequestError('La cantidad revisada no puede ser negativa');
+    if (data.cantidadAprobada < 0) throw new BadRequestError('La cantidad aprobada no puede ser negativa');
+    if (data.cantidadRechazada < 0) throw new BadRequestError('La cantidad rechazada no puede ser negativa');
+    if (data.cantidadRevisada > data.cantidadTotal) throw new BadRequestError('La cantidad revisada no puede exceder la cantidad total');
+    if (data.cantidadAprobada + data.cantidadRechazada > data.cantidadRevisada) throw new BadRequestError('La suma de aprobadas y rechazadas no puede exceder la cantidad revisada');
+    if (!data.creadoPorId) throw new BadRequestError('El usuario creador es obligatorio');
   }
 
   puedeAprobar(): boolean {
@@ -71,3 +73,4 @@ export class ControlPrenda {
     return this.estado !== 'RECHAZADO';
   }
 }
+

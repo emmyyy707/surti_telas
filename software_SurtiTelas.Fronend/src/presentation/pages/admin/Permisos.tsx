@@ -69,13 +69,17 @@ export const AdminPermisos: React.FC = () => {
     setSelectedPermiso(null);
   };
 
-  const handleSubmitPermiso = async () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmitPermiso = async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
     if (!formRef.current) return;
     const fd = new FormData(formRef.current);
     const code = String(fd.get('code') ?? '').trim();
     const description = String(fd.get('description') ?? '').trim();
     const module = String(fd.get('module') ?? '').trim();
     try {
+      setSaving(true);
       if (selectedPermiso) {
         await authApi.updatePermission(selectedPermiso.id, { code, description, module });
         setItems(prev => prev.map(it => it.id === selectedPermiso.id ? { ...it, code, description, module } : it));
@@ -88,6 +92,7 @@ export const AdminPermisos: React.FC = () => {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al guardar permiso');
     } finally {
+      setSaving(false);
       handleCloseModal();
       try {
         const result = await authApi.listPermissions();
@@ -235,7 +240,7 @@ export const AdminPermisos: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef}>
+              <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitPermiso(e); }}>
                 <div className={s.formRow}>
                   <div className={s.field}>
                     <label className={s.label}>Código del Permiso</label>
@@ -254,14 +259,14 @@ export const AdminPermisos: React.FC = () => {
                   <label className={s.label}>Descripción</label>
                   <textarea className={s.textarea} placeholder="Descripción del permiso..." name="description" defaultValue={selectedPermiso?.description} />
                 </div>
-                <div className={s.formActions}>
-                  <Button variant="secondary" onClick={handleCloseModal}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSubmitPermiso}>
-                    {selectedPermiso ? 'Guardar cambios' : 'Crear permiso'}
-                  </Button>
-                </div>
+                 <div className={s.formActions}>
+                   <Button variant="secondary" type="button" onClick={handleCloseModal}>
+                     Cancelar
+                   </Button>
+                   <Button type="submit" disabled={saving}>
+                     {saving ? 'Guardando...' : (selectedPermiso ? 'Guardar cambios' : 'Crear permiso')}
+                   </Button>
+                 </div>
               </form>
             </div>
           </div>

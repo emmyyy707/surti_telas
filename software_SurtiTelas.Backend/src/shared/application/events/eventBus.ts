@@ -1,3 +1,5 @@
+import { logger } from '../../infrastructure/logger';
+
 export type DomainEventMap = {
   'order.created': { orderId: string; orderNumero: string; clienteId: string; asesorId: string; total: number };
   'order.status.updated': { orderId: string; previousStatus: string; newStatus: string };
@@ -45,7 +47,15 @@ class EventBus {
   async publish<T extends DomainEvent>(event: T): Promise<void> {
     const handlers = this.handlers.get(event.type);
     if (!handlers) return;
-    const promises = Array.from(handlers).map((handler) => handler(event));
+    const promises = Array.from(handlers).map((handler) => {
+      return Promise.resolve().then(() => {
+        try {
+          return handler(event);
+        } catch (error) {
+          logger.error(`[EventBus] Error en subscriber de ${event.type}`, { error: (error as Error).message, event });
+        }
+      });
+    });
     await Promise.allSettled(promises);
   }
 

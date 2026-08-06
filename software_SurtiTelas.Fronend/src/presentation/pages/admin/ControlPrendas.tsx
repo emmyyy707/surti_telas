@@ -24,8 +24,6 @@ export const AdminControlPrendas: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filtroEtapa, setFiltroEtapa] = useState<'Todos' | Etapa>('Todos');
   const [filtroEstado, setFiltroEstado] = useState<'Todos' | Estado>('Todos');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);

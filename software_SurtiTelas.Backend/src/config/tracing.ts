@@ -7,8 +7,8 @@ import { env } from './env';
 
 const sdk = new NodeSDK({
   serviceName: 'surtitelas-api',
-  traceExporter: env.NODE_ENV === 'production'
-    ? new OTLPTraceExporter({ url: 'http://jaeger:4318/v1/traces' })
+  traceExporter: env.NODE_ENV === 'production' || env.NODE_ENV === 'staging'
+    ? new OTLPTraceExporter({ url: env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://jaeger:4318/v1/traces' })
     : undefined,
   instrumentations: [
     new HttpInstrumentation(),
@@ -18,7 +18,7 @@ const sdk = new NodeSDK({
 });
 
 export function startTracing() {
-  if (env.NODE_ENV === 'production') {
+  if (env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') {
     sdk.start();
   }
 }

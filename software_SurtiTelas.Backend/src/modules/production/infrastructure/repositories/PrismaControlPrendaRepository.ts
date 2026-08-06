@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient, ControlPrendaEtapa, ControlPrendaEstado } from '@prisma/client';
-import { NotFoundError } from '../../../../shared/domain/errors';
+import { NotFoundError, BadRequestError } from '../../../../shared/domain/errors';
 import type { ControlPrendaRepository, ControlPrendaListItem, CreateControlPrendaInput, ReviewControlPrendaInput } from '../../domain/repositories/ControlPrendaRepository';
 
 const ETAPA_DB_MAP: Record<string, ControlPrendaEtapa> = {
@@ -91,7 +91,7 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
     const cantidadAprobada = changes.cantidadAprobada ?? existing.cantidadAprobada;
     const cantidadRechazada = changes.cantidadRechazada ?? existing.cantidadRechazada;
     if (cantidadAprobada + cantidadRechazada > existing.cantidadTotal) {
-      throw new Error('La suma de cantidad aprobada y rechazada no puede superar la cantidad total');
+      throw new BadRequestError('La suma de cantidad aprobada y rechazada no puede superar la cantidad total');
     }
 
     const data: Prisma.ControlPrendaUpdateInput = {
@@ -174,3 +174,5 @@ export class PrismaControlPrendaRepository implements ControlPrendaRepository {
     };
   }
 }
+
+

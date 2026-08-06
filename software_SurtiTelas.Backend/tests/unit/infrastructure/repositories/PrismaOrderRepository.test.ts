@@ -88,6 +88,8 @@ describe('PrismaOrderRepository', () => {
         findFirst: vi.fn().mockResolvedValue({ numero: 'PED-000000' }),
         create: vi.fn().mockResolvedValue(makeRow({ id: '1', numero: 'PED-000001' })),
       },
+      customer: { findUnique: vi.fn().mockResolvedValue({ nombre: 'Juan' }) },
+      user: { findUnique: vi.fn().mockResolvedValue({ nombre: 'Asesor' }) },
       $executeRaw: vi.fn(),
     };
     mockPrisma.$transaction.mockImplementation((fn: any) => fn(tx));
@@ -110,10 +112,10 @@ describe('PrismaOrderRepository', () => {
 
   it('should update order status', async () => {
     mockPrisma.order.findFirst.mockResolvedValue(makeRow({ estado: 'NUEVO' }));
-    mockPrisma.order.update.mockResolvedValue(makeRow({ estado: 'EN_PRODUCCION' }));
+    mockPrisma.order.update.mockResolvedValue(makeRow({ estado: 'ACEPTADO' }));
 
-    const result = await repo.updateStatus('1', 'En producción');
-    expect(result.estado).toBe('En producción');
+    const result = await repo.updateStatus('1', 'Aceptado');
+    expect(result.estado).toBe('Aceptado');
   });
 
   it('should throw on invalid transition', async () => {
@@ -123,10 +125,10 @@ describe('PrismaOrderRepository', () => {
   });
 
   it('should assign domiciliario', async () => {
-    mockPrisma.order.findFirst.mockResolvedValue(makeRow());
+    mockPrisma.order.findFirst.mockResolvedValue(makeRow({ estado: 'ACEPTADO', asesorNombre: 'Asesor' }));
     mockPrisma.user.findFirst.mockResolvedValue({ nombre: 'Domi' });
     mockPrisma.delivery.upsert.mockResolvedValue({ id: 'del1', orderId: '1', estado: 'ASIGNADO' });
-    mockPrisma.order.findFirst.mockResolvedValueOnce(makeRow({ asesorNombre: 'Asesor' }));
+    mockPrisma.order.update.mockResolvedValue(makeRow({ estado: 'DESPACHADO' }));
 
     const result = await repo.assignDomiciliario('1', 'dom1');
     expect(result.asesor).toBe('Asesor');

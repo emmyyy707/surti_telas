@@ -1,5 +1,6 @@
 import { ProductStatus, StockStatus } from '@prisma/client';
-import type { Product, ProductData, ProductStockStatus } from '../../domain/entities/Product';
+import { Product, ProductData, ProductStockStatus } from '../../domain/entities/Product';
+import { computeStockStatus } from '../../domain/entities/Product';
 
 const STOCK_TO_DB: Record<ProductStockStatus, StockStatus> = {
   OK: 'OK',
@@ -129,6 +130,7 @@ export function toUpdateInput(changes: {
   descuento?: number;
   cantidadStock?: number;
   stock?: ProductStockStatus;
+  stockStatus?: ProductStockStatus;
   estado?: 'Activo' | 'Inactivo';
   publicado?: boolean;
   destacado?: boolean;
@@ -153,9 +155,13 @@ export function toUpdateInput(changes: {
   if (changes.descuento !== undefined) data.descuento = changes.descuento;
   if (changes.cantidadStock !== undefined) {
     data.cantidadStock = changes.cantidadStock;
-    data.stockStatus = STOCK_TO_DB[
-      changes.stock ?? (changes.cantidadStock <= 0 ? 'Agotado' : changes.cantidadStock < 10 ? 'Bajo stock' : 'OK')
-    ];
+    if (changes.stock === undefined) {
+      data.stockStatus = STOCK_TO_DB[computeStockStatus(changes.cantidadStock)];
+    } else {
+      data.stockStatus = STOCK_TO_DB[changes.stock];
+    }
+  } else if (changes.stockStatus !== undefined) {
+    data.stockStatus = STOCK_TO_DB[changes.stockStatus];
   } else if (changes.stock !== undefined) {
     data.stockStatus = STOCK_TO_DB[changes.stock];
   }

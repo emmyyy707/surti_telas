@@ -14,6 +14,7 @@ import { customersApi } from '@/infrastructure/api/customersApi';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import type { Cliente } from '@/core/types';
 import { api } from '@/infrastructure/api/httpClient';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Recibo {
   id: string;
@@ -90,6 +91,7 @@ const metodosPago: NonNullable<Recibo['metodoPago']>[] = ['Efectivo', 'Transfere
 
 export const AdminRecibos: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'Borrador' | 'Enviado' | 'Pagado' | 'Vencido' | 'Cancelado'>('Todos');
   const [recibos, setRecibos] = useState<Recibo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,12 +140,12 @@ export const AdminRecibos: React.FC = () => {
   const filteredRecibos = useMemo(() => {
     return recibos.filter(r =>
       (filtroEstado === 'Todos' || r.estado === filtroEstado) &&
-      (r.numeroRecibo.toLowerCase().includes(search.toLowerCase()) ||
-        r.cliente.toLowerCase().includes(search.toLowerCase()) ||
-        r.nitCliente.toLowerCase().includes(search.toLowerCase()) ||
-        r.vendedor.toLowerCase().includes(search.toLowerCase()))
+      (r.numeroRecibo.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        r.cliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        r.nitCliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        r.vendedor.toLowerCase().includes(debouncedSearch.toLowerCase()))
     );
-  }, [recibos, search, filtroEstado]);
+  }, [recibos, debouncedSearch, filtroEstado]);
 
   const subtotal = items.reduce((sum, it) => sum + (Number(it.cantidad) || 0) * (Number(it.precioUnitario) || 0), 0);
   const iva = Math.round(subtotal * 0.19);

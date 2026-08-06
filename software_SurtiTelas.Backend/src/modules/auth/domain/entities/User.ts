@@ -1,5 +1,3 @@
-import { Role, EstadoUsuario } from '@prisma/client';
-
 export interface UserRecord {
   id: string;
   email: string;
@@ -9,8 +7,8 @@ export interface UserRecord {
   direccion?: string | null;
   tipoDocumento?: string | null;
   numeroDocumento?: string | null;
-  role: Role;
-  estado: EstadoUsuario;
+  role: string;
+  estado: 'ACTIVO' | 'INACTIVO';
   passwordHash: string;
   refreshToken?: string | null;
   twoFactorEnabled?: boolean;
@@ -29,6 +27,6 @@ export interface AuthUser {
   id: string;
   email: string;
   nombre: string;
-  role: Role;
+  role: string;
   permissions: string[];
 }

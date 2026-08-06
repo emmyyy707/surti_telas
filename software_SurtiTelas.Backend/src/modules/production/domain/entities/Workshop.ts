@@ -1,5 +1,7 @@
 export type WorkshopStatus = 'ACTIVO' | 'INACTIVO';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface WorkshopData {
   id?: string;
   nombre: string;
@@ -40,7 +42,7 @@ export class Workshop {
   }
 
   static validate(data: WorkshopData): void {
-    if (!data.nombre.trim()) throw new Error('El taller debe tener un nombre');
+    if (!data.nombre.trim()) throw new BadRequestError('El taller debe tener un nombre');
   }
 
   activate(): Workshop {
@@ -53,3 +55,4 @@ export class Workshop {
     return new Workshop({ ...this, estado: 'INACTIVO' });
   }
 }
+

@@ -1,5 +1,7 @@
 export type ProductionStatus = 'PENDIENTE' | 'ASIGNADA' | 'EN_PROCESO' | 'TERMINADO';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface ProductionOrderData {
   id?: string;
   pedidoId?: string;
@@ -67,9 +69,9 @@ export class ProductionOrder {
   }
 
   static validate(data: ProductionOrderData): void {
-    if (!data.referencia.trim()) throw new Error('La orden de producción debe tener una referencia');
-    if (data.cantidad <= 0) throw new Error('La cantidad debe ser mayor a cero');
-    if (data.avance < 0 || data.avance > 100) throw new Error('El avance debe estar entre 0 y 100');
+    if (!data.referencia.trim()) throw new BadRequestError('La orden de producción debe tener una referencia');
+    if (data.cantidad <= 0) throw new BadRequestError('La cantidad debe ser mayor a cero');
+    if (data.avance < 0 || data.avance > 100) throw new BadRequestError('El avance debe estar entre 0 y 100');
   }
 
   avanceValido(nuevoAvance: number): boolean {
@@ -82,9 +84,10 @@ export class ProductionOrder {
 
   withProgress(newProgress: number): ProductionOrder {
     if (!this.avanceValido(newProgress)) {
-      throw new Error('El avance debe estar entre 0 y 100');
+      throw new BadRequestError('El avance debe estar entre 0 y 100');
     }
     const nextEstado = newProgress === 100 ? 'TERMINADO' : newProgress > 0 ? 'EN_PROCESO' : this.estado;
     return new ProductionOrder({ ...this, avance: newProgress, estado: nextEstado as ProductionStatus });
   }
 }
+

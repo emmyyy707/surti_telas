@@ -13,6 +13,7 @@ function toProductBody(p: Record<string, unknown>): Record<string, unknown> {
   if (p.precio !== undefined) body.precio = p.precio;
   if (p.precioAnterior !== undefined) body.precioAnterior = p.precioAnterior;
   if (p.descuento !== undefined) body.descuento = p.descuento;
+  if (p.stockStatus !== undefined) body.stock = p.stockStatus;
   if (p.stock !== undefined) body.cantidadStock = p.stock;
   if (p.estado !== undefined) body.estado = p.estado;
   if (p.tela !== undefined) body.tela = p.tela;
@@ -60,6 +61,7 @@ export interface ProductTerminadoDTO {
 
 export interface ProductTerminado {
   id: string;
+  ref: string;
   codigo: string;
   nombre: string;
   descripcion: string;
@@ -85,6 +87,7 @@ export interface ProductTerminado {
   estado: 'Activo' | 'Inactivo';
   colores?: string[];
   tallas?: string[];
+  stockStatus?: 'OK' | 'Bajo stock' | 'Agotado';
 }
 
 export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): ProductTerminado {
@@ -92,6 +95,7 @@ export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): Produ
     const p = toProducto(dto as ProductDTO);
     return {
       id: p.id ?? p.ref,
+      ref: p.ref,
       codigo: p.codigo ?? p.ref,
       nombre: p.nombre,
       descripcion: p.descripcion || p.descripcionCorta || '',
@@ -122,6 +126,7 @@ export function toProductTerminado(dto: ProductDTO | ProductTerminadoDTO): Produ
   const d = dto as ProductTerminadoDTO;
   return {
     id: d.id,
+    ref: d.ref ?? d.id,
     codigo: d.codigo ?? d.id,
     nombre: d.nombre,
     descripcion: d.descripcion || '',
@@ -181,11 +186,13 @@ export const productsApi = {
       colores: p.colores,
       tallas: p.tallas,
     } as Record<string, unknown>);
+    console.log('[productsApi] create body', body);
     const dto = await api.post<ProductDTO>('/catalog/products', body);
+    console.log('[productsApi] create response', dto);
     return toProductTerminado(dto);
   },
 
-  async update(id: string, changes: Partial<ProductTerminado>): Promise<ProductTerminado> {
+  async update(ref: string, changes: Partial<ProductTerminado>): Promise<ProductTerminado> {
     const body = toProductBody({
       codigo: changes.codigo,
       nombre: changes.nombre,
@@ -209,12 +216,14 @@ export const productsApi = {
       colores: changes.colores,
       tallas: changes.tallas,
     } as Record<string, unknown>);
-    const dto = await api.patch<ProductDTO>(`/catalog/products/${encodeURIComponent(id)}`, body);
+    console.log('[productsApi] update body', ref, body);
+    const dto = await api.patch<ProductDTO>(`/catalog/products/${encodeURIComponent(ref)}`, body);
+    console.log('[productsApi] update response', dto);
     return toProductTerminado(dto);
   },
 
-  async remove(id: string): Promise<void> {
-    await api.delete<void>(`/catalog/products/${encodeURIComponent(id)}`);
+  async remove(ref: string): Promise<void> {
+    await api.delete<void>(`/catalog/products/${encodeURIComponent(ref)}`);
   },
 };
 

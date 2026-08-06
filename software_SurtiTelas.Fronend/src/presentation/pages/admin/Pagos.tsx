@@ -13,6 +13,7 @@ import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { authApi } from '@/infrastructure/api/authApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Factura {
   id: string;
@@ -98,6 +99,7 @@ const abonosFromPayments = (payments: Payment[]): Abono[] =>
 
 export const AdminPagos: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'Pendiente' | 'Parcial' | 'Pagado' | 'Vencido' | 'En Mora'>('Todos');
   const [filtroMetodo, setFiltroMetodo] = useState<string>('Todos');
   const [modalAbonoOpen, setModalAbonoOpen] = useState(false);
@@ -209,11 +211,11 @@ export const AdminPagos: React.FC = () => {
     return facturas.filter(f =>
       (filtroEstado === 'Todos' || f.estado === filtroEstado) &&
       (filtroMetodo === 'Todos' || f.metodoPago === filtroMetodo) &&
-      (f.numeroFactura.toLowerCase().includes(search.toLowerCase()) ||
-        f.cliente.toLowerCase().includes(search.toLowerCase()) ||
-        f.vendedor.toLowerCase().includes(search.toLowerCase()))
+      (f.numeroFactura.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        f.cliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        f.vendedor.toLowerCase().includes(debouncedSearch.toLowerCase()))
     );
-  }, [search, filtroEstado, filtroMetodo, facturas]);
+  }, [debouncedSearch, filtroEstado, filtroMetodo, facturas]);
 
   const metodosUnicos = Array.from(new Set(facturas.map(f => f.metodoPago)));
 

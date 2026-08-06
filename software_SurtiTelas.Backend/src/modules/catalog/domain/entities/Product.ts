@@ -1,6 +1,8 @@
 export type ProductStockStatus = 'OK' | 'Bajo stock' | 'Agotado';
 export type ProductCategory = string;
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface ProductData {
   id?: string;
   ref: string;
@@ -92,25 +94,25 @@ export class Product {
   }
 
   static validate(data: ProductData): void {
-    if (data.ref.trim() === '') throw new Error('El producto debe tener una referencia');
-    if (data.nombre.trim() === '') throw new Error('El producto debe tener un nombre');
-    if (data.categoria.trim() === '') throw new Error('El producto debe tener una categoría');
-    if (data.tela.trim() === '') throw new Error('El producto debe tener una tela definida');
+    if (data.ref.trim() === '') throw new BadRequestError('El producto debe tener una referencia');
+    if (data.nombre.trim() === '') throw new BadRequestError('El producto debe tener un nombre');
+    if (data.categoria.trim() === '') throw new BadRequestError('El producto debe tener una categoría');
+    if (data.tela.trim() === '') throw new BadRequestError('El producto debe tener una tela definida');
     if (!Number.isFinite(data.precio) || data.precio < 0)
-      throw new Error('El precio del producto no puede ser negativo');
+      throw new BadRequestError('El precio del producto no puede ser negativo');
     if (data.precioAnterior !== undefined && data.precioAnterior < 0)
-      throw new Error('El precio anterior no puede ser negativo');
+      throw new BadRequestError('El precio anterior no puede ser negativo');
     if (data.descuento !== undefined && (data.descuento < 0 || data.descuento > 100))
-      throw new Error('El descuento debe estar entre 0 y 100');
+      throw new BadRequestError('El descuento debe estar entre 0 y 100');
     if (!Number.isInteger(data.cantidadStock) || data.cantidadStock < 0)
-      throw new Error('La cantidad en stock no puede ser negativa');
+      throw new BadRequestError('La cantidad en stock no puede ser negativa');
     if (data.stock === 'Agotado' && data.cantidadStock > 0)
-      throw new Error('Un producto agotado no puede tener cantidad en stock mayor a cero');
-    if (!Array.isArray(data.imagenes)) throw new Error('Las imágenes deben ser un arreglo');
+      throw new BadRequestError('Un producto agotado no puede tener cantidad en stock mayor a cero');
+    if (!Array.isArray(data.imagenes)) throw new BadRequestError('Las imágenes deben ser un arreglo');
     if (!Array.isArray(data.colores) || data.colores.length === 0)
-      throw new Error('El producto debe tener al menos un color');
+      throw new BadRequestError('El producto debe tener al menos un color');
     if (!Array.isArray(data.tallas) || data.tallas.length === 0)
-      throw new Error('El producto debe tener al menos una talla');
+      throw new BadRequestError('El producto debe tener al menos una talla');
   }
 
   withChanges(changes: Partial<ProductData>): Product {
@@ -125,7 +127,7 @@ export class Product {
 
   publish(): Product {
     if (!this.canBePublished()) {
-      throw new Error('El producto no cumple los requisitos para ser publicado');
+      throw new BadRequestError('El producto no cumple los requisitos para ser publicado');
     }
     return this.withChanges({ publicado: true, estado: 'Activo' });
   }
@@ -147,3 +149,4 @@ export class Product {
     return this.publicado && this.stock !== 'Agotado';
   }
 }
+

@@ -1,4 +1,3 @@
-import { Role } from '@prisma/client';
 import type { UserRecord } from '../entities/User';
 
 export interface CreateUserInput {
@@ -6,7 +5,7 @@ export interface CreateUserInput {
   nombre: string;
   apellidos?: string;
   passwordHash: string;
-  role: Role;
+  role: string;
   telefono?: string;
   direccion?: string;
   tipoDocumento?: string;
@@ -22,7 +21,7 @@ export interface PermissionData {
 }
 
 export interface RolePermissionData {
-  role: Role;
+  role: string;
   permissionId: string;
   permission: PermissionData;
 }
@@ -38,8 +37,8 @@ export interface RoleData {
 
 export interface UserFilters {
   search?: string;
-  role?: Role;
-  estado?: 'ACTIVO' | 'INACTIVO';
+  role?: string;
+  estado?: string;
   page?: number;
   limit?: number;
   sort?: 'nombre' | 'email' | 'createdAt';
@@ -51,7 +50,7 @@ export interface AuthRepository {
   findById(id: string): Promise<UserRecord | null>;
   create(input: CreateUserInput): Promise<UserRecord>;
   updateRefreshToken(id: string, token: string | null): Promise<void>;
-  findPermissionsByRole(role: Role): Promise<string[]>;
+  findPermissionsByRole(role: string): Promise<string[]>;
   listUsers(filters?: UserFilters): Promise<{ data: UserRecord[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
 
   listPermissions(filters?: { page?: number; limit?: number }): Promise<{ data: PermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
@@ -60,9 +59,9 @@ export interface AuthRepository {
   updatePermission(id: string, data: { code?: string; description?: string; module?: string }): Promise<PermissionData>;
   updatePermissionStatus(id: string, estado: 'ACTIVO' | 'INACTIVO'): Promise<PermissionData>;
   deletePermission(id: string): Promise<void>;
-  listRolePermissions(role: Role, filters?: { page?: number; limit?: number }): Promise<{ data: RolePermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
-  assignPermissionToRole(role: Role, permissionId: string): Promise<void>;
-  removePermissionFromRole(role: Role, permissionId: string): Promise<void>;
+  listRolePermissions(role: string, filters?: { page?: number; limit?: number }): Promise<{ data: RolePermissionData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
+  assignPermissionToRole(role: string, permissionId: string): Promise<void>;
+  removePermissionFromRole(role: string, permissionId: string): Promise<void>;
   listRoles(filters?: { page?: number; limit?: number }): Promise<{ data: RoleData[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>;
   getRole(id: string): Promise<RoleData | null>;
   findRoleByName(name: string): Promise<RoleData | null>;

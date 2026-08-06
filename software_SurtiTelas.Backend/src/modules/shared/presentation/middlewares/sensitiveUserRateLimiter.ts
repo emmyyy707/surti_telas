@@ -20,7 +20,7 @@ const RATE_LIMIT_SCRIPT = `
 `;
 
 export async function sensitiveUserRateLimiter(req: Request, res: Response, next: NextFunction) {
-  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true') {
+  if (process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true' || process.env.NODE_ENV === 'development') {
     return next();
   }
 

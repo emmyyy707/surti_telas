@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../../../../shared/presentation/http/asyncHandler';
 import { authenticate } from '../../../auth/presentation/middlewares/authenticate';
 import { requirePermission } from '../../../auth/presentation/middlewares/authorize';
+import { cacheMiddleware } from '../../../../modules/shared/infrastructure/middleware/cache.middleware';
 import * as controller from '../controllers/report.controller';
 
 export const reportRouter = Router();
@@ -30,6 +31,7 @@ reportRouter.use(authenticate);
 reportRouter.get(
   '/sales',
   requirePermission('orders:read'),
+  cacheMiddleware(300),
   asyncHandler(controller.getSalesReport)
 );
 
@@ -48,6 +50,7 @@ reportRouter.get(
 reportRouter.get(
   '/inventory',
   requirePermission('stock:read'),
+  cacheMiddleware(600),
   asyncHandler(controller.getInventoryReport)
 );
 
@@ -66,6 +69,7 @@ reportRouter.get(
 reportRouter.get(
   '/production',
   requirePermission('production:read'),
+  cacheMiddleware(600),
   asyncHandler(controller.getProductionReport)
 );
 
@@ -91,5 +95,7 @@ reportRouter.get(
 reportRouter.get(
   '/users',
   requirePermission('auth:manage'),
+  cacheMiddleware(300),
   asyncHandler(controller.getUsersReport)
 );
+

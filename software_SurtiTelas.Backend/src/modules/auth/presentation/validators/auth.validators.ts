@@ -71,7 +71,7 @@ export const UpdateRoleStatusSchema = z.object({
 export const UserFiltersSchema = z.object({
   search: z.string().optional(),
   role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']).optional(),
-  estado: z.enum(['ACTIVO', 'INACTIVO']).optional(),
+  estado: z.enum(['ACTIVO', 'INACTIVO', 'Activo', 'Inactivo']).transform((val) => val.toUpperCase()).optional(),
   ...PaginationSchema.shape,
   sort: z.enum(['nombre', 'email', 'createdAt']).optional(),
   order: z.enum(['asc', 'desc']).optional(),

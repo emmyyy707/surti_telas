@@ -8,6 +8,7 @@ import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { FileUpload } from '@/shared/ui/FileUpload';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { authApi } from '@/infrastructure/api/authApi';
 import type { Pedido, PedidoItem } from '@/core/types';
 import type { BackendAuthUser } from '@/infrastructure/api/authApi';
@@ -26,6 +27,7 @@ const ESTADOS_ORDEN = [
 
 export const AdminVentasPedidos: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [items, setItems] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,12 +94,12 @@ export const AdminVentasPedidos: React.FC = () => {
 
   const filteredPedidos = useMemo(() => {
     return items.filter(p =>
-      p.cliente.toLowerCase().includes(search.toLowerCase()) ||
-      p.asesor.toLowerCase().includes(search.toLowerCase()) ||
-      p.id.toLowerCase().includes(search.toLowerCase()) ||
-      p.estado.toLowerCase().includes(search.toLowerCase())
+      p.cliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.asesor.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.id.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.estado.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [items, search]);
+  }, [items, debouncedSearch]);
 
 const resetForm = () => {
     setClienteId('');
@@ -237,7 +239,7 @@ const resetForm = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

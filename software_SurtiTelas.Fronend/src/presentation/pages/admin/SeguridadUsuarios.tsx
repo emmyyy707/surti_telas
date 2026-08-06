@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Shield, AlertTriangle, Clock, User, Globe } from 'lucide-react';
-import { toast } from 'sonner';
 import s from './SeguridadUsuarios.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { DataTable, DataTableColumn, DataTableDetailPanel } from '@/shared/ui/DataTable';

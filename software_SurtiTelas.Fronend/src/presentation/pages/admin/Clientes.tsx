@@ -12,6 +12,7 @@ import { authApi, type BackendAuthUser, type CreateUserRequest } from '@/infrast
 import { customersApi } from '@/infrastructure/api/customersApi';
 import type { Cliente } from '@/core/types';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
   interface ClienteUI extends BackendAuthUser {
   telefono?: string | null;
@@ -31,6 +32,7 @@ import { ModalFooter } from '@/shared/ui/ModalFooter';
 
 export const AdminClientes: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState<ClienteUI | null>(null);
   const [items, setItems] = useState<ClienteUI[]>([]);
@@ -98,9 +100,10 @@ export const AdminClientes: React.FC = () => {
 
   const filteredClientes = items.filter((c) => {
     if (showTrustedOnly && !c.isTrustedCustomer) return false;
+    const term = debouncedSearch.toLowerCase();
     return (
-      c.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase())
+      c.nombre.toLowerCase().includes(term) ||
+      c.email.toLowerCase().includes(term)
     );
   });
 

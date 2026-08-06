@@ -1,5 +1,3 @@
-import { Role, EstadoUsuario } from '@prisma/client';
-
 export interface PublicUser {
   id: string;
   email: string;
@@ -9,8 +7,8 @@ export interface PublicUser {
   direccion?: string | null;
   tipoDocumento?: string | null;
   numeroDocumento?: string | null;
-  role: Role;
-  estado: EstadoUsuario;
+  role: string;
+  estado: 'ACTIVO' | 'INACTIVO';
   createdAt: Date;
   permissions?: string[];
 }

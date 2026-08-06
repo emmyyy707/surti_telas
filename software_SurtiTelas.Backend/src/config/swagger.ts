@@ -169,6 +169,69 @@ const options: swaggerJsdoc.Options = {
             updatedAt: { type: 'string', format: 'date-time' },
           },
         },
+        Domiciliario: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'dom-123' },
+            userId: { type: 'string', example: 'user-123' },
+            zona: { type: 'string', nullable: true, example: 'Norte' },
+            vehiculo: { type: 'string', nullable: true, example: 'Moto' },
+            capacidad: { type: 'integer', nullable: true, example: 50 },
+            activo: { type: 'boolean', example: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        CmsPage: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'cms-123' },
+            slug: { type: 'string', example: 'inicio' },
+            titulo: { type: 'string', example: 'Inicio' },
+            contenido: { type: 'string', nullable: true, example: '<p>Bienvenido</p>' },
+            publicado: { type: 'boolean', example: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        CreateDomiciliario: {
+          type: 'object',
+          required: ['userId'],
+          properties: {
+            userId: { type: 'string', example: 'user-123' },
+            zona: { type: 'string', nullable: true, example: 'Norte' },
+            vehiculo: { type: 'string', nullable: true, example: 'Moto' },
+            capacidad: { type: 'integer', nullable: true, example: 50 },
+          },
+        },
+        UpdateDomiciliario: {
+          type: 'object',
+          properties: {
+            zona: { type: 'string', nullable: true, example: 'Sur' },
+            vehiculo: { type: 'string', nullable: true, example: 'Camioneta' },
+            capacidad: { type: 'integer', nullable: true, example: 100 },
+            activo: { type: 'boolean', example: true },
+          },
+        },
+        CreateCmsPage: {
+          type: 'object',
+          required: ['slug', 'titulo'],
+          properties: {
+            slug: { type: 'string', example: 'inicio' },
+            titulo: { type: 'string', example: 'Inicio' },
+            contenido: { type: 'string', nullable: true, example: '<p>Bienvenido</p>' },
+            publicado: { type: 'boolean', example: true },
+          },
+        },
+        UpdateCmsPage: {
+          type: 'object',
+          properties: {
+            slug: { type: 'string', example: 'inicio' },
+            titulo: { type: 'string', example: 'Inicio' },
+            contenido: { type: 'string', nullable: true, example: '<p>Bienvenido</p>' },
+            publicado: { type: 'boolean', example: true },
+          },
+        },
       },
     },
     security: [

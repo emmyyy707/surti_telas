@@ -5,6 +5,7 @@ import type { ReceiptRepository } from '../../../receipts/domain/repositories/Re
 import type { EventBus } from '../../../../shared/application/events';
 import { logger } from '../../../../shared/infrastructure/logger';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export class RetryReceiptDelivery {
   constructor(
     private readonly orderRepo: OrderRepository,
@@ -18,7 +19,7 @@ export class RetryReceiptDelivery {
     if (!order) throw new NotFoundError('Pedido no encontrado');
 
     if (order.estado !== 'Aceptado') {
-      throw new Error('Solo se puede reintentar el envío de recibos en estado ACEPTADO');
+      throw new BadRequestError('Solo se puede reintentar el envío de recibos en estado ACEPTADO');
     }
 
     const receipt = await this.receiptRepo.findByOrderId(id);
@@ -76,3 +77,5 @@ export class RetryReceiptDelivery {
     }
   }
 }
+
+

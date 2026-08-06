@@ -52,3 +52,5 @@ pids/
 
 # Production
 *.local
+src/generated/
+

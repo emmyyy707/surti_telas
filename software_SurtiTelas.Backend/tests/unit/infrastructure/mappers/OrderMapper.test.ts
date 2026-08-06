@@ -42,7 +42,7 @@ describe('OrderMapper.toOrderData', () => {
       asesor: 'Asesor Snapshot',
       items: 3,
       total: 5000,
-      estado: 'En producción',
+      estado: 'En proceso',
       prioridad: 'Prioritario',
       observaciones: 'Frágil',
     });

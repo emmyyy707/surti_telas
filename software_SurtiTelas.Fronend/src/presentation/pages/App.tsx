@@ -1,4 +1,4 @@
-﻿import React, { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ProtectedRoute from '@/presentation/routes/ProtectedRoute';
@@ -20,7 +20,7 @@ const AdminCatalogo = React.lazy(() => import('@/presentation/pages/admin/AdminC
 const AdminPedidos = React.lazy(() => import('@/presentation/pages/admin/Pedidos').then(m => ({ default: m.AdminPedidos })));
 const AdminProduccion = React.lazy(() => import('@/presentation/pages/admin/Produccion').then(m => ({ default: m.AdminProduccion })));
 const AdminInventario = React.lazy(() => import('@/presentation/pages/admin/Inventario').then(m => ({ default: m.AdminInventario })));
-const AdminAsesores = React.lazy(() => import('@/presentation/pages/admin/AdminAsesores').then(m => ({ default: m.AdminAsesores })));
+const GestionUsuariosAsesores = React.lazy(() => import('@/presentation/pages/admin/GestionUsuariosAsesores').then(m => ({ default: m.GestionUsuariosAsesores })));
 const AdminReportes = React.lazy(() => import('@/presentation/pages/admin/AdminReportes').then(m => ({ default: m.AdminReportes })));
 const AdminDashboardAnalitico = React.lazy(() => import('@/presentation/pages/admin/DashboardAnalitico').then(m => ({ default: m.AdminDashboardAnalitico })));
 const PortalCliente = React.lazy(() => import('@/presentation/pages/admin/PortalCliente').then(m => ({ default: m.PortalCliente })));
@@ -48,6 +48,9 @@ const AdminReportesUsuarios = React.lazy(() => import('@/presentation/pages/admi
 const AdminReportesProduccion = React.lazy(() => import('@/presentation/pages/admin/ReportesProduccion').then(m => ({ default: m.AdminReportesProduccion })));
 const AdminReportesInventario = React.lazy(() => import('@/presentation/pages/admin/ReportesInventario').then(m => ({ default: m.AdminReportesInventario })));
 const AdminWebhooks = React.lazy(() => import('@/presentation/pages/admin/Webhooks').then(m => ({ default: m.AdminWebhooks })));
+const AdminNotificaciones = React.lazy(() => import('@/presentation/pages/admin/AdminNotificaciones').then(m => ({ default: m.AdminNotificaciones })));
+const AdminComisiones = React.lazy(() => import('@/presentation/pages/admin/AdminComisiones').then(m => ({ default: m.AdminComisiones })));
+const AdminFinanzas = React.lazy(() => import('@/presentation/pages/admin/AdminFinanzas').then(m => ({ default: m.AdminFinanzas })));
 const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/RutaDelDiaAdmin').then(m => ({ default: m.RutaDelDiaAdmin })));
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
 const AsesorDashboard = React.lazy(() => import('@/presentation/pages/asesor/Dashboard').then(m => ({ default: m.AsesorDashboard })));
@@ -108,7 +111,9 @@ const App: React.FC = () => {
           {/* ADMIN - Protected routes for admin role */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AdminLayout />
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner size="lg" /></div>}>
+                <AdminLayout />
+              </React.Suspense>
             </ProtectedRoute>
           }>
             <Route index element={<Navigate to="dashboard" replace />} />
@@ -119,7 +124,7 @@ const App: React.FC = () => {
             <Route path="produccion" element={<AdminProduccion />} />
             <Route path="inventario" element={<AdminInventario />} />
             <Route path="domicilios" element={<AdminDomicilios />} />
-            <Route path="asesores" element={<AdminAsesores />} />
+            <Route path="asesores" element={<GestionUsuariosAsesores />} />
             <Route path="reportes" element={<AdminReportes />} />
             <Route path="configuracion" element={<AdminConfiguracion />} />
             <Route path="roles" element={<AdminRoles />} />
@@ -146,6 +151,9 @@ const App: React.FC = () => {
             <Route path="reportes-produccion" element={<AdminReportesProduccion />} />
             <Route path="reportes-inventario" element={<AdminReportesInventario />} />
             <Route path="webhooks" element={<AdminWebhooks />} />
+            <Route path="notificaciones" element={<AdminNotificaciones />} />
+            <Route path="comisiones" element={<AdminComisiones />} />
+            <Route path="finanzas" element={<AdminFinanzas />} />
             <Route path="ruta-del-dia" element={<AdminRutaDelDia />} />
           </Route>
 

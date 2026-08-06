@@ -1,3 +1,4 @@
+import { BadRequestError } from '../../../../shared/domain/errors';
 export interface SaleData {
   id: string;
   orderId: string;
@@ -54,12 +55,14 @@ export class Sale {
   }
 
   static validate(data: SaleData): void {
-    if (!data.id.trim()) throw new Error('La venta debe tener un identificador');
-    if (!data.orderId.trim()) throw new Error('La venta debe estar asociada a un pedido');
-    if (!data.clienteId.trim()) throw new Error('La venta debe tener un cliente');
-    if (!data.asesorId.trim()) throw new Error('La venta debe tener un asesor');
+    if (!data.id.trim()) throw new BadRequestError('La venta debe tener un identificador');
+    if (!data.orderId.trim()) throw new BadRequestError('La venta debe estar asociada a un pedido');
+    if (!data.clienteId.trim()) throw new BadRequestError('La venta debe tener un cliente');
+    if (!data.asesorId.trim()) throw new BadRequestError('La venta debe tener un asesor');
     if (!Number.isFinite(data.total) || data.total < 0) {
-      throw new Error('El total de la venta debe ser mayor o igual a cero');
+      throw new BadRequestError('El total de la venta debe ser mayor o igual a cero');
     }
   }
 }
+
+

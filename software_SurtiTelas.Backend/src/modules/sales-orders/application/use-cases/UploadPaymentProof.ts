@@ -3,6 +3,7 @@ import type { OrderRepository } from '../../../orders/domain/repositories/OrderR
 import type { OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
 import type { EventBus } from '../../../../shared/application/events';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
 export class UploadPaymentProof {
   constructor(
     private readonly orderRepo: OrderRepository,
@@ -23,7 +24,7 @@ export class UploadPaymentProof {
     if (!order) throw new NotFoundError('Pedido no encontrado');
 
     if (!order.canAcceptPaymentProof()) {
-      throw new Error('El pedido no puede recibir comprobantes de pago');
+      throw new BadRequestError('El pedido no puede recibir comprobantes de pago');
     }
 
     const updatedOrder = await this.orderRepo.updatePaymentProof(id, data);
@@ -56,3 +57,5 @@ export class UploadPaymentProof {
     return updatedOrder;
   }
 }
+
+

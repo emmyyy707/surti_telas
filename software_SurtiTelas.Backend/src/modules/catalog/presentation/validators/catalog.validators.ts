@@ -14,7 +14,7 @@ export const ProductSchema = z.object({
   precioAnterior: z.number().nonnegative().optional(),
   descuento: z.number().min(0).max(100).optional(),
   cantidadStock: z.number().int().nonnegative(),
-  stock: z.enum(['OK', 'Bajo stock', 'Agotado']),
+  stock: z.enum(['OK', 'Bajo stock', 'Agotado']).optional(),
   estado: z.enum(['Activo', 'Inactivo']).optional(),
   imagenes: z.array(z.string()),
   imagenPrincipal: z.string().optional(),

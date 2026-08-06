@@ -1,14 +1,13 @@
 import type { AuthRepository } from '../../domain/repositories/AuthRepository';
 import type { PublicUser } from '../dtos/AuthResult';
-import { Role } from '@prisma/client';
 
 export class ListUsers {
   constructor(private readonly repo: AuthRepository) {}
 
   async execute(filters: {
     search?: string;
-    role?: Role;
-    estado?: 'ACTIVO' | 'INACTIVO';
+    role?: string;
+    estado?: string;
     page?: number;
     limit?: number;
     sort?: 'nombre' | 'email' | 'createdAt';

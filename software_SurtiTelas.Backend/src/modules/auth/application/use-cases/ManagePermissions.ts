@@ -1,5 +1,5 @@
 import type { AuthRepository, PermissionData } from '../../domain/repositories/AuthRepository';
-import { Role } from '@prisma/client';
+import { ForbiddenError } from '../../../../shared/domain/errors';
 
 export class ListPermissions {
   constructor(private readonly repo: AuthRepository) {}
@@ -45,21 +45,21 @@ export class UpdatePermissionStatus {
 
 export class ListRolePermissions {
   constructor(private readonly repo: AuthRepository) {}
-  execute(role: Role, filters?: { page?: number; limit?: number }) {
+  execute(role: string, filters?: { page?: number; limit?: number }) {
     return this.repo.listRolePermissions(role, filters);
   }
 }
 
 export class AssignPermissionToRole {
   constructor(private readonly repo: AuthRepository) {}
-  execute(role: Role, permissionId: string) {
+  execute(role: string, permissionId: string) {
     return this.repo.assignPermissionToRole(role, permissionId);
   }
 }
 
 export class RemovePermissionFromRole {
   constructor(private readonly repo: AuthRepository) {}
-  execute(role: Role, permissionId: string) {
+  execute(role: string, permissionId: string) {
     return this.repo.removePermissionFromRole(role, permissionId);
   }
 }
@@ -97,7 +97,7 @@ export class DeleteRole {
   execute(nombre: string) {
     const roleName = nombre.startsWith('R-') ? nombre.slice(2) : nombre;
     if (['ADMIN', 'ASESOR'].includes(roleName)) {
-      throw new Error('No se puede eliminar un rol protegido');
+      throw new ForbiddenError('No se puede eliminar un rol protegido');
     }
     return this.repo.deleteRole(nombre);
   }
@@ -109,3 +109,5 @@ export class UpdateRoleStatus {
     return this.repo.updateRoleStatus(nombre, estado);
   }
 }
+
+

@@ -13,12 +13,10 @@ export type EnvioPrioridad = 'Normal' | 'Express' | 'Urgente';
 export type RejectionReason =
   | 'COMPROBANTE_FALSO'
   | 'COMPROBANTE_ILEGIBLE'
-  | 'PAGO_INCOMPLETO'
-  | 'VALOR_INCORRECTO'
-  | 'INFORMACION_INCOMPLETA'
-  | 'PEDIDO_DUPLICADO'
-  | 'PRODUCTO_NO_DISPONIBLE'
+  | 'DATOS_INCONSISTENTES'
   | 'OTRA';
+
+import { BadRequestError } from '../../../../shared/domain/errors';
 
 export interface OrderItem {
   productId?: string;
@@ -159,26 +157,26 @@ export class Order {
 
   static validate(data: OrderData): void {
     if (!data.id.trim()) {
-      throw new Error('El pedido debe tener un identificador');
+      throw new BadRequestError('El pedido debe tener un identificador');
     }
     if (!data.cliente.trim()) {
-      throw new Error('El pedido debe tener un cliente asociado');
+      throw new BadRequestError('El pedido debe tener un cliente asociado');
     }
     if (!data.asesor.trim()) {
-      throw new Error('El pedido debe tener un asesor asignado');
+      throw new BadRequestError('El pedido debe tener un asesor asignado');
     }
     if (!Number.isFinite(data.total) || data.total < 0) {
-      throw new Error('El total del pedido debe ser mayor o igual a cero');
+      throw new BadRequestError('El total del pedido debe ser mayor o igual a cero');
     }
     if (!Number.isInteger(data.items) || data.items < 0) {
-      throw new Error('La cantidad de items del pedido debe ser un número entero positivo');
+      throw new BadRequestError('La cantidad de items del pedido debe ser un número entero positivo');
     }
 
     const itemsList = data.itemsList ?? [];
     if (itemsList.length > 0) {
       const itemsTotal = itemsList.reduce((sum, item) => sum + item.cantidad, 0);
       if (itemsTotal !== data.items) {
-        throw new Error('La cantidad de items no coincide con la suma de itemsList');
+        throw new BadRequestError('La cantidad de items no coincide con la suma de itemsList');
       }
 
       const invalidItems = itemsList.filter(
@@ -190,7 +188,7 @@ export class Order {
           item.cantidad <= 0
       );
       if (invalidItems.length > 0) {
-        throw new Error('El pedido contiene items inválidos');
+        throw new BadRequestError('El pedido contiene items inválidos');
       }
     }
   }

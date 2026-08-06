@@ -1,5 +1,7 @@
 export type CustomerStatus = 'Activo' | 'Inactivo';
 
+import { BadRequestError } from '../../../../shared/domain/errors';
+
 export interface CustomerData {
   id?: string;
   nombre: string;
@@ -59,19 +61,19 @@ export class Customer {
 
   static validate(data: CustomerData): void {
     if (!data.nombre.trim()) {
-      throw new Error('El cliente debe tener un nombre');
+      throw new BadRequestError('El cliente debe tener un nombre');
     }
     if (!Number.isFinite(data.cupoTotal) || data.cupoTotal < 0) {
-      throw new Error('El cupo total no puede ser negativo');
+      throw new BadRequestError('El cupo total no puede ser negativo');
     }
     if (!Number.isFinite(data.cupoUsado) || data.cupoUsado < 0) {
-      throw new Error('El cupo usado no puede ser negativo');
+      throw new BadRequestError('El cupo usado no puede ser negativo');
     }
     if (!Number.isFinite(data.deudaVencida) || data.deudaVencida < 0) {
-      throw new Error('La deuda vencida no puede ser negativa');
+      throw new BadRequestError('La deuda vencida no puede ser negativa');
     }
     if (data.cupoUsado > data.cupoTotal) {
-      throw new Error('El cupo usado no puede superar el cupo total');
+      throw new BadRequestError('El cupo usado no puede superar el cupo total');
     }
   }
 

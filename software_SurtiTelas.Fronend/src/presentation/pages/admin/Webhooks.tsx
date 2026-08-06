@@ -11,6 +11,7 @@ import { webhooksApi, type Webhook } from '@/infrastructure/api/webhooksApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 const WEBHOOK_EVENTS = [
   { value: 'order.created', label: 'Pedido creado' },
@@ -23,6 +24,7 @@ const WEBHOOK_EVENTS = [
 
 export const AdminWebhooks: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export const AdminWebhooks: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
       };
-      if (search.trim()) query.search = search.trim();
+      if (debouncedSearch.trim()) query.search = debouncedSearch.trim();
       const result = await webhooksApi.list(query);
       setWebhooks(result.data);
       pagination.setTotalRecords(result.meta.totalRecords);
@@ -57,7 +59,7 @@ export const AdminWebhooks: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination, search]);
+  }, [pagination, debouncedSearch]);
 
   useEffect(() => {
     void fetchWebhooks();
@@ -208,7 +210,7 @@ export const AdminWebhooks: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => { setSearch(value); pagination.setPage(1); }}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

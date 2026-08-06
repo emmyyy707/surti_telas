@@ -13,31 +13,7 @@ import { AddTagInput } from '@/presentation/components/AddTagInput';
 import { productsApi, type ProductTerminado } from '@/infrastructure/api/productsApi';
 import { ETIQUETAS_PRODUCTO } from '@/shared/constants/options';
 
-interface Producto {
-  id: string;
-  codigo: string;
-  nombre: string;
-  descripcion: string;
-  descripcionCorta: string;
-  categoria: string;
-  subcategoria: string;
-  marca: string;
-  talla: string;
-  color: string;
-  stock: number;
-  precio: number;
-  precioAnterior: number;
-  descuento: number;
-  tela: string;
-  imagenes: string[];
-  imagenPrincipal: string;
-  destacado: boolean;
-  oferta: boolean;
-  nuevo: boolean;
-  masVendido: boolean;
-  fechaCreacion: string;
-  estado: 'Activo' | 'Inactivo';
-}
+type Producto = ProductTerminado;
 
 export const AdminProductosTerminados: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -91,7 +67,7 @@ export const AdminProductosTerminados: React.FC = () => {
   const [nuevo, setNuevo] = useState(false);
   const [masVendido, setMasVendido] = useState(false);
   const [estado, setEstado] = useState<'Activo' | 'Inactivo'>('Activo');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingRef, setEditingRef] = useState<string | null>(null);
 
   const filteredProductos = useMemo(() => {
     return productos.filter(p =>
@@ -147,10 +123,10 @@ export const AdminProductosTerminados: React.FC = () => {
       setNuevo(item.nuevo);
       setMasVendido(item.masVendido);
       setEstado(item.estado);
-      setEditingId(item.id);
+      setEditingRef(item.ref);
     } else {
       resetForm();
-      setEditingId(null);
+      setEditingRef(null);
     }
     setModalOpen(true);
   };
@@ -159,7 +135,7 @@ export const AdminProductosTerminados: React.FC = () => {
     setModalOpen(false);
     setSaving(false);
     setFormError(null);
-    setEditingId(null);
+    setEditingRef(null);
     setLocalFiles({});
   };
 
@@ -237,6 +213,7 @@ export const AdminProductosTerminados: React.FC = () => {
       const totalQty = Number(cantidadStock) || 0;
       const pre = precioAnterior ? Number(precioAnterior) : Number(precio);
       const desc = descuento ? Number(descuento) : 0;
+      const stockStatus = totalQty <= 0 ? 'Agotado' : totalQty < 10 ? 'Bajo stock' : 'OK';
       const data: Partial<ProductTerminado> = {
         nombre: nombre.trim(),
         descripcion: descripcion.trim() || descripcionCorta.trim(),
@@ -250,6 +227,7 @@ export const AdminProductosTerminados: React.FC = () => {
         stock: totalQty,
         cantidadStock: totalQty,
         estado,
+        stockStatus,
         imagenes: imagenes.filter(Boolean),
         imagenPrincipal: imagenPrincipal || (imagenes.length > 0 ? imagenes[0] : ''),
         destacado,
@@ -261,9 +239,11 @@ export const AdminProductosTerminados: React.FC = () => {
         tallas,
       };
 
-      if (editingId) {
-        const updated = await productsApi.update(editingId, data);
-        setProductos(prev => prev.map(p => p.id === editingId ? { ...p, ...updated } : p));
+      console.log('[ProductosTerminados] submit data', data);
+
+      if (editingRef) {
+        const updated = await productsApi.update(editingRef, data);
+        setProductos(prev => prev.map(p => p.ref === editingRef ? { ...p, ...updated } : p));
         toast.success(`${updated.nombre} actualizado correctamente`);
       } else {
         const creado = await productsApi.create(data);
@@ -272,7 +252,8 @@ export const AdminProductosTerminados: React.FC = () => {
       }
       closeModal();
     } catch (err: unknown) {
-      toast.error((err as { message?: string })?.message || 'No se pudo guardar el producto');
+      console.error('[ProductosTerminados] submit error', err);
+      toast.error((err instanceof Error ? err.message : 'No se pudo guardar el producto'));
     } finally {
       setSaving(false);
     }
@@ -393,7 +374,7 @@ export const AdminProductosTerminados: React.FC = () => {
       <Modal
         open={modalOpen}
         onClose={closeModal}
-        title={editingId ? 'Editar Producto' : 'Registrar Nuevo Producto'}
+        title={editingRef ? 'Editar Producto' : 'Registrar Nuevo Producto'}
         size="lg"
       >
         <form onSubmit={handleSubmit} className={f.form}>
@@ -586,7 +567,7 @@ export const AdminProductosTerminados: React.FC = () => {
 
           <ModalFooter
             secondary={{ label: 'Cancelar', onClick: closeModal, disabled: saving, loading: saving }}
-            primary={{ label: editingId ? 'Guardar Cambios' : 'Crear Producto (Borrador)', type: 'submit', loading: saving }}
+            primary={{ label: editingRef ? 'Guardar Cambios' : 'Crear Producto (Borrador)', type: 'submit', loading: saving }}
           />
         </form>
       </Modal>
@@ -597,8 +578,8 @@ export const AdminProductosTerminados: React.FC = () => {
         onConfirm={async () => {
           if (!deleteConfirm) return;
           try {
-            await productsApi.remove(deleteConfirm.id);
-            setProductos(prev => prev.filter(p => p.id !== deleteConfirm.id));
+            await productsApi.remove(deleteConfirm.ref);
+            setProductos(prev => prev.filter(p => p.ref !== deleteConfirm.ref));
             toast.success(`Producto "${deleteConfirm.nombre}" eliminado`);
           } catch {
             toast.error('No se pudo eliminar el producto');

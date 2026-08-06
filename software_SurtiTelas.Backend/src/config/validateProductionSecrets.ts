@@ -1,3 +1,4 @@
+import { BadRequestError } from '../shared/domain/errors';
 export function validateProductionSecrets(env: {
   NODE_ENV: string;
   JWT_ACCESS_SECRET: string;
@@ -22,7 +23,7 @@ export function validateProductionSecrets(env: {
   const validate = (name: string, value: string) => {
     const lower = value.toLowerCase();
     if (weakSecrets.has(lower) || lower.length < 32) {
-      throw new Error(
+      throw new BadRequestError(
         `Invalid ${name} in production: must be a strong secret (min 32 chars, not a known default)`
       );
     }
@@ -33,6 +34,8 @@ export function validateProductionSecrets(env: {
   validate('METRICS_SECRET', env.METRICS_SECRET);
 
   if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
-    throw new Error('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different in production');
+    throw new BadRequestError('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different in production');
   }
 }
+
+

@@ -148,9 +148,9 @@ const CheckoutPage: React.FC = () => {
         form.append('paymentMethod', createInput.paymentMethod || 'OTHER');
         if (createInput.installments) form.append('installments', String(createInput.installments));
         form.append('comprobantePago', createInput.comprobantePago);
-        const result = await ordersApi.createForm(form);
+        await ordersApi.createForm(form);
       } else {
-        const result = await ordersApi.create(createInput);
+        await ordersApi.create(createInput);
       }
 
       clearCart();

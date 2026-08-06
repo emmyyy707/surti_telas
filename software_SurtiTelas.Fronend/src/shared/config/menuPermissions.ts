@@ -35,6 +35,8 @@ export const MENU_ITEM_PERMISSIONS: Record<string, string | string[]> = {
   'reportes.reportes-inventario': 'reports:read',
   catalogo: 'catalog:read',
   webhooks: 'webhooks:read',
+  'ruta-del-dia': 'deliveries:read',
+  finanzas: 'financial:read',
 };
 
 export function hasMenuPermission(itemKey: string, user: User | null): boolean {

@@ -17,6 +17,7 @@ import type { Pedido, PedidoItem } from '@/core/types';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { OrderStatusSelector } from '@/shared/ui/OrderStatusSelector';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 type PedidoFormItem = {
   id: string;
@@ -37,6 +38,7 @@ export const AdminPedidos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
@@ -45,7 +47,7 @@ export const AdminPedidos: React.FC = () => {
   const [clienteId, setClienteId] = useState('');
   const [asesorId, setAsesorId] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
-  const [estado, setEstado] = useState<Pedido['estado']>('Pendiente');
+  const [estado, setEstado] = useState<Pedido['estado']>(ESTADOS_PEDIDO[0]);
   const [observaciones, setObservaciones] = useState('');
   const [items, setItems] = useState<PedidoFormItem[]>([
     { id: 'I1', nombre: '', precio: 0, cantidad: 1 },
@@ -57,44 +59,50 @@ export const AdminPedidos: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<Pedido['estado'] | null>(null);
 
   const pagination = useServerPagination(10);
+  const [reloadToken, setReloadToken] = useState(0);
 
-  const hydrate = useCallback(async () => {
-    setLoading(true);
-    try {
-      const ordersQuery: Record<string, string | number | boolean | undefined | null> = {
-        page: pagination.page,
-        limit: pagination.limit,
-      };
-      if (search.trim()) ordersQuery.search = search.trim();
-
-      const [ordersResult, clientesResult, _profile, asesoresResult] = await Promise.all([
-        ordersApi.list(ordersQuery),
-        authApi.listUsers({ limit: 100, role: 'CLIENTE' }),
-        authApi.me(),
-        authApi.listUsers({ limit: 100, role: 'ASESOR' }),
-      ]);
-
-      setClientes(clientesResult.data ?? []);
-      setAsesores(asesoresResult.data ?? []);
-
-      const pedidos = (ordersResult.pedidos ?? []).filter((p) => p.estado !== 'Entregado' && p.estado !== 'Rechazado');
-      setPageData(pedidos);
-      pagination.setTotalRecords(ordersResult.meta.totalRecords);
-
-      if (!asesorId && asesoresResult.data?.length) {
-        const adminAsesor = asesoresResult.data.find((u) => u.role === 'ASESOR');
-        setAsesorId(adminAsesor?.id ?? '');
-      }
-    } catch {
-      toast.error('No se pudieron cargar los pedidos');
-    } finally {
-      setLoading(false);
-    }
-  }, [asesorId, pagination, search]);
+  const reload = useCallback(() => setReloadToken(t => t + 1), []);
 
   useEffect(() => {
-    void hydrate();
-  }, [hydrate]);
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const ordersQuery: Record<string, string | number | boolean | undefined | null> = {
+          page: pagination.page,
+          limit: pagination.limit,
+        };
+        if (debouncedSearch.trim()) ordersQuery.search = debouncedSearch.trim();
+
+        const [ordersResult, clientesResult, _profile, asesoresResult] = await Promise.all([
+          ordersApi.list(ordersQuery),
+          authApi.listUsers({ limit: 100, role: 'CLIENTE' }),
+          authApi.me(),
+          authApi.listUsers({ limit: 100, role: 'ASESOR' }),
+        ]);
+
+        if (!cancelled) {
+          setClientes(clientesResult.data ?? []);
+          setAsesores(asesoresResult.data ?? []);
+
+          const pedidos = (ordersResult.pedidos ?? []).filter((p) => p.estado !== ESTADOS_PEDIDO[4] && p.estado !== ESTADOS_PEDIDO[5]);
+          setPageData(pedidos);
+          pagination.setTotalRecords(ordersResult.meta.totalRecords);
+
+          if (!asesorId && asesoresResult.data?.length) {
+            const adminAsesor = asesoresResult.data.find((u) => u.role === 'ASESOR');
+            setAsesorId(adminAsesor?.id ?? '');
+          }
+        }
+      } catch {
+        if (!cancelled) toast.error('No se pudieron cargar los pedidos');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, [asesorId, pagination, debouncedSearch, reloadToken]);
 
   const handlePageChange = useCallback((newPage: number) => {
     pagination.setPage(newPage);
@@ -107,7 +115,7 @@ export const AdminPedidos: React.FC = () => {
     setClienteId('');
     setAsesorId('');
     setFecha(new Date().toISOString().slice(0, 10));
-    setEstado('Pendiente');
+    setEstado(ESTADOS_PEDIDO[0]);
     setObservaciones('');
     setItems([{ id: 'I1', nombre: '', precio: 0, cantidad: 1 }]);
     setFormError(null);
@@ -198,7 +206,7 @@ export const AdminPedidos: React.FC = () => {
           prioridad: undefined,
           observaciones: observaciones || undefined,
         });
-        await hydrate();
+        await reload();
         toast.success(`Pedido ${resultado.pedido.id} creado`);
       }
       setEditModalOpen(false);
@@ -214,7 +222,7 @@ export const AdminPedidos: React.FC = () => {
     if (!statusConfirm || !selectedStatus) return;
     try {
       await ordersApi.updateStatus(statusConfirm.id, selectedStatus);
-      await hydrate();
+      await reload();
       toast.success(`Pedido ${statusConfirm.id} actualizado a ${selectedStatus}`);
       setStatusConfirm(null);
       setSelectedStatus(null);
@@ -233,7 +241,7 @@ export const AdminPedidos: React.FC = () => {
     if (!deleteConfirm) return;
     try {
       await ordersApi.delete(deleteConfirm.id);
-      await hydrate();
+      await reload();
       toast.success(`Pedido ${deleteConfirm.id} eliminado`);
       setDeleteConfirm(null);
     } catch {
@@ -252,7 +260,7 @@ export const AdminPedidos: React.FC = () => {
         </div>
         <div className={s.headerActions}>
           <Button leftIcon={<Plus size={16} />} onClick={openNew}>Nuevo Pedido</Button>
-          <Button variant="secondary" onClick={hydrate}>Actualizar</Button>
+          <Button variant="secondary" onClick={reload}>Actualizar</Button>
         </div>
       </div>
 

@@ -9,7 +9,8 @@ import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTab
 import { useDelegatedTooltips } from '@/shared/components/Tooltip';
 import { cn } from '@/shared/utils';
 import { rolesApi, type Rol } from '@/infrastructure/api/rolesApi';
-import { PERMISOS_SISTEMA, ROLES_SISTEMA, ROL_LABELS } from '@/shared/constants/options';
+import { PERMISOS_SISTEMA } from '@/shared/constants/options';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 const PROTECTED_ROLES = new Set(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE']);
 
@@ -22,6 +23,7 @@ const mapBackendRole = (rol: Rol): Rol => ({
 
 export const AdminRoles: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRol, setSelectedRol] = useState<Rol | null>(null);
   const [items, setItems] = useState<Rol[]>([]);
@@ -54,17 +56,18 @@ export const AdminRoles: React.FC = () => {
 
   const filteredRoles = useMemo(() => {
     return items.filter(r =>
-      String(r.nombre ?? '').toLowerCase().includes(search.toLowerCase()) ||
-      String(r.descripcion ?? '').toLowerCase().includes(search.toLowerCase())
+      String(r.nombre ?? '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      String(r.descripcion ?? '').toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [items, search]);
+  }, [items, debouncedSearch]);
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedRol(null);
   };
 
-  const handleSubmitRol = async () => {
+  const handleSubmitRol = async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
     if (!formRef.current) return;
     const fd = new FormData(formRef.current);
     const nombre = String(fd.get('nombre') ?? '').trim();
@@ -251,16 +254,11 @@ export const AdminRoles: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef}>
+               <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitRol(e); }}>
                 <div className={s.formRow}>
                   <div className={s.field}>
                     <label className={s.label}>Nombre del Rol</label>
-                    <select className={s.select} name="nombre" defaultValue={selectedRol?.nombre}>
-                      <option value="">Selecciona un rol</option>
-                      {ROLES_SISTEMA.map(role => (
-                        <option key={role} value={role}>{ROL_LABELS[role] ?? role}</option>
-                      ))}
-                    </select>
+                    <input className={s.input} name="nombre" defaultValue={selectedRol?.nombre} placeholder="Nombre del rol" />
                   </div>
                 </div>
                 <div className={s.field}>
@@ -279,14 +277,14 @@ export const AdminRoles: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                <div className={s.formActions}>
-                  <Button variant="secondary" onClick={handleCloseModal}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSubmitRol}>
-                    {selectedRol ? 'Guardar cambios' : 'Crear rol'}
-                  </Button>
-                </div>
+                 <div className={s.formActions}>
+                   <Button variant="secondary" type="button" onClick={handleCloseModal}>
+                     Cancelar
+                   </Button>
+                   <Button type="submit">
+                     {selectedRol ? 'Guardar cambios' : 'Crear rol'}
+                   </Button>
+                 </div>
               </form>
             </div>
           </div>

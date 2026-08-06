@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, User, Users, BarChart3, Calendar } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
-import s from './AdminAsesores.module.css';
+import s from './GestionUsuariosAsesores.module.css';
 import { Button } from '../../../shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '../../../shared/ui/DataTable';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { ESTADOS_GENERALES } from '@/shared/constants/options';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Asesor {
   id: string;
@@ -34,8 +35,9 @@ const toAsesor = (u: BackendAuthUser): Asesor => ({
   estado: 'Activo',
 });
 
-export const AdminAsesores: React.FC = () => {
+export const GestionUsuariosAsesores: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAsesor, setSelectedAsesor] = useState<Asesor | null>(null);
   const [items, setItems] = useState<Asesor[]>([]);
@@ -104,8 +106,8 @@ export const AdminAsesores: React.FC = () => {
   }, []);
 
   const filteredAsesores = items.filter(a =>
-    a.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    a.email.toLowerCase().includes(search.toLowerCase())
+    a.nombre.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    a.email.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   const handleSubmitAsesor = async () => {
@@ -217,7 +219,7 @@ export const AdminAsesores: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

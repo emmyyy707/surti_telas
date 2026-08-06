@@ -170,7 +170,7 @@ const LoginPage: React.FC = () => {
             <div className="dividerLine" />
           </div>
 
-          <div className="form">
+          <form className="form" onSubmit={handleLogin}>
             <div className="fieldWrap fieldWrap--icon">
               <input
                 className="fieldInput"
@@ -208,12 +208,12 @@ const LoginPage: React.FC = () => {
               <a href="/olvide-contrasena" className="forgotLink">¿Olvidaste tu contraseña?</a>
             </div>
 
-            <button className={`submitBtn ${loading ? 'submitBtn--loading' : ''}`} onClick={handleLogin} disabled={loading}>
+            <button type="submit" className={`submitBtn ${loading ? 'submitBtn--loading' : ''}`} disabled={loading}>
               <span className="btnInner">{loading && <span className="spinner" />}
                 {loading ? 'Verificando...' : 'Iniciar sesión'}
               </span>
             </button>
-          </div>
+          </form>
 
           <div className="formFooter">
             ¿No tienes cuenta?{' '}

@@ -10,6 +10,7 @@ import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { authApi } from '@/infrastructure/api/authApi';
 import { rolesApi } from '@/infrastructure/api/rolesApi';
 import { TIPOS_PERMISO_ACCESO } from '@/shared/constants/options';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Acceso {
   id: string;
@@ -41,6 +42,7 @@ const toAcceso = (log: AccessLog): Acceso => ({
 
 export const AdminGestionAcceso: React.FC = () => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAcceso, setSelectedAcceso] = useState<Acceso | null>(null);
   const [items, setItems] = useState<Acceso[]>([]);
@@ -79,11 +81,11 @@ export const AdminGestionAcceso: React.FC = () => {
 
   const filteredAccesos = useMemo(() => {
     return items.filter(a =>
-      a.usuario.toLowerCase().includes(search.toLowerCase()) ||
-      a.rol.toLowerCase().includes(search.toLowerCase()) ||
-      a.modulo.toLowerCase().includes(search.toLowerCase())
+      a.usuario.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      a.rol.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      a.modulo.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [search, items]);
+  }, [debouncedSearch, items]);
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -183,7 +185,7 @@ export const AdminGestionAcceso: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onSearch={(value) => setSearch(value)}
-          debounceMs={100}
+          debounceMs={300}
           minChars={0}
         />
       </div>

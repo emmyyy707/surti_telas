@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
-  Download, DollarSign, ShoppingBag, Users, TrendingUp,
-  Package, Truck, Clock, AlertTriangle, Loader2,
-  Filter, RefreshCw, FileSpreadsheet,
+  DollarSign, ShoppingBag, Users, TrendingUp,
+  AlertTriangle, Loader2,
+  RefreshCw, FileSpreadsheet,
 } from 'lucide-react';
 import s from './DashboardAnalitico.module.css';
 import { Button } from '@/shared/ui/Button';
