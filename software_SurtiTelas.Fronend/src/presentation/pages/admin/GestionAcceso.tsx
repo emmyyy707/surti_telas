@@ -32,7 +32,7 @@ const formatFecha = (value: string): string => {
 const toAcceso = (log: AccessLog): Acceso => ({
   id: log.id,
   usuario: typeof log.usuario === 'object' && log.usuario !== null ? log.usuario.nombre : (log.usuario ?? '—'),
-  rol: log.dispositivo ?? '—',
+  rol: typeof log.usuario === 'object' && log.usuario !== null ? log.usuario.role : '—',
   modulo: log.modulo ?? '—',
   permiso: `${log.accion}${log.ip ? ` · ${log.ip}` : ''}`,
   fechaAsignacion: formatFecha(log.createdAt),
