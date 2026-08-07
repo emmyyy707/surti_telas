@@ -270,7 +270,7 @@ export const AdminGestionUsuarios: React.FC = () => {
 
           enableSorting={true}
           toolbarLeft={null}
-          maxVisibleColumns={5}
+          maxVisibleColumns={7}
           emptyMessage={loading ? 'Cargando usuarios...' : error ? error : 'No se encontraron usuarios'} enableExport={false} enableRowSelection={false}
         />
       </div>
