@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -40,6 +40,8 @@ const PERMISSIONS: { code: string; description: string; module: string }[] = [
   { code: 'deliveries:read', description: 'Ver entregas/domicilios', module: 'deliveries' },
   { code: 'deliveries:create', description: 'Crear entregas/domicilios', module: 'deliveries' },
   { code: 'deliveries:update', description: 'Gestionar entregas/domicilios', module: 'deliveries' },
+  { code: 'notifications:read', description: 'Ver notificaciones', module: 'notifications' },
+  { code: 'notifications:update', description: 'Gestionar notificaciones', module: 'notifications' },
 ];
 
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
@@ -65,7 +67,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'customers:read',
     'users:read',
   ],
-  CLIENTE: ['catalog:read', 'orders:read', 'orders:create', 'customers:read'],
+  CLIENTE: ['catalog:read', 'orders:read', 'orders:create', 'customers:read', 'notifications:read'],
 };
 
 function generatePassword(): string {
@@ -119,7 +121,7 @@ async function main() {
     REPORTES: 'Reportes',
   };
 
-  for (const role of Object.values(Role)) {
+  for (const role of Object.keys(defaultDescriptions)) {
     await prisma.roleConfig.upsert({
       where: { role },
       update: {},
@@ -138,7 +140,7 @@ async function main() {
         email: adminEmail,
         nombre: 'Administrador SurtiTelas',
         passwordHash,
-        role: Role.ADMIN,
+        role: 'ADMIN',
       },
     });
     console.log(`✓ Usuario admin creado (${adminEmail} / ${adminPassword})`);
@@ -248,7 +250,7 @@ async function main() {
         email: clienteEmail,
         nombre: 'Andres Daniel Ruiz Murillo',
         passwordHash,
-        role: Role.CLIENTE,
+        role: 'CLIENTE',
       },
     });
     console.log(`✓ Usuario cliente creado (${clienteEmail} / ${clientePassword})`);
@@ -257,7 +259,7 @@ async function main() {
 
   const demoProduct = await prisma.product.findUnique({ where: { ref: 'REF-001' } });
   const demoCustomer = await prisma.customer.findFirst({ where: { nit: '900123456-7' } });
-  const demoAsesor = await prisma.user.findFirst({ where: { role: Role.ASESOR } });
+  const demoAsesor = await prisma.user.findFirst({ where: { role: 'ASESOR' } });
 
   if (demoProduct && demoCustomer && demoAsesor) {
     const orderNumber = 'PED-000001';
@@ -297,7 +299,7 @@ async function main() {
           email: domiciliarioEmail,
           nombre: 'Domiciliario Demo',
           passwordHash: await bcrypt.hash(domiciliarioPassword, 12),
-          role: Role.DOMICILIARIO,
+          role: 'DOMICILIARIO',
         },
       });
       console.log(`✓ Domiciliario demo asegurado (${domiciliarioEmail} / ${domiciliarioPassword})`);
@@ -305,6 +307,27 @@ async function main() {
 
     // Tablas deliveries/returns no existen en la BD actual; se habilitan cuando se agreguen las migraciones correspondientes.
     console.log('✓ Seed demo entregas/devoluciones omitidas (tablas no migradas)');
+
+    const users = await prisma.user.findMany({ where: { deletedAt: null } });
+    const auditActions = [
+      { accion: 'Login exitoso', modulo: 'auth', usuarioId: users[0]?.id },
+      { accion: 'Intento fallido de login', modulo: 'auth', usuarioId: users[1]?.id },
+      { accion: 'Actualización de perfil', modulo: 'usuarios', usuarioId: users[0]?.id },
+      { accion: 'Cambio de estado de pedido', modulo: 'pedidos', usuarioId: users[0]?.id },
+      { accion: 'Exportación de reporte', modulo: 'reportes', usuarioId: users[0]?.id },
+    ];
+    for (const audit of auditActions) {
+      await prisma.auditLog.create({
+        data: {
+          accion: audit.accion,
+          modulo: audit.modulo,
+          usuarioId: audit.usuarioId,
+          ip: '127.0.0.1',
+          userAgent: 'seed',
+        },
+      });
+    }
+    console.log('✓ Registros de auditoría creados');
   }
 
   console.log('🎉 Seed completado');

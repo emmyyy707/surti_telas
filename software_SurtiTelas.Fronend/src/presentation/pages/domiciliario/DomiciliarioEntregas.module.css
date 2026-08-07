@@ -131,6 +131,13 @@
   letter-spacing: 0.02em;
 }
 
+.pedidoEstado {
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
 .cardBody {
   display: flex;
   flex-direction: column;

@@ -17,6 +17,15 @@ export interface DeliveryDTO {
   orderNumero?: string;
   clienteNombre?: string;
   domiciliarioNombre?: string;
+  order?: {
+    numero?: string;
+    cliente?: string;
+    telefono?: string;
+    direccion?: string;
+    ciudad?: string;
+    total?: number;
+    estado?: string;
+  };
 }
 
 export interface Delivery {

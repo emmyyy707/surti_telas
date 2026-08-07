@@ -87,8 +87,10 @@ export class CreateRole {
 
 export class UpdateRole {
   constructor(private readonly repo: AuthRepository) {}
-  execute(nombre: string, data: { nombre?: string; descripcion?: string; permisos?: string[] }) {
-    return this.repo.updateRole(data.nombre ?? nombre, data.descripcion, data.permisos);
+  execute(currentId: string, data: { nombre?: string; descripcion?: string; permisos?: string[] }) {
+    const currentName = currentId.startsWith('R-') ? currentId.slice(2) : currentId;
+    const newName = (data.nombre ?? currentName).startsWith('R-') ? (data.nombre ?? currentName).slice(2) : (data.nombre ?? currentName);
+    return this.repo.updateRole(currentName, newName, data.descripcion, data.permisos);
   }
 }
 

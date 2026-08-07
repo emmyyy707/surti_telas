@@ -1,4 +1,4 @@
-import { api } from './httpClient';
+import { api, ApiError } from './httpClient';
 
 export interface NotificationDTO {
   id: string;
@@ -35,9 +35,16 @@ export function toNotification(dto: NotificationDTO): Notification {
 
 export const notificationsApi = {
   async list(): Promise<Notification[]> {
-    const response = await api.get<{ items: NotificationDTO[]; meta: Record<string, unknown> }>('/notifications');
-    const data = response?.items ?? [];
-    return data.map(toNotification);
+    try {
+      const response = await api.get<{ items: NotificationDTO[]; meta: Record<string, unknown> }>('/notifications');
+      const data = response?.items ?? [];
+      return data.map(toNotification);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 403) {
+        return [];
+      }
+      throw error;
+    }
   },
 
   async create(data: { titulo: string; mensaje: string; tipo?: NotificationDTO['tipo'] }): Promise<Notification> {

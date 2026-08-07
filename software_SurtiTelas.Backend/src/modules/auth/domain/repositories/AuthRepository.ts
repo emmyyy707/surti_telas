@@ -66,7 +66,7 @@ export interface AuthRepository {
   getRole(id: string): Promise<RoleData | null>;
   findRoleByName(name: string): Promise<RoleData | null>;
   createRole(name: string, description?: string, permisos?: string[]): Promise<RoleData>;
-  updateRole(name: string, description?: string, permisos?: string[]): Promise<RoleData>;
+  updateRole(currentName: string, newName: string, description?: string, permisos?: string[]): Promise<RoleData>;
   updateRoleStatus(name: string, estado: 'Activo' | 'Inactivo'): Promise<RoleData>;
   deleteRole(name: string): Promise<void>;
   delete(id: string): Promise<void>;

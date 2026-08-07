@@ -63,11 +63,15 @@ export const AdminGestionAcceso: React.FC = () => {
           rolesApi.list(),
           accessApi.list(),
         ]);
+        console.log('[GestionAcceso] usersData', usersData);
+        console.log('[GestionAcceso] rolesData', rolesData);
+        console.log('[GestionAcceso] accessData', accessData);
         setUserOptions(usersData.data.map(u => u.nombre).filter(Boolean));
         setRoleOptions(rolesData.map(r => r.nombre).filter(Boolean));
         setModuloOptions([...new Set(accessData.map(a => a.modulo).filter(Boolean))] as string[]);
         setItems(accessData.map(toAcceso));
-      } catch {
+      } catch (err) {
+        console.error('[GestionAcceso] load error', err);
         setError('No se pudieron cargar los registros de acceso');
         toast.error('No se pudieron cargar los registros de acceso');
       } finally {

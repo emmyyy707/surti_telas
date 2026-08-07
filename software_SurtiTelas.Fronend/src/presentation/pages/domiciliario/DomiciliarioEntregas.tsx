@@ -15,6 +15,8 @@ const estadoConfig: Record<string, { label: string; variant: 'success' | 'info' 
   FALLIDO: { label: 'Fallido', variant: 'danger', color: '#ef4444' },
 };
 
+const PEDIDO_ENVIADO = 'DESPACHADO';
+
 export const DomiciliarioEntregas: React.FC = () => {
   const [entregas, setEntregas] = useState<DeliveryDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,7 @@ export const DomiciliarioEntregas: React.FC = () => {
 
   const filtradas = useMemo(() => {
     if (filtro === 'TODOS') return entregas;
+    if (filtro === 'ENVIADO') return entregas.filter(e => e.order?.estado === PEDIDO_ENVIADO || e.estado === 'ASIGNADO');
     return entregas.filter(e => e.estado === filtro);
   }, [entregas, filtro]);
 
@@ -107,6 +110,7 @@ export const DomiciliarioEntregas: React.FC = () => {
           <Filter size={16} />
           <select className={s.selectFiltro} value={filtro} onChange={e => setFiltro(e.target.value)}>
             <option value="TODOS">Todos</option>
+            <option value="ENVIADO">Enviados</option>
             {ESTADOS.map(e => <option key={e} value={e}>{estadoConfig[e]?.label ?? e}</option>)}
           </select>
         </div>
@@ -140,6 +144,9 @@ export const DomiciliarioEntregas: React.FC = () => {
                   <div>
                     <div className={s.cliente}>{entrega.clienteNombre ?? 'Cliente'}</div>
                     <div className={s.pedido}>Pedido #{entrega.orderNumero ?? entrega.orderId}</div>
+                    {entrega.order?.estado && (
+                      <div className={s.pedidoEstado}>Pedido: {entrega.order.estado}</div>
+                    )}
                   </div>
                   <div className={s.badgeWrap}>
                     <Badge variant={config.variant}>{config.label}</Badge>

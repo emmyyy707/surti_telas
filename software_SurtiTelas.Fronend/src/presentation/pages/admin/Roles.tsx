@@ -54,43 +54,45 @@ export const AdminRoles: React.FC = () => {
     return () => { active = false; };
   }, []);
 
+  const normalizedRoles = useMemo(() => {
+    return items.filter(r => r.id && (r.nombre ?? '').trim().length > 0);
+  }, [items]);
+
   const filteredRoles = useMemo(() => {
-    return items.filter(r =>
+    return normalizedRoles.filter(r =>
       String(r.nombre ?? '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
       String(r.descripcion ?? '').toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [items, debouncedSearch]);
+  }, [normalizedRoles, debouncedSearch]);
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedRol(null);
   };
 
-  const handleSubmitRol = async (e?: React.FormEvent<HTMLFormElement>) => {
-    if (e) e.preventDefault();
-    if (!formRef.current) return;
-    const fd = new FormData(formRef.current);
-    const nombre = String(fd.get('nombre') ?? '').trim();
-    const descripcion = String(fd.get('descripcion') ?? '').trim();
-    const permisos = fd.getAll('permisos') as string[];
-    try {
-      if (selectedRol) {
-        await rolesApi.update(selectedRol.id, { nombre, descripcion, permisos });
-        setItems(prev => prev.map(it => it.id === selectedRol.id ? { ...it, nombre, descripcion, permisos } : it));
-        toast.success('Rol actualizado');
-      } else {
-        const nuevo = await rolesApi.create({ nombre, descripcion, permisos });
-        setItems(prev => [{ ...nuevo, permisos: nuevo.permisos ?? [] }, ...prev]);
-        toast.success('Rol creado');
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al guardar rol');
-    } finally {
-      handleCloseModal();
-      const data = await rolesApi.list();
-      setItems(data.map(mapBackendRole));
-    }
-  };
+   const handleSubmitRol = async (e?: React.FormEvent<HTMLFormElement>) => {
+     if (e) e.preventDefault();
+     if (!formRef.current) return;
+     const fd = new FormData(formRef.current);
+     const nombre = String(fd.get('nombre') ?? '').trim();
+     const descripcion = String(fd.get('descripcion') ?? '').trim();
+     const permisos = fd.getAll('permisos') as string[];
+     try {
+       if (selectedRol) {
+         await rolesApi.update(selectedRol.id, { nombre, descripcion, permisos });
+         toast.success('Rol actualizado');
+       } else {
+         await rolesApi.create({ nombre, descripcion, permisos });
+         toast.success('Rol creado');
+       }
+     } catch (err) {
+       toast.error(err instanceof Error ? err.message : 'Error al guardar rol');
+     } finally {
+       handleCloseModal();
+       const data = await rolesApi.list();
+       setItems(data.map(mapBackendRole));
+     }
+   };
 
   const columns: DataTableColumn<Rol>[] = [
     {

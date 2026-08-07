@@ -11,6 +11,11 @@ export interface Usuario {
   estado: 'Activo' | 'Inactivo' | 'Pendiente';
   fechaRegistro: string;
   pedidosRealizados: number;
+  telefono?: string | null;
+  direccion?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
+  apellidos?: string | null;
   permisos?: string[];
 }
 
@@ -38,6 +43,11 @@ function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pe
     estado,
     fechaRegistro: (dto.createdAt ?? '').slice(0, 10),
     pedidosRealizados: dto.pedidosRealizados ?? 0,
+    telefono: dto.telefono ?? null,
+    direccion: dto.direccion ?? null,
+    tipoDocumento: dto.tipoDocumento ?? null,
+    numeroDocumento: dto.numeroDocumento ?? null,
+    apellidos: dto.apellidos ?? null,
     permisos: dto.permisos ?? [],
   };
 }

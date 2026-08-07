@@ -54,8 +54,10 @@ export const AdminSeguridadUsuarios: React.FC = () => {
     setError(null);
     try {
       const data = await auditApi.list();
+      console.log('[SeguridadUsuarios] audit data', data);
       setAuditorias(data.map(toAuditoria));
-    } catch {
+    } catch (err) {
+      console.error('[SeguridadUsuarios] load error', err);
       setError('No se pudieron cargar los registros de auditoría');
     } finally {
       setLoading(false);

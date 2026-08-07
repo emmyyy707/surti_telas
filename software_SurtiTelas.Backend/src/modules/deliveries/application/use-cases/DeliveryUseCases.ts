@@ -14,13 +14,20 @@ export class ListDeliveries {
 export class ListRutaDelDia {
   constructor(private readonly prisma: PrismaClient) {}
   async execute(filters?: { domiciliarioId?: string; estado?: string }) {
+    const deliveriesWhere: any = {
+      deletedAt: null,
+      ...(filters?.estado ? { estado: filters.estado } : { estado: { in: ['ASIGNADO', 'EN_RUTA', 'ENTREGADO', 'FALLIDO'] } }),
+    };
+    if (filters?.domiciliarioId) {
+      deliveriesWhere.OR = [
+        { domiciliarioId: filters.domiciliarioId },
+        { domiciliarioId: null, order: { estado: 'DESPACHADO' } as any },
+      ];
+    }
+
     const [deliveriesRaw, orphanOrders] = await Promise.all([
       this.prisma.delivery.findMany({
-        where: {
-          deletedAt: null,
-          ...(filters?.domiciliarioId ? { domiciliarioId: filters.domiciliarioId } : {}),
-          ...(filters?.estado ? { estado: filters.estado } : { estado: { in: ['ASIGNADO', 'EN_RUTA', 'ENTREGADO', 'FALLIDO'] } }),
-        },
+        where: deliveriesWhere,
         include: {
           order: {
             include: {
@@ -86,6 +93,7 @@ export class ListRutaDelDia {
           direccion: cliente?.direccion ?? null,
           ciudad: cliente?.ciudad ?? null,
           total: order?.total ? Number(order.total) : null,
+          estado: order?.estado ?? null,
         },
       };
     });
