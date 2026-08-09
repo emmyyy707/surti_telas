@@ -90,7 +90,7 @@ function toDevolucion(r: Return): Devolucion {
     cliente: r.cliente,
     responsable: r.responsable,
     observaciones: r.observaciones,
-    evidencias: [],
+    evidencias: r.imagenes ?? [],
   };
 }
 
@@ -105,11 +105,12 @@ function fromDevolucion(d: Devolucion): Return {
     cantidad: d.cantidad,
     cantidadInspeccionada: d.cantidadInspeccionada,
     fechaDevolucion: d.fechaDevolucion,
-    estado: (ESTADO_TO_API[d.estado] ?? 'RECIBIDO') as Return['estado'],
-    destino: (DESTINO_TO_API[d.destino] ?? 'REINGRESO_INVENTARIO') as Return['destino'],
+    estado: ESTADO_TO_API[d.estado] as Return['estado'],
+    destino: DESTINO_TO_API[d.destino] as Return['destino'],
     cliente: d.cliente,
     responsable: d.responsable,
     observaciones: d.observaciones,
+    imagenes: d.evidencias ?? [],
   };
 }
 

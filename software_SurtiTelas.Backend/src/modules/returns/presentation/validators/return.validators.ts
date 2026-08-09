@@ -27,9 +27,11 @@ export const CreateReturnSchema = z.object({
   cantidadInspeccionada: NonNegativeIntegerSchema.optional(),
   destino: ReturnDestinoEnum.optional(),
   cliente: z.string().optional(),
+  clienteId: z.string().optional(),
   responsable: z.string().optional(),
   observaciones: z.string().optional(),
   fechaDevolucion: z.string().optional(),
+  imagenes: z.array(z.string()).optional(),
 });
 
 export const UpdateReturnSchema = z.object({
@@ -41,12 +43,16 @@ export const UpdateReturnSchema = z.object({
   estado: ReturnStatusEnum.optional(),
   destino: ReturnDestinoEnum.optional(),
   cliente: z.string().optional(),
+  clienteId: z.string().optional(),
   responsable: z.string().optional(),
   observaciones: z.string().optional(),
+  imagenes: z.array(z.string()).optional(),
 });
 
 export const ReturnFiltersSchema = z.object({
   estado: ReturnStatusEnum.optional(),
+  cliente: z.string().optional(),
+  clienteId: z.string().optional(),
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().optional(),
   cursor: z.string().optional(),

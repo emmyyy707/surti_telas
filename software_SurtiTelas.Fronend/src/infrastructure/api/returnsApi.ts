@@ -30,6 +30,7 @@ export interface ReturnDTO {
   cliente?: string;
   responsable?: string;
   observaciones?: string;
+  imagenes?: string[];
 }
 
 export interface Return {
@@ -47,6 +48,7 @@ export interface Return {
   cliente: string;
   responsable?: string;
   observaciones: string;
+  imagenes: string[];
 }
 
 export function toReturn(dto: ReturnDTO): Return {
@@ -65,6 +67,7 @@ export function toReturn(dto: ReturnDTO): Return {
     cliente: dto.cliente ?? '',
     responsable: dto.responsable,
     observaciones: dto.observaciones ?? '',
+    imagenes: dto.imagenes ?? [],
   };
 }
 
@@ -80,11 +83,18 @@ export interface CreateReturnInput {
   responsable?: string;
   observaciones?: string;
   fechaDevolucion?: string;
+  imagenes?: string[];
 }
 
 export const returnsApi = {
   async list(): Promise<Return[]> {
     const response = await api.get<{ items: ReturnDTO[]; meta: Record<string, unknown> }>('/returns');
+    const data = response?.items ?? [];
+    return data.map(toReturn);
+  },
+
+  async listClient(): Promise<Return[]> {
+    const response = await api.get<{ items: ReturnDTO[]; meta: Record<string, unknown> }>('/client/returns');
     const data = response?.items ?? [];
     return data.map(toReturn);
   },
@@ -128,6 +138,7 @@ export const returnsApi = {
       responsable: input.responsable,
       observaciones: input.observaciones,
       fechaDevolucion: input.fechaDevolucion,
+      imagenes: input.imagenes,
     });
     return toReturn(dto);
   },

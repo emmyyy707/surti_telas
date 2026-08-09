@@ -10,9 +10,11 @@ export interface CreateReturnInput {
   cantidadInspeccionada?: number;
   destino?: Return['destino'];
   cliente?: string;
+  clienteId?: string;
   responsable?: string;
   observaciones?: string;
   fechaDevolucion?: string;
+  imagenes?: string[];
 }
 
 export interface UpdateReturnInput {
@@ -24,8 +26,10 @@ export interface UpdateReturnInput {
   estado?: Return['estado'];
   destino?: Return['destino'];
   cliente?: string;
+  clienteId?: string;
   responsable?: string;
   observaciones?: string;
+  imagenes?: string[];
 }
 
 export interface ReturnRepository {

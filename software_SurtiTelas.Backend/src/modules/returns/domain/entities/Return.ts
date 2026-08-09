@@ -14,14 +14,18 @@ export interface ReturnData {
   estado: ReturnEstado;
   destino: ReturnDestino;
   cliente?: string | null;
+  clienteId?: string | null;
   responsable?: string | null;
   observaciones?: string | null;
+  imagenes?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface ReturnFilters {
   estado?: ReturnEstado;
+  cliente?: string;
+  clienteId?: string;
   page?: number;
   limit?: number;
 }
@@ -49,8 +53,10 @@ export class Return {
   estado: ReturnEstado;
   destino: ReturnDestino;
   cliente?: string | null;
+  clienteId?: string | null;
   responsable?: string | null;
   observaciones?: string | null;
+  imagenes: string[];
   createdAt?: Date;
   updatedAt?: Date;
 
@@ -67,8 +73,10 @@ export class Return {
     this.estado = data.estado;
     this.destino = data.destino;
     this.cliente = data.cliente ?? null;
+    this.clienteId = data.clienteId ?? null;
     this.responsable = data.responsable ?? null;
     this.observaciones = data.observaciones ?? null;
+    this.imagenes = data.imagenes ?? [];
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }
@@ -96,8 +104,10 @@ export class Return {
       estado: this.estado,
       destino: this.destino,
       cliente: this.cliente,
+      clienteId: this.clienteId,
       responsable: this.responsable,
       observaciones: this.observaciones,
+      imagenes: this.imagenes,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

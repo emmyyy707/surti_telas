@@ -816,12 +816,15 @@ model Return {
   estado                String    @default("RECIBIDO")
   destino               String?
   cliente               String?
+  clienteId             String?   @map("cliente_id")
   responsable           String?
   observaciones         String?
+  imagenes             String[]   @default([])
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   deletedAt             DateTime? @map("deleted_at")
   @@index([orderId])
+  @@index([clienteId])
   @@index([deletedAt])
   @@map("returns")
 }

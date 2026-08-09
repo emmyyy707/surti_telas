@@ -15,8 +15,10 @@ export function toReturnData(row: any): ReturnData {
     estado: row.estado,
     destino: row.destino,
     cliente: row.cliente,
+    clienteId: row.clienteId,
     responsable: row.responsable,
     observaciones: row.observaciones,
+    imagenes: row.imagenes ?? [],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -39,8 +41,10 @@ export function toCreateInput(d: Return) {
     estado: d.estado,
     destino: d.destino,
     cliente: d.cliente,
+    clienteId: d.clienteId,
     responsable: d.responsable,
     observaciones: d.observaciones,
+    imagenes: d.imagenes,
   };
 }
 
@@ -54,8 +58,10 @@ export function toUpdateInput(changes: Partial<ReturnData>) {
   if (changes.estado !== undefined) data.estado = changes.estado;
   if (changes.destino !== undefined) data.destino = changes.destino;
   if (changes.cliente !== undefined) data.cliente = changes.cliente;
+  if (changes.clienteId !== undefined) data.clienteId = changes.clienteId;
   if (changes.responsable !== undefined) data.responsable = changes.responsable;
   if (changes.observaciones !== undefined) data.observaciones = changes.observaciones;
+  if (changes.imagenes !== undefined) data.imagenes = changes.imagenes;
   return data;
 }
 

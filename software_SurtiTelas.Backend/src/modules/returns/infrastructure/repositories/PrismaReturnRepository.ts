@@ -11,6 +11,13 @@ export class PrismaReturnRepository implements ReturnRepository {
     const where: Prisma.ReturnWhereInput = { deletedAt: null };
     if (filters.estado) where.estado = filters.estado;
 
+    if (filters.clienteId || filters.cliente) {
+      const orConditions: Prisma.ReturnWhereInput[] = [];
+      if (filters.clienteId) orConditions.push({ clienteId: filters.clienteId });
+      if (filters.cliente) orConditions.push({ cliente: { contains: filters.cliente, mode: 'insensitive' } });
+      where.AND = [{ deletedAt: null }, { OR: orConditions }];
+    }
+
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 50;
     const [rows, total] = await this.prisma.$transaction([

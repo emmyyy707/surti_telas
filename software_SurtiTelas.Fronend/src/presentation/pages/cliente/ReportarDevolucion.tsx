@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Package, AlertCircle, CheckCircle } from 'lucide-react';
+import { Package, AlertCircle, CheckCircle, Image as ImageIcon, X, Clock, ChevronRight, List, FileText } from 'lucide-react';
 import s from './ReportarDevolucion.module.css';
 import { Button } from '@/shared/ui/Button';
-import { returnsApi } from '@/infrastructure/api/returnsApi';
+import { returnsApi, type Return } from '@/infrastructure/api/returnsApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { authApi } from '@/infrastructure/api/authApi';
@@ -34,6 +34,12 @@ export const ReportarDevolucion: React.FC = () => {
   const [referencias, setReferencias] = useState<{ ref: string; nombre: string }[]>([]);
   const [ordenes, setOrdenes] = useState<OrderOption[]>([]);
   const [pedidosFiltrados, setPedidosFiltrados] = useState<OrderOption[]>([]);
+  const [imagenes, setImagenes] = useState<string[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
+  const [myReturns, setMyReturns] = useState<Return[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   useEffect(() => {
     catalogApi.list({ limit: 100 }).then(r => {
@@ -67,7 +73,28 @@ export const ReportarDevolucion: React.FC = () => {
     };
 
     loadClienteData();
+    loadMyReturns();
   }, []);
+
+  const loadMyReturns = async () => {
+    setLoadingHistory(true);
+    setHistoryError(null);
+    try {
+      const data = await returnsApi.listClient();
+      setMyReturns(data);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudieron cargar las devoluciones';
+      setHistoryError(msg);
+      setMyReturns([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const refreshHistory = () => {
+    loadMyReturns();
+    setActiveTab('history');
+  };
 
   const handleReferenciaChange = (ref: string) => {
     setForm(prev => ({ ...prev, referencia: ref }));
@@ -90,6 +117,45 @@ export const ReportarDevolucion: React.FC = () => {
     setForm(prev => ({ ...prev, orderId: numero, ordenId: orden?.id ?? prev.ordenId }));
   };
 
+  const MAX_IMAGES = 4;
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+  const validateAndAddImages = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setImageError(null);
+    const remaining = MAX_IMAGES - imagenes.length;
+    if (remaining <= 0) {
+      setImageError(`Máximo ${MAX_IMAGES} imágenes permitidas`);
+      return;
+    }
+    const toProcess = Array.from(files).slice(0, remaining);
+    const invalid = toProcess.find(f => !ALLOWED_TYPES.includes(f.type));
+    if (invalid) {
+      setImageError('Formato no permitido. Usa JPG, PNG, WEBP o GIF');
+      return;
+    }
+    const readers = toProcess.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    });
+    Promise.all(readers).then(results => {
+      setImagenes(prev => [...prev, ...results].slice(0, MAX_IMAGES));
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    validateAndAddImages(e.target.files);
+    e.target.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setImagenes(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -106,6 +172,7 @@ export const ReportarDevolucion: React.FC = () => {
         responsable: form.responsable || undefined,
         observaciones: form.observaciones || undefined,
         fechaDevolucion: form.fechaDevolucion,
+        imagenes,
       });
       toast.success(`Devolución ${response.numeroDevolucion} reportada correctamente`);
       setForm({
@@ -122,6 +189,8 @@ export const ReportarDevolucion: React.FC = () => {
         observaciones: '',
         fechaDevolucion: new Date().toISOString().slice(0, 10),
       });
+      setImagenes([]);
+      setImageError(null);
     } catch {
       toast.error('No fue posible reportar la devolución');
     } finally {
@@ -133,15 +202,27 @@ export const ReportarDevolucion: React.FC = () => {
     <div className={s.container}>
       <div className={s.header}>
         <div>
-          <h1 className={s.title}>Reportar Devolución</h1>
-          <p className={s.subtitle}>Completa el formulario para registrar una devolución</p>
+          <h1 className={s.title}>Devoluciones</h1>
+          <p className={s.subtitle}>Reporta una devolución o consulta el estado de tus solicitudes</p>
         </div>
       </div>
 
-      <div className={s.card}>
-        <form onSubmit={handleSubmit} className={s.form}>
-          <div className={s.section}>
-            <h3 className={s.sectionTitle}>Datos de la devolución</h3>
+      <div className={s.tabs}>
+        <button type="button" className={`${s.tab} ${activeTab === 'new' ? s.tabActive : ''}`} onClick={() => setActiveTab('new')}>
+          <FileText size={16} />
+          <span>Reportar devolución</span>
+        </button>
+        <button type="button" className={`${s.tab} ${activeTab === 'history' ? s.tabActive : ''}`} onClick={() => { setActiveTab('history'); loadMyReturns(); }}>
+          <List size={16} />
+          <span>Mis devoluciones</span>
+        </button>
+      </div>
+
+      {activeTab === 'new' && (
+        <div className={s.card}>
+          <form onSubmit={handleSubmit} className={s.form}>
+            <div className={s.section}>
+              <h3 className={s.sectionTitle}>Datos de la devolución</h3>
             <div className={s.grid}>
               <div className={s.field}>
                 <label className={s.label}>Referencia *</label>
@@ -211,6 +292,38 @@ export const ReportarDevolucion: React.FC = () => {
                 <textarea className={s.input} value={form.observaciones} onChange={e => setForm({ ...form, observaciones: e.target.value })} placeholder="Notas adicionales..." rows={3} />
               </div>
             </div>
+
+            <div className={s.field}>
+              <label className={s.label}>Imágenes de soporte (máx. {MAX_IMAGES})</label>
+              <div className={s.uploadArea}>
+                <input
+                  id="return-images"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  onChange={handleImageChange}
+                  className={s.hiddenInput}
+                />
+                <label htmlFor="return-images" className={s.uploadLabel}>
+                  <ImageIcon size={20} />
+                  <span>Seleccionar imágenes</span>
+                  <span className={s.uploadHint}>JPG, PNG, WEBP o GIF. Hasta {MAX_IMAGES} archivos.</span>
+                </label>
+                {imageError && <p className={s.imageError}>{imageError}</p>}
+                {imagenes.length > 0 && (
+                  <div className={s.imagePreviewGrid}>
+                    {imagenes.map((src, idx) => (
+                      <div key={idx} className={s.imagePreviewItem}>
+                        <img src={src} alt={`preview-${idx}`} />
+                        <button type="button" className={s.removeImageBtn} onClick={() => removeImage(idx)} aria-label={`Eliminar imagen ${idx + 1}`}>
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className={s.actions}>
@@ -218,6 +331,100 @@ export const ReportarDevolucion: React.FC = () => {
           </div>
         </form>
       </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div className={s.card}>
+          <div className={s.sectionHeader}>
+            <h3 className={s.sectionTitle}>Historial de mis devoluciones</h3>
+            <Button variant="secondary" size="xs" onClick={loadMyReturns} loading={loadingHistory}>Actualizar</Button>
+          </div>
+          {loadingHistory ? (
+            <p className={s.emptyText}>Cargando...</p>
+          ) : historyError ? (
+            <p className={s.imageError}>{historyError}</p>
+          ) : myReturns.length === 0 ? (
+            <p className={s.emptyText}>No tienes devoluciones registradas</p>
+          ) : (
+            <div className={s.tableWrapper}>
+              <table className={s.table}>
+                <thead>
+                  <tr>
+                    <th>N° Devolución</th>
+                    <th>Fecha</th>
+                    <th>Prenda</th>
+                    <th>Referencia</th>
+                    <th>Cantidad</th>
+                    <th>Destino</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {myReturns.map(ret => (
+                    <tr key={ret.id}>
+                      <td>{ret.numeroDevolucion}</td>
+                      <td>{new Date(ret.fechaDevolucion).toLocaleDateString()}</td>
+                      <td>{ret.prenda}</td>
+                      <td>{ret.referencia}</td>
+                      <td>{ret.cantidad}</td>
+                      <td>{DESTINO_TO_UI[ret.destino] ?? ret.destino}</td>
+                      <td>
+                        <span className={`${s.statusBadge} ${s[`status${ret.estado}`]}`}>
+                          {ESTADO_TO_UI[ret.estado] ?? ret.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ESTADO_TO_UI: Record<string, string> = {
+  RECIBIDO: 'Recibida',
+  EN_INSPECCION: 'En inspección',
+  APROBADO: 'Aprobada',
+  RECHAZADO: 'Rechazada',
+  EN_REPARACION: 'En reparación',
+  REINGRESADO: 'Reingresada',
+  DESCARTADO: 'Descartada',
+};
+
+const DESTINO_TO_UI: Record<string, string> = {
+  REINGRESO_INVENTARIO: 'Reingreso a inventario',
+  REPARACION: 'Reparación',
+  DESCARTE: 'Descarte',
+  DEVOLUCION_PROVEEDOR: 'Devolución a proveedor',
+};
+
+const TimelineStep: React.FC<{ estado: Return['estado'] }> = ({ estado }) => {
+  const steps = [
+    { key: 'RECIBIDO', label: 'Recibida' },
+    { key: 'EN_INSPECCION', label: 'En inspección' },
+    { key: 'APROBADO', label: 'Aprobada' },
+    { key: 'EN_REPARACION', label: 'En reparación' },
+    { key: 'REINGRESADO', label: 'Finalizada' },
+  ];
+
+  const currentIndex = steps.findIndex(s => s.key === estado);
+
+  return (
+    <div className={s.timelineTrack}>
+      {steps.map((step, idx) => {
+        const isCompleted = idx < currentIndex || estado === 'REINGRESADO' || estado === 'DESCARTADO';
+        const isCurrent = idx === currentIndex && estado !== 'REINGRESADO' && estado !== 'DESCARTADO';
+        return (
+          <div key={step.key} className={`${s.timelineStep} ${isCompleted ? s.timelineCompleted : ''} ${isCurrent ? s.timelineCurrent : ''}`}>
+            <div className={s.timelineDot} />
+            <span className={s.timelineLabel}>{step.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 };

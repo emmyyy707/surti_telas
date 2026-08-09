@@ -50,8 +50,10 @@ export class CreateReturn {
       estado: 'RECIBIDO',
       destino: input.destino ?? 'REINGRESO_INVENTARIO',
       cliente: input.cliente ?? null,
+      clienteId: input.clienteId ?? null,
       responsable: input.responsable ?? null,
       observaciones: input.observaciones ?? null,
+      imagenes: input.imagenes ?? [],
     });
     return this.repo.create(ret as any);
   }
