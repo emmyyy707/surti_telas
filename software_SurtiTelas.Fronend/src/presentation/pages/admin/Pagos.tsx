@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Plus, CheckCircle, AlertTriangle, Clock, FileText, CreditCard, Download, DollarSign, ChevronDown, X, Loader2, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Pagos.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '../../../shared/ui/DataTable';
@@ -547,96 +548,119 @@ export const AdminPagos: React.FC = () => {
         size="md"
         variant="form"
       >
-        <div className={s.formContent}>
-          <div className={s.formGrid}>
-            <div className={s.field}>
-              <label className={s.label}>Cliente</label>
-              <input type="text" className={s.input} value={selectedFactura?.cliente ?? ''} readOnly />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Saldo pendiente</label>
-              <input type="text" className={s.input} value={selectedFactura ? formatCurrency(selectedFactura.saldo) : ''} readOnly />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Valor del abono *</label>
-              <input
-                type="number"
-                className={s.input}
-                value={nuevoAbono.valor}
-                onChange={e => setNuevoAbono({ ...nuevoAbono, valor: e.target.value })}
-                placeholder="Ingrese el valor"
-                min={1}
-                max={selectedFactura?.saldo ?? 0}
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Método de pago</label>
-              <select
-                className={s.input}
-                value={nuevoAbono.metodo}
-                onChange={e => setNuevoAbono({ ...nuevoAbono, metodo: e.target.value })}
-              >
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Tarjeta">Tarjeta</option>
-                <option value="Credito">Crédito</option>
-              </select>
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Fecha</label>
-              <input
-                type="date"
-                className={s.input}
-                value={nuevoAbono.fecha}
-                onChange={e => setNuevoAbono({ ...nuevoAbono, fecha: e.target.value })}
-              />
-            </div>
-            <div className={`${s.field} ${s.fieldFull}`}>
-              <label className={s.label}>Concepto / Observación</label>
-              <input
-                type="text"
-                className={s.input}
-                value={nuevoAbono.concepto}
-                onChange={e => setNuevoAbono({ ...nuevoAbono, concepto: e.target.value })}
-                placeholder="Ej: Abono cuota 2/3"
-              />
+        <div className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información de la factura</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Cliente</label>
+                <input type="text" className={f.input} value={selectedFactura?.cliente ?? ''} readOnly />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Saldo pendiente</label>
+                <input type="text" className={f.input} value={selectedFactura ? formatCurrency(selectedFactura.saldo) : ''} readOnly />
+              </div>
             </div>
           </div>
 
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setModalAbonoOpen(false) }, { label: 'Guardar abono', onClick: handleGuardarAbono, leftIcon: <DollarSign size={16} /> }]} />
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Detalle del abono</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Valor del abono *</label>
+                <input
+                  type="number"
+                  className={f.input}
+                  value={nuevoAbono.valor}
+                  onChange={e => setNuevoAbono({ ...nuevoAbono, valor: e.target.value })}
+                  placeholder="Ingrese el valor"
+                  min={1}
+                  max={selectedFactura?.saldo ?? 0}
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Método de pago</label>
+                <select
+                  className={f.select}
+                  value={nuevoAbono.metodo}
+                  onChange={e => setNuevoAbono({ ...nuevoAbono, metodo: e.target.value })}
+                >
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Credito">Crédito</option>
+                </select>
+              </div>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Fecha</label>
+                <input
+                  type="date"
+                  className={f.input}
+                  value={nuevoAbono.fecha}
+                  onChange={e => setNuevoAbono({ ...nuevoAbono, fecha: e.target.value })}
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Concepto / Observación</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={nuevoAbono.concepto}
+                  onChange={e => setNuevoAbono({ ...nuevoAbono, concepto: e.target.value })}
+                  placeholder="Ej: Abono cuota 2/3"
+                />
+              </div>
+            </div>
+          </div>
 
+          <div className={f.formActions}>
+            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setModalAbonoOpen(false) }, { label: 'Guardar abono', onClick: handleGuardarAbono, leftIcon: <DollarSign size={16} /> }]} />
+          </div>
         </div>
       </Modal>
 
       <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar pago" size="md" variant="form">
-        <form onSubmit={e => { e.preventDefault(); handleUpdatePayment(); }} className={s.formContent}>
-          <div className={s.formGrid}>
-            <div className={s.field}>
-              <label className={s.label}>Monto *</label>
-              <input type="number" className={s.input} value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} required min="0" />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Método de pago</label>
-              <select className={s.input} value={paymentForm.method} onChange={e => setPaymentForm({ ...paymentForm, method: e.target.value as PaymentForm['method'] })}>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Tarjeta">Tarjeta</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div className={`${s.field} ${s.fieldFull}`}>
-              <label className={s.label}>Referencia</label>
-              <input type="text" className={s.input} value={paymentForm.reference} onChange={e => setPaymentForm({ ...paymentForm, reference: e.target.value })} />
-            </div>
-            <div className={`${s.field} ${s.fieldFull}`}>
-              <label className={s.label}>Notas</label>
-              <textarea className={s.textarea} value={paymentForm.notes} onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })} rows={3} />
+        <form onSubmit={e => { e.preventDefault(); handleUpdatePayment(); }} className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información del pago</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Monto *</label>
+                <input type="number" className={f.input} value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} required min="0" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Método de pago</label>
+                <select className={f.select} value={paymentForm.method} onChange={e => setPaymentForm({ ...paymentForm, method: e.target.value as PaymentForm['method'] })}>
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
             </div>
           </div>
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => setEditModalOpen(false), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , type: 'submit', disabled: saving }]} />
 
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Detalles adicionales</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Referencia</label>
+                <input type="text" className={f.input} value={paymentForm.reference} onChange={e => setPaymentForm({ ...paymentForm, reference: e.target.value })} />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Notas</label>
+                <textarea className={f.textarea} value={paymentForm.notes} onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })} rows={3} />
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formActions}>
+            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => setEditModalOpen(false), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , type: 'submit', disabled: saving }]} />
+          </div>
         </form>
       </Modal>
 

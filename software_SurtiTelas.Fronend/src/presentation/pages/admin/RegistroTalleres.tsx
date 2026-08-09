@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, ToggleLeft } from 'lucide-react';
 import s from './RegistroTalleres.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -225,41 +226,44 @@ export const AdminRegistroTalleres: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef} onSubmit={handleSubmitTaller}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Nombre del Taller</label>
-                    <input type="text" className={s.input} value={nombre} onChange={e => setNombre(e.target.value)} required />
+              <form className={f.form} ref={formRef} onSubmit={handleSubmitTaller}>
+                <div className={f.formSection}>
+                  <h3 className={f.sectionTitle}>Información del taller</h3>
+                  <div className={f.formRow}>
+                    <div className={f.field}>
+                      <label className={f.label}>Nombre del Taller</label>
+                      <input type="text" className={f.input} value={nombre} onChange={e => setNombre(e.target.value)} required />
+                    </div>
+                    <div className={f.field}>
+                      <label className={f.label}>Capacidad</label>
+                      <input type="number" className={f.input} value={capacidad} onChange={e => setCapacidad(e.target.value)} min="0" />
+                    </div>
                   </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Capacidad</label>
-                    <input type="number" className={s.input} value={capacidad} onChange={e => setCapacidad(e.target.value)} min="0" />
+
+                  <div className={f.formRow}>
+                    <div className={f.field}>
+                      <label className={f.label}>Teléfono</label>
+                      <input type="tel" className={f.input} value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="Ej: +57 300 000 0000" />
+                    </div>
+                    <div className={f.field}>
+                      <label className={f.label}>Email</label>
+                      <input type="email" className={f.input} value={email} onChange={e => setEmail(e.target.value)} placeholder="taller@correo.com" />
+                    </div>
+                  </div>
+
+                  <div className={f.formRow}>
+                    <div className={f.field}>
+                      <label className={f.label}>Dirección</label>
+                      <input type="text" className={f.input} value={direccion} onChange={e => setDireccion(e.target.value)} placeholder="Calle / Carrera / Avenida" />
+                    </div>
+                    <div className={f.field}>
+                      <label className={f.label}>Ciudad</label>
+                      <input type="text" className={f.input} value={ciudad} onChange={e => setCiudad(e.target.value)} placeholder="Ciudad" />
+                    </div>
                   </div>
                 </div>
 
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Teléfono</label>
-                    <input type="tel" className={s.input} value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="Ej: +57 300 000 0000" />
-                  </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Email</label>
-                    <input type="email" className={s.input} value={email} onChange={e => setEmail(e.target.value)} placeholder="taller@correo.com" />
-                  </div>
-                </div>
-
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Dirección</label>
-                    <input type="text" className={s.input} value={direccion} onChange={e => setDireccion(e.target.value)} placeholder="Calle / Carrera / Avenida" />
-                  </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Ciudad</label>
-                    <input type="text" className={s.input} value={ciudad} onChange={e => setCiudad(e.target.value)} placeholder="Ciudad" />
-                  </div>
-                </div>
-
-                <div className={s.formActions}>
+                <div className={f.formActions}>
                   <Button type="button" variant="secondary" onClick={handleCloseModal}>
                     Cancelar
                   </Button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Factory, Clock, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './AsignacionProduccion.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
@@ -439,115 +440,118 @@ export const AdminAsignacionProduccion: React.FC = () => {
         size="lg"
         variant="form"
       >
-        <form id="ordenForm" className={s.form} onSubmit={handleCrudSubmit}>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Referencia</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formReferencia}
-                onChange={e => setFormReferencia(e.target.value)}
-                placeholder="Ej: CMR-001"
-                required
-              />
+        <form id="ordenForm" className={f.form} onSubmit={handleCrudSubmit}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Datos de la orden</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Referencia</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={formReferencia}
+                  onChange={e => setFormReferencia(e.target.value)}
+                  placeholder="Ej: CMR-001"
+                  required
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Cantidad</label>
+                <input
+                  type="number"
+                  className={f.input}
+                  value={formCantidad}
+                  onChange={e => setFormCantidad(e.target.value)}
+                  placeholder="Ej: 50"
+                  required
+                  min="1"
+                />
+              </div>
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Cantidad</label>
-              <input
-                type="number"
-                className={s.input}
-                value={formCantidad}
-                onChange={e => setFormCantidad(e.target.value)}
-                placeholder="Ej: 50"
-                required
-                min="1"
-              />
-            </div>
-          </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Fecha estimada</label>
-              <input
-                type="date"
-                className={s.input}
-                value={formFecha}
-                onChange={e => setFormFecha(e.target.value)}
-                required
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Estado</label>
-              <select className={s.select} value={formEstado} onChange={e => setFormEstado(e.target.value as 'Pendiente' | 'Asignada' | 'En produccion' | 'Completada')}>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Asignada">Asignada</option>
-                <option value="En produccion">En producción</option>
-                <option value="Completada">Completada</option>
-              </select>
-            </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Notas técnicas</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formNotas}
-                onChange={e => setFormNotas(e.target.value)}
-                placeholder="Opcional"
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Fecha inicio</label>
-              <input
-                type="date"
-                className={s.input}
-                value={formFechaInicio}
-                onChange={e => setFormFechaInicio(e.target.value)}
-              />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Fecha estimada</label>
+                <input
+                  type="date"
+                  className={f.input}
+                  value={formFecha}
+                  onChange={e => setFormFecha(e.target.value)}
+                  required
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Estado</label>
+                <select className={f.select} value={formEstado} onChange={e => setFormEstado(e.target.value as 'Pendiente' | 'Asignada' | 'En produccion' | 'Completada')}>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Asignada">Asignada</option>
+                  <option value="En produccion">En producción</option>
+                  <option value="Completada">Completada</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Tela</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formTela}
-                onChange={e => setFormTela(e.target.value)}
-                placeholder="Ej: Algodón"
-              />
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Detalles</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Notas técnicas</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={formNotas}
+                  onChange={e => setFormNotas(e.target.value)}
+                  placeholder="Opcional"
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Fecha inicio</label>
+                <input
+                  type="date"
+                  className={f.input}
+                  value={formFechaInicio}
+                  onChange={e => setFormFechaInicio(e.target.value)}
+                />
+              </div>
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Colores (separados por coma)</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formColores}
-                onChange={e => setFormColores(e.target.value)}
-                placeholder="Ej: Rojo, Azul"
-              />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Tela</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={formTela}
+                  onChange={e => setFormTela(e.target.value)}
+                  placeholder="Ej: Algodón"
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Colores (separados por coma)</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={formColores}
+                  onChange={e => setFormColores(e.target.value)}
+                  placeholder="Ej: Rojo, Azul"
+                />
+              </div>
             </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Tallas (JSON)</label>
-              <input
-                type="text"
-                className={s.input}
-                value={formCurvaTallas}
-                onChange={e => setFormCurvaTallas(e.target.value)}
-                placeholder='Ej: {"s":10,"m":20}'
-              />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Tallas (JSON)</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={formCurvaTallas}
+                  onChange={e => setFormCurvaTallas(e.target.value)}
+                  placeholder='Ej: {"s":10,"m":20}'
+                />
+              </div>
             </div>
           </div>
 
           <ModalFooter
             actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setCrudModalOpen(false); setEditingId(null); }, disabled: saving }, { label: editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Creando...' : 'Crear orden') , type: 'submit', disabled: saving }]} />
-
         </form>
       </Modal>
 

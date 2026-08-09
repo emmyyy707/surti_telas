@@ -8,6 +8,7 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import s from './Clientes.module.css';
+import f from '@/styles/Form.module.css';
 import { authApi, type BackendAuthUser, type CreateUserRequest } from '@/infrastructure/api/authApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
 import type { Cliente } from '@/core/types';
@@ -391,76 +392,91 @@ export const AdminClientes: React.FC = () => {
         title={selectedCliente ? 'Editar Cliente' : 'Nuevo Cliente'}
         size="lg"
       >
-        <form className={s.form} ref={formRef} onSubmit={handleSubmit}>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="nombre">Nombre *</label>
-              <input id="nombre" type="text" className={s.input} name="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required maxLength={100} autoComplete="given-name" />
-            </div>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="apellidos">Apellidos *</label>
-              <input id="apellidos" type="text" className={s.input} name="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required maxLength={100} autoComplete="family-name" />
-            </div>
-          </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="email">Email {selectedCliente ? '' : '*'}</label>
-              <input id="email" type="email" className={s.input} name="email" value={email} onChange={(e) => setEmail(e.target.value)} required={!selectedCliente} maxLength={100} autoComplete="email" />
-            </div>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="telefono">Teléfono</label>
-              <input id="telefono" type="tel" className={s.input} name="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value)} maxLength={11} pattern="[0-9]*" inputMode="numeric" autoComplete="tel" />
-            </div>
-          </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="tipoDocumento">Tipo de documento *</label>
-              <select id="tipoDocumento" className={s.select} name="tipoDocumento" value={tipoDocumento} onChange={(e) => setTipoDocumento(e.target.value)} required>
-                <option value="">Selecciona...</option>
-                <option value="CC">Cédula de ciudadanía</option>
-                <option value="NIE">NIE</option>
-                <option value="PASSPORT">Pasaporte</option>
-                <option value="CE">Cédula de extranjería</option>
-                <option value="OTHER">Otro</option>
-              </select>
-            </div>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="numeroDocumento">Número de documento *</label>
-              <input id="numeroDocumento" type="text" className={s.input} name="numeroDocumento" value={numeroDocumento} onChange={(e) => setNumeroDocumento(e.target.value)} required maxLength={20} inputMode="numeric" />
-            </div>
-          </div>
-          <div className={s.field}>
-            <label className={s.label} htmlFor="direccion">Dirección</label>
-            <input id="direccion" type="text" className={s.input} name="direccion" value={direccion} onChange={(e) => setDireccion(e.target.value)} maxLength={200} autoComplete="street-address" />
-          </div>
-          {!selectedCliente && (
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label} htmlFor="password">Contraseña *</label>
-                <input id="password" type="password" className={s.input} name="password" required minLength={8} placeholder="Mínimo 8 caracteres" autoComplete="new-password" />
+        <form className={f.form} ref={formRef} onSubmit={handleSubmit}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Datos personales</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="nombre">Nombre *</label>
+                <input id="nombre" type="text" className={f.input} name="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required maxLength={100} autoComplete="given-name" />
               </div>
-              <div className={s.field}>
-                <label className={s.label} htmlFor="confirmPassword">Confirmar contraseña *</label>
-                <input id="confirmPassword" type="password" className={s.input} name="confirmPassword" required minLength={8} placeholder="Repite la contraseña" autoComplete="new-password" />
+              <div className={f.field}>
+                <label className={f.label} htmlFor="apellidos">Apellidos *</label>
+                <input id="apellidos" type="text" className={f.input} name="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required maxLength={100} autoComplete="family-name" />
+              </div>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="email">Email {selectedCliente ? '' : '*'}</label>
+                <input id="email" type="email" className={f.input} name="email" value={email} onChange={(e) => setEmail(e.target.value)} required={!selectedCliente} maxLength={100} autoComplete="email" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="telefono">Teléfono</label>
+                <input id="telefono" type="tel" className={f.input} name="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value)} maxLength={11} pattern="[0-9]*" inputMode="numeric" autoComplete="tel" />
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Documento y dirección</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="tipoDocumento">Tipo de documento *</label>
+                <select id="tipoDocumento" className={f.select} name="tipoDocumento" value={tipoDocumento} onChange={(e) => setTipoDocumento(e.target.value)} required>
+                  <option value="">Selecciona...</option>
+                  <option value="CC">Cédula de ciudadanía</option>
+                  <option value="NIE">NIE</option>
+                  <option value="PASSPORT">Pasaporte</option>
+                  <option value="CE">Cédula de extranjería</option>
+                  <option value="OTHER">Otro</option>
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="numeroDocumento">Número de documento *</label>
+                <input id="numeroDocumento" type="text" className={f.input} name="numeroDocumento" value={numeroDocumento} onChange={(e) => setNumeroDocumento(e.target.value)} required maxLength={20} inputMode="numeric" />
+              </div>
+            </div>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="direccion">Dirección</label>
+              <input id="direccion" type="text" className={f.input} name="direccion" value={direccion} onChange={(e) => setDireccion(e.target.value)} maxLength={200} autoComplete="street-address" />
+            </div>
+          </div>
+
+          {!selectedCliente && (
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Seguridad</h3>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label} htmlFor="password">Contraseña *</label>
+                  <input id="password" type="password" className={f.input} name="password" required minLength={8} placeholder="Mínimo 8 caracteres" autoComplete="new-password" />
+                </div>
+                <div className={f.field}>
+                  <label className={f.label} htmlFor="confirmPassword">Confirmar contraseña *</label>
+                  <input id="confirmPassword" type="password" className={f.input} name="confirmPassword" required minLength={8} placeholder="Repite la contraseña" autoComplete="new-password" />
+                </div>
               </div>
             </div>
           )}
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label} htmlFor="estado">Estado</label>
-              <select id="estado" className={s.input} name="estado" value={estado} onChange={(e) => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
-            </div>
-            <div className={s.field} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 24 }}>
-              <input type="checkbox" id="isTrustedCustomer" name="isTrustedCustomer" checked={isTrustedCustomer} onChange={(e) => setIsTrustedCustomer(e.target.checked)} />
-              <label htmlFor="isTrustedCustomer" className={s.label} style={{ margin: 0 }}>Cliente de confianza</label>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Estado</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="estado">Estado</label>
+                <select id="estado" className={f.select} name="estado" value={estado} onChange={(e) => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
+                  <option value="Activo">Activo</option>
+                  <option value="Inactivo">Inactivo</option>
+                </select>
+              </div>
+              <div className={f.field} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 24 }}>
+                <input type="checkbox" id="isTrustedCustomer" name="isTrustedCustomer" checked={isTrustedCustomer} onChange={(e) => setIsTrustedCustomer(e.target.checked)} />
+                <label htmlFor="isTrustedCustomer" className={f.label} style={{ margin: 0 }}>Cliente de confianza</label>
+              </div>
             </div>
           </div>
+
           <ModalFooter
             actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal }, { label: selectedCliente ? 'Guardar cambios' : 'Crear cliente' , type: 'submit' }]} />
-
         </form>
       </Modal>
 

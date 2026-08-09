@@ -1,6 +1,5 @@
 import type { Producto } from '@/core/types';
 import { api } from './httpClient';
-import type { PaginatedResponse } from './pagination';
 
 /** DTO que devuelve el backend para un producto (coincide con ProductMapper.toProductData). */
 export interface ProductDTO {
@@ -96,15 +95,39 @@ function toProductBody(p: Partial<Producto>): Record<string, unknown> {
 
 export interface ProductsListResult {
   data: Producto[];
-  meta: PaginatedResponse<ProductDTO>['data']['meta'];
+  meta: {
+    totalRecords: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    nextCursor?: string;
+  };
 }
 
 export const catalogApi = {
-  async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<ProductsListResult> {
-    const response = await api.get<{ items: ProductDTO[]; meta: PaginatedResponse<ProductDTO>['data']['meta'] }>('/catalog/products', { query, auth: false });
+  async list(query?: Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>): Promise<ProductsListResult> {
+    const response = await api.get<{
+      items: ProductDTO[];
+      totalRecords: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+      nextCursor?: string | null;
+    }>('/catalog/products', { query, auth: false });
     const data = (response?.items ?? []).map(toProducto);
-    const meta = response?.meta ?? { totalRecords: 0, page: 1, limit: 12, totalPages: 1 };
+    const meta = {
+      totalRecords: response?.totalRecords ?? 0,
+      page: response?.page ?? 1,
+      limit: response?.limit ?? 12,
+      totalPages: response?.totalPages ?? 1,
+      nextCursor: response?.nextCursor ?? undefined,
+    };
     return { data, meta };
+  },
+
+  async getBrands(): Promise<string[]> {
+    const brands = await api.get<string[]>('/catalog/products/brands', { auth: false });
+    return brands ?? [];
   },
 
   async getByRef(ref: string): Promise<Producto | null> {

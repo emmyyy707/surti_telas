@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import s from './Produccion.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
@@ -186,28 +187,31 @@ export const AdminProduccion: React.FC = () => {
           title="Editar Orden de Producción"
           size="md"
         >
-          <form className={s.form} onSubmit={handleSubmitOrden}>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Operario asignado</label>
-                <select className={s.select} name="operarioId" defaultValue={selectedOrden.operarioId} disabled={loadingOperarios}>
-                  <option value="">-- Seleccione un operario --</option>
-                  {operarios.map(op => (
-                    <option key={op.id} value={op.id}>{op.nombre}</option>
-                  ))}
-                </select>
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Estado</label>
-                <select className={s.select} name="estado" defaultValue={selectedOrden.estado}>
-                  <option>Pendiente</option>
-                  <option>Asignada</option>
-                  <option>En produccion</option>
-                  <option>Completada</option>
-                </select>
+          <form className={f.form} onSubmit={handleSubmitOrden}>
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Datos de la orden</h3>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Operario asignado</label>
+                  <select className={f.select} name="operarioId" defaultValue={selectedOrden.operarioId} disabled={loadingOperarios}>
+                    <option value="">-- Seleccione un operario --</option>
+                    {operarios.map(op => (
+                      <option key={op.id} value={op.id}>{op.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Estado</label>
+                  <select className={f.select} name="estado" defaultValue={selectedOrden.estado}>
+                    <option>Pendiente</option>
+                    <option>Asignada</option>
+                    <option>En produccion</option>
+                    <option>Completada</option>
+                  </select>
+                </div>
               </div>
             </div>
-            <div className={s.formActions}>
+            <div className={f.formActions}>
               <Button variant="secondary" type="button" onClick={closeModals}>Cancelar</Button>
               <Button type="submit">Guardar cambios</Button>
             </div>

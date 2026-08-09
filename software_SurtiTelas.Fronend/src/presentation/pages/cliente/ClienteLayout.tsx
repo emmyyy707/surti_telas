@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, ShoppingBag, UserCircle, Route, ReceiptText, Heart } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, ShoppingBag, UserCircle, Route, ReceiptText, Heart, RotateCcw } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
@@ -20,6 +20,7 @@ const clienteMenu: SidebarItem[] = [
   { icon: ReceiptText, label: 'Mis Recibos', key: 'recibos' },
   { icon: Heart, label: 'Mis Favoritos', key: 'favoritos' },
   { icon: Route, label: 'Seguimiento', key: 'seguimiento' },
+  { icon: RotateCcw, label: 'Reportar Devolución', key: 'reportar-devolucion' },
   { icon: UserCircle, label: 'Mi Perfil', key: 'perfil' },
 ];
 

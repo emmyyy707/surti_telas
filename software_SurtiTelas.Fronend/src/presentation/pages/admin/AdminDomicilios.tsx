@@ -305,28 +305,31 @@ export const AdminDomicilios: React.FC = () => {
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo domiciliario" description="Asocia un usuario existente como domiciliario." size="lg" variant="form">
         <form id="createDomiciliarioForm" className={f.form} onSubmit={handleCreate}>
-          <div className={f.field}>
-            <label className={f.label}>Usuario *</label>
-            <select className={f.select} value={formUserId} onChange={e => setFormUserId(e.target.value)} required>
-              <option value="">Selecciona un usuario...</option>
-              {usuarios.filter(u => u.rol === 'domiciliario').map(u => (
-                <option key={u.id} value={u.id}>{u.nombre} ({u.email})</option>
-              ))}
-            </select>
-          </div>
-          <div className={f.formRow}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información del domiciliario</h3>
             <div className={f.field}>
-              <label className={f.label}>Zona</label>
-              <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} placeholder="Ej: Norte" />
+              <label className={f.label}>Usuario *</label>
+              <select className={f.select} value={formUserId} onChange={e => setFormUserId(e.target.value)} required>
+                <option value="">Selecciona un usuario...</option>
+                {usuarios.filter(u => u.rol === 'domiciliario').map(u => (
+                  <option key={u.id} value={u.id}>{u.nombre} ({u.email})</option>
+                ))}
+              </select>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Zona</label>
+                <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} placeholder="Ej: Norte" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Vehículo</label>
+                <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} placeholder="Ej: Moto, Camioneta" />
+              </div>
             </div>
             <div className={f.field}>
-              <label className={f.label}>Vehículo</label>
-              <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} placeholder="Ej: Moto, Camioneta" />
+              <label className={f.label}>Capacidad</label>
+              <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} placeholder="Ej: 50" min={1} />
             </div>
-          </div>
-          <div className={f.field}>
-            <label className={f.label}>Capacidad</label>
-            <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} placeholder="Ej: 50" min={1} />
           </div>
           <div className={f.formActions}>
             <Button variant="secondary" type="button" onClick={() => setCreateOpen(false)} disabled={saving}>Cancelar</Button>
@@ -337,23 +340,26 @@ export const AdminDomicilios: React.FC = () => {
 
       <Modal open={editOpen} onClose={() => { setEditOpen(false); setEditingId(null); }} title="Editar domiciliario" description="Modifica los datos del domiciliario." size="lg" variant="form">
         <form id="editDomiciliarioForm" className={f.form} onSubmit={handleUpdate}>
-          <div className={f.field}>
-            <label className={f.label}>Usuario</label>
-            <input type="text" className={f.input} value={usuarios.find(u => u.id === formUserId)?.nombre ?? ''} disabled />
-          </div>
-          <div className={f.formRow}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información del domiciliario</h3>
             <div className={f.field}>
-              <label className={f.label}>Zona</label>
-              <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} />
+              <label className={f.label}>Usuario</label>
+              <input type="text" className={f.input} value={usuarios.find(u => u.id === formUserId)?.nombre ?? ''} disabled />
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Zona</label>
+                <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Vehículo</label>
+                <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} />
+              </div>
             </div>
             <div className={f.field}>
-              <label className={f.label}>Vehículo</label>
-              <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} />
+              <label className={f.label}>Capacidad</label>
+              <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} min={1} />
             </div>
-          </div>
-          <div className={f.field}>
-            <label className={f.label}>Capacidad</label>
-            <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} min={1} />
           </div>
           <div className={f.formActions}>
             <Button variant="secondary" type="button" onClick={() => { setEditOpen(false); setEditingId(null); }} disabled={saving}>Cancelar</Button>

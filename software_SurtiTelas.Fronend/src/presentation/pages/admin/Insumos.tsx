@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ToggleLeft, AlertTriangle, Barcode, Package, BarChart3, CreditCard } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft, AlertTriangle, Barcode, Package, CreditCard } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Insumos.module.css';
+import f from '@/styles/Form.module.css';
 import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '@/shared/ui/DataTable';
 import { stockApi, type RawMaterial } from '@/infrastructure/api/stockApi';
@@ -18,7 +19,6 @@ interface Insumo {
   medida: string;
   stock: number;
   stockMin: number;
-  stockMax: number;
   precio: number;
   proveedor: string;
   estado: 'Activo' | 'Inactivo';
@@ -33,9 +33,8 @@ function toInsumo(m: RawMaterial): Insumo {
     medida: m.unidadMedida,
     stock: m.stockActual,
     stockMin: m.stockMinimo,
-    stockMax: 'stockMaximo' in m ? (m as { stockMaximo?: number }).stockMaximo ?? m.stockMinimo ?? 0 : m.stockMinimo ?? 0,
     precio: m.precioUnitario,
-    proveedor: '',
+    proveedor: m.proveedorId ?? '',
     estado: m.stockActual > 0 ? 'Activo' : 'Inactivo',
   };
 }
@@ -46,28 +45,45 @@ export const AdminInsumos: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [items, setItems] = useState<Insumo[]>([]);
-  const [proveedores, setProveedores] = useState<string[]>([]);
+  const [proveedores, setProveedores] = useState<Array<{ id: string; nombre: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Insumo | null>(null);
 
-  const formRef = useRef<HTMLFormElement>(null);
+  const [formNombre, setFormNombre] = useState('');
+  const [formCategoria, setFormCategoria] = useState('');
+  const [formMedida, setFormMedida] = useState('');
+  const [formStockMin, setFormStockMin] = useState(0);
+  const [formPrecio, setFormPrecio] = useState(0);
+  const [formProveedorId, setFormProveedorId] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const fetchInsumos = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await stockApi.rawMaterials.list();
-        setItems(data.map(toInsumo));
-      } catch {
-        setError('No se pudieron cargar los insumos');
-      } finally {
-        setLoading(false);
-      }
-    };
-    void fetchInsumos();
-  }, []);
+  const resetForm = () => {
+    setFormNombre('');
+    setFormCategoria('');
+    setFormMedida('');
+    setFormStockMin(0);
+    setFormPrecio(0);
+    setFormProveedorId('');
+    setErrors({});
+  };
+
+  const openCreateModal = () => {
+    setSelectedInsumo(null);
+    resetForm();
+    setModalOpen(true);
+  };
+
+  const openEditModal = (insumo: Insumo) => {
+    setSelectedInsumo(insumo);
+    setFormNombre(insumo.nombre);
+    setFormCategoria(insumo.categoria);
+    setFormMedida(insumo.medida);
+    setFormStockMin(insumo.stockMin);
+    setFormPrecio(insumo.precio);
+    setErrors({});
+    setModalOpen(true);
+  };
 
   useEffect(() => {
     let active = true;
@@ -75,7 +91,7 @@ export const AdminInsumos: React.FC = () => {
       try {
         const result = await stockApi.suppliers.list();
         if (!active) return;
-        setProveedores(result.data.map(p => p.nombre));
+        setProveedores(result.data.map(p => ({ id: p.id, nombre: p.nombre })));
       } catch {
         if (active) setProveedores([]);
       }
@@ -95,44 +111,66 @@ export const AdminInsumos: React.FC = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedInsumo(null);
+    resetForm();
   };
 
-  const handleSubmitInsumo = async () => {
-    if (!formRef.current) return;
-    const fd = new FormData(formRef.current);
-    const _codigo = String(fd.get('codigo') ?? '').trim();
-    const nombre = String(fd.get('nombre') ?? '').trim();
-    const categoria = String(fd.get('categoria') ?? '').trim();
-    const medida = String(fd.get('medida') ?? '').trim();
-    const stockMin = Number(fd.get('stockMin') ?? 0) || 0;
-    const _stockMax = Number(fd.get('stockMax') ?? 0) || 0;
-    const precio = Number(fd.get('precio') ?? 0) || 0;
-    const _proveedor = String(fd.get('proveedor') ?? '').trim();
+  const fetchInsumos = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await stockApi.rawMaterials.list();
+      setItems(data.map(toInsumo));
+    } catch {
+      setError('No se pudieron cargar los insumos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchInsumos();
+  }, []);
+
+  const handleSubmitInsumo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!formNombre || formNombre.length < 2) newErrors.nombre = 'El nombre es obligatorio';
+    if (!formMedida) newErrors.medida = 'La medida es obligatoria';
+    if (formStockMin < 0) newErrors.stockMin = 'Debe ser mayor o igual a 0';
+    if (formPrecio <= 0) newErrors.precio = 'Debe ser mayor a 0';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
     try {
       if (selectedInsumo) {
         const actualizado = await stockApi.rawMaterials.update(selectedInsumo.id, {
-          nombre,
-          categoria,
-          unidadMedida: medida,
-          stockActual: stockMin,
-          stockMinimo: stockMin,
-          precioUnitario: precio,
+          nombre: formNombre,
+          categoria: formCategoria || undefined,
+          unidadMedida: formMedida,
+          stockActual: selectedInsumo.stock,
+          stockMinimo: formStockMin,
+          precioUnitario: formPrecio,
+          proveedorId: formProveedorId || undefined,
         });
         setItems(prev => prev.map(it => it.id === selectedInsumo.id ? toInsumo(actualizado) : it));
         toast.success('Insumo actualizado');
       } else {
         const nuevo = await stockApi.rawMaterials.create({
-          nombre,
-          categoria,
-          unidadMedida: medida,
-          stockActual: stockMin,
-          stockMinimo: stockMin,
-          precioUnitario: precio,
+          nombre: formNombre,
+          categoria: formCategoria || undefined,
+          unidadMedida: formMedida,
+          stockActual: 0,
+          stockMinimo: formStockMin,
+          precioUnitario: formPrecio,
+          proveedorId: formProveedorId || undefined,
         });
         setItems(prev => [toInsumo(nuevo), ...prev]);
         toast.success('Insumo creado');
       }
       handleCloseModal();
+      void fetchInsumos();
     } catch {
       toast.error('No fue posible guardar el insumo');
     }
@@ -200,7 +238,6 @@ export const AdminInsumos: React.FC = () => {
     kpis: item => [
       { label: 'Stock', value: item.stock, icon: <Package size={16} />, tone: item.stock < item.stockMin ? 'warning' : 'success' },
       { label: 'Stock mínimo', value: item.stockMin, icon: <AlertTriangle size={16} />, tone: 'default' },
-      { label: 'Stock máximo', value: item.stockMax, icon: <BarChart3 size={16} />, tone: 'primary' },
       { label: 'Precio', value: `$${item.precio.toLocaleString()}`, icon: <CreditCard size={16} />, tone: 'info' },
     ],
     render: (item) => (
@@ -209,13 +246,12 @@ export const AdminInsumos: React.FC = () => {
         <div className={s.detailRow}><span>Precio:</span> ${item.precio.toLocaleString()}</div>
         <div className={s.detailRow}><span>Proveedor:</span> {item.proveedor || '—'}</div>
         <div className={s.detailRow}><span>Stock mínimo:</span> {item.stockMin}</div>
-        <div className={s.detailRow}><span>Stock máximo:</span> {item.stockMax}</div>
       </div>
     ),
   };
 
   const actions = ((item: Insumo): DataTableAction<Insumo>[] => [
-    { label: 'Editar', icon: <Edit size={14} aria-hidden="true" focusable="false" />, onClick: (i) => { setSelectedInsumo(i); setModalOpen(true); } },
+    { label: 'Editar', icon: <Edit size={14} aria-hidden="true" focusable="false" />, onClick: (i) => openEditModal(i) },
     { label: item.estado === 'Activo' ? 'Desactivar' : 'Activar', icon: <ToggleLeft size={14} aria-hidden="true" focusable="false" />, onClick: (i) => handleToggleEstado(i) },
     { label: 'Eliminar', icon: <Trash2 size={14} aria-hidden="true" focusable="false" />, danger: true, onClick: (i) => handleEliminar(i) },
   ]) as DataTableAction<Insumo>[] | ((item: Insumo) => DataTableAction<Insumo>[]);
@@ -227,7 +263,7 @@ export const AdminInsumos: React.FC = () => {
           <h1 className={s.pageTitle}>Gestión de Insumos</h1>
           <p className={s.pageSubtitle}>Inventario de insumos</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
+        <Button onClick={openCreateModal}>
           <Plus size={16} />
           Nuevo Insumo
         </Button>
@@ -266,59 +302,69 @@ export const AdminInsumos: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Código</label>
-                    <input type="text" className={s.input} name="codigo" defaultValue={selectedInsumo?.codigo} />
+              <form className={f.form} onSubmit={handleSubmitInsumo}>
+                <div className={s.formSection}>
+                  <h3 className={s.formSectionTitle}>Datos generales</h3>
+                  <div className={s.formRow}>
+                    <div className={s.field}>
+                      <label className={s.label}>Nombre</label>
+                      <input type="text" className={`${s.input} ${errors.nombre ? s.inputError : ''}`} value={formNombre} onChange={e => { setFormNombre(e.target.value); delete errors.nombre; setErrors({...errors}); }} />
+                      {errors.nombre && <span className={s.errorText}>{errors.nombre}</span>}
+                    </div>
+                    <div className={s.field}>
+                      <label className={s.label}>Categoría</label>
+                      <select className={s.select} value={formCategoria} onChange={e => setFormCategoria(e.target.value)}>
+                        <option value="">Sin categoría</option>
+                        {CATEGORIAS_INSUMO.map((c, idx) => <option key={`${c}-${idx}`} value={c}>{c}</option>)}
+                      </select>
+                    </div>
                   </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Nombre</label>
-                    <input type="text" className={s.input} name="nombre" defaultValue={selectedInsumo?.nombre} />
-                  </div>
-                </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Categoría</label>
-                    <select className={s.select} name="categoria" defaultValue={selectedInsumo?.categoria}>
-                      {CATEGORIAS_INSUMO.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Medida</label>
-                    <select className={s.select} name="medida" defaultValue={selectedInsumo?.medida}>
-                      {UNIDADES_MEDIDA_INSUMO.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Stock mínimo</label>
-                    <input type="number" className={s.input} name="stockMin" defaultValue={selectedInsumo?.stockMin} />
-                  </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Stock máximo</label>
-                    <input type="number" className={s.input} name="stockMax" defaultValue={selectedInsumo?.stockMax} />
+                  <div className={s.formRow}>
+                    <div className={s.field}>
+                      <label className={s.label}>Medida</label>
+                      <select className={`${s.select} ${errors.medida ? s.inputError : ''}`} value={formMedida} onChange={e => { setFormMedida(e.target.value); delete errors.medida; setErrors({...errors}); }}>
+                        <option value="">Selecciona...</option>
+                        {UNIDADES_MEDIDA_INSUMO.map((m, idx) => <option key={`${m}-${idx}`} value={m}>{m}</option>)}
+                      </select>
+                      {errors.medida && <span className={s.errorText}>{errors.medida}</span>}
+                    </div>
                   </div>
                 </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Precio</label>
-                    <input type="number" className={s.input} name="precio" defaultValue={selectedInsumo?.precio} />
-                  </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Proveedor</label>
-                    <select className={s.select} name="proveedor" defaultValue={selectedInsumo?.proveedor}>
-                      <option value="">Sin proveedor</option>
-                      {proveedores.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
+
+                <div className={s.formSection}>
+                  <h3 className={s.formSectionTitle}>Inventario y costo</h3>
+                  <div className={s.formRow}>
+                    <div className={s.field}>
+                      <label className={s.label}>Stock mínimo</label>
+                      <input type="number" className={`${s.input} ${errors.stockMin ? s.inputError : ''}`} value={formStockMin} onChange={e => { setFormStockMin(Number(e.target.value)); delete errors.stockMin; setErrors({...errors}); }} min={0} />
+                      {errors.stockMin && <span className={s.errorText}>{errors.stockMin}</span>}
+                    </div>
+                    <div className={s.field}>
+                      <label className={s.label}>Precio</label>
+                      <input type="number" className={`${s.input} ${errors.precio ? s.inputError : ''}`} value={formPrecio} onChange={e => { setFormPrecio(Number(e.target.value)); delete errors.precio; setErrors({...errors}); }} min={0} step="0.01" />
+                      {errors.precio && <span className={s.errorText}>{errors.precio}</span>}
+                    </div>
                   </div>
                 </div>
+
+                <div className={s.formSection}>
+                  <h3 className={s.formSectionTitle}>Proveedor</h3>
+                  <div className={s.formRow}>
+                    <div className={s.field}>
+                      <label className={s.label}>Proveedor</label>
+                      <select className={s.select} value={formProveedorId} onChange={e => setFormProveedorId(e.target.value)}>
+                        <option value="">Sin proveedor</option>
+                        {proveedores.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 <div className={s.formActions}>
                   <Button variant="secondary" onClick={handleCloseModal}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSubmitInsumo}>
+                  <Button type="submit">
                     {selectedInsumo ? 'Guardar cambios' : 'Crear insumo'}
                   </Button>
                 </div>

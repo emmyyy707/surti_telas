@@ -3,6 +3,7 @@ import type { Producto } from '@/core/types';
 import { Modal } from '@/shared/ui/Modal';
 import { Badge } from '@/shared/ui/Badge';
 import { Calendar, Tag } from 'lucide-react';
+import { resolveColor } from '@/shared/utils/colorUtils';
 
 interface ProductPreviewModalProps {
   open: boolean;
@@ -147,11 +148,14 @@ export const ProductPreviewModal: React.FC<ProductPreviewModalProps> = ({ open, 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', minWidth: '100px' }}>Colores</span>
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                {product.colores.map(c => (
-                  <span key={c} style={{ fontSize: '0.76rem', padding: '3px 8px', background: 'var(--color-bg-elevated)', borderRadius: '999px', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border-subtle)' }}>
-                    {c}
-                  </span>
-                ))}
+                {product.colores.map(c => {
+                  const resolved = resolveColor(c);
+                  return (
+                    <span key={c} style={{ fontSize: '0.76rem', padding: '3px 8px', borderRadius: '999px', color: resolved ? '#fff' : 'var(--color-text-secondary)', border: '1px solid var(--color-border-subtle)', background: resolved ? resolved.value : 'var(--color-bg-elevated)' }}>
+                      {resolved ? resolved.label : c}
+                    </span>
+                  );
+                })}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

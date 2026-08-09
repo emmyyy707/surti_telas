@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Webhook as WebhookIcon, Eye, EyeOff, Copy, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 import s from './Webhooks.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -244,74 +245,84 @@ export const AdminWebhooks: React.FC = () => {
         title={editingWebhook ? 'Editar Webhook' : 'Nuevo Webhook'}
         size="lg"
       >
-        <form className={s.form} onSubmit={handleSubmit}>
-          <div className={s.field}>
-            <label className={s.label}>URL del Webhook</label>
-            <input
-              type="url"
-              className={s.input}
-              value={formUrl}
-              onChange={(e) => setFormUrl(e.target.value)}
-              placeholder="https://ejemplo.com/webhook"
-              required
-            />
+        <form className={f.form} onSubmit={handleSubmit}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Configuración general</h3>
+            <div className={f.field}>
+              <label className={f.label}>URL del Webhook</label>
+              <input
+                type="url"
+                className={f.input}
+                value={formUrl}
+                onChange={(e) => setFormUrl(e.target.value)}
+                placeholder="https://ejemplo.com/webhook"
+                required
+              />
+            </div>
           </div>
 
-          <div className={s.field}>
-            <label className={s.label}>Eventos</label>
-            <div className={s.eventsGrid}>
-              {WEBHOOK_EVENTS.map(event => (
-                <label key={event.value} className={s.eventOption}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Eventos</h3>
+            <div className={f.field}>
+              <label className={f.label}>Eventos</label>
+              <div className={s.eventsGrid}>
+                {WEBHOOK_EVENTS.map(event => (
+                  <label key={event.value} className={s.eventOption}>
+                    <input
+                      type="checkbox"
+                      checked={formEvents.includes(event.value)}
+                      onChange={() => toggleEvent(event.value)}
+                    />
+                    <span>{event.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Seguridad</h3>
+            <div className={f.field}>
+              <label className={f.label}>{editingWebhook ? 'Nuevo Secret (opcional)' : 'Secret'}</label>
+              <div className={s.secretInput}>
+                <input
+                  type={showSecret ? 'text' : 'password'}
+                  className={f.input}
+                  value={formSecret}
+                  onChange={(e) => setFormSecret(e.target.value)}
+                  placeholder={editingWebhook ? 'Dejar vacío para mantener el actual' : 'Secret para validar la firma HMAC'}
+                  required={!editingWebhook}
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  className={s.eyeButton}
+                  onClick={() => setShowSecret(!showSecret)}
+                  tabIndex={-1}
+                >
+                  {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {editingWebhook && (
+              <div className={f.field}>
+                <label className={f.checkboxLabel}>
                   <input
                     type="checkbox"
-                    checked={formEvents.includes(event.value)}
-                    onChange={() => toggleEvent(event.value)}
+                    checked={formActive}
+                    onChange={(e) => setFormActive(e.target.checked)}
                   />
-                  <span>{event.label}</span>
+                  <span>Webhook activo</span>
                 </label>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
-          <div className={s.field}>
-            <label className={s.label}>{editingWebhook ? 'Nuevo Secret (opcional)' : 'Secret'}</label>
-            <div className={s.secretInput}>
-              <input
-                type={showSecret ? 'text' : 'password'}
-                className={s.input}
-                value={formSecret}
-                onChange={(e) => setFormSecret(e.target.value)}
-                placeholder={editingWebhook ? 'Dejar vacío para mantener el actual' : 'Secret para validar la firma HMAC'}
-                required={!editingWebhook}
-                minLength={8}
-              />
-              <button
-                type="button"
-                className={s.eyeButton}
-                onClick={() => setShowSecret(!showSecret)}
-                tabIndex={-1}
-              >
-                {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
+          <div className={f.formActions}>
+            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingWebhook ? 'Guardar cambios' : 'Crear webhook' , type: 'submit', loading: saving }]} />
           </div>
-
-          {editingWebhook && (
-            <div className={s.field}>
-              <label className={s.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={formActive}
-                  onChange={(e) => setFormActive(e.target.checked)}
-                />
-                <span>Webhook activo</span>
-              </label>
-            </div>
-          )}
-
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingWebhook ? 'Guardar cambios' : 'Crear webhook' , type: 'submit', loading: saving }]} />
-
         </form>
       </Modal>
 

@@ -37,7 +37,7 @@ interface RequestOptions {
   method?: HttpMethod;
   body?: unknown;
   auth?: boolean;
-  query?: Record<string, string | number | boolean | undefined | null>;
+  query?: Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null>;
 }
 
 /** Callback opcional para que el authStore reaccione cuando la sesión expira. */
@@ -50,9 +50,16 @@ function buildUrl(path: string, query?: RequestOptions['query']): string {
   const url = new URL(`${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined && value !== null && value !== '') {
-        url.searchParams.set(key, String(value));
+      if (value === undefined || value === null || value === '') continue;
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (item !== undefined && item !== null && item !== '') {
+            url.searchParams.append(key, String(item));
+          }
+        }
+        continue;
       }
+      url.searchParams.set(key, String(value));
     }
   }
   url.searchParams.set('_t', Date.now().toString());

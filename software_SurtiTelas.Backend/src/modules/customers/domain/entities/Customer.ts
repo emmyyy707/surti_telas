@@ -72,9 +72,6 @@ export class Customer {
     if (!Number.isFinite(data.deudaVencida) || data.deudaVencida < 0) {
       throw new BadRequestError('La deuda vencida no puede ser negativa');
     }
-    if (data.cupoUsado > data.cupoTotal) {
-      throw new BadRequestError('El cupo usado no puede superar el cupo total');
-    }
   }
 
   tieneCupoDisponible(monto: number): boolean {

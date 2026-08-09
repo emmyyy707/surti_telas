@@ -143,6 +143,7 @@ export function toUpdateInput(changes: {
   imagenPrincipal?: string;
   imagenes?: string[];
   categoriaId?: string;
+  codigo?: string;
 }) {
   const data: Record<string, unknown> = {};
   if (changes.nombre !== undefined) data.nombre = changes.nombre;
@@ -153,6 +154,7 @@ export function toUpdateInput(changes: {
   if (changes.precio !== undefined) data.precio = changes.precio;
   if (changes.precioAnterior !== undefined) data.precioAnterior = changes.precioAnterior;
   if (changes.descuento !== undefined) data.descuento = changes.descuento;
+  if (changes.codigo !== undefined) data.codigo = changes.codigo;
   if (changes.cantidadStock !== undefined) {
     data.cantidadStock = changes.cantidadStock;
     if (changes.stock === undefined) {

@@ -2,6 +2,7 @@
 import { NotFoundError } from '../../../../shared/domain/errors';
 import type { CreateReturnInput, ReturnRepository, UpdateReturnInput } from '../../domain/repositories/ReturnRepository';
 import { Return } from '../../domain/entities/Return';
+import { PrismaClient } from '@prisma/client';
 
 function generarNumero(seq: number): string {
   return `DEV-${String(seq).padStart(4, '0')}`;
@@ -24,12 +25,22 @@ export class GetReturn {
 }
 
 export class CreateReturn {
-  constructor(private readonly repo: ReturnRepository) {}
-  async execute(input: CreateReturnInput) {
+  constructor(private readonly repo: ReturnRepository, private readonly prisma: PrismaClient) {}
+  async execute(input: CreateReturnInput & { clienteId?: string; clienteNombre?: string }) {
     const numero = await this.repo.nextNumero();
+    let orderId = input.orderId;
+    if (orderId && !orderId.startsWith('c')) {
+      const order = await this.prisma.order.findFirst({ where: { numero: orderId, deletedAt: null }, select: { id: true, clienteId: true } });
+      if (order) {
+        if (input.clienteId && order.clienteId !== input.clienteId) {
+          throw new NotFoundError('El pedido no pertenece al cliente autenticado');
+        }
+        orderId = order.id;
+      }
+    }
     const ret = new Return({
       numeroDevolucion: numero,
-      orderId: input.orderId ?? null,
+      orderId: orderId ?? null,
       prenda: input.prenda ?? null,
       referencia: input.referencia ?? null,
       motivo: input.motivo ?? null,

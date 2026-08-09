@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Plus, X, Package, AlertTriangle } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Inventario.module.css';
+import f from '@/styles/Form.module.css';
 import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableDetailPanel } from '@/shared/ui/DataTable';
 import { inventoryApi, type InventoryMovement } from '@/infrastructure/api/inventoryApi';
@@ -200,43 +201,49 @@ export const AdminInventario: React.FC = () => {
               <button className={s.closeBtn} onClick={closeModals}><X size={16} /></button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} onSubmit={handleGuardarAjuste}>
+              <form className={f.form} onSubmit={handleGuardarAjuste}>
                 {formError && (
-                  <div className={s.formErrorBanner}>
+                  <div className={f.formErrorBanner}>
                     {formError}
                   </div>
                 )}
-                <div className={s.field}>
-                  <label className={s.label}>Producto/Insumo (Referencia)</label>
-                  <select className={s.select} value={selectedProducto?.ref || ''} onChange={e => {
-                    const mov = movimientos.find(p => p.ref === e.target.value);
-                    setSelectedProducto(mov || null);
-                  }} required>
-                    <option value="">Seleccionar referencia...</option>
-                    {movimientos.map(p => <option key={p.ref} value={p.ref}>{p.ref} - {p.nombre}</option>)}
-                  </select>
+                <div className={f.formSection}>
+                  <h3 className={f.sectionTitle}>Información del movimiento</h3>
+                  <div className={f.field}>
+                    <label className={f.label}>Producto/Insumo (Referencia)</label>
+                    <select className={f.select} value={selectedProducto?.ref || ''} onChange={e => {
+                      const mov = movimientos.find(p => p.ref === e.target.value);
+                      setSelectedProducto(mov || null);
+                    }} required>
+                      <option value="">Seleccionar referencia...</option>
+                      {movimientos.map(p => <option key={p.ref} value={p.ref}>{p.ref} - {p.nombre}</option>)}
+                    </select>
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label}>Tipo de movimiento</label>
+                    <select className={f.select} value={editTipo} onChange={e => setEditTipo(e.target.value as 'entrada' | 'salida' | 'ajuste')}>
+                      {TIPOS_MOVIMIENTO.map(t => (
+                        <option key={t} value={t}>{t === 'entrada' ? 'Entrada (+)' : t === 'salida' ? 'Salida (-)' : 'Ajuste'}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className={s.field}>
-                  <label className={s.label}>Tipo de movimiento</label>
-                  <select className={s.select} value={editTipo} onChange={e => setEditTipo(e.target.value as 'entrada' | 'salida' | 'ajuste')}>
-                    {TIPOS_MOVIMIENTO.map(t => (
-                      <option key={t} value={t}>{t === 'entrada' ? 'Entrada (+)' : t === 'salida' ? 'Salida (-)' : 'Ajuste'}</option>
-                    ))}
-                  </select>
+                <div className={f.formSection}>
+                  <h3 className={f.sectionTitle}>Detalles</h3>
+                  <div className={f.field}>
+                    <label className={f.label}>Cantidad</label>
+                    <input type="number" className={f.input} value={editCantidad} onChange={e => setEditCantidad(Number(e.target.value))} min="0" required />
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label}>Motivo</label>
+                    <select className={f.select} value={editMotivo} onChange={e => setEditMotivo(e.target.value)}>
+                      {MOTIVOS_MOVIMIENTO.map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className={s.field}>
-                  <label className={s.label}>Cantidad</label>
-                  <input type="number" className={s.input} value={editCantidad} onChange={e => setEditCantidad(Number(e.target.value))} min="0" required />
-                </div>
-                <div className={s.field}>
-                  <label className={s.label}>Motivo</label>
-                  <select className={s.select} value={editMotivo} onChange={e => setEditMotivo(e.target.value)}>
-                    {MOTIVOS_MOVIMIENTO.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className={s.modalFooter}>
+                <div className={f.formActions}>
                   <Button type="button" variant="secondary" onClick={closeModals} disabled={saving}>Cancelar</Button>
                   <Button type="submit" loading={saving}>Registrar movimiento</Button>
                 </div>

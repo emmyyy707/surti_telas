@@ -43,6 +43,29 @@ catalogRouter.get('/products', cache60s, asyncHandler(controller.listProducts));
 
 /**
  * @swagger
+ * /catalog/products/brands:
+ *   get:
+ *     tags: [Catalog]
+ *     summary: List distinct product brands
+ *     responses:
+ *       200:
+ *         description: Distinct brands list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: Nike
+ */
+catalogRouter.get('/products/brands', asyncHandler(controller.listBrands));
+
+/**
+ * @swagger
  * /catalog/products/{ref}:
  *   get:
  *     tags: [Catalog]
@@ -319,6 +342,26 @@ catalogRouter.post(
   requireRole('ADMIN'),
   sensitiveUserRateLimiter,
   asyncHandler(controller.createCategory)
+);
+
+catalogRouter.get('/categories/stock-status', asyncHandler(controller.getCategoriesWithLowStock));
+
+catalogRouter.get('/categories/:id', asyncHandler(controller.getCategory));
+
+catalogRouter.patch(
+  '/categories/:id',
+  authenticate,
+  requireRole('ADMIN'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.updateCategory)
+);
+
+catalogRouter.delete(
+  '/categories/:id',
+  authenticate,
+  requireRole('ADMIN'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.deleteCategory)
 );
 
 /**

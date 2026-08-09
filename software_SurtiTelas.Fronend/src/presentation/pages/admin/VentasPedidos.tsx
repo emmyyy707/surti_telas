@@ -316,94 +316,114 @@ const resetForm = () => {
       <Modal open={modalOpen} onClose={closeModal} title={editingId ? 'Editar Pedido' : 'Nuevo Pedido'} description="Completa la información del pedido" size="lg" variant="form">
         <form onSubmit={handleSubmit} className={f.form}>
           {formError && <div className={f.formError}>{formError}</div>}
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Cliente *</label>
-              <select className={f.select} value={clienteId} onChange={e => setClienteId(e.target.value)}>
-                <option value="">Selecciona un cliente</option>
-                {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </select>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Asesor *</label>
-              <select className={f.select} value={asesorId} onChange={e => setAsesorId(e.target.value)}>
-                <option value="">Selecciona un asesor</option>
-                {asesores.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Estado</label>
-              <select className={f.select} value={estado} onChange={e => setEstado(e.target.value as Pedido['estado'])}>
-                {ESTADOS_ORDEN.map(e => <option key={e} value={e}>{e}</option>)}
-              </select>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Prioridad</label>
-              <select className={f.select} value={prioridad} onChange={e => setPrioridad(e.target.value as Pedido['prioridad'])}>
-                <option value="Estándar">Estándar</option>
-                <option value="Prioritario">Prioritario</option>
-              </select>
-            </div>
-          </div>
-          <div className={f.field}>
-            <label className={f.label}>Observaciones</label>
-            <textarea className={f.textarea} rows={3} value={observaciones} onChange={e => setObservaciones(e.target.value)} placeholder="Notas del pedido..." />
-          </div>
-          <div className={f.field}>
-            <label className={f.label}>Comprobante de pago (opcional)</label>
-            <FileUpload
-              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
-              maxSizeMB={10}
-              maxFiles={1}
-              value={comprobantePago}
-              onChange={(files) => {
-                if (files && files.length > 0) {
-                  setComprobantePago(files[0]);
-                } else {
-                  setComprobantePago(null);
-                }
-              }}
-              hint="Formatos permitidos: PDF, JPG, PNG, GIF, WEBP. Tamaño mÃ¡ximo: 10 MB."
-              allowPreview
-            />
-          </div>
-          <div className={f.field}>
-            <label className={f.label}>Items del pedido</label>
-            <table className={f.itemsTable}>
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th className={f.centerCol}>Cant.</th>
-                  <th className={f.rightCol}>Precio unit.</th>
-                  <th className={f.rightCol}>Total</th>
-                  <th style={{ width: 40 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {itemsForm.map((it, idx) => (
-                  <tr key={idx}>
-                    <td><input className={f.input} value={it.nombre} onChange={e => updateItem(idx, 'nombre', e.target.value)} placeholder="Item" /></td>
-                    <td className={f.centerCol}><input className={f.input} type="number" min="1" value={it.cantidad} onChange={e => updateItem(idx, 'cantidad', Number(e.target.value))} /></td>
-                    <td className={f.rightCol}><input className={f.input} type="number" min="0" value={it.precio} onChange={e => updateItem(idx, 'precio', Number(e.target.value))} /></td>
-                    <td className={f.rightCol} style={{ fontWeight: 600 }}>${((it.cantidad || 0) * (it.precio || 0)).toLocaleString('es-CO')}</td>
-                    <td>
-                      <button type="button" className={f.removeRowBtn} onClick={() => removeItem(idx)} aria-label="Eliminar item" disabled={itemsForm.length === 1}>
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <button type="button" className={f.addRowBtn} onClick={addItem}>
-              <Plus size={14} /> Agregar item
-            </button>
-          </div>
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingId ? 'Guardar cambios' : 'Crear pedido' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
 
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información del pedido</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Cliente *</label>
+                <select className={f.select} value={clienteId} onChange={e => setClienteId(e.target.value)}>
+                  <option value="">Selecciona un cliente</option>
+                  {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Asesor *</label>
+                <select className={f.select} value={asesorId} onChange={e => setAsesorId(e.target.value)}>
+                  <option value="">Selecciona un asesor</option>
+                  {asesores.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Estado y prioridad</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Estado</label>
+                <select className={f.select} value={estado} onChange={e => setEstado(e.target.value as Pedido['estado'])}>
+                  {ESTADOS_ORDEN.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Prioridad</label>
+                <select className={f.select} value={prioridad} onChange={e => setPrioridad(e.target.value as Pedido['prioridad'])}>
+                  <option value="Estándar">Estándar</option>
+                  <option value="Prioritario">Prioritario</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Observaciones y comprobante</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Observaciones</label>
+                <textarea className={f.textarea} rows={3} value={observaciones} onChange={e => setObservaciones(e.target.value)} placeholder="Notas del pedido..." />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Comprobante de pago (opcional)</label>
+                <FileUpload
+                  accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+                  maxSizeMB={10}
+                  maxFiles={1}
+                  value={comprobantePago}
+                  onChange={(files) => {
+                    if (files && files.length > 0) {
+                      setComprobantePago(files[0]);
+                    } else {
+                      setComprobantePago(null);
+                    }
+                  }}
+                  hint="Formatos permitidos: PDF, JPG, PNG, GIF, WEBP. Tamaño mÃ¡ximo: 10 MB."
+                  allowPreview
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Items del pedido</h3>
+            <div className={f.field}>
+              <label className={f.label}>Items del pedido</label>
+              <table className={f.itemsTable}>
+                <thead>
+                  <tr>
+                    <th>Descripción</th>
+                    <th className={f.centerCol}>Cant.</th>
+                    <th className={f.rightCol}>Precio unit.</th>
+                    <th className={f.rightCol}>Total</th>
+                    <th style={{ width: 40 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itemsForm.map((it, idx) => (
+                    <tr key={idx}>
+                      <td><input className={f.input} value={it.nombre} onChange={e => updateItem(idx, 'nombre', e.target.value)} placeholder="Item" /></td>
+                      <td className={f.centerCol}><input className={f.input} type="number" min="1" value={it.cantidad} onChange={e => updateItem(idx, 'cantidad', Number(e.target.value))} /></td>
+                      <td className={f.rightCol}><input className={f.input} type="number" min="0" value={it.precio} onChange={e => updateItem(idx, 'precio', Number(e.target.value))} /></td>
+                      <td className={f.rightCol} style={{ fontWeight: 600 }}>${((it.cantidad || 0) * (it.precio || 0)).toLocaleString('es-CO')}</td>
+                      <td>
+                        <button type="button" className={f.removeRowBtn} onClick={() => removeItem(idx)} aria-label="Eliminar item" disabled={itemsForm.length === 1}>
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button type="button" className={f.addRowBtn} onClick={addItem}>
+                <Plus size={14} /> Agregar item
+              </button>
+            </div>
+          </div>
+
+          <div className={f.formActions}>
+            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingId ? 'Guardar cambios' : 'Crear pedido' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
+          </div>
         </form>
       </Modal>
 

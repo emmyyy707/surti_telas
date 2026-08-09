@@ -103,12 +103,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
 
     setIsSubmitting(true)
     try {
+      const totalCarrito = items.reduce((sum, item) => sum + item.precio * item.quantity, 0);
+      if (totalCarrito <= 0) {
+        toast.error('El total del pedido no es válido.');
+        setIsSubmitting(false);
+        return;
+      }
 
       const itemsList = items.map((item) => ({
+        productId: item.productId || undefined,
         nombre: item.nombre,
         precio: item.precio,
         cantidad: item.quantity,
       }));
+
+      const validItemsList = itemsList.filter(it => it.nombre.trim() && it.cantidad > 0 && it.precio >= 0);
+      if (validItemsList.length === 0) {
+        toast.error('No hay productos válidos para registrar el pedido.');
+        setIsSubmitting(false);
+        return;
+      }
 
       const observaciones = [
         `Banco: ${appContent.checkout.bankingKey.bankName}`,
@@ -124,7 +138,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
          const form = new FormData();
          if (clienteActual?.id) form.append('clienteId', clienteActual.id);
          if (clienteActual?.asesorId) form.append('asesorId', clienteActual.asesorId);
-         form.append('itemsList', JSON.stringify(itemsList));
+         form.append('itemsList', JSON.stringify(validItemsList));
          form.append('prioridad', 'Estándar');
          form.append('observaciones', observaciones);
           form.append('paymentMethod', paymentType === 'installments' ? 'OTHER' : 'TRANSFER');
@@ -135,7 +149,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
          await ordersApi.create({
            clienteId: clienteActual?.id,
            asesorId: clienteActual?.asesorId,
-           itemsList,
+           itemsList: validItemsList,
            prioridad: 'Estándar',
            observaciones,
            paymentMethod: paymentType === 'installments' ? 'OTHER' : 'TRANSFER',

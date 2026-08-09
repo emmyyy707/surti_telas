@@ -23,6 +23,7 @@ export const adminContent = {
       inventario: {
         label: import.meta.env.VITE_ADMIN_MENU_INVENTARIO?.trim() || 'Existencias',
         productos: { label: import.meta.env.VITE_ADMIN_MENU_PRODUCTOS?.trim() || 'Productos Terminados' },
+        categorias: { label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS?.trim() || 'Categorías' },
         insumos: { label: import.meta.env.VITE_ADMIN_MENU_INSUMOS?.trim() || 'Insumos' },
         proveedores: { label: import.meta.env.VITE_ADMIN_MENU_PROVEEDORES?.trim() || 'Proveedores' },
         alertasStock: { label: import.meta.env.VITE_ADMIN_MENU_ALERTAS_STOCK?.trim() || 'Alertas de Stock' },

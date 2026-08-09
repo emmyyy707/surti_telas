@@ -16,7 +16,7 @@ const returnRepository = new PrismaReturnRepository(prisma);
 export const returnsUseCases = {
   listReturns: new ListReturns(returnRepository),
   getReturn: new GetReturn(returnRepository),
-  createReturn: new CreateReturn(returnRepository),
+  createReturn: new CreateReturn(returnRepository, prisma),
   updateReturn: new UpdateReturn(returnRepository),
   changeReturnStatus: new ChangeReturnStatus(returnRepository),
   deleteReturn: new DeleteReturn(returnRepository),

@@ -195,7 +195,7 @@ export class PrismaOrderRepository implements OrderRepository {
       const customer = await tx.customer.findUnique({ where: { id: clienteId } });
       if (!customer) throw new NotFoundError('Cliente no encontrado');
 
-      const asesor = await tx.user.findUnique({ where: { id: asesorId } });
+      const asesor = await tx.user.findUnique({ where: { id: asesorId! } });
       if (!asesor) throw new NotFoundError('Asesor no encontrado');
 
       const itemsCount = items.reduce((sum, i) => sum + i.cantidad, 0);
@@ -205,7 +205,7 @@ export class PrismaOrderRepository implements OrderRepository {
         numero,
         clienteId: clienteId!,
         clienteNombre: customer.nombre,
-          asesorId: asesorId ?? '',
+          asesorId: asesorId!,
           asesorNombre: asesor.nombre,
           tipoFlujo: tipoFlujo as OrderFlow,
           fecha: input.fecha ? new Date(input.fecha) : new Date(),
@@ -223,17 +223,30 @@ export class PrismaOrderRepository implements OrderRepository {
           descuentoEspecial: input.descuentoEspecial,
           envioGratis: input.envioGratis,
           prioridadEnvio: input.prioridadEnvio,
-          items: {
-            create: items.map((i) => ({
-              productId: i.productId,
-              nombre: i.nombre,
-              precio: i.precio,
-              cantidad: i.cantidad,
-            })),
-          },
         },
         include,
       });
+
+      const validItems = await Promise.all(
+        items.map(async (i) => {
+          if (!i.productId) return null;
+          const product = await tx.product.findUnique({ where: { id: i.productId } });
+          if (!product) return null;
+          return { ...i, productId: product.id };
+        }),
+      ).then((arr) => arr.filter((x): x is NonNullable<typeof x> => Boolean(x)));
+
+      for (const item of validItems) {
+        await tx.orderItem.create({
+          data: {
+            orderId: row.id,
+            productId: item.productId,
+            nombre: item.nombre,
+            precio: item.precio,
+            cantidad: item.cantidad,
+          },
+        });
+      }
 
       return new Order(toOrderData(row as unknown as OrderRow));
     });
@@ -470,9 +483,30 @@ export class PrismaOrderRepository implements OrderRepository {
         data: {
           total,
           itemsCount,
-          items: { create: changes.itemsList.map((i) => ({ productId: i.productId, nombre: i.nombre, precio: i.precio, cantidad: i.cantidad })) },
         },
+        include,
       });
+
+      const validItems = await Promise.all(
+        changes.itemsList.map(async (i) => {
+          if (!i.productId) return null;
+          const product = await this.prisma.product.findUnique({ where: { id: i.productId } });
+          if (!product) return null;
+          return { ...i, productId: product.id };
+        }),
+      ).then((arr) => arr.filter((x): x is NonNullable<typeof x> => Boolean(x)));
+
+      for (const item of validItems) {
+        await this.prisma.orderItem.create({
+          data: {
+            orderId: id,
+            productId: item.productId,
+            nombre: item.nombre,
+            precio: item.precio,
+            cantidad: item.cantidad,
+          },
+        });
+      }
     }
 
     return new Order(toOrderData({ ...updated, ...data }));

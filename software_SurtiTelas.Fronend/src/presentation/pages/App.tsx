@@ -36,6 +36,7 @@ const AdminInsumos = React.lazy(() => import('@/presentation/pages/admin/Insumos
 const AdminProveedores = React.lazy(() => import('@/presentation/pages/admin/Proveedores').then(m => ({ default: m.AdminProveedores })));
 const AdminGestionAcceso = React.lazy(() => import('@/presentation/pages/admin/GestionAcceso').then(m => ({ default: m.AdminGestionAcceso })));
 const AdminAlertasStock = React.lazy(() => import('@/presentation/pages/admin/AlertasStock').then(m => ({ default: m.AdminAlertasStock })));
+const AdminCategorias = React.lazy(() => import('@/presentation/pages/admin/AdminCategorias').then(m => ({ default: m.AdminCategorias })));
 const AdminStockDevuelto = React.lazy(() => import('@/presentation/pages/admin/StockDevuelto').then(m => ({ default: m.AdminStockDevuelto })));
 const AdminRegistroTalleres = React.lazy(() => import('@/presentation/pages/admin/RegistroTalleres').then(m => ({ default: m.AdminRegistroTalleres })));
 const AdminControlPrendas = React.lazy(() => import('@/presentation/pages/admin/ControlPrendas').then(m => ({ default: m.AdminControlPrendas })));
@@ -76,6 +77,7 @@ const PerfilCliente = React.lazy(() => import('@/presentation/pages/cliente/Perf
 const OrderTracking = React.lazy(() => import('@/presentation/pages/cliente/OrderTracking').then(m => ({ default: m.OrderTracking })));
 const Recibos = React.lazy(() => import('@/presentation/pages/cliente/Recibos').then(m => ({ default: m.Recibos })));
 const Favoritos = React.lazy(() => import('@/presentation/pages/cliente/Favoritos').then(m => ({ default: m.Favoritos })));
+const ReportarDevolucion = React.lazy(() => import('@/presentation/pages/cliente/ReportarDevolucion').then(m => ({ default: m.ReportarDevolucion })));
 const HomePage = React.lazy(() => import('@/presentation/pages/public/HomePage'));
 const CatalogPage = React.lazy(() => import('@/presentation/pages/features/CatalogPage'));
 const CartPage = React.lazy(() => import('@/presentation/pages/features/CartPage'));
@@ -123,6 +125,7 @@ const App: React.FC = () => {
             <Route path="pedidos" element={<AdminPedidos />} />
             <Route path="produccion" element={<AdminProduccion />} />
             <Route path="inventario" element={<AdminInventario />} />
+            <Route path="categorias" element={<AdminCategorias />} />
             <Route path="domicilios" element={<AdminDomicilios />} />
             <Route path="asesores" element={<GestionUsuariosAsesores />} />
             <Route path="reportes" element={<AdminReportes />} />
@@ -203,6 +206,7 @@ const App: React.FC = () => {
             <Route path="seguimiento" element={<OrderTracking />} />
             <Route path="seguimiento/:orderId" element={<OrderTracking />} />
             <Route path="perfil" element={<PerfilCliente />} />
+            <Route path="reportar-devolucion" element={<ReportarDevolucion />} />
           </Route>
 
           {/* REDIRECT */}

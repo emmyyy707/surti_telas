@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Edit, Shield, Loader2, AlertCircle, EyeOff, Trash2, Plus } from 'lucide-react';
 import s from './Roles.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -256,38 +257,44 @@ export const AdminRoles: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-               <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitRol(e); }}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Nombre del Rol</label>
-                    <input className={s.input} name="nombre" defaultValue={selectedRol?.nombre} placeholder="Nombre del rol" />
-                  </div>
-                </div>
-                <div className={s.field}>
-                  <label className={s.label}>Descripción</label>
-                  <textarea className={s.textarea} placeholder="Descripción del rol..." name="descripcion" defaultValue={selectedRol?.descripcion} />
-                </div>
-                <div className={s.field}>
-                  <label className={s.label}>Permisos</label>
-                  <div className={s.permisosGrid}>
-                    {PERMISOS_SISTEMA.map(permiso => (
-                      <label key={permiso} className={s.permisoCheckbox}>
-                        <input type="checkbox" name="permisos" value={permiso.toLowerCase()} defaultChecked={selectedRol?.permisos.includes(permiso.toLowerCase())} />
-                        <Shield size={14} className={s.checkIcon} />
-                        <span>{permiso}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                 <div className={s.formActions}>
-                   <Button variant="secondary" type="button" onClick={handleCloseModal}>
-                     Cancelar
-                   </Button>
-                   <Button type="submit">
-                     {selectedRol ? 'Guardar cambios' : 'Crear rol'}
-                   </Button>
+               <form className={f.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitRol(e); }}>
+                 <div className={f.formSection}>
+                   <h3 className={f.sectionTitle}>Información del rol</h3>
+                   <div className={f.formRow}>
+                     <div className={f.field}>
+                       <label className={f.label}>Nombre del Rol</label>
+                       <input className={f.input} name="nombre" defaultValue={selectedRol?.nombre} placeholder="Nombre del rol" />
+                     </div>
+                   </div>
+                   <div className={f.field}>
+                     <label className={f.label}>Descripción</label>
+                     <textarea className={f.textarea} placeholder="Descripción del rol..." name="descripcion" defaultValue={selectedRol?.descripcion} />
+                   </div>
                  </div>
-              </form>
+                 <div className={f.formSection}>
+                   <h3 className={f.sectionTitle}>Permisos</h3>
+                   <div className={f.field}>
+                     <label className={f.label}>Permisos</label>
+                     <div className={s.permisosGrid}>
+                       {PERMISOS_SISTEMA.map(permiso => (
+                         <label key={permiso} className={s.permisoCheckbox}>
+                           <input type="checkbox" name="permisos" value={permiso.toLowerCase()} defaultChecked={selectedRol?.permisos.includes(permiso.toLowerCase())} />
+                           <Shield size={14} className={s.checkIcon} />
+                           <span>{permiso}</span>
+                         </label>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+                  <div className={f.formActions}>
+                    <Button variant="secondary" type="button" onClick={handleCloseModal}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit">
+                      {selectedRol ? 'Guardar cambios' : 'Crear rol'}
+                    </Button>
+                  </div>
+               </form>
             </div>
           </div>
         </div>

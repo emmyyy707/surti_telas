@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Send, Package, User, Paperclip, CheckCircle2, Clock, FileText, UserCheck, Archive, CreditCard, MapPin, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './Atencion-cliente.module.css';
+import f from '@/styles/Form.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { DetailModal } from '@/shared/ui/DetailModal';
@@ -226,28 +227,31 @@ export const AtencionCliente: React.FC = () => {
       </div>
 
       <Modal open={isPedidoModalOpen} onClose={() => setIsPedidoModalOpen(false)} title={`Generar Pedido para ${clienteActual?.nombre || 'Cliente'}`}>
-        <div className={s.form}>
-          <div className={s.field}>
-            <label className={s.label}>Detalles del requerimiento (Cantidades y Referencias)</label>
-            <textarea
-              className={s.textarea}
-              placeholder="Ej: 50 metros de lino blanco (REF-002)..."
-              value={pedidoData.detalle}
-              onChange={(e) => setPedidoData({ ...pedidoData, detalle: e.target.value })}
-            />
+        <form className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Detalles del pedido</h3>
+            <div className={f.field}>
+              <label className={f.label}>Detalles del requerimiento (Cantidades y Referencias)</label>
+              <textarea
+                className={f.textarea}
+                placeholder="Ej: 50 metros de lino blanco (REF-002)..."
+                value={pedidoData.detalle}
+                onChange={(e) => setPedidoData({ ...pedidoData, detalle: e.target.value })}
+              />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Prioridad de Despacho</label>
+              <select className={f.select} value={pedidoData.urgencia} onChange={(e) => setPedidoData({ ...pedidoData, urgencia: e.target.value as 'Estándar' | 'Prioritario' })}>
+                <option value="Estándar">Estándar (3-5 días hábiles)</option>
+                <option value="Prioritario">Prioritario (48 hrs - Requiere aprobación)</option>
+              </select>
+            </div>
           </div>
-          <div className={s.field}>
-            <label className={s.label}>Prioridad de Despacho</label>
-            <select className={s.select} value={pedidoData.urgencia} onChange={(e) => setPedidoData({ ...pedidoData, urgencia: e.target.value as 'Estándar' | 'Prioritario' })}>
-              <option value="Estándar">Estándar (3-5 días hábiles)</option>
-              <option value="Prioritario">Prioritario (48 hrs - Requiere aprobación)</option>
-            </select>
-          </div>
-          <div className={s.modalActions}>
+          <div className={f.formActions}>
             <Button variant="secondary" onClick={() => setIsPedidoModalOpen(false)}>Cancelar</Button>
             <Button onClick={handleGenerarPedido}>Enviar a Bodega</Button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       <DetailModal

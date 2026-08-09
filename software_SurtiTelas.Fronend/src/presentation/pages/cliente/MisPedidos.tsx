@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ChevronDown, MessageCircle, Archive, Package, CreditCard, User, Plus } from 'lucide-react';
 import s from './MisPedidos.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { DetailModal } from '@/shared/ui/DetailModal';
@@ -328,14 +329,19 @@ export const MisPedidos: React.FC = () => {
       />
 
       <Modal open={Boolean(chatPedido)} onClose={() => setChatPedido(null)} title={`Consultar pedido ${chatPedido?.id}`} size="sm">
-        <div className="grid gap-4">
-          <p className="text-sm text-[var(--color-text-secondary)]">Escribe la consulta y copia el mensaje para enviarlo por tu canal de WhatsApp.</p>
-          <textarea className="min-h-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" placeholder="Ej: ¿Cuándo sale despachado mi pedido?" value={mensajeAsesor} onChange={(e) => setMensajeAsesor(e.target.value)} />
-          <div className="flex justify-end gap-3">
+        <form className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Consulta</h3>
+            <div className={f.field}>
+              <label className={f.label}>Mensaje</label>
+              <textarea className={f.textarea} placeholder="Ej: ¿Cuándo sale despachado mi pedido?" value={mensajeAsesor} onChange={(e) => setMensajeAsesor(e.target.value)} />
+            </div>
+          </div>
+          <div className={f.formActions}>
             <Button variant="secondary" onClick={() => setChatPedido(null)}>Cancelar</Button>
             <Button onClick={contactarAsesor}><MessageCircle size={14} /> Copiar mensaje</Button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       <ConfirmationModal

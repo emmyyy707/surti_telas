@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Edit2, Check, Image as ImageIcon, User, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './PerfilDomiciliario.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
@@ -111,26 +112,26 @@ export const DomiciliarioPerfil: React.FC = () => {
         </div>
 
         <div className={s.perfilForm}>
-          <div className={s.perfilFormSection}>
-            <div className={s.perfilFormSectionTitle}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>
               <Edit2 size={16} />
               Información Personal
-            </div>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Nombre completo</label>
+            </h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Nombre completo</label>
                 <input
                   type="text"
-                  className={s.input}
+                  className={f.input}
                   value={nombre}
                   onChange={e => setNombre(e.target.value)}
                 />
               </div>
-              <div className={s.field}>
-                <label className={s.label}>Teléfono</label>
+              <div className={f.field}>
+                <label className={f.label}>Teléfono</label>
                 <input
                   type="text"
-                  className={s.input}
+                  className={f.input}
                   value={telefono}
                   onChange={e => setTelefono(e.target.value)}
                 />
@@ -138,8 +139,8 @@ export const DomiciliarioPerfil: React.FC = () => {
             </div>
           </div>
 
-          <div className={s.perfilFormSection}>
-            <div className={s.perfilFormSectionTitle}>Datos de acceso</div>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Datos de acceso</h3>
             <div className={s.readOnlyField}>
               <label className={s.readOnlyLabel}>Email</label>
               <div className={s.readOnlyValue}>{email}</div>
@@ -163,7 +164,7 @@ export const DomiciliarioPerfil: React.FC = () => {
             </div>
           )}
 
-          <div className={s.formActions}>
+          <div className={f.formActions}>
             <Button onClick={guardarCambios} loading={saving}>
               <Check size={16} />
               Guardar cambios

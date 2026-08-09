@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Search, ClipboardCheck, CheckCircle, XCircle, Layers, Plus, Edit, Trash2 } from 'lucide-react';
 import s from './ControlPrendas.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
@@ -401,15 +402,16 @@ export const AdminControlPrendas: React.FC = () => {
         closeOnOverlay
       >
         {reviewingId ? (
-          <div className={s.detailModalContent}>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Cantidad aprobada</label>
-                <input type="number" className={s.input} value={reviewAprobada} onChange={e => setReviewAprobada(e.target.value)} min={0} />
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Revisión</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Cantidad aprobada</label>
+                <input type="number" className={f.input} value={reviewAprobada} onChange={e => setReviewAprobada(e.target.value)} min={0} />
               </div>
-              <div className={s.field}>
-                <label className={s.label}>Cantidad rechazada</label>
-                <input type="number" className={s.input} value={reviewRechazada} onChange={e => setReviewRechazada(e.target.value)} min={0} />
+              <div className={f.field}>
+                <label className={f.label}>Cantidad rechazada</label>
+                <input type="number" className={f.input} value={reviewRechazada} onChange={e => setReviewRechazada(e.target.value)} min={0} />
               </div>
             </div>
             <ModalFooter
@@ -418,65 +420,69 @@ export const AdminControlPrendas: React.FC = () => {
             />
           </div>
         ) : (
-          <form className={s.form} onSubmit={editingId ? handleUpdate : handleCreate}>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Orden de producción</label>
-                <select
-                  className={s.select}
-                  value={produccionId}
-                  onChange={e => setProduccionId(e.target.value)}
-                  required
-                  disabled={!!editingId}
-                >
-                  <option value="">Seleccioná una orden...</option>
-                  {ordenesProduccion.map(o => (
-                    <option key={o.id} value={o.id}>
-                      {o.numero ? `${o.numero} - ${o.cliente ?? ''}` : o.id}
-                    </option>
-                  ))}
-                </select>
-                {!editingId && ordenesProduccion.length === 0 && (
-                  <span className={s.fieldError}>No hay órdenes de producción disponibles</span>
-                )}
+          <form className={f.form} onSubmit={editingId ? handleUpdate : handleCreate}>
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Control de prenda</h3>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={s.label}>Orden de producción</label>
+                  <select
+                    className={f.select}
+                    value={produccionId}
+                    onChange={e => setProduccionId(e.target.value)}
+                    required
+                    disabled={!!editingId}
+                  >
+                    <option value="">Seleccioná una orden...</option>
+                    {ordenesProduccion.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {o.numero ? `${o.numero} - ${o.cliente ?? ''}` : o.id}
+                      </option>
+                    ))}
+                  </select>
+                  {!editingId && ordenesProduccion.length === 0 && (
+                    <span className={s.fieldError}>No hay órdenes de producción disponibles</span>
+                  )}
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Etapa</label>
+                  <select
+                    className={f.select}
+                    value={etapa}
+                    onChange={e => setEtapa(e.target.value as Etapa)}
+                  >
+                    {ETAPAS.map(e => (
+                      <option key={e} value={e}>{e}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className={s.field}>
-                <label className={s.label}>Etapa</label>
-                <select
-                  className={s.select}
-                  value={etapa}
-                  onChange={e => setEtapa(e.target.value as Etapa)}
-                >
-                  {ETAPAS.map(e => (
-                    <option key={e} value={e}>{e}</option>
-                  ))}
-                </select>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Cantidad total</label>
+                  <input
+                    type="number"
+                    className={f.input}
+                    value={cantidadTotal}
+                    onChange={e => setCantidadTotal(e.target.value)}
+                    placeholder="Ej: 50"
+                    required
+                    min="1"
+                  />
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Observaciones</label>
+                  <input
+                    type="text"
+                    className={f.input}
+                    value={observaciones}
+                    onChange={e => setObservaciones(e.target.value)}
+                    placeholder="Opcional"
+                  />
+                </div>
               </div>
             </div>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Cantidad total</label>
-                <input
-                  type="number"
-                  className={s.input}
-                  value={cantidadTotal}
-                  onChange={e => setCantidadTotal(e.target.value)}
-                  placeholder="Ej: 50"
-                  required
-                  min="1"
-                />
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Observaciones</label>
-                <input
-                  type="text"
-                  className={s.input}
-                  value={observaciones}
-                  onChange={e => setObservaciones(e.target.value)}
-                  placeholder="Opcional"
-                />
-              </div>
-            </div>            <ModalFooter
+            <ModalFooter
               actions={[{ label: editingId ? (saving ? 'Guardando...' : 'Guardar cambios') : (saving ? 'Guardando...' : 'Crear control') , type: 'submit', disabled: saving }]}
             />
           </form>

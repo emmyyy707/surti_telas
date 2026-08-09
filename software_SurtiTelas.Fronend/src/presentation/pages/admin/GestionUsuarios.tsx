@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Plus, Edit, Trash2, ToggleLeft, User, ShieldCheck, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './GestionUsuarios.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '@/shared/ui/DataTable';
@@ -281,47 +282,47 @@ export const AdminGestionUsuarios: React.FC = () => {
         title={selectedUsuario ? 'Editar Usuario' : 'Nuevo Usuario'}
         size="lg"
       >
-        <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitUsuario(); }}>
-          <div className={s.formSection}>
-            <h3 className={s.formSectionTitle}>Información personal</h3>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Nombre completo</label>
-                <input type="text" className={`${s.input} ${errors.nombre ? s.inputError : ''}`} name="nombre" defaultValue={selectedUsuario?.nombre} minLength={3} />
-                {errors.nombre && <span className={s.errorText}>{errors.nombre}</span>}
+        <form className={f.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitUsuario(); }}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información personal</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Nombre completo</label>
+                <input type="text" className={`${f.input} ${errors.nombre ? f.inputError : ''}`} name="nombre" defaultValue={selectedUsuario?.nombre} minLength={3} />
+                {errors.nombre && <span className={f.errorText}>{errors.nombre}</span>}
               </div>
-              <div className={s.field}>
-                <label className={s.label}>Apellidos</label>
-                <input type="text" className={`${s.input} ${errors.apellidos ? s.inputError : ''}`} name="apellidos" defaultValue={selectedUsuario?.apellidos ?? ''} minLength={3} />
-                {errors.apellidos && <span className={s.errorText}>{errors.apellidos}</span>}
-              </div>
-            </div>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Correo electrónico</label>
-                <input type="email" className={`${s.input} ${errors.email ? s.inputError : ''}`} name="email" defaultValue={selectedUsuario?.email} />
-                {errors.email && <span className={s.errorText}>{errors.email}</span>}
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Teléfono</label>
-                <input type="tel" className={`${s.input} ${errors.telefono ? s.inputError : ''}`} name="telefono" defaultValue={selectedUsuario?.telefono ?? ''} maxLength={11} inputMode="numeric" />
-                {errors.telefono && <span className={s.errorText}>{errors.telefono}</span>}
+              <div className={f.field}>
+                <label className={f.label}>Apellidos</label>
+                <input type="text" className={`${f.input} ${errors.apellidos ? f.inputError : ''}`} name="apellidos" defaultValue={selectedUsuario?.apellidos ?? ''} minLength={3} />
+                {errors.apellidos && <span className={f.errorText}>{errors.apellidos}</span>}
               </div>
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Dirección</label>
-              <input type="text" className={`${s.input} ${errors.direccion ? s.inputError : ''}`} name="direccion" defaultValue={selectedUsuario?.direccion ?? ''} placeholder="Calle, ciudad, código postal" minLength={5} />
-              {errors.direccion && <span className={s.errorText}>{errors.direccion}</span>}
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Correo electrónico</label>
+                <input type="email" className={`${f.input} ${errors.email ? f.inputError : ''}`} name="email" defaultValue={selectedUsuario?.email} />
+                {errors.email && <span className={f.errorText}>{errors.email}</span>}
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Teléfono</label>
+                <input type="tel" className={`${f.input} ${errors.telefono ? f.inputError : ''}`} name="telefono" defaultValue={selectedUsuario?.telefono ?? ''} maxLength={11} inputMode="numeric" />
+                {errors.telefono && <span className={f.errorText}>{errors.telefono}</span>}
+              </div>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Dirección</label>
+              <input type="text" className={`${f.input} ${errors.direccion ? f.inputError : ''}`} name="direccion" defaultValue={selectedUsuario?.direccion ?? ''} placeholder="Calle, ciudad, código postal" minLength={5} />
+              {errors.direccion && <span className={f.errorText}>{errors.direccion}</span>}
             </div>
           </div>
 
           {!selectedUsuario && (
-            <div className={s.formSection}>
-              <h3 className={s.formSectionTitle}>Documento</h3>
-              <div className={s.formRow}>
-                <div className={s.field}>
-                  <label className={s.label}>Tipo de documento</label>
-                  <select className={`${s.select} ${errors.tipoDocumento ? s.inputError : ''}`} name="tipoDocumento" defaultValue="">
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Documento</h3>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Tipo de documento</label>
+                  <select className={`${f.select} ${errors.tipoDocumento ? f.inputError : ''}`} name="tipoDocumento" defaultValue="">
                     <option value="" disabled>Selecciona...</option>
                     <option value="CC">C.C. - Cédula de ciudadanía</option>
                     <option value="TI">T.I. - Tarjeta de identidad</option>
@@ -330,42 +331,42 @@ export const AdminGestionUsuarios: React.FC = () => {
                     <option value="NIT">NIT</option>
                     <option value="PPT">PPT - Pasaporte especial</option>
                   </select>
-                  {errors.tipoDocumento && <span className={s.errorText}>{errors.tipoDocumento}</span>}
+                  {errors.tipoDocumento && <span className={f.errorText}>{errors.tipoDocumento}</span>}
                 </div>
-                <div className={s.field}>
-                  <label className={s.label}>Número de documento</label>
-                  <input type="text" className={`${s.input} ${errors.numeroDocumento ? s.inputError : ''}`} name="numeroDocumento" defaultValue="" maxLength={15} />
-                  {errors.numeroDocumento && <span className={s.errorText}>{errors.numeroDocumento}</span>}
+                <div className={f.field}>
+                  <label className={f.label}>Número de documento</label>
+                  <input type="text" className={`${f.input} ${errors.numeroDocumento ? f.inputError : ''}`} name="numeroDocumento" defaultValue="" maxLength={15} />
+                  {errors.numeroDocumento && <span className={f.errorText}>{errors.numeroDocumento}</span>}
                 </div>
               </div>
             </div>
           )}
 
           {!selectedUsuario && (
-            <div className={s.formSection}>
-              <h3 className={s.formSectionTitle}>Seguridad</h3>
-              <div className={s.formRow}>
-                <div className={s.field}>
-                  <label className={s.label}>Contraseña</label>
-                  <input type="password" className={`${s.input} ${errors.password ? s.inputError : ''}`} name="password" minLength={8} />
-                  {errors.password && <span className={s.errorText}>{errors.password}</span>}
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Seguridad</h3>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Contraseña</label>
+                  <input type="password" className={`${f.input} ${errors.password ? f.inputError : ''}`} name="password" minLength={8} />
+                  {errors.password && <span className={f.errorText}>{errors.password}</span>}
                   <p className={s.hint}>Mínimo 8 caracteres, con mayúscula, minúscula y número</p>
                 </div>
-                <div className={s.field}>
-                  <label className={s.label}>Confirmar contraseña</label>
-                  <input type="password" className={`${s.input} ${errors.confirmPassword ? s.inputError : ''}`} name="confirmPassword" minLength={8} />
-                  {errors.confirmPassword && <span className={s.errorText}>{errors.confirmPassword}</span>}
+                <div className={f.field}>
+                  <label className={f.label}>Confirmar contraseña</label>
+                  <input type="password" className={`${f.input} ${errors.confirmPassword ? f.inputError : ''}`} name="confirmPassword" minLength={8} />
+                  {errors.confirmPassword && <span className={f.errorText}>{errors.confirmPassword}</span>}
                 </div>
               </div>
             </div>
           )}
 
           {!selectedUsuario && (
-            <div className={s.formSection}>
-              <h3 className={s.formSectionTitle}>Acceso y permisos</h3>
-              <div className={s.field}>
-                <label className={s.label}>Rol</label>
-                <select className={s.select} name="role" defaultValue="CLIENTE">
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Acceso y permisos</h3>
+              <div className={f.field}>
+                <label className={f.label}>Rol</label>
+                <select className={f.select} name="role" defaultValue="CLIENTE">
                   <option value="ADMIN">Administrador</option>
                   <option value="ASESOR">Asesor</option>
                   <option value="DOMICILIARIO">Domiciliario</option>
@@ -375,8 +376,8 @@ export const AdminGestionUsuarios: React.FC = () => {
                   <option value="REPORTES">Reportes</option>
                 </select>
               </div>
-              <div className={s.field}>
-                <label className={s.label}>Módulos</label>
+              <div className={f.field}>
+                <label className={f.label}>Módulos</label>
                 <div className={s.permisosGrid}>
                   {Object.entries(
                     permissions.reduce<Record<string, PermissionDTO[]>>((acc, perm) => {

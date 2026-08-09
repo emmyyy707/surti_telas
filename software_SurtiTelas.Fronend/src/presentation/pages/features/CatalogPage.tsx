@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal, X, Sparkles, Heart, ShoppingBag, Star } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, SlidersHorizontal, X, Sparkles, Heart, ShoppingBag, Star, RefreshCcw } from 'lucide-react';
 import { FilterDrawer, type FilterState } from '@presentation/pages/components/FilterDrawer';
 import { ProductDetailModal } from '@presentation/components/ProductDetailModal';
 import { toast } from 'sonner';
@@ -10,21 +10,7 @@ import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { favoritesApi } from '@/infrastructure/api/favoritesApi';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import type { Producto as ProductoCore } from '@/core/types';
-
-interface Producto {
-  id: string;
-  nombre: string;
-  categoria: string;
-  precio: number;
-  imagen: string;
-  marca?: string;
-  tallas?: string[];
-  color?: string;
-  disponible: boolean;
-  destacado?: boolean;
-  nuevo?: boolean;
-  rating?: number;
-}
+import ProductCard from './ProductCard';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('es-CO')}`;
 
@@ -44,42 +30,31 @@ const writeFavoriteIds = (favoriteIds: string[]) => {
   window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoriteIds));
 };
 
-const mapProducto = (p: ProductoCore): Producto => ({
-  id: p.id || p.ref,
-  nombre: p.nombre,
-  categoria: p.categoria || 'General',
-  precio: p.precio,
-  imagen: p.imagenPrincipal || (p.imagenes && p.imagenes[0]) || '',
-  marca: p.marca,
-  tallas: p.tallas,
-  color: (p.colores && p.colores[0]) || undefined,
-  disponible: (p.publicado ?? false) && p.stock !== 'Agotado',
-  destacado: p.destacado,
-  nuevo: p.nuevo,
-  rating: undefined,
-});
-
 const CatalogPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [filtrosAbierto, setFiltrosAbierto] = useState(false);
-  const [categoriaActiva, setCategoriaActiva] = useState('Todas');
+  const initialCategoria = searchParams.get('categoria') || 'Todas';
+  const [categoriaActiva, setCategoriaActiva] = useState(initialCategoria);
   const [marcaActiva, setMarcaActiva] = useState('Todas');
   const [filtrosAvanzados, setFiltrosAvanzados] = useState<FilterState>({ tallas: [], marcas: [], categoriasEspeciales: [] });
-  const [allProducts, setAllProducts] = useState<Producto[]>([]);
+  const [allProducts, setAllProducts] = useState<ProductoCore[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductoCore | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [heroConfig, setHeroConfig] = useState({ badge: 'Colección Premium', titulo: 'Bienvenido a', destacado: 'Surticamisetas', subtitulo: 'Explora una colección premium diseñada para quienes buscan estilo, calidad y exclusividad.' });
 
+  const [brands, setBrands] = useState<string[]>([]);
   const pagination = useServerPagination(12);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const query: Record<string, string | number | boolean | undefined | null> = {
+      const query: Record<string, string | number | boolean | Array<string | number | boolean> | undefined | null> = {
         page: pagination.page,
         limit: pagination.limit,
         sort: 'createdAt',
@@ -89,66 +64,136 @@ const CatalogPage: React.FC = () => {
       if (categoriaActiva !== 'Todas') query.categoria = categoriaActiva;
       if (marcaActiva !== 'Todas') query.marca = marcaActiva;
 
-      const result = await catalogApi.list(query);
-      const mapped = result.data.map(mapProducto);
-      
-      if (pagination.page === 1) {
-        setAllProducts(mapped);
-      } else {
-        setAllProducts(prev => [...prev, ...mapped]);
+      if (filtrosAvanzados.marcas.length > 0) {
+        query.marcas = filtrosAvanzados.marcas;
       }
-      
+      if (filtrosAvanzados.categoriasEspeciales.length > 0) {
+        query.categoriasEspeciales = filtrosAvanzados.categoriasEspeciales;
+      }
+      if (filtrosAvanzados.tallas.length > 0) {
+        query.tallas = filtrosAvanzados.tallas;
+      }
+
+      const result = await catalogApi.list(query);
+
+      if (pagination.page === 1) {
+        setAllProducts(result.data);
+      } else {
+        setAllProducts(prev => [...prev, ...result.data]);
+      }
+
       pagination.setTotalRecords(result.meta.totalRecords);
-    } catch {
-      setError('No se pudieron cargar los productos');
-      toast.error('No se pudieron cargar los productos');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No se pudieron cargar los productos';
+      setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, searchTerm, categoriaActiva, marcaActiva, pagination.setTotalRecords]);
+  }, [pagination.page, pagination.limit, searchTerm, categoriaActiva, marcaActiva, filtrosAvanzados, pagination.setTotalRecords]);
 
   useEffect(() => {
     void fetchProducts();
   }, [fetchProducts]);
 
-  useEffect(() => { setFavoriteIds(readFavoriteIds()); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const loadBrands = async () => {
+      try {
+        const data = await catalogApi.getBrands();
+        if (!cancelled) setBrands(data);
+      } catch {
+        if (!cancelled) setBrands([]);
+      }
+    };
+    loadBrands();
+    return () => { cancelled = true; };
+  }, []);
 
-  const categoriasUnicas = useMemo(() => { const cats = new Set(allProducts.map(p => p.categoria)); return ['Todas', ...Array.from(cats)]; }, [allProducts]);
+  useEffect(() => {
+    if (categoriaActiva && categoriaActiva !== 'Todas') {
+      setSearchParams((prev) => {
+        if (prev.get('categoria') === categoriaActiva) return prev;
+        const next = new URLSearchParams(prev);
+        next.set('categoria', categoriaActiva);
+        return next;
+      });
+    } else {
+      setSearchParams((prev) => {
+        if (!prev.has('categoria')) return prev;
+        const next = new URLSearchParams(prev);
+        next.delete('categoria');
+        return next;
+      });
+    }
+  }, [categoriaActiva, setSearchParams]);
+
+  useEffect(() => {
+    const cat = searchParams.get('categoria');
+    if (cat && cat !== categoriaActiva) {
+      setCategoriaActiva(cat);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const stored = readFavoriteIds();
+    setFavoriteIds(stored);
+  }, []);
+
+  const categoriasUnicas = useMemo(() => {
+    const cats = new Set(allProducts.map(p => p.categoria).filter((c): c is string => typeof c === 'string' && c.trim() !== ''));
+    return ['Todas', ...Array.from(cats)];
+  }, [allProducts]);
 
   const productosFiltrados = useMemo(() => {
     return allProducts.filter(p => {
       const matchCategoria = categoriaActiva === 'Todas' || p.categoria === categoriaActiva;
       const matchMarca = marcaActiva === 'Todas' || p.marca === marcaActiva;
       const matchTalla = filtrosAvanzados.tallas.length === 0 || (p.tallas && p.tallas.some(t => filtrosAvanzados.tallas.includes(t)));
-      const matchCategoriaEspecial = filtrosAvanzados.categoriasEspeciales.length === 0 || p.categoria.toLowerCase().includes(filtrosAvanzados.categoriasEspeciales[0]?.toLowerCase() || '');
+      const matchCategoriaEspecial = filtrosAvanzados.categoriasEspeciales.length === 0 || (p.categoria ?? '').toLowerCase().includes(filtrosAvanzados.categoriasEspeciales[0]?.toLowerCase() || '');
       return matchCategoria && matchMarca && matchTalla && matchCategoriaEspecial;
     });
   }, [allProducts, categoriaActiva, marcaActiva, filtrosAvanzados]);
 
-  const handleClearSearch = () => setSearchTerm('');
-  const handleAddToCart = (product: Producto) => { setSelectedProduct(product); setIsModalOpen(true); };
-  const handleCloseModal = () => { setIsModalOpen(false); setSelectedProduct(null); };
-  const handleApplyFilters = (filters: FilterState) => setFiltrosAvanzados(filters);
-  const handleResetFilters = () => { setCategoriaActiva('Todas'); setMarcaActiva('Todas'); setFiltrosAvanzados({ tallas: [], marcas: [], categoriasEspeciales: [] }); setSearchTerm(''); };
-  const handleLoadMore = () => pagination.setPage(pagination.page + 1);
-  const toggleFavorite = async (producto: Producto) => {
-    let exists = false;
+  const handleClearSearch = useCallback(() => setSearchTerm(''), []);
+  const handleOpenDetail = useCallback((product: ProductoCore) => { setSelectedProduct(product); setIsModalOpen(true); }, []);
+  const handleCloseModal = useCallback(() => { setIsModalOpen(false); setSelectedProduct(null); }, []);
+  const handleApplyFilters = useCallback((filters: FilterState) => setFiltrosAvanzados(filters), []);
+  const handleResetFilters = useCallback(() => {
+    setCategoriaActiva('Todas');
+    setMarcaActiva('Todas');
+    setFiltrosAvanzados({ tallas: [], marcas: [], categoriasEspeciales: [] });
+    setSearchTerm('');
+  }, []);
+  const handleLoadMore = useCallback(() => pagination.setPage(pagination.page + 1), [pagination]);
+
+  const toggleFavorite = useCallback(async (producto: ProductoCore) => {
+    const productId = producto.id || producto.ref;
     setFavoriteIds(current => {
-      exists = current.includes(producto.id);
-      const next = exists ? current.filter(id => id !== producto.id) : [...current, producto.id];
+      const exists = current.includes(productId);
+      const next = exists ? current.filter(id => id !== productId) : [...current, productId];
       writeFavoriteIds(next);
       return next;
     });
     try {
-      await favoritesApi.toggle(producto.id);
-      toast.success(exists ? 'Producto eliminado de favoritos' : 'Producto agregado a favoritos');
+      await favoritesApi.toggle(productId);
+      toast.success(productId);
     } catch {
       toast.error('No se pudo sincronizar el favorito con el servidor');
     }
-  };
+  }, []);
 
-  const countFiltrosActivos = () => { let count = 0; if (categoriaActiva !== 'Todas') count++; if (marcaActiva !== 'Todas') count++; count += filtrosAvanzados.tallas.length; count += filtrosAvanzados.marcas.length; count += filtrosAvanzados.categoriasEspeciales.length; return count; };
+  const countFiltrosActivos = useCallback(() => {
+    let count = 0;
+    if (categoriaActiva !== 'Todas') count++;
+    if (marcaActiva !== 'Todas') count++;
+    count += filtrosAvanzados.tallas.length;
+    count += filtrosAvanzados.marcas.length;
+    count += filtrosAvanzados.categoriasEspeciales.length;
+    return count;
+  }, [categoriaActiva, marcaActiva, filtrosAvanzados]);
+
   const totalFiltrosActivos = countFiltrosActivos();
 
   const hasMore = useMemo(() => {
@@ -163,8 +208,24 @@ const CatalogPage: React.FC = () => {
   if (isLoading && pagination.page === 1) {
     return (
       <div className="catalog-page">
-        <div className="catalog-hero"><div className="content"><div className="skeleton skeleton-title" /><div className="skeleton skeleton-subtitle" /><div className="skeleton skeleton-search" /></div></div>
-        <div className="products-section"><div className="products-grid">{[...Array(8)].map((_, i) => (<div key={i} className="product-card-skeleton"><div className="skeleton skeleton-img" /><div className="skeleton skeleton-text" /><div className="skeleton skeleton-text-short" /></div>))}</div></div>
+        <div className="catalog-hero">
+          <div className="hero-content">
+            <div className="skeleton skeleton-title" />
+            <div className="skeleton skeleton-subtitle" />
+            <div className="skeleton skeleton-search" />
+          </div>
+        </div>
+        <div className="products-section">
+          <div className="products-grid">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="product-card-skeleton">
+                <div className="skeleton skeleton-img" />
+                <div className="skeleton skeleton-text" />
+                <div className="skeleton skeleton-text-short" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -172,7 +233,16 @@ const CatalogPage: React.FC = () => {
   if (error) {
     return (
       <div className="catalog-page">
-        <div className="catalog-hero"><div className="content"><h1>Catálogo</h1><p className="text-red-500">{error}</p></div></div>
+        <div className="catalog-hero">
+          <div className="hero-content">
+            <h1>Catálogo</h1>
+            <p className="text-red-500">{error}</p>
+            <button className="retry-btn" onClick={fetchProducts} type="button">
+              <RefreshCcw size={16} />
+              Reintentar
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -191,16 +261,16 @@ const CatalogPage: React.FC = () => {
         <div className="hero-content">
           <div className="hero-badge">
             <Sparkles size={14} />
-            <span>Colección Premium </span>
+            <span>{heroConfig.badge}</span>
           </div>
 
           <h1 className="hero-title">
-            Bienvenido a<br />
-            <span className="title-highlight">Surticamisetas</span>
+            {heroConfig.titulo}<br />
+            <span className="title-highlight">{heroConfig.destacado}</span>
           </h1>
 
           <p className="hero-subtitle">
-            Explora una colección premium diseñada para quienes buscan estilo, calidad y exclusividad.
+            {heroConfig.subtitulo}
           </p>
 
           {/* SEARCH EXPERIENCE PREMIUM */}
@@ -216,7 +286,7 @@ const CatalogPage: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 {searchTerm && (
-                  <button className="glass-clear-btn" onClick={handleClearSearch}>
+                  <button className="glass-clear-btn" onClick={handleClearSearch} type="button">
                     <X size={16} />
                   </button>
                 )}
@@ -227,6 +297,7 @@ const CatalogPage: React.FC = () => {
               className="filter-toggle-btn"
               onClick={() => setFiltrosAbierto(true)}
               data-active={totalFiltrosActivos > 0}
+              type="button"
             >
               <SlidersHorizontal size={20} />
               <span>Filtros</span>
@@ -241,20 +312,41 @@ const CatalogPage: React.FC = () => {
       <section className="category-section">
         <div className="category-pills-container">
           <div className="category-pills-scroll">
-            {categoriasUnicas.map(cat => (<button key={cat} className={`category-pill ${categoriaActiva === cat ? 'active' : ''}`} onClick={() => setCategoriaActiva(cat)}>{cat}</button>))}
+            {categoriasUnicas.map(cat => (
+              <button
+                key={cat}
+                className={`category-pill ${categoriaActiva === cat ? 'active' : ''}`}
+                onClick={() => {
+                  setCategoriaActiva(cat);
+                  if (cat === 'Todas') {
+                    navigate('/catalogo');
+                  } else {
+                    navigate(`/catalogo?categoria=${encodeURIComponent(cat)}`);
+                  }
+                }}
+                type="button"
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="controls-section">
         <div className="catalog-controls-bar">
-          <div className="controls-left"><span className="results-count">{productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} encontrado{productosFiltrados.length !== 1 ? 's' : ''}</span></div>
+          <div className="controls-left">
+            <span className="results-count">
+              {productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} encontrado{productosFiltrados.length !== 1 ? 's' : ''}
+            </span>
+          </div>
           <div className="controls-right">
-            <button className="mobile-filter-btn" onClick={() => setFiltrosAbierto(true)}><SlidersHorizontal size={18} /><span>Filtros {totalFiltrosActivos > 0 && `(${totalFiltrosActivos})`}</span></button>
-            <Tooltip title="Ver carrito"><button className="nav-to-cart-btn" onClick={() => navigate('/carrito')}>
-              <ShoppingBag size={18} />
-              <span>Ver carrito</span>
-            </button></Tooltip>
+            <Tooltip title="Ver carrito">
+              <button className="nav-to-cart-btn" onClick={() => navigate('/carrito')} type="button">
+                <ShoppingBag size={18} />
+                <span>Ver carrito</span>
+              </button>
+            </Tooltip>
           </div>
         </div>
       </section>
@@ -264,80 +356,26 @@ const CatalogPage: React.FC = () => {
           <div className="empty-catalog">
             <div className="empty-icon"><Search size={48} /></div>
             <h3>No se encontraron productos</h3>
-            <p>Intenta ajustar tus filtros o terminos de búsqueda</p>
-            <button className="btn-reset-filters" onClick={handleResetFilters}>Ver todos los productos</button>
+            <p>Intenta ajustar tus filtros o términos de búsqueda</p>
+            <button className="btn-reset-filters" onClick={handleResetFilters} type="button">Ver todos los productos</button>
           </div>
         ) : (
           <>
             <div className="products-grid">
               {productosFiltrados.map((producto, idx) => (
-                <article
-                  key={producto.id}
-                  className="premium-product-card"
-                  style={{ animationDelay: `${idx * 0.05}s` }}
-                  onClick={() => producto.disponible && handleAddToCart(producto)}
-                >
-                <div className="card-image-wrapper">
-                  <img src={producto.imagen} alt={producto.nombre} className="card-image" loading="lazy" />
-                  <div className="card-badges">
-                    {producto.destacado && (<span className="badge-destacado"><Sparkles size={10} />Destacado</span>)}
-                    {producto.nuevo && (<span className="badge-nuevo">Nuevo</span>)}
-                    {!producto.disponible && (<span className="badge-agotado">Agotado</span>)}
-                  </div>
-                  <div className="card-actions">
-                    <button className={`action-btn wishlist-btn ${favoriteIds.includes(producto.id) ? 'active' : ''}`} aria-label={favoriteIds.includes(producto.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'} onClick={(e) => { e.stopPropagation(); toggleFavorite(producto); }}><Heart size={18} fill={favoriteIds.includes(producto.id) ? 'currentColor' : 'none'} /></button>
-                    <button className="action-btn cart-btn" aria-label="Agregar al carrito" disabled={!producto.disponible} onClick={(e) => { e.stopPropagation(); handleAddToCart(producto); }}><ShoppingBag size={18} /></button>
-                  </div>
-                  <div className="card-overlay" />
-                </div>
-                {/* INFO CARD PREMIUM */}
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-category">{producto.categoria}</span>
-                    {producto.marca && (
-                      <span className="card-brand">{producto.marca}</span>
-                    )}
-                  </div>
-
-                  <h3 className="card-title">{producto.nombre}</h3>
-
-                  {/* RATING STARS */}
-                  {producto.rating && (
-                    <div className="card-rating">
-                      <div className="rating-stars">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={12}
-                            fill={i < Math.floor(producto.rating!) ? 'currentColor' : 'none'}
-                            className={i < Math.floor(producto.rating!) ? 'star-filled' : 'star-empty'}
-                          />
-                        ))}
-                      </div>
-                      <span className="rating-value">{producto.rating}</span>
-                    </div>
-                  )}
-
-                  <div className="card-footer">
-                    <span className="card-price">{formatPrice(producto.precio)}</span>
-                    {producto.disponible && producto.tallas && (
-                      <div className="card-tallas">
-                        {producto.tallas.slice(0, 3).map(t => (
-                          <span key={t} className="talla-tag">{t}</span>
-                        ))}
-                        {producto.tallas.length > 3 && (
-                          <span className="talla-more">+{producto.tallas.length - 3}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </article>
+                <ProductCard
+                  key={producto.id || producto.ref}
+                  producto={producto}
+                  isFavorite={favoriteIds.includes(producto.id || producto.ref)}
+                  onToggleFavorite={toggleFavorite}
+                  onOpenDetail={handleOpenDetail}
+                  animationDelay={idx * 0.05}
+                />
               ))}
             </div>
             {hasMore && (
               <div className="load-more-container">
-                <button className="load-more-btn" onClick={handleLoadMore} disabled={isLoading}>
+                <button className="load-more-btn" onClick={handleLoadMore} disabled={isLoading} type="button">
                   {isLoading ? 'Cargando...' : 'Cargar más productos'}
                 </button>
               </div>
@@ -346,7 +384,7 @@ const CatalogPage: React.FC = () => {
         )}
       </section>
 
-      <FilterDrawer isOpen={filtrosAbierto} onClose={() => setFiltrosAbierto(false)} onApplyFilters={handleApplyFilters} />
+      <FilterDrawer isOpen={filtrosAbierto} onClose={() => setFiltrosAbierto(false)} onApplyFilters={handleApplyFilters} onResetFilters={handleResetFilters} brandOptions={brands} />
 
       {selectedProduct && (
         <ProductDetailModal

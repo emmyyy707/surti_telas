@@ -19,6 +19,7 @@ export class PrismaProductRepository implements ProductRepository {
       where.OR = [
         { nombre: { contains: filters.search, mode: 'insensitive' } },
         { ref: { contains: filters.search, mode: 'insensitive' } },
+        { codigo: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
     if (filters.categoriaId) where.categoriaId = filters.categoriaId;
@@ -35,6 +36,16 @@ export class PrismaProductRepository implements ProductRepository {
     }
     if (filters.publicado !== undefined) where.publicado = filters.publicado;
     if (filters.destacado !== undefined) where.destacado = filters.destacado;
+    if (filters.marca) where.marca = filters.marca;
+    if (filters.marcas && filters.marcas.length > 0) where.marca = { in: filters.marcas };
+    if (filters.categoriasEspeciales && filters.categoriasEspeciales.length > 0) {
+      where.categoria = {
+        nombre: { in: filters.categoriasEspeciales, mode: 'insensitive' },
+      };
+    }
+    if (filters.tallas && filters.tallas.length > 0) {
+      where.tallas = { hasSome: filters.tallas };
+    }
 
     const limit = filters.limit ?? 50;
     const sort = filters.sort ?? 'createdAt';
@@ -102,8 +113,9 @@ export class PrismaProductRepository implements ProductRepository {
   async create(input: CreateProductInput): Promise<Product> {
     const categoriaId = await this.resolveCategoriaId(input);
     const ref = input.ref?.trim() || `REF-${Date.now()}`;
+    const codigo = input.codigo?.trim() || ref;
     const stock = input.stock ?? computeStockStatus(input.cantidadStock);
-    const product = new Product({ ...input, stock, ref });
+    const product = new Product({ ...input, stock, ref, codigo });
     const row = await this.prisma.product.create({
       data: toCreateInput(product, categoriaId, ref) as Prisma.ProductCreateInput,
       include: { categoria: true },
@@ -135,6 +147,16 @@ export class PrismaProductRepository implements ProductRepository {
     const existing = await this.getByRef(ref);
     if (!existing) throw new NotFoundError('Producto no encontrado');
     await this.prisma.product.update({ where: { ref }, data: { deletedAt: new Date() } });
+  }
+
+  async getBrands(): Promise<string[]> {
+    const rows = await this.prisma.product.findMany({
+      where: { deletedAt: null, marca: { not: null } },
+      select: { marca: true },
+      distinct: ['marca'],
+      orderBy: { marca: 'asc' },
+    });
+    return rows.map((r) => r.marca!).filter((m): m is string => Boolean(m && m.trim()));
   }
 
   private async resolveCategoriaId(input: { categoria?: string; categoriaId?: string }): Promise<string | null> {

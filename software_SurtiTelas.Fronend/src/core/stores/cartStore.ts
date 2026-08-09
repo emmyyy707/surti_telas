@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface CartItem {
   cartId: string;
+  productId?: string;
   nombre: string;
   precio: number;
   quantity: number;
@@ -111,6 +112,17 @@ export const useCartStore = create<CartState>()(
       name: CART_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ items: state.items }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.items) {
+          const totals = calculateTotals(state.items);
+          state.totalItems = totals.totalItems;
+          state.subtotal = totals.subtotal;
+          state.discount = totals.discount;
+          state.shipping = totals.shipping;
+          state.tax = totals.tax;
+          state.total = totals.total;
+        }
+      },
     },
   ),
 );

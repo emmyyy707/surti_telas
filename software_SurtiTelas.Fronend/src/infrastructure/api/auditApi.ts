@@ -64,8 +64,8 @@ export interface CreateAuditInput {
 export const auditApi = {
   async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<AuditLog[]> {
     const response = await api.get<{ items: AuditLogDTO[]; meta: Record<string, unknown> }>('/audit', { query });
-    const data = response?.items ?? [];
-    return data.map(toAuditLog);
+    const items = response?.items ?? [];
+    return items.map(toAuditLog);
   },
 
   async create(input: CreateAuditInput): Promise<AuditLog> {

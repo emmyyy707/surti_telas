@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import s from './AdminNotificaciones.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -190,28 +191,34 @@ export const AdminNotificaciones: React.FC = () => {
       />
 
       <Modal open={modalOpen} onClose={closeModal} title={editingItem ? 'Editar notificación' : 'Nueva notificación'}>
-        <form onSubmit={handleSubmit}>
-          <div className={s.formGroup}>
-            <label className={s.label}>Tipo</label>
-            <select className={s.select} value={formTipo} onChange={e => setFormTipo(e.target.value as Notification['tipo'])}>
-              {TIPO_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+        <form onSubmit={handleSubmit} className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Contenido</h3>
+            <div className={f.field}>
+              <label className={f.label}>Tipo</label>
+              <select className={f.select} value={formTipo} onChange={e => setFormTipo(e.target.value as Notification['tipo'])}>
+                {TIPO_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Título</label>
+              <input className={f.input} value={formTitulo} onChange={e => setFormTitulo(e.target.value)} required />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Mensaje</label>
+              <textarea className={f.textarea} value={formMensaje} onChange={e => setFormMensaje(e.target.value)} required rows={3} />
+            </div>
           </div>
-          <div className={s.formGroup}>
-            <label className={s.label}>Título</label>
-            <input className={s.input} value={formTitulo} onChange={e => setFormTitulo(e.target.value)} required />
-          </div>
-          <div className={s.formGroup}>
-            <label className={s.label}>Mensaje</label>
-            <textarea className={s.textarea} value={formMensaje} onChange={e => setFormMensaje(e.target.value)} required rows={3} />
-          </div>
-          <div className={s.formGroup}>
-            <label className={s.checkboxLabel}>
-              <input type="checkbox" checked={formLeida} onChange={e => setFormLeida(e.target.checked)} />
-              Marcada como leída
-            </label>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Estado</h3>
+            <div className={f.field}>
+              <label className={f.checkboxLabel}>
+                <input type="checkbox" checked={formLeida} onChange={e => setFormLeida(e.target.checked)} />
+                Marcada como leída
+              </label>
+            </div>
           </div>
           <ModalFooter
             actions={[

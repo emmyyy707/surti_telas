@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Plus, Edit, Trash2, Eye, EyeOff, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -17,6 +17,7 @@ import { ProductDetailModal } from '@/presentation/components/ProductDetailModal
 import { useProductos, useAppStore } from '@/core/stores';
 import { useAuth } from '@/core/stores/authStore';
 import { productService } from '@/services/productService';
+import { categoryService } from '@/services/categoryService';
 import type { Producto, PublicationStatus } from '@/core/types';
 import { ETIQUETAS_PRODUCTO } from '@/shared/constants/options';
 
@@ -46,6 +47,8 @@ export const AdminCatalogo: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [editingRef, setEditingRef] = useState<string | null>(null);
 
+  const [categorias, setCategorias] = useState<Array<{ id: string; nombre: string; slug: string }>>([]);
+
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [descripcionCorta, setDescripcionCorta] = useState('');
@@ -66,6 +69,7 @@ export const AdminCatalogo: React.FC = () => {
   const [nuevo, setNuevo] = useState(false);
   const [masVendido, setMasVendido] = useState(false);
   const [tela, setTela] = useState('');
+  const [codigo, setCodigo] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [localFiles, setLocalFiles] = useState<Record<string, File>>({});
 
@@ -98,6 +102,7 @@ export const AdminCatalogo: React.FC = () => {
     setNuevo(false);
     setMasVendido(false);
     setTela('');
+    setCodigo('');
     setLocalFiles({});
     setEditingRef(null);
     setFormError(null);
@@ -177,9 +182,16 @@ export const AdminCatalogo: React.FC = () => {
     setNuevo(product.nuevo || false);
     setMasVendido(product.masVendido || false);
     setTela(product.tela || '');
+    setCodigo(product.codigo || '');
     setFormError(null);
     setIsEditOpen(true);
   };
+
+  useEffect(() => {
+    if (isCreateOpen || isEditOpen) {
+      categoryService.list().then((data) => setCategorias(data));
+    }
+  }, [isCreateOpen, isEditOpen]);
 
   const validateForm = (): boolean => {
     setFormError(null);
@@ -206,6 +218,7 @@ export const AdminCatalogo: React.FC = () => {
       const pre = precioAnterior ? Number(precioAnterior) : Number(precio);
       const desc = descuento ? Number(descuento) : 0;
       const baseData: Omit<Producto, 'ref'> = {
+        codigo: codigo.trim() || undefined,
         nombre: nombre.trim(),
         descripcion: descripcion.trim() || descripcionCorta.trim(),
         descripcionCorta: descripcionCorta.trim() || descripcion.trim() || nombre.trim(),
@@ -224,7 +237,7 @@ export const AdminCatalogo: React.FC = () => {
         oferta,
         nuevo,
         masVendido,
-        tela,
+        tela: tela.trim(),
         colores,
         tallas,
       };
@@ -455,170 +468,198 @@ export const AdminCatalogo: React.FC = () => {
             </div>
           )}
 
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-nombre">Nombre del Producto *</label>
-              <input id="ac-nombre" className={f.input} type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información básica</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-codigo">Código</label>
+                <input id="ac-codigo" className={f.input} type="text" value={codigo} onChange={e => setCodigo(e.target.value)} placeholder="Ej: CAM-001" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-nombre">Nombre del Producto *</label>
+                <input id="ac-nombre" className={f.input} type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
+              </div>
             </div>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-categoria">Categoría *</label>
-              <input id="ac-categoria" className={f.input} type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="Ej: Camisetas" />
-            </div>
-          </div>
 
-          <div className={f.field}>
-            <label className={f.label} htmlFor="ac-descripcion-corta">Descripción Corta</label>
-            <input id="ac-descripcion-corta" className={f.input} type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve para el catálogo" />
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label} htmlFor="ac-descripcion">Descripción Completa</label>
-            <textarea id="ac-descripcion" className={f.textarea} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-precio">Precio ($) *</label>
-              <input id="ac-precio" className={f.input} type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-precio-anterior">Precio Anterior (opcional)</label>
-              <input id="ac-precio-anterior" className={f.input} type="number" min="0" value={precioAnterior} onChange={e => setPrecioAnterior(e.target.value)} placeholder="Sin descuento" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-descuento">Descuento (%)</label>
-              <input id="ac-descuento" className={f.input} type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-stock">Cantidad Stock</label>
-              <input id="ac-stock" className={f.input} type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-tela">Tipo de Tela</label>
-              <input id="ac-tela" className={f.input} type="text" value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-marca">Marca</label>
-              <input id="ac-marca" className={f.input} type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-colores">Colores Disponibles</label>
-              <AddTagInput tags={colores} onTagsChange={setColores} placeholder="Ej: Azul, Blanco, Verde" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label} htmlFor="ac-tallas">Tallas Disponibles</label>
-              <AddTagInput tags={tallas} onTagsChange={setTallas} placeholder="Ej: S, M, L, XL" />
-            </div>
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label} htmlFor="ac-subcategoria">Subcategoría</label>
-            <input id="ac-subcategoria" className={f.input} type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label} htmlFor="ac-imagen-principal">Imagen Principal</label>
-            <select id="ac-imagen-principal" className={f.select} value={imagenPrincipal} onChange={e => setImagenPrincipal(e.target.value)}>
-              <option value="">Sin imagen principal</option>
-              {imagenes.map((url, index) => (
-                <option key={index} value={url}>Imagen {index + 1}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Galería de Imágenes</label>
-            <div
-              className={s.uploadContainer}
-              onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
-              onDrop={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  handleAddLocalImages(e.dataTransfer.files);
-                }
-              }}
-            >
-              <label className={s.uploadPlaceholder} htmlFor="ac-file-input">
-                <Upload size={22} />
-                <span>Arrastra imágenes aquí o haz clic para seleccionar</span>
-                <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>JPG, PNG, WEBP (máx 4)</span>
-                <input
-                  id="ac-file-input"
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className={s.hiddenFileInput}
-                  onChange={e => {
-                    handleAddLocalImages(e.target.files);
-                    if (e.target.value) e.target.value = '';
-                  }}
-                />
-              </label>
-
-              {imagenes.length > 0 && (
-                <div className={s.previewGrid}>
-                  {imagenes.map((url, index) => (
-                    <div key={index} className={s.previewBox}>
-                      <img src={url} alt={`Imagen ${index + 1}`} />
-                      <div style={{ position: 'absolute', top: '4px', right: '4px', display: 'flex', gap: '4px' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleSetPrincipal(url)}
-                          className={s.removeImgBtn}
-                          style={{ background: imagenPrincipal === url ? 'var(--color-accent)' : 'rgba(0,0,0,0.5)' }}
-                          aria-label={imagenPrincipal === url ? 'Quitar imagen principal' : 'Establecer como principal'}
-                          title={imagenPrincipal === url ? 'Quitar imagen principal' : 'Establecer como principal'}
-                        >
-                          ★
-                        </button>
-                        <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn} aria-label={`Eliminar imagen ${index + 1}`}>
-                          <span style={{ fontSize: '14px' }}>×</span>
-                        </button>
-                      </div>
-                      {imagenPrincipal === url && (
-                        <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--color-accent)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
-                          Principal
-                        </div>
-                      )}
-                    </div>
+            <div className={f.formRow}>
+              <div className={f.field} style={{ position: 'relative' }}>
+                <label className={f.label} htmlFor="ac-categoria">Categoría *</label>
+                <select id="ac-categoria" className={f.select} value={categoria} onChange={e => setCategoria(e.target.value)}>
+                  <option value="">Seleccionar categoría</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.nombre}>{cat.nombre}</option>
                   ))}
-                </div>
-              )}
+                </select>
+              </div>
+            </div>
+
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-descripcion-corta">Descripción Corta</label>
+              <input id="ac-descripcion-corta" className={f.input} type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve para el catálogo" />
+            </div>
+
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-descripcion">Descripción Completa</label>
+              <textarea id="ac-descripcion" className={f.textarea} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
             </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label} htmlFor="ac-estado">Estado</label>
-            <select id="ac-estado" className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo (Oculto)</option>
-            </select>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Precio y stock</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-precio">Precio ($) *</label>
+                <input id="ac-precio" className={f.input} type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-precio-anterior">Precio Anterior (opcional)</label>
+                <input id="ac-precio-anterior" className={f.input} type="number" min="0" value={precioAnterior} onChange={e => setPrecioAnterior(e.target.value)} placeholder="Sin descuento" />
+              </div>
+            </div>
+
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-descuento">Descuento (%)</label>
+                <input id="ac-descuento" className={f.input} type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-stock">Cantidad Stock</label>
+                <input id="ac-stock" className={f.input} type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
+              </div>
+            </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label}>Etiquetas</label>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {ETIQUETAS_PRODUCTO.map(({ key, label }) => {
-                const state = key === 'destacado' ? destacado : key === 'oferta' ? oferta : key === 'nuevo' ? nuevo : masVendido;
-                const set = key === 'destacado' ? setDestacado : key === 'oferta' ? setOferta : key === 'nuevo' ? setNuevo : setMasVendido;
-                return (
-                <label key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text-secondary)', padding: '6px 12px', background: state ? 'rgba(244,162,97,0.15)' : 'rgba(255,255,255,0.04)', borderRadius: '8px', border: `1px solid ${state ? 'rgba(244,162,97,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
-                  <input type="checkbox" checked={state} onChange={e => set(e.target.checked)} />
-                  {label}
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Características</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-tela">Tipo de Tela</label>
+                <input id="ac-tela" className={f.input} type="text" value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-marca">Marca</label>
+                <input id="ac-marca" className={f.input} type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
+              </div>
+            </div>
+
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-colores">Colores Disponibles</label>
+                <AddTagInput tags={colores} onTagsChange={setColores} placeholder="Ej: Azul, Rojo claro, Verde oscuro" colorMode={true} />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-tallas">Tallas Disponibles</label>
+                <AddTagInput tags={tallas} onTagsChange={setTallas} placeholder="Ej: S, M, L, XL" />
+              </div>
+            </div>
+
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-subcategoria">Subcategoría</label>
+              <input id="ac-subcategoria" className={f.input} type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Imágenes</h3>
+            <div className={f.field}>
+              <label className={f.label} htmlFor="ac-imagen-principal">Imagen Principal</label>
+              <select id="ac-imagen-principal" className={f.select} value={imagenPrincipal} onChange={e => setImagenPrincipal(e.target.value)}>
+                <option value="">Sin imagen principal</option>
+                {imagenes.map((url, index) => (
+                  <option key={index} value={url}>Imagen {index + 1}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className={f.field}>
+              <label className={f.label}>Galería de Imágenes</label>
+              <div
+                className={s.uploadContainer}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleAddLocalImages(e.dataTransfer.files);
+                  }
+                }}
+              >
+                <label className={s.uploadPlaceholder} htmlFor="ac-file-input">
+                  <Upload size={22} />
+                  <span>Arrastra imágenes aquí o haz clic para seleccionar</span>
+                  <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>JPG, PNG, WEBP (máx 4)</span>
+                  <input
+                    id="ac-file-input"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className={s.hiddenFileInput}
+                    onChange={e => {
+                      handleAddLocalImages(e.target.files);
+                      if (e.target.value) e.target.value = '';
+                    }}
+                  />
                 </label>
-                );
-              })}
+
+                {imagenes.length > 0 && (
+                  <div className={s.previewGrid}>
+                    {imagenes.map((url, index) => (
+                      <div key={index} className={s.previewBox}>
+                        <img src={url} alt={`Imagen ${index + 1}`} />
+                        <div style={{ position: 'absolute', top: '4px', right: '4px', display: 'flex', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrincipal(url)}
+                            className={s.removeImgBtn}
+                            style={{ background: imagenPrincipal === url ? 'var(--color-accent)' : 'rgba(0,0,0,0.5)' }}
+                            aria-label={imagenPrincipal === url ? 'Quitar imagen principal' : 'Establecer como principal'}
+                            title={imagenPrincipal === url ? 'Quitar imagen principal' : 'Establecer como principal'}
+                          >
+                            ★
+                          </button>
+                          <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn} aria-label={`Eliminar imagen ${index + 1}`}>
+                            <span style={{ fontSize: '14px' }}>×</span>
+                          </button>
+                        </div>
+                        {imagenPrincipal === url && (
+                          <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--color-accent)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                            Principal
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Publicación</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="ac-estado">Estado</label>
+                <select id="ac-estado" className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
+                  <option value="Activo">Activo</option>
+                  <option value="Inactivo">Inactivo (Oculto)</option>
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Etiquetas</label>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {ETIQUETAS_PRODUCTO.map(({ key, label }) => {
+                    const state = key === 'destacado' ? destacado : key === 'oferta' ? oferta : key === 'nuevo' ? nuevo : masVendido;
+                    const set = key === 'destacado' ? setDestacado : key === 'oferta' ? setOferta : key === 'nuevo' ? setNuevo : setMasVendido;
+                    return (
+                    <label key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text-secondary)', padding: '6px 12px', background: state ? 'rgba(244,162,97,0.15)' : 'rgba(255,255,255,0.04)', borderRadius: '8px', border: `1px solid ${state ? 'rgba(244,162,97,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
+                      <input type="checkbox" checked={state} onChange={e => set(e.target.checked)} />
+                      {label}
+                    </label>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -649,16 +690,7 @@ export const AdminCatalogo: React.FC = () => {
 
       {detailProduct && (
         <ProductDetailModal
-          product={{
-            id: detailProduct.ref,
-            nombre: detailProduct.nombre,
-            precio: detailProduct.precio,
-            imagen: detailProduct.imagenPrincipal || detailProduct.imagenes?.[0],
-            categoria: detailProduct.categoria,
-            descripcion: detailProduct.descripcion || detailProduct.descripcionCorta,
-            tallas: detailProduct.tallas,
-            colores: detailProduct.colores,
-          }}
+          product={detailProduct}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

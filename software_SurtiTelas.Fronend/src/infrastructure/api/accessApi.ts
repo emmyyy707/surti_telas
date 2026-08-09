@@ -53,7 +53,7 @@ export function toAccessLog(dto: AccessLogDTO): AccessLog {
 
 export const accessApi = {
   async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<AccessLog[]> {
-    const response = await api.get<{ items: AccessLogDTO[]; meta: Record<string, unknown> }>('/access-logs', { query });
+    const response = await api.get<{ items: AccessLogDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/access-logs', { query });
     const data = response?.items ?? [];
     return data.map(toAccessLog);
   },

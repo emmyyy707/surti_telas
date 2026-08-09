@@ -11,6 +11,7 @@ import { cn } from '@/shared/utils';
 import { authApi, type PermissionDTO } from '@/infrastructure/api/authApi';
 import { MODULOS_SISTEMA } from '@/shared/constants/options';
 import s from './Permisos.module.css';
+import f from '@/styles/Form.module.css';
 
 interface Permiso extends PermissionDTO {
   modulo: string;
@@ -240,26 +241,29 @@ export const AdminPermisos: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitPermiso(e); }}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Código del Permiso</label>
-                    <input type="text" className={s.input} name="code" defaultValue={selectedPermiso?.code} placeholder="ej: catalog:read" />
+              <form className={f.form} ref={formRef} onSubmit={(e) => { e.preventDefault(); void handleSubmitPermiso(e); }}>
+                <div className={f.formSection}>
+                  <h3 className={f.sectionTitle}>Información del permiso</h3>
+                  <div className={f.formRow}>
+                    <div className={f.field}>
+                      <label className={f.label}>Código del Permiso</label>
+                      <input type="text" className={f.input} name="code" defaultValue={selectedPermiso?.code} placeholder="ej: catalog:read" />
+                    </div>
+                    <div className={f.field}>
+                      <label className={f.label}>Módulo</label>
+                      <select className={f.select} name="module" defaultValue={selectedPermiso?.module}>
+                        {MODULOS_SISTEMA.map(modulo => (
+                          <option key={modulo} value={modulo.toLowerCase()}>{modulo}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Módulo</label>
-                    <select className={s.select} name="module" defaultValue={selectedPermiso?.module}>
-                      {MODULOS_SISTEMA.map(modulo => (
-                        <option key={modulo} value={modulo.toLowerCase()}>{modulo}</option>
-                      ))}
-                    </select>
+                  <div className={f.field}>
+                    <label className={f.label}>Descripción</label>
+                    <textarea className={f.textarea} placeholder="Descripción del permiso..." name="description" defaultValue={selectedPermiso?.description} />
                   </div>
                 </div>
-                <div className={s.field}>
-                  <label className={s.label}>Descripción</label>
-                  <textarea className={s.textarea} placeholder="Descripción del permiso..." name="description" defaultValue={selectedPermiso?.description} />
-                </div>
-                 <div className={s.formActions}>
+                 <div className={f.formActions}>
                    <Button variant="secondary" type="button" onClick={handleCloseModal}>
                      Cancelar
                    </Button>

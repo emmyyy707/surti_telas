@@ -7,6 +7,7 @@ import { catalogUseCases } from '../../infrastructure/container/catalogContainer
 import {
   CategorySchema,
   CategoryFiltersSchema,
+  CategoryUpdateSchema,
   ProductFiltersSchema,
   ProductSchema,
   ProductUpdateSchema,
@@ -14,7 +15,18 @@ import {
 import { computeStockStatus } from '../../domain/entities/Product';
 
 export const listProducts = async (req: Request, res: Response) => {
-  const filters = parseDto(ProductFiltersSchema, req.query);
+  console.log('[DEBUG listProducts] req.query:', JSON.stringify(req.query));
+  const raw = req.query;
+  const normalized = {
+    ...raw,
+    marca: raw.marca ? String(raw.marca) : undefined,
+    marcas: Array.isArray(raw.marcas) ? raw.marcas : raw.marcas ? [String(raw.marcas)] : undefined,
+    categoriasEspeciales: Array.isArray(raw.categoriasEspeciales) ? raw.categoriasEspeciales : raw.categoriasEspeciales ? [String(raw.categoriasEspeciales)] : undefined,
+    tallas: Array.isArray(raw.tallas) ? raw.tallas : raw.tallas ? [String(raw.tallas)] : undefined,
+  };
+  console.log('[DEBUG listProducts] normalized:', JSON.stringify(normalized));
+  const filters = parseDto(ProductFiltersSchema, normalized);
+  console.log('[DEBUG listProducts] filters:', JSON.stringify(filters));
   const result = await catalogUseCases.getProducts.execute(filters);
   const response = buildApiPaginatedResponse(
     result.data,
@@ -24,6 +36,11 @@ export const listProducts = async (req: Request, res: Response) => {
     result.meta.nextCursor
   );
   return ok(res, response);
+};
+
+export const listBrands = async (_req: Request, res: Response) => {
+  const brands = await catalogUseCases.getBrands.execute();
+  return ok(res, brands);
 };
 
 export const getProduct = async (req: Request, res: Response) => {
@@ -83,6 +100,30 @@ export const createCategory = async (req: Request, res: Response) => {
   const category = await catalogUseCases.createCategory.execute(input);
   clearCache('/api/v1/catalog/categories');
   return created(res, category, 'Categoría creada');
+};
+
+export const getCategory = async (_req: Request, res: Response) => {
+  const category = await catalogUseCases.getCategoryById.execute(_req.params.id);
+  if (!category) return noContent(res);
+  return ok(res, category);
+};
+
+export const updateCategory = async (req: Request, res: Response) => {
+  const changes = parseDto(CategoryUpdateSchema, req.body);
+  const category = await catalogUseCases.updateCategory.execute(req.params.id, changes);
+  clearCache('/api/v1/catalog/categories');
+  return ok(res, category, 'Categoría actualizada');
+};
+
+export const deleteCategory = async (req: Request, res: Response) => {
+  await catalogUseCases.deleteCategory.execute(req.params.id);
+  clearCache('/api/v1/catalog/categories');
+  return noContent(res);
+};
+
+export const getCategoriesWithLowStock = async (_req: Request, res: Response) => {
+  const categories = await catalogUseCases.getCategoriesWithLowStock.execute();
+  return ok(res, categories);
 };
 
 export const uploadProductImage = async (req: Request & { file?: Express.Multer.File }, res: Response) => {

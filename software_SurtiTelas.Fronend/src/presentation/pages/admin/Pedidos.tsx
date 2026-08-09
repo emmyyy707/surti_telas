@@ -39,6 +39,7 @@ export const AdminPedidos: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
+  const [showEntregados, setShowEntregados] = useState(false);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
@@ -69,7 +70,7 @@ export const AdminPedidos: React.FC = () => {
       setLoading(true);
       try {
         const ordersQuery: Record<string, string | number | boolean | undefined | null> = {
-          page: pagination.page,
+          page: 1,
           limit: pagination.limit,
         };
         if (debouncedSearch.trim()) ordersQuery.search = debouncedSearch.trim();
@@ -85,9 +86,11 @@ export const AdminPedidos: React.FC = () => {
           setClientes(clientesResult.data ?? []);
           setAsesores(asesoresResult.data ?? []);
 
-          const pedidos = (ordersResult.pedidos ?? []).filter((p) => p.estado !== ESTADOS_PEDIDO[4] && p.estado !== ESTADOS_PEDIDO[5]);
+          const ESTADOS_OCULTOS = new Set(showEntregados ? [] : [ESTADOS_PEDIDO[4], ESTADOS_PEDIDO[5]]);
+          const pedidos = (ordersResult.pedidos ?? []).filter((p) => !ESTADOS_OCULTOS.has(p.estado));
           setPageData(pedidos);
           pagination.setTotalRecords(ordersResult.meta.totalRecords);
+          pagination.setPage(1);
 
           if (!asesorId && asesoresResult.data?.length) {
             const adminAsesor = asesoresResult.data.find((u) => u.role === 'ASESOR');
@@ -102,7 +105,7 @@ export const AdminPedidos: React.FC = () => {
     }
     void load();
     return () => { cancelled = true; };
-  }, [asesorId, pagination, debouncedSearch, reloadToken]);
+  }, [asesorId, pagination, debouncedSearch, reloadToken, showEntregados]);
 
   const handlePageChange = useCallback((newPage: number) => {
     pagination.setPage(newPage);
@@ -273,6 +276,10 @@ export const AdminPedidos: React.FC = () => {
           debounceMs={100}
           minChars={0}
         />
+        <label className={s.toggleLabel}>
+          <input type="checkbox" checked={showEntregados} onChange={(e) => setShowEntregados(e.target.checked)} />
+          <span>Ver entregados</span>
+        </label>
       </div>
 
       <div className={s.tableWrapper}>
@@ -349,130 +356,140 @@ export const AdminPedidos: React.FC = () => {
         <form onSubmit={handleSubmit} className={f.form}>
           {formError && <div className={f.formError}>{formError}</div>}
 
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Cliente *</label>
-              <select className={f.select} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
-                <option value="">Selecciona un cliente</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información general</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Cliente *</label>
+                <select className={f.select} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+                  <option value="">Selecciona un cliente</option>
+                  {clientes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Asesor *</label>
+                <select className={f.select} value={asesorId} onChange={(e) => setAsesorId(e.target.value)}>
+                  <option value="">Selecciona un asesor</option>
+                  {asesores.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Fecha *</label>
+                <input className={f.input} type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+              </div>
             </div>
-            <div className={f.field}>
-              <label className={f.label}>Asesor *</label>
-              <select className={f.select} value={asesorId} onChange={(e) => setAsesorId(e.target.value)}>
-                <option value="">Selecciona un asesor</option>
-                {asesores.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Fecha *</label>
-              <input className={f.input} type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Estado *</label>
+                <select className={f.select} value={estado} onChange={(e) => setEstado(e.target.value as Pedido['estado'])}>
+                  {ESTADOS_PEDIDO.map(es => (
+                    <option key={es} value={es}>{es}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label}>Estado *</label>
-            <select className={f.select} value={estado} onChange={(e) => setEstado(e.target.value as Pedido['estado'])}>
-              {ESTADOS_PEDIDO.map(es => (
-                <option key={es} value={es}>{es}</option>
-              ))}
-            </select>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Productos del pedido</h3>
+            <div className={f.field}>
+              <label className={f.label}>Productos del pedido</label>
+              <table className={f.itemsTable}>
+                <thead>
+                  <tr>
+                    <th>Descripción</th>
+                    <th className={f.centerCol}>Cant.</th>
+                    <th className={f.rightCol}>Precio unit.</th>
+                    <th className={f.rightCol}>Subtotal</th>
+                    <th style={{ width: 40 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((it) => {
+                    const sub = it.precio * it.cantidad;
+                    return (
+                      <tr key={it.id}>
+                        <td>
+                          <input
+                            className={f.input}
+                            value={it.nombre}
+                            onChange={(e) => updateFormItem(it.id, 'nombre', e.target.value)}
+                            placeholder="Producto"
+                          />
+                        </td>
+                        <td className={f.centerCol}>
+                          <input
+                            className={f.input}
+                            type="number"
+                            min="1"
+                            value={it.cantidad}
+                            onChange={(e) => updateFormItem(it.id, 'cantidad', Number(e.target.value))}
+                          />
+                        </td>
+                        <td className={f.rightCol}>
+                          <input
+                            className={f.input}
+                            type="number"
+                            min="0"
+                            value={it.precio}
+                            onChange={(e) => updateFormItem(it.id, 'precio', Number(e.target.value))}
+                          />
+                        </td>
+                        <td className={f.rightCol} style={{ fontWeight: 600 }}>
+                          {formatoCOP(sub)}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className={f.removeRowBtn}
+                            onClick={() => removeItem(it.id)}
+                            aria-label="Eliminar producto"
+                            disabled={items.length === 1}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <button type="button" className={f.addRowBtn} onClick={addItem}>
+                <Plus size={14} /> Agregar producto
+              </button>
+            </div>
+            <div className={f.totalsBox}>
+              <div className={f.totalRow}><span>Total de items:</span><span>{totalItems}</span></div>
+              <div className={`${f.totalRow} ${f.totalRowFinal}`}><span>Total pedido:</span><span>{formatoCOP(subtotal)}</span></div>
+            </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label}>Productos del pedido</label>
-            <table className={f.itemsTable}>
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th className={f.centerCol}>Cant.</th>
-                  <th className={f.rightCol}>Precio unit.</th>
-                  <th className={f.rightCol}>Subtotal</th>
-                  <th style={{ width: 40 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((it) => {
-                  const sub = it.precio * it.cantidad;
-                  return (
-                    <tr key={it.id}>
-                      <td>
-                        <input
-                          className={f.input}
-                          value={it.nombre}
-                          onChange={(e) => updateFormItem(it.id, 'nombre', e.target.value)}
-                          placeholder="Producto"
-                        />
-                      </td>
-                      <td className={f.centerCol}>
-                        <input
-                          className={f.input}
-                          type="number"
-                          min="1"
-                          value={it.cantidad}
-                          onChange={(e) => updateFormItem(it.id, 'cantidad', Number(e.target.value))}
-                        />
-                      </td>
-                      <td className={f.rightCol}>
-                        <input
-                          className={f.input}
-                          type="number"
-                          min="0"
-                          value={it.precio}
-                          onChange={(e) => updateFormItem(it.id, 'precio', Number(e.target.value))}
-                        />
-                      </td>
-                      <td className={f.rightCol} style={{ fontWeight: 600 }}>
-                        {formatoCOP(sub)}
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className={f.removeRowBtn}
-                          onClick={() => removeItem(it.id)}
-                          aria-label="Eliminar producto"
-                          disabled={items.length === 1}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <button type="button" className={f.addRowBtn} onClick={addItem}>
-              <Plus size={14} /> Agregar producto
-            </button>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Observaciones</h3>
+            <div className={f.field}>
+              <label className={f.label}>Observaciones</label>
+              <textarea
+                className={f.textarea}
+                value={observaciones}
+                onChange={(e) => setObservaciones(e.target.value)}
+                placeholder="Notas del pedido..."
+                rows={2}
+              />
+            </div>
           </div>
 
-          <div className={f.totalsBox}>
-            <div className={f.totalRow}><span>Total de items:</span><span>{totalItems}</span></div>
-            <div className={`${f.totalRow} ${f.totalRowFinal}`}><span>Total pedido:</span><span>{formatoCOP(subtotal)}</span></div>
+          <div className={f.formActions}>
+            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setEditModalOpen(false); resetForm(); }, disabled: saving }, { label: selectedPedido ? 'Guardar cambios' : 'Crear pedido' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
           </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Observaciones</label>
-            <textarea
-              className={f.textarea}
-              value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
-              placeholder="Notas del pedido..."
-              rows={2}
-            />
-          </div>
-
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setEditModalOpen(false); resetForm(); }, disabled: saving }, { label: selectedPedido ? 'Guardar cambios' : 'Crear pedido' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
-
         </form>
       </Modal>
 

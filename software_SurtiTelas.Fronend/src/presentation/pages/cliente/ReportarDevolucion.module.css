@@ -1,0 +1,16 @@
+.container { max-width: 900px; margin: 0 auto; padding: 24px; }
+.header { margin-bottom: 24px; }
+.title { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 6px; }
+.subtitle { font-size: 0.9rem; color: var(--color-text-muted); margin: 0; }
+.card { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 20px; }
+.form { display: flex; flex-direction: column; gap: 18px; }
+.section { display: flex; flex-direction: column; gap: 12px; }
+.sectionTitle { font-size: 0.85rem; font-weight: 700; color: var(--color-text-primary); margin: 0; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 0.82rem; font-weight: 600; color: var(--color-text-secondary); }
+.input, .select, .textarea { width: 100%; height: 42px; padding: 0 12px; background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text-primary); font-size: 0.88rem; font-family: var(--font-sans); outline: none; transition: var(--transition); }
+.textarea { height: auto; padding: 10px 12px; resize: vertical; }
+.input:focus, .select:focus, .textarea:focus { border-color: var(--color-accent); background: var(--color-bg-surface); }
+.input[readonly] { opacity: 0.85; background: var(--color-bg-surface); }
+.actions { display: flex; justify-content: flex-end; }

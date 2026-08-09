@@ -4,13 +4,14 @@ import { PrismaProductRepository } from '../repositories/PrismaProductRepository
 import {
   CreateProduct,
   DeleteProduct,
+  GetBrands,
   GetProductByRef,
   GetProducts,
   PublishProduct,
   UnpublishProduct,
   UpdateProduct,
 } from '../../application/use-cases/ProductUseCases';
-import { CreateCategory, GetCategories } from '../../application/use-cases/CategoryUseCases';
+import { CreateCategory, GetCategories, GetCategoryById, UpdateCategory, DeleteCategory, GetCategoriesWithLowStock } from '../../application/use-cases/CategoryUseCases';
 
 const productRepository = new PrismaProductRepository(prisma);
 const categoryRepository = new PrismaCategoryRepository(prisma);
@@ -18,6 +19,7 @@ const categoryRepository = new PrismaCategoryRepository(prisma);
 export const catalogUseCases = {
   createProduct: new CreateProduct(productRepository),
   getProducts: new GetProducts(productRepository),
+  getBrands: new GetBrands(productRepository),
   getProductByRef: new GetProductByRef(productRepository),
   updateProduct: new UpdateProduct(productRepository),
   deleteProduct: new DeleteProduct(productRepository),
@@ -25,4 +27,8 @@ export const catalogUseCases = {
   unpublishProduct: new UnpublishProduct(productRepository),
   createCategory: new CreateCategory(categoryRepository),
   getCategories: new GetCategories(categoryRepository),
+  getCategoryById: new GetCategoryById(categoryRepository),
+  updateCategory: new UpdateCategory(categoryRepository),
+  deleteCategory: new DeleteCategory(categoryRepository),
+  getCategoriesWithLowStock: new GetCategoriesWithLowStock(categoryRepository),
 };

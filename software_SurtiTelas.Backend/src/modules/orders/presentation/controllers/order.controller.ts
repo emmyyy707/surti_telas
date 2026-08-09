@@ -122,11 +122,7 @@ export const createOrder = async (req: Request, res: Response) => {
     let asesorId = req.user!.role === 'ASESOR' ? req.user!.id : input.asesorId;
 
     if (!asesorId) {
-      const asesor = await prisma.user.findFirst({
-        where: { role: 'ASESOR', deletedAt: null },
-        select: { id: true },
-      });
-      asesorId = asesor?.id;
+      asesorId = req.user!.id;
     }
 
     if (!asesorId) {

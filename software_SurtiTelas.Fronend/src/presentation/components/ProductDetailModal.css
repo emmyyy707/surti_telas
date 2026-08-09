@@ -1317,63 +1317,261 @@
   line-height: 1.75;
 }
 
+.pd-short-description {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
 /* =========================================================
    SELECTORS
 ========================================================= */
 
 .pd-selector-section {
   margin-bottom: 26px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--pd-surface-2);
+  border: 1px solid var(--pd-border);
+}
+
+.pd-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pd-section-title-row h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pd-text-muted);
+  font-weight: 700;
+}
+
+/* =========================================================
+   PRODUCT META GRID
+========================================================= */
+
+.pd-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.pd-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--pd-surface-2);
+  border: 1px solid var(--pd-border);
+}
+
+.pd-meta-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pd-text-faint);
+  font-weight: 600;
+}
+
+.pd-meta-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--pd-text);
 }
 
 /* =========================================================
    COLORS
 ========================================================= */
 
+.pd-color-selector {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .pd-color-option {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
+  padding: 4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .25s ease, border .25s ease, box-shadow .25s ease;
+}
+
+.pd-color-option:hover {
+  transform: scale(1.08);
+}
+
+.pd-color-option.active {
+  border-color: var(--color-brand-charcoal);
+  box-shadow: 0 0 0 6px rgba(0,0,0,.04);
+}
+
+.pd-color-swatch {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.06);
 }
 
 /* =========================================================
    SIZES
 ========================================================= */
 
-.pd-size-option {
-  width: 74px;
-  height: 62px;
-
-  font-size: 16px;
-
-  border-radius: 18px;
+.pd-size-selector {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-/* =========================================================
-   PURCHASE
-========================================================= */
+.pd-size-option {
+  width: 84px;
+  height: 72px;
+  border-radius: 22px;
+  border: 1px solid #e7e3dd;
+  background: white;
+  color: var(--pd-text);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .25s ease, border .25s ease, background .25s ease;
+}
 
-.pd-bottom-purchase {
-  padding-top: 28px;
+.pd-size-option:hover {
+  transform: translateY(-3px);
+  border-color: var(--pd-accent);
+}
 
-  gap: 18px;
+.pd-size-option.active {
+  background: var(--color-brand-charcoal);
+  border-color: var(--color-brand-charcoal);
+  color: white;
+  box-shadow: 0 12px 24px rgba(0,0,0,.14);
 }
 
 /* =========================================================
    QUANTITY
 ========================================================= */
 
-.pd-quantity-wrapper {
-  height: 72px;
-
-  border-radius: 22px;
+.pd-quantity-input-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 18px;
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-border);
 }
 
-.pd-quantity-btn {
-  width: 42px;
-  height: 42px;
+.pd-quantity-input-row .pd-quantity-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: var(--pd-text);
+  font-size: 18px;
+  cursor: pointer;
+  transition: .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.pd-quantity-value {
-  font-size: 20px;
+.pd-quantity-input-row .pd-quantity-btn:hover:not(:disabled) {
+  background: rgba(0,0,0,.05);
+}
+
+.pd-quantity-input-row .pd-quantity-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pd-quantity-input {
+  width: 72px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--pd-text);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px 4px;
+  border-radius: 12px;
+}
+
+.pd-quantity-input::-webkit-outer-spin-button,
+.pd-quantity-input::-webkit-inner-spin-button {
+  opacity: 1;
+  height: 28px;
+}
+
+/* =========================================================
+   VARIANT ROWS
+========================================================= */
+
+.pd-variant-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pd-variant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-border);
+}
+
+.pd-variant-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pd-color-swatch-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.08);
+  flex-shrink: 0;
+}
+
+.pd-variant-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pd-variant-controls .pd-quantity-input {
+  width: 64px;
+}
+
+.pd-selected-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--pd-surface-3);
+  border: 1px solid var(--pd-border);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--pd-text);
 }
 
 /* =========================================================
@@ -1410,6 +1608,118 @@
   padding: 18px;
 
   border-radius: 20px;
+}
+
+/* =========================================================
+   IMPROVED SECTION DESIGN
+========================================================= */
+
+.ppd-section {
+  margin-bottom: 22px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--pd-surface-2);
+  border: 1px solid var(--pd-border);
+}
+
+.ppd-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ppd-section-title h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pd-text-muted);
+  font-weight: 700;
+}
+
+.ppd-quantity-input {
+  width: 100%;
+  max-width: 320px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--pd-border);
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font-size: 16px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ppd-quantity-input:focus {
+  border-color: var(--pd-accent);
+  box-shadow: 0 0 0 3px rgba(181, 173, 161, 0.15);
+}
+
+.ppd-variant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-border);
+  margin-top: 10px;
+}
+
+.ppd-variant-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ppd-color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.08);
+  flex-shrink: 0;
+}
+
+.ppd-variant-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ppd-variant-controls input {
+  width: 72px;
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1px solid var(--pd-border);
+  background: var(--pd-surface-2);
+  color: var(--pd-text);
+  font-size: 16px;
+  font-weight: 800;
+  outline: none;
+}
+
+.ppd-variant-controls input:focus {
+  border-color: var(--pd-accent);
+  box-shadow: 0 0 0 3px rgba(181, 173, 161, 0.15);
+}
+
+.ppd-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pd-surface-3);
+  border: 1px solid var(--pd-border);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--pd-text);
 }
 
 /* =========================================================

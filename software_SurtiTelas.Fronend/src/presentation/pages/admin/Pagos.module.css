@@ -478,65 +478,6 @@
   font-weight: 700;
 }
 
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.fieldFull {
-  grid-column: 1 / -1;
-}
-
-.label {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-.input {
-  height: 38px;
-  padding: 0 12px;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-primary);
-  font-size: 0.88rem;
-  font-family: var(--font-sans);
-  outline: none;
-  transition: var(--transition);
-  width: 100%;
-}
-
-.input:focus {
-  border-color: var(--color-accent);
-  background: var(--color-bg-surface);
-}
-
-.input:readOnly {
-  opacity: 0.8;
-  cursor: not-allowed;
-}
-
-select.input {
-  cursor: pointer;
-}
-
-.formActions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-
-
 .deliveredSection {
   margin-top: 32px;
   padding: 20px;

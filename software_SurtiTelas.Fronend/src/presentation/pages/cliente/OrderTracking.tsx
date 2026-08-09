@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowLeft, Package, Calendar, Factory, Hash, AlertTriangle, Truck, CheckCircle2, ClipboardCheck, User, Phone, MessageSquare, ShieldCheck } from 'lucide-react';
 import s from './OrderTracking.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
@@ -321,42 +322,45 @@ export const OrderTracking: React.FC = () => {
       </Modal>
 
       <Modal open={supportOpen} onClose={() => setSupportOpen(false)} title="Reportar Novedad / Soporte" size="md">
-        <div className={s.supportForm}>
-          <label className={s.field}>
-            <span>Tipo de novedad</span>
-            <select value={supportForm.tipo} onChange={(e) => setSupportForm({ ...supportForm, tipo: e.target.value })}>
-              <option value="Entrega">Entrega</option>
-              <option value="Producto">Producto / Prendas</option>
-              <option value="Facturación">Facturación</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </label>
-          <label className={s.field}>
-            <span>Descripción del problema</span>
-            <textarea
-              className={s.textarea}
-              placeholder="Ej: El pedido llegó con una referencia diferente..."
-              value={supportForm.detalle}
-              onChange={(e) => setSupportForm({ ...supportForm, detalle: e.target.value })}
-            />
-          </label>
-          <label className={s.field}>
-            <span>Teléfono o correo de contacto</span>
-            <input
-              className={s.input}
-              placeholder="310 234 5678"
-              value={supportForm.contacto}
-              onChange={(e) => setSupportForm({ ...supportForm, contacto: e.target.value })}
-            />
-          </label>
-        </div>
-        <div className={s.modalActions}>
-          <Button variant="secondary" onClick={() => setSupportOpen(false)}>Cancelar</Button>
-          <Button onClick={submitSupport}>
-            <MessageSquare size={14} />
-            Enviar reporte
-          </Button>
-        </div>
+        <form className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Reporte</h3>
+            <div className={f.field}>
+              <label className={f.label}>Tipo de novedad</label>
+              <select value={supportForm.tipo} onChange={(e) => setSupportForm({ ...supportForm, tipo: e.target.value })}>
+                <option value="Entrega">Entrega</option>
+                <option value="Producto">Producto / Prendas</option>
+                <option value="Facturación">Facturación</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Descripción del problema</label>
+              <textarea
+                className={f.textarea}
+                placeholder="Ej: El pedido llegó con una referencia diferente..."
+                value={supportForm.detalle}
+                onChange={(e) => setSupportForm({ ...supportForm, detalle: e.target.value })}
+              />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Teléfono o correo de contacto</label>
+              <input
+                className={f.input}
+                placeholder="310 234 5678"
+                value={supportForm.contacto}
+                onChange={(e) => setSupportForm({ ...supportForm, contacto: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className={f.formActions}>
+            <Button variant="secondary" onClick={() => setSupportOpen(false)}>Cancelar</Button>
+            <Button onClick={submitSupport}>
+              <MessageSquare size={14} />
+              Enviar reporte
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

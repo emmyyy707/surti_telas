@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Eye, EyeOff, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './Catalogo.module.css';
+import f from '@/styles/Form.module.css';
 import { DataTable, DataTableColumn } from '@/shared/ui/DataTable';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
@@ -320,56 +321,65 @@ export const AsesorCatalogo: React.FC = () => {
             </div>
           )}
 
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Nombre del Producto *</label>
-              <input type="text" value={form.nombre} onChange={(e) => updateForm({ nombre: e.target.value })} placeholder="Ej: Camiseta Oversize Premium" />
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información básica</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label>Nombre del Producto *</label>
+                <input type="text" value={form.nombre} onChange={(e) => updateForm({ nombre: e.target.value })} placeholder="Ej: Camiseta Oversize Premium" />
+              </div>
+              <div className={f.field}>
+                <label>Categoría *</label>
+                <input type="text" value={form.categoria || ''} onChange={(e) => updateForm({ categoria: e.target.value })} placeholder="Ej: Camisetas" />
+              </div>
             </div>
-            <div className={s.formGroup}>
-              <label>Categoría *</label>
-              <input type="text" value={form.categoria || ''} onChange={(e) => updateForm({ categoria: e.target.value })} placeholder="Ej: Camisetas" />
+
+            <div className={f.field}>
+              <label>Descripción</label>
+              <textarea value={form.descripcion || ''} onChange={(e) => updateForm({ descripcion: e.target.value })} placeholder="Añade detalles..." rows={3} />
             </div>
           </div>
 
-          <div className={s.formGroup}>
-            <label>Descripción</label>
-            <textarea value={form.descripcion || ''} onChange={(e) => updateForm({ descripcion: e.target.value })} placeholder="Añade detalles..." rows={3} />
-          </div>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Precio y atributos</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label>Precio ($) *</label>
+                <input type="number" min="1" value={form.precio} onChange={(e) => updateForm({ precio: Number(e.target.value) })} placeholder="Precio base" />
+              </div>
+              <div className={f.field}>
+                <label>Calificación (rating)</label>
+                <input type="number" min="0" max="5" step="0.1" value={form.rating ?? ''} onChange={(e) => updateForm({ rating: e.target.value ? Number(e.target.value) : undefined })} placeholder="0 - 5" />
+              </div>
+            </div>
 
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Precio ($) *</label>
-              <input type="number" min="1" value={form.precio} onChange={(e) => updateForm({ precio: Number(e.target.value) })} placeholder="Precio base" />
-            </div>
-            <div className={s.formGroup}>
-              <label>Calificación (rating)</label>
-              <input type="number" min="0" max="5" step="0.1" value={form.rating ?? ''} onChange={(e) => updateForm({ rating: e.target.value ? Number(e.target.value) : undefined })} placeholder="0 - 5" />
-            </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Colores Disponibles</label>
-              <input type="text" value={(form.colores || []).join(', ')} onChange={(e) => updateForm({ colores: e.target.value.split(',').map(c => c.trim()).filter(Boolean) })} placeholder="Ej: Azul, Blanco, Verde" />
-            </div>
-            <div className={s.formGroup}>
-              <label>Tallas Disponibles</label>
-              <input type="text" value={(form.tallas || []).join(', ')} onChange={(e) => updateForm({ tallas: e.target.value.split(',').map(t => t.trim().toUpperCase()).filter(Boolean) })} placeholder="Ej: S, M, L, XL" />
-            </div>
-          </div>
-
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label>Imagen del Producto (URL) *</label>
-              <input type="text" value={form.imagen || ''} onChange={(e) => updateForm({ imagen: e.target.value })} placeholder="https://..." />
-            </div>
-            <div className={s.formGroup}>
-              <label>Reseñas (reviews)</label>
-              <input type="number" min="0" value={form.reviews ?? ''} onChange={(e) => updateForm({ reviews: e.target.value ? Number(e.target.value) : undefined })} placeholder="0" />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label>Colores Disponibles</label>
+                <input type="text" value={(form.colores || []).join(', ')} onChange={(e) => updateForm({ colores: e.target.value.split(',').map(c => c.trim()).filter(Boolean) })} placeholder="Ej: Azul, Blanco, Verde" />
+              </div>
+              <div className={f.field}>
+                <label>Tallas Disponibles</label>
+                <input type="text" value={(form.tallas || []).join(', ')} onChange={(e) => updateForm({ tallas: e.target.value.split(',').map(t => t.trim().toUpperCase()).filter(Boolean) })} placeholder="Ej: S, M, L, XL" />
+              </div>
             </div>
           </div>
 
-          <div className={s.modalActions}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Imagen y reseñas</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label>Imagen del Producto (URL) *</label>
+                <input type="text" value={form.imagen || ''} onChange={(e) => updateForm({ imagen: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className={f.field}>
+                <label>Reseñas (reviews)</label>
+                <input type="number" min="0" value={form.reviews ?? ''} onChange={(e) => updateForm({ reviews: e.target.value ? Number(e.target.value) : undefined })} placeholder="0" />
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formActions}>
             <Button type="button" variant="secondary" onClick={resetForm} disabled={saving}>Cancelar</Button>
             <Button type="submit" loading={saving}>{editingRef ? 'Guardar Cambios' : 'Crear Producto (Borrador)'}</Button>
           </div>
@@ -411,16 +421,7 @@ export const AsesorCatalogo: React.FC = () => {
 
       {detailProduct && (
         <ProductDetailModal
-          product={{
-            id: detailProduct.ref,
-            nombre: detailProduct.nombre,
-            precio: detailProduct.precio,
-            imagen: detailProduct.imagenPrincipal || detailProduct.imagenes?.[0],
-            categoria: detailProduct.categoria,
-            descripcion: detailProduct.descripcion || detailProduct.descripcionCorta,
-            tallas: detailProduct.tallas,
-            colores: detailProduct.colores,
-          }}
+          product={detailProduct}
           isOpen={isDetailOpen}
           onClose={() => setIsDetailOpen(false)}
         />

@@ -551,13 +551,6 @@
   padding-top: 4px;
 }
 
-.formActions {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 24px;
-}
-
 .detailModalContent {
   display: flex;
   flex-direction: column;

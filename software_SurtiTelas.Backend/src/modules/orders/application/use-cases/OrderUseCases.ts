@@ -33,6 +33,7 @@ export class CreateOrder {
 
   async execute(input: CreateOrderInput, requestId?: string, user?: { id: string; email: string; nombre?: string; role?: string }) {
     let customerId = input.clienteId;
+    let asesorId = input.asesorId;
 
     if (user?.role === 'CLIENTE' && user?.email) {
       const customer = await this.customerRepo.getByEmail(user.email);
@@ -139,11 +140,23 @@ export class CreateOrder {
       }
     }
 
-    if (!customerId) {
-      throw new NotFoundError('Cliente no encontrado');
+    if (!asesorId) {
+      const asesor = await this.prisma.user.findFirst({
+        where: { role: 'ASESOR', deletedAt: null },
+        select: { id: true },
+      });
+      asesorId = asesor?.id ?? undefined;
+    }
+
+    if (!asesorId) {
+      throw new BadRequestError('Se requiere asesorId para crear el pedido');
     }
 
     console.log('CREATE_ORDER_CUSTOMER_ID', JSON.stringify({ customerId, inputClienteId: input.clienteId, userEmail: user?.email, userRole: user?.role }));
+
+    if (!customerId) {
+      throw new BadRequestError('Se requiere clienteId para crear el pedido');
+    }
 
     const customer = await this.customerRepo.getById(customerId);
     if (!customer) throw new NotFoundError('Cliente no encontrado');
@@ -155,9 +168,6 @@ export class CreateOrder {
     try {
       const itemsList = input.itemsList ?? [];
       const total = itemsList.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-      if (!customer.isTrustedCustomer && !customer.tieneCupoDisponible(total)) {
-        throw new BadRequestError('El cliente no tiene cupo disponible para este pedido');
-      }
 
       const stockItems: { productId: string; productRef: string; cantidad: number }[] = [];
       const productUpdates: { ref: string; cantidadStock: number; stockStatus: StockStatus }[] = [];
@@ -178,7 +188,7 @@ export class CreateOrder {
         const order = await this.repo.create({
           ...input,
           clienteId: customerId,
-          asesorId: input.asesorId ?? '',
+          asesorId: asesorId ?? undefined,
         });
         await tx.customer.update({
           where: { id: customer.id! },
@@ -195,13 +205,15 @@ export class CreateOrder {
 
         for (const item of itemsList) {
           if (item.productId) {
+            const product = await tx.product.findUnique({ where: { id: item.productId } });
+            if (!product) continue;
             await tx.inventoryMovement.create({
               data: {
                 tipo: 'SALIDA',
-                productId: item.productId,
+                productId: product.id,
                 cantidad: item.cantidad,
                 motivo: `Pedido ${order.numero || order.id}`,
-                usuarioId: input.asesorId ?? requestId ?? '',
+                usuarioId: asesorId || user?.id!,
               },
             });
           }

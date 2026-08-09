@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Clock, Factory, TrendingUp, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './SeguimientoProduccion.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
+import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
@@ -504,55 +506,59 @@ export const AdminSeguimientoProduccion: React.FC = () => {
         size="lg"
         variant="form"
       >
-        <form id="editOrdenForm" className={s.form} onSubmit={handleEditSubmit}>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Referencia</label>
-              <input
-                type="text"
-                className={s.input}
-                value={editReferencia}
-                onChange={e => setEditReferencia(e.target.value)}
-                required
-              />
+        <form id="editOrdenForm" className={f.form} onSubmit={handleEditSubmit}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Datos de la orden</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Referencia</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={editReferencia}
+                  onChange={e => setEditReferencia(e.target.value)}
+                  required
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Cantidad</label>
+                <input
+                  type="number"
+                  className={f.input}
+                  value={editCantidad}
+                  onChange={e => setEditCantidad(e.target.value)}
+                  required
+                  min="1"
+                />
+              </div>
             </div>
-            <div className={s.field}>
-              <label className={s.label}>Cantidad</label>
-              <input
-                type="number"
-                className={s.input}
-                value={editCantidad}
-                onChange={e => setEditCantidad(e.target.value)}
-                required
-                min="1"
-              />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Fecha límite</label>
+                <input
+                  type="date"
+                  className={f.input}
+                  value={editFecha}
+                  onChange={e => setEditFecha(e.target.value)}
+                  required
+                />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Observaciones</label>
+                <input
+                  type="text"
+                  className={f.input}
+                  value={editNotas}
+                  onChange={e => setEditNotas(e.target.value)}
+                  placeholder="Opcional"
+                />
+              </div>
             </div>
           </div>
-          <div className={s.formRow}>
-            <div className={s.field}>
-              <label className={s.label}>Fecha límite</label>
-              <input
-                type="date"
-                className={s.input}
-                value={editFecha}
-                onChange={e => setEditFecha(e.target.value)}
-                required
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Observaciones</label>
-              <input
-                type="text"
-                className={s.input}
-                value={editNotas}
-                onChange={e => setEditNotas(e.target.value)}
-                placeholder="Opcional"
-              />
-            </div>
+          <div className={f.formActions}>
+            <Button variant="secondary" onClick={() => { setEditModalOpen(false); setEditingId(null); }}>Cancelar</Button>
+            <Button type="submit" loading={saving}>Guardar cambios</Button>
           </div>
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: () => { setEditModalOpen(false); setEditingId(null); }, disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , type: 'submit', disabled: saving }]} />
-
         </form>
       </Modal>
 

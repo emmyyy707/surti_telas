@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import s from './PerfilCliente.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
@@ -395,32 +396,37 @@ export const PerfilCliente: React.FC = () => {
       </div>
 
       <Modal open={direccionModal.open} onClose={() => setDireccionModal({ open: false, mode: 'crear' })} title={direccionModal.mode === 'editar' ? 'Editar dirección' : 'Nueva dirección'} size="md">
-        <div className="grid gap-4">
-          <div className={s.field}>
-            <label className={s.label}>Label</label>
-            <input className={s.input} value={direccionDraft.label} onChange={e => setDireccionDraft(prev => ({ ...prev, label: e.target.value }))} />
+        <form className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Dirección</h3>
+            <div className={f.field}>
+              <label className={f.label}>Label</label>
+              <input className={f.input} value={direccionDraft.label} onChange={e => setDireccionDraft(prev => ({ ...prev, label: e.target.value }))} />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Dirección</label>
+              <input className={f.input} value={direccionDraft.texto} onChange={e => setDireccionDraft(prev => ({ ...prev, texto: e.target.value }))} />
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Ciudad</label>
+                <input className={f.input} value={direccionDraft.ciudad} onChange={e => setDireccionDraft(prev => ({ ...prev, ciudad: e.target.value }))} />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Barrio</label>
+                <input className={f.input} value={direccionDraft.barrio} onChange={e => setDireccionDraft(prev => ({ ...prev, barrio: e.target.value }))} />
+              </div>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Indicaciones</label>
+              <textarea className={f.textarea} value={direccionDraft.indicaciones} onChange={e => setDireccionDraft(prev => ({ ...prev, indicaciones: e.target.value }))} />
+            </div>
           </div>
-          <div className={s.field}>
-            <label className={s.label}>Dirección</label>
-            <input className={s.input} value={direccionDraft.texto} onChange={e => setDireccionDraft(prev => ({ ...prev, texto: e.target.value }))} />
-          </div>
-          <div className={s.field}>
-            <label className={s.label}>Ciudad</label>
-            <input className={s.input} value={direccionDraft.ciudad} onChange={e => setDireccionDraft(prev => ({ ...prev, ciudad: e.target.value }))} />
-          </div>
-          <div className={s.field}>
-            <label className={s.label}>Barrio</label>
-            <input className={s.input} value={direccionDraft.barrio} onChange={e => setDireccionDraft(prev => ({ ...prev, barrio: e.target.value }))} />
-          </div>
-          <div className={s.field}>
-            <label className={s.label}>Indicaciones</label>
-            <textarea className={s.textarea} value={direccionDraft.indicaciones} onChange={e => setDireccionDraft(prev => ({ ...prev, indicaciones: e.target.value }))} />
-          </div>
-          <div className="flex justify-end gap-3">
+          <div className={f.formActions}>
             <Button variant="secondary" onClick={() => setDireccionModal({ open: false, mode: 'crear' })}>Cancelar</Button>
             <Button onClick={guardarDireccion}>Guardar</Button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       <ConfirmationModal

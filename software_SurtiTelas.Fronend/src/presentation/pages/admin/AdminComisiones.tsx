@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, User } from 'lucide-react';
 import s from './AdminComisiones.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -205,43 +206,49 @@ export const AdminComisiones: React.FC = () => {
       />
 
       <Modal open={modalOpen} onClose={closeModal} title={editingItem ? 'Editar comisión' : 'Nueva comisión'}>
-        <form onSubmit={handleSubmit}>
-          <div className={s.formGroup}>
-            <label className={s.label}>Asesor</label>
-            <select className={s.select} value={formAsesorId} onChange={e => setFormAsesorId(e.target.value)} required>
-              <option value="">Selecciona un asesor</option>
-              {usuarios.map(u => (
-                <option key={u.id} value={u.id}>{u.nombre}</option>
-              ))}
-            </select>
-          </div>
-          <div className={s.formRow}>
-            <div className={s.formGroup}>
-              <label className={s.label}>Monto</label>
-              <input className={s.input} type="number" value={formMonto} onChange={e => setFormMonto(e.target.value)} required min="0" step="0.01" />
+        <form onSubmit={handleSubmit} className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información de la comisión</h3>
+            <div className={f.field}>
+              <label className={f.label}>Asesor</label>
+              <select className={f.select} value={formAsesorId} onChange={e => setFormAsesorId(e.target.value)} required>
+                <option value="">Selecciona un asesor</option>
+                {usuarios.map(u => (
+                  <option key={u.id} value={u.id}>{u.nombre}</option>
+                ))}
+              </select>
             </div>
-            <div className={s.formGroup}>
-              <label className={s.label}>Porcentaje (%)</label>
-              <input className={s.input} type="number" value={formPorcentaje} onChange={e => setFormPorcentaje(e.target.value)} required min="0" max="100" step="0.01" />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Monto</label>
+                <input className={f.input} type="number" value={formMonto} onChange={e => setFormMonto(e.target.value)} required min="0" step="0.01" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Porcentaje (%)</label>
+                <input className={f.input} type="number" value={formPorcentaje} onChange={e => setFormPorcentaje(e.target.value)} required min="0" max="100" step="0.01" />
+              </div>
             </div>
           </div>
-          <div className={s.formGroup}>
-            <label className={s.label}>Estado</label>
-            <select className={s.select} value={formEstado} onChange={e => setFormEstado(e.target.value as Commission['estado'])}>
-              {ESTADO_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Estado y notas</h3>
+            <div className={f.field}>
+              <label className={f.label}>Estado</label>
+              <select className={f.select} value={formEstado} onChange={e => setFormEstado(e.target.value as Commission['estado'])}>
+                {ESTADO_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Notas</label>
+              <textarea className={f.textarea} value={formNotas} onChange={e => setFormNotas(e.target.value)} rows={2} />
+            </div>
           </div>
-          <div className={s.formGroup}>
-            <label className={s.label}>Notas</label>
-            <textarea className={s.textarea} value={formNotas} onChange={e => setFormNotas(e.target.value)} rows={2} />
-          </div>
+
           <ModalFooter
-            actions={[
-              { label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving },
-              { label: editingItem ? 'Guardar' : 'Crear', type: 'submit', loading: saving },
-            ]}
+            secondary={{ label: 'Cancelar', onClick: closeModal, disabled: saving }}
+            primary={{ label: editingItem ? 'Guardar cambios' : 'Crear comisión', type: 'submit', loading: saving }}
           />
         </form>
       </Modal>

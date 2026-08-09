@@ -111,10 +111,13 @@ const CheckoutPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const itemsList: PedidoItem[] = items.map((item) => ({
+        productId: item.productId || undefined,
         nombre: item.nombre,
         precio: item.precio,
         cantidad: item.quantity,
       }));
+
+      const validItemsList = itemsList.filter(it => it.nombre.trim() && it.cantidad > 0 && it.precio >= 0);
 
       const observaciones = [
         `Banco: ${appContent.checkout.bankingKey.bankName}`,
@@ -127,10 +130,12 @@ const CheckoutPage: React.FC = () => {
         .filter(Boolean)
         .join(' | ');
 
+      const validItemsList = itemsList.filter(it => it.nombre.trim() && it.cantidad > 0 && it.precio >= 0);
+
       const createInput = {
         clienteId: clienteActual?.id,
         asesorId: clienteActual?.asesorId,
-        itemsList,
+        itemsList: validItemsList,
         prioridad: undefined,
         observaciones,
         paymentMethod: paymentType === 'installments' ? 'OTHER' : 'TRANSFER',

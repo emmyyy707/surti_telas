@@ -19,13 +19,14 @@ interface FilterDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyFilters: (filters: FilterState) => void;
+  onResetFilters?: () => void;
   currentFilters?: FilterState; // Opcional: Para no perder los filtros ya aplicados al reabrir
+  brandOptions?: string[]; // Opcional: marcas dinámicas desde el catálogo
 }
 
 // Configuración de secciones para renderizado dinámico e inteligente
 const FILTER_SECTIONS = [
   { id: 'tallas', title: 'Tallas', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
-  { id: 'marcas', title: 'Marcas', options: ['Nike', 'Puma', 'Adidas', 'Reebok', 'Under Armour'] },
   { id: 'categoriasEspeciales', title: 'Categorías Especiales', options: ['Pantaloneta Burda Bordada', 'Oversize Alta', 'Burda Bordada', 'Telas Frás', 'Blusas Cortas'] }
 ] as const;
 
@@ -39,7 +40,9 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
   isOpen, 
   onClose, 
   onApplyFilters, 
-  currentFilters 
+  onResetFilters,
+  currentFilters,
+  brandOptions,
 }) => {
   // 1. Estado unificado (Simplifica el reset y el manejo de datos)
   const [filters, setFilters] = useState<FilterState>(INITIAL_STATE);
@@ -68,6 +71,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
 
   const handleReset = () => {
     setFilters(INITIAL_STATE);
+    onResetFilters?.();
   };
 
   if (!isOpen) return null;
@@ -109,6 +113,25 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
               </div>
             </div>
           ))}
+          {brandOptions && brandOptions.length > 0 && (
+            <div className="filter-section" key="marcas">
+              <h4>Marcas</h4>
+              <div className="filter-options-grid marcas-grid">
+                {brandOptions.map(option => {
+                  const isActive = filters.marcas.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      className={`filter-option-btn marca-pill ${isActive ? 'active' : ''}`}
+                      onClick={() => toggleSelection('marcas', option)}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="filter-drawer-footer">

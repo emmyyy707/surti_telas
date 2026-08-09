@@ -315,20 +315,32 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 20px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-elevated, #f8fafc);
 }
 
 .formSectionTitle {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--color-text-primary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formRowSingle {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
@@ -346,7 +358,7 @@
 
 .input,
 .select {
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-surface, #ffffff);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
@@ -366,8 +378,7 @@
 .input:focus,
 .select:focus {
   border-color: var(--color-accent);
-  background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.1);
+  box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.12);
 }
 
 .inputError {
@@ -375,7 +386,7 @@
 }
 
 .inputError:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
 .errorText {
@@ -439,58 +450,6 @@
   justify-content: center;
   gap: 10px;
   margin-top: 8px;
-}
-
-.detailModalContent {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.detailSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detailSectionTitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0 0 8px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-}
-
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.detailLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.modalActions {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
 }
 
 @media (max-width: 768px) {

@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, FolderTree, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
@@ -45,6 +45,7 @@ const adminMenu: SidebarItem[] = [
     key: 'inventario',
     subItems: [
       { icon: PackageOpen, label: adminContent.layout.menu.inventario.productos.label, key: 'productos' },
+      { icon: FolderTree, label: adminContent.layout.menu.inventario.categorias.label, key: 'categorias' },
       { icon: Boxes, label: adminContent.layout.menu.inventario.insumos.label, key: 'insumos' },
       { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
       { icon: AlertTriangle, label: adminContent.layout.menu.inventario.alertasStock.label, key: 'alertas-stock' },

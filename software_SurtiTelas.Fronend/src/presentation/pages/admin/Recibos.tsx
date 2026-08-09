@@ -520,87 +520,95 @@ export const AdminRecibos: React.FC = () => {
         <form onSubmit={handleSubmit} className={f.form}>
           {formError && <div className={f.formError}>{formError}</div>}
 
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Cliente *</label>
-              <input className={f.input} value={cliente} onChange={e => setCliente(e.target.value)} placeholder="Ej: Tienda La Esquina" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>NIT *</label>
-              <input className={f.input} value={nitCliente} onChange={e => setNitCliente(e.target.value)} placeholder="Ej: 900123456-1" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Vendedor</label>
-              <input className={f.input} value={vendedor} onChange={e => setVendedor(e.target.value)} placeholder="Ej: Juan Pérez" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Método de pago</label>
-              <select className={f.select} value={metodoPago} onChange={e => setMetodoPago(e.target.value as NonNullable<Recibo['metodoPago']>)}>
-                <option value="">Sin especificar</option>
-                {metodosPago.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información general</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Cliente *</label>
+                <input className={f.input} value={cliente} onChange={e => setCliente(e.target.value)} placeholder="Ej: Tienda La Esquina" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>NIT *</label>
+                <input className={f.input} value={nitCliente} onChange={e => setNitCliente(e.target.value)} placeholder="Ej: 900123456-1" />
+              </div>
             </div>
           </div>
 
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Fecha de emisión *</label>
-              <input className={f.input} type="date" value={fechaEmision} onChange={e => setFechaEmision(e.target.value)} />
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Detalles del recibo</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Vendedor</label>
+                <input className={f.input} value={vendedor} onChange={e => setVendedor(e.target.value)} placeholder="Ej: Juan Pérez" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Método de pago</label>
+                <select className={f.select} value={metodoPago} onChange={e => setMetodoPago(e.target.value as NonNullable<Recibo['metodoPago']>)}>
+                  <option value="">Sin especificar</option>
+                  {metodosPago.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
             </div>
-            <div className={f.field}>
-              <label className={f.label}>Fecha de vencimiento</label>
-              <input className={f.input} type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} />
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Fecha de emisión *</label>
+                <input className={f.input} type="date" value={fechaEmision} onChange={e => setFechaEmision(e.target.value)} />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Fecha de vencimiento</label>
+                <input className={f.input} type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} />
+              </div>
             </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label}>Artículos del recibo</label>
-            <table className={f.itemsTable}>
-              <thead>
-                <tr>
-                  <th>Descripción</th>
-                  <th className={f.centerCol}>Cant.</th>
-                  <th className={f.rightCol}>Precio unit.</th>
-                  <th className={f.rightCol}>Total</th>
-                  <th style={{ width: 40 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map(it => {
-                  const tot = (Number(it.cantidad) || 0) * (Number(it.precioUnitario) || 0);
-                  return (
-                    <tr key={it.id}>
-                      <td><input className={f.input} value={it.descripcion} onChange={e => updateItem(it.id, 'descripcion', e.target.value)} placeholder="Descripción del artículo" /></td>
-                      <td className={f.centerCol}><input className={f.input} type="number" min="1" value={it.cantidad} onChange={e => updateItem(it.id, 'cantidad', e.target.value)} /></td>
-                      <td className={f.rightCol}><input className={f.input} type="number" min="0" value={it.precioUnitario} onChange={e => updateItem(it.id, 'precioUnitario', e.target.value)} /></td>
-                      <td className={f.rightCol} style={{ fontWeight: 600 }}>{formatCurrency(tot)}</td>
-                      <td>
-                        <button type="button" className={f.removeRowBtn} onClick={() => removeItem(it.id)} aria-label="Eliminar artículo" disabled={items.length === 1}>
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <button type="button" className={f.addRowBtn} onClick={addItem}>
-              <Plus size={14} /> Agregar artículo
-            </button>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Artículos del recibo</h3>
+            <div className={f.field}>
+              <label className={f.label}>Artículos del recibo</label>
+              <table className={f.itemsTable}>
+                <thead>
+                  <tr>
+                    <th>Descripción</th>
+                    <th className={f.centerCol}>Cant.</th>
+                    <th className={f.rightCol}>Precio unit.</th>
+                    <th className={f.rightCol}>Total</th>
+                    <th style={{ width: 40 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map(it => {
+                    const tot = (Number(it.cantidad) || 0) * (Number(it.precioUnitario) || 0);
+                    return (
+                      <tr key={it.id}>
+                        <td><input className={f.input} value={it.descripcion} onChange={e => updateItem(it.id, 'descripcion', e.target.value)} placeholder="Descripción del artículo" /></td>
+                        <td className={f.centerCol}><input className={f.input} type="number" min="1" value={it.cantidad} onChange={e => updateItem(it.id, 'cantidad', e.target.value)} /></td>
+                        <td className={f.rightCol}><input className={f.input} type="number" min="0" value={it.precioUnitario} onChange={e => updateItem(it.id, 'precioUnitario', e.target.value)} /></td>
+                        <td className={f.rightCol} style={{ fontWeight: 600 }}>{formatCurrency(tot)}</td>
+                        <td>
+                          <button type="button" className={f.removeRowBtn} onClick={() => removeItem(it.id)} aria-label="Eliminar artículo" disabled={items.length === 1}>
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <button type="button" className={f.addRowBtn} onClick={addItem}>
+                <Plus size={14} /> Agregar artículo
+              </button>
+            </div>
+            <div className={f.totalsBox}>
+              <div className={f.totalRow}><span>Subtotal:</span><span>{formatCurrency(subtotal)}</span></div>
+              <div className={f.totalRow}><span>IVA (19%):</span><span>{formatCurrency(iva)}</span></div>
+              <div className={`${f.totalRow} ${f.totalRowFinal}`}><span>Total:</span><span>{formatCurrency(total)}</span></div>
+            </div>
           </div>
 
-          <div className={f.totalsBox}>
-            <div className={f.totalRow}><span>Subtotal:</span><span>{formatCurrency(subtotal)}</span></div>
-            <div className={f.totalRow}><span>IVA (19%):</span><span>{formatCurrency(iva)}</span></div>
-            <div className={`${f.totalRow} ${s.totalRowFinal}`}><span>Total:</span><span>{formatCurrency(total)}</span></div>
+          <div className={f.formActions}>
+            <ModalFooter
+              actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingId ? 'Guardar cambios' : 'Crear recibo' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
           </div>
-
-          <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingId ? 'Guardar cambios' : 'Crear recibo' , type: 'submit', loading: saving, leftIcon: <Save size={16} /> }]} />
-
         </form>
       </Modal>
 

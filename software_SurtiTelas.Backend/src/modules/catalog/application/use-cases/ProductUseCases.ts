@@ -29,6 +29,13 @@ export class GetProducts {
   }
 }
 
+export class GetBrands {
+  constructor(private readonly repo: ProductRepository) {}
+  execute() {
+    return this.repo.getBrands();
+  }
+}
+
 export class GetProductByRef {
   constructor(private readonly repo: ProductRepository) {}
   async execute(ref: string) {

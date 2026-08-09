@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Plus, Edit, Trash2, ToggleLeft, Loader2 } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './GestionAcceso.module.css';
+import f from '@/styles/Form.module.css';
 import { Button } from '../../../shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '../../../shared/ui/DataTable';
 import { accessApi, type AccessLog } from '@/infrastructure/api/accessApi';
@@ -227,48 +228,51 @@ export const AdminGestionAcceso: React.FC = () => {
               <button className={s.closeBtn} onClick={handleCloseModal}>×</button>
             </div>
             <div className={s.modalBody}>
-              <form className={s.form} ref={formRef}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Usuario</label>
-                    <select className={s.select} name="usuario" defaultValue={selectedAcceso?.usuario}>
-                      {userOptions.map(u => (
-                        <option key={u} value={u}>{u}</option>
-                      ))}
-                    </select>
+              <form className={f.form} ref={formRef}>
+                <div className={f.formSection}>
+                  <h3 className={f.sectionTitle}>Acceso</h3>
+                  <div className={f.formRow}>
+                    <div className={f.field}>
+                      <label className={f.label}>Usuario</label>
+                      <select className={f.select} name="usuario" defaultValue={selectedAcceso?.usuario}>
+                        {userOptions.map(u => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={f.field}>
+                      <label className={f.label}>Rol</label>
+                      <select className={f.select} name="rol" defaultValue={selectedAcceso?.rol}>
+                        {roleOptions.map(r => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Rol</label>
-                    <select className={s.select} name="rol" defaultValue={selectedAcceso?.rol}>
-                      {roleOptions.map(r => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
+                  <div className={f.formRow}>
+                    <div className={f.field}>
+                      <label className={f.label}>Módulo</label>
+                      <select className={f.select} name="modulo" defaultValue={selectedAcceso?.modulo}>
+                        {moduloOptions.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={f.field}>
+                      <label className={f.label}>Tipo de Permiso</label>
+                      <select className={f.select} name="permiso" defaultValue={selectedAcceso?.permiso}>
+                        {TIPOS_PERMISO_ACCESO.map(t => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label}>Fecha de expiración</label>
+                    <input type="date" className={f.input} name="expira" defaultValue={selectedAcceso?.expira || ''} />
                   </div>
                 </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Módulo</label>
-                    <select className={s.select} name="modulo" defaultValue={selectedAcceso?.modulo}>
-                      {moduloOptions.map(m => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={s.field}>
-                    <label className={s.label}>Tipo de Permiso</label>
-                    <select className={s.select} name="permiso" defaultValue={selectedAcceso?.permiso}>
-                      {TIPOS_PERMISO_ACCESO.map(t => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className={s.field}>
-                  <label className={s.label}>Fecha de expiración</label>
-                  <input type="date" className={s.input} name="expira" defaultValue={selectedAcceso?.expira || ''} />
-                </div>
-                <div className={s.formActions}>
+                <div className={f.formActions}>
                   <Button variant="secondary" onClick={handleCloseModal}>
                     Cancelar
                   </Button>

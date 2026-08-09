@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Package, CheckCircle2, Clock, CreditCard, FileText, Archive, MessageCircle } from 'lucide-react';
 import s from './Catalogo.module.css';
+import f from '@/styles/Form.module.css';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 import { DetailModal } from '@/shared/ui/DetailModal';
@@ -107,28 +108,31 @@ export const CatalogoCliente: React.FC = () => {
       </div>
 
       <Modal open={isPedidoModalOpen} onClose={() => setIsPedidoModalOpen(false)} title="Generar Pedido Personalizado">
-        <div className={s.form}>
-          <div className={s.field}>
-            <label className={s.label}>Detalles del requerimiento</label>
-            <textarea
-              className={s.textarea}
-              placeholder="Ej: Necesito 2 rollos de algodón peinado negro y 1 de gris jaspeado..."
-              value={pedidoData.detalle}
-              onChange={(e) => setPedidoData({...pedidoData, detalle: e.target.value})}
-            />
+        <form className={f.form}>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Detalles del pedido</h3>
+            <div className={f.field}>
+              <label className={f.label}>Detalles del requerimiento</label>
+              <textarea
+                className={f.textarea}
+                placeholder="Ej: Necesito 2 rollos de algodón peinado negro y 1 de gris jaspeado..."
+                value={pedidoData.detalle}
+                onChange={(e) => setPedidoData({...pedidoData, detalle: e.target.value})}
+              />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Nivel de Urgencia</label>
+              <select className={f.select} value={pedidoData.urgencia} onChange={(e) => setPedidoData({...pedidoData, urgencia: e.target.value})}>
+                <option value="Estándar">Estándar (3-5 días)</option>
+                <option value="Prioritario">Prioritario (48 hrs)</option>
+              </select>
+            </div>
           </div>
-          <div className={s.field}>
-            <label className={s.label}>Nivel de Urgencia</label>
-            <select className={s.select} value={pedidoData.urgencia} onChange={(e) => setPedidoData({...pedidoData, urgencia: e.target.value})}>
-              <option value="Estándar">Estándar (3-5 días)</option>
-              <option value="Prioritario">Prioritario (48 hrs)</option>
-            </select>
-          </div>
-          <div className={s.modalActions}>
+          <div className={f.formActions}>
             <Button variant="secondary" onClick={() => setIsPedidoModalOpen(false)}>Cancelar</Button>
             <Button onClick={handleCrearPedido}>Confirmar Pedido</Button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       <DetailModal

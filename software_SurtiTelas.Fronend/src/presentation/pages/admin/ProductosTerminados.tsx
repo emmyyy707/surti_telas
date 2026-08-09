@@ -10,10 +10,10 @@ import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { AddTagInput } from '@/presentation/components/AddTagInput';
-import { productsApi, type ProductTerminado } from '@/infrastructure/api/productsApi';
+import { catalogApi } from '@/infrastructure/api/catalogApi';
+import { categoryService } from '@/services/categoryService';
+import type { Producto } from '@/core/types';
 import { ETIQUETAS_PRODUCTO } from '@/shared/constants/options';
-
-type Producto = ProductTerminado;
 
 export const AdminProductosTerminados: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -24,6 +24,7 @@ export const AdminProductosTerminados: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Producto | null>(null);
+  const [categorias, setCategorias] = useState<Array<{ id: string; nombre: string; slug: string }>>([]);
 
   useEffect(() => {
     let active = true;
@@ -31,9 +32,9 @@ export const AdminProductosTerminados: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await productsApi.list();
+        const result = await catalogApi.list({ page: 1, limit: 100 });
         if (!active) return;
-        setProductos(data);
+        setProductos(result.data);
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : 'No se pudieron cargar los productos terminados');
@@ -71,9 +72,9 @@ export const AdminProductosTerminados: React.FC = () => {
 
   const filteredProductos = useMemo(() => {
     return productos.filter(p =>
-      p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      p.codigo.toLowerCase().includes(search.toLowerCase()) ||
-      p.categoria.toLowerCase().includes(search.toLowerCase())
+      (p.nombre ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.codigo ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.categoria ?? '').toLowerCase().includes(search.toLowerCase())
     );
   }, [productos, search]);
 
@@ -101,28 +102,35 @@ export const AdminProductosTerminados: React.FC = () => {
     setFormError(null);
   };
 
-  const openModal = (item?: Producto) => {
+  const openModal = async (item?: Producto) => {
+    try {
+      const data = await categoryService.list();
+      setCategorias(data);
+    } catch {
+      setCategorias([]);
+    }
+
     if (item) {
-      setNombre(item.nombre);
-      setDescripcion(item.descripcion);
-      setDescripcionCorta(item.descripcionCorta);
-      setCategoria(item.categoria);
-      setSubcategoria(item.subcategoria);
-      setMarca(item.marca);
-      setCantidadStock(String(item.stock));
+      setNombre(item.nombre ?? '');
+      setDescripcion(item.descripcion ?? '');
+      setDescripcionCorta(item.descripcionCorta ?? '');
+      setCategoria(item.categoria ?? '');
+      setSubcategoria(item.subcategoria ?? '');
+      setMarca(item.marca ?? '');
+      setCantidadStock(String(item.cantidadStock));
       setPrecio(String(item.precio));
       setPrecioAnterior(String(item.precioAnterior));
       setDescuento(String(item.descuento));
-      setTela(item.tela);
-      setColores(item.color && item.color !== 'Sin especificar' ? [item.color] : []);
-      setTallas(item.talla && item.talla !== 'Única' ? [item.talla] : []);
+      setTela(item.tela ?? '');
+      setColores(item.colores && item.colores.length > 0 ? item.colores : []);
+      setTallas(item.tallas && item.tallas.length > 0 ? item.tallas : []);
       setImagenes(item.imagenes);
-      setImagenPrincipal(item.imagenPrincipal);
-      setDestacado(item.destacado);
-      setOferta(item.oferta);
-      setNuevo(item.nuevo);
-      setMasVendido(item.masVendido);
-      setEstado(item.estado);
+      setImagenPrincipal(item.imagenPrincipal || (item.imagenes && item.imagenes[0]) || '');
+      setDestacado(item.destacado ?? false);
+      setOferta(item.oferta ?? false);
+      setNuevo(item.nuevo ?? false);
+      setMasVendido(item.masVendido ?? false);
+      setEstado(item.estado ?? 'Activo');
       setEditingRef(item.ref);
     } else {
       resetForm();
@@ -213,8 +221,7 @@ export const AdminProductosTerminados: React.FC = () => {
       const totalQty = Number(cantidadStock) || 0;
       const pre = precioAnterior ? Number(precioAnterior) : Number(precio);
       const desc = descuento ? Number(descuento) : 0;
-      const stockStatus = totalQty <= 0 ? 'Agotado' : totalQty < 10 ? 'Bajo stock' : 'OK';
-      const data: Partial<ProductTerminado> = {
+      const data: Partial<Producto> = {
         nombre: nombre.trim(),
         descripcion: descripcion.trim() || descripcionCorta.trim(),
         descripcionCorta: descripcionCorta.trim() || descripcion.trim() || nombre.trim(),
@@ -224,17 +231,17 @@ export const AdminProductosTerminados: React.FC = () => {
         precio: Number(precio),
         precioAnterior: pre,
         descuento: desc,
-        stock: totalQty,
         cantidadStock: totalQty,
+        stock: totalQty <= 0 ? 'Agotado' : totalQty < 10 ? 'Bajo stock' : 'OK',
         estado,
-        stockStatus,
+        publicado: false,
         imagenes: imagenes.filter(Boolean),
         imagenPrincipal: imagenPrincipal || (imagenes.length > 0 ? imagenes[0] : ''),
         destacado,
         oferta,
         nuevo,
         masVendido,
-        tela: tela.trim() || undefined,
+        tela: tela.trim() || 'General',
         colores,
         tallas,
       };
@@ -242,11 +249,11 @@ export const AdminProductosTerminados: React.FC = () => {
       console.log('[ProductosTerminados] submit data', data);
 
       if (editingRef) {
-        const updated = await productsApi.update(editingRef, data);
+        const updated = await catalogApi.update(editingRef, data);
         setProductos(prev => prev.map(p => p.ref === editingRef ? { ...p, ...updated } : p));
         toast.success(`${updated.nombre} actualizado correctamente`);
       } else {
-        const creado = await productsApi.create(data);
+        const creado = await catalogApi.create(data);
         setProductos(prev => [creado, ...prev]);
         toast.success(`${creado.nombre} creado correctamente`);
       }
@@ -286,22 +293,21 @@ export const AdminProductosTerminados: React.FC = () => {
       title: 'Producto terminado',
       code: item.codigo,
       subtitle: `${item.nombre} · ${item.categoria}`,
-      meta: item.fechaCreacion,
       status: item.estado,
       badgeVariant: item.estado === 'Activo' ? 'success' : 'default',
     }),
     kpis: item => [
-      { label: 'Stock', value: item.stock, icon: <Package size={16} />, tone: item.stock > 0 ? 'success' : 'danger' },
+      { label: 'Stock', value: `${item.cantidadStock} uds`, icon: <Package size={16} />, tone: item.cantidadStock > 0 ? 'success' : 'danger' },
       { label: 'Precio', value: `$${item.precio.toLocaleString()}`, icon: <CreditCard size={16} />, tone: 'info' },
-      { label: 'Talla', value: item.talla, icon: <User size={16} />, tone: 'primary' },
-      { label: 'Creación', value: item.fechaCreacion, icon: <Calendar size={16} />, tone: 'default' },
+      { label: 'Talla', value: item.tallas?.[0] || 'Única', icon: <User size={16} />, tone: 'primary' },
+      { label: 'Estado', value: item.estado || 'Activo', icon: <Calendar size={16} />, tone: 'default' },
     ],
     render: (item) => (
       <div className={s.detailPanel}>
-        <div className={s.detailRow}><span>Talla:</span> {item.talla}</div>
-        <div className={s.detailRow}><span>Color:</span> {item.color}</div>
+        <div className={s.detailRow}><span>Tallas:</span> {item.tallas?.join(', ') || 'Única'}</div>
+        <div className={s.detailRow}><span>Colores:</span> {item.colores?.join(', ') || 'Sin especificar'}</div>
         <div className={s.detailRow}><span>Precio:</span> ${item.precio.toLocaleString()}</div>
-        <div className={s.detailRow}><span>Fecha creación:</span> {item.fechaCreacion}</div>
+        <div className={s.detailRow}><span>Stock:</span> {item.cantidadStock} uds</div>
       </div>
     ),
   };
@@ -311,8 +317,8 @@ export const AdminProductosTerminados: React.FC = () => {
     { label: 'Desactivar', icon: <ToggleLeft size={14} aria-hidden="true" focusable="false" />, onClick: async (item) => {
       try {
         const nuevoEstado = item.estado === 'Activo' ? 'Inactivo' : 'Activo';
-        await productsApi.update(item.id, { estado: nuevoEstado });
-        setProductos(prev => prev.map(p => p.id === item.id ? { ...p, estado: nuevoEstado } : p));
+        await catalogApi.update(item.ref, { estado: nuevoEstado });
+        setProductos(prev => prev.map(p => p.ref === item.ref ? { ...p, estado: nuevoEstado } : p));
         toast.success(`Producto "${item.nombre}" ${nuevoEstado === 'Inactivo' ? 'desactivado' : 'activado'}`);
       } catch {
         toast.error('No se pudo cambiar el estado del producto');
@@ -384,184 +390,205 @@ export const AdminProductosTerminados: React.FC = () => {
             </div>
           )}
 
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Nombre del Producto *</label>
-              <input className={f.input} type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Categoría *</label>
-              <input className={f.input} type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="Ej: Camisetas" />
-            </div>
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Descripción Corta</label>
-            <input className={f.input} type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve del producto" />
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Descripción Completa</label>
-            <textarea className={f.textarea} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Precio ($) *</label>
-              <input className={f.input} type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Precio Anterior (opcional)</label>
-              <input className={f.input} type="number" min="0" value={precioAnterior} onChange={e => setPrecioAnterior(e.target.value)} placeholder="Sin descuento" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Descuento (%)</label>
-              <input className={f.input} type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Cantidad Stock</label>
-              <input className={f.input} type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Tipo de Tela</label>
-              <input className={f.input} type="text" value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Marca</label>
-              <input className={f.input} type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
-            </div>
-          </div>
-
-          <div className={f.formRow}>
-            <div className={f.field}>
-              <label className={f.label}>Colores Disponibles</label>
-              <AddTagInput tags={colores} onTagsChange={setColores} placeholder="Ej: Azul, Blanco, Verde" />
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Tallas Disponibles</label>
-              <AddTagInput tags={tallas} onTagsChange={setTallas} placeholder="Ej: S, M, L, XL" />
-            </div>
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Subcategoría</label>
-            <input className={f.input} type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Imagen Principal</label>
-            <select
-              className={f.select}
-              value={imagenPrincipal}
-              onChange={e => setImagenPrincipal(e.target.value)}
-            >
-              <option value="">Sin imagen principal</option>
-              {imagenes.map((url, index) => (
-                <option key={index} value={url}>Imagen {index + 1}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Galería de Imágenes</label>
-            <div
-              className={s.uploadContainer}
-              onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
-              onDrop={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  handleAddLocalImages(e.dataTransfer.files);
-                }
-              }}
-            >
-              <label className={s.uploadPlaceholder}>
-                <Upload size={22} />
-                <span>Arrastra imágenes aquí o haz clic para seleccionar</span>
-                <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>JPG, PNG, WEBP (máx 4)</span>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className={s.hiddenFileInput}
-                  onChange={e => {
-                    handleAddLocalImages(e.target.files);
-                    if (e.target.value) e.target.value = '';
-                  }}
-                />
-              </label>
-
-              {imagenes.length > 0 && (
-                <div className={s.previewGrid}>
-                  {imagenes.map((url, index) => (
-                    <div key={index} className={s.previewBox} style={{ width: '100%' }}>
-                      <img src={url} alt={`Imagen ${index + 1}`} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
-                      <div style={{ position: 'absolute', top: '4px', right: '4px', display: 'flex', gap: '4px' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleSetPrincipal(url)}
-                          style={{
-                            width: '22px',
-                            height: '22px',
-                            borderRadius: '50%',
-                            background: imagenPrincipal === url ? 'var(--color-accent)' : 'rgba(0,0,0,0.5)',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '10px',
-                            fontWeight: 700,
-                          }}
-                          title="Establecer como principal"
-                        >
-                          ★
-                        </button>
-                        <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn}>
-                          <span style={{ fontSize: '14px' }}>×</span>
-                        </button>
-                      </div>
-                      {imagenPrincipal === url && (
-                        <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--color-accent)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
-                          Principal
-                        </div>
-                      )}
-                    </div>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Información básica</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Nombre del Producto *</label>
+                <input className={f.input} type="text" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Camiseta Oversize Premium" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label} htmlFor="pt-categoria">Categoría *</label>
+                <select id="pt-categoria" className={f.select} value={categoria} onChange={e => setCategoria(e.target.value)}>
+                  <option value="">Seleccionar categoría</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.nombre}>{cat.nombre}</option>
                   ))}
-                </div>
-              )}
+                </select>
+              </div>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Descripción Corta</label>
+                <input className={f.input} type="text" value={descripcionCorta} onChange={e => setDescripcionCorta(e.target.value)} placeholder="Resumen breve del producto" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Descripción Completa</label>
+                <textarea className={f.textarea} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Añade detalles sobre el producto..." rows={3} />
+              </div>
             </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label}>Estado</label>
-            <select className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo (Oculto)</option>
-            </select>
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Precio y stock</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Precio ($) *</label>
+                <input className={f.input} type="number" required min="1" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio base" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Precio Anterior (opcional)</label>
+                <input className={f.input} type="number" min="0" value={precioAnterior} onChange={e => setPrecioAnterior(e.target.value)} placeholder="Sin descuento" />
+              </div>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Descuento (%)</label>
+                <input className={f.input} type="number" min="0" max="100" value={descuento} onChange={e => setDescuento(e.target.value)} placeholder="0" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Cantidad Stock</label>
+                <input className={f.input} type="number" required min="0" value={cantidadStock} onChange={e => setCantidadStock(e.target.value)} placeholder="Unidades en bodega" />
+              </div>
+            </div>
           </div>
 
-          <div className={f.field}>
-            <label className={f.label}>Etiquetas</label>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {ETIQUETAS_PRODUCTO.map(({ key, label }) => {
-                const state = key === 'destacado' ? destacado : key === 'oferta' ? oferta : key === 'nuevo' ? nuevo : masVendido;
-                const set = key === 'destacado' ? setDestacado : key === 'oferta' ? setOferta : key === 'nuevo' ? setNuevo : setMasVendido;
-                return (
-                <label key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text-secondary)', padding: '6px 12px', background: state ? 'rgba(244,162,97,0.15)' : 'rgba(255,255,255,0.04)', borderRadius: '8px', border: `1px solid ${state ? 'rgba(244,162,97,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
-                  <input type="checkbox" checked={state} onChange={e => set(e.target.checked)} />
-                  {label}
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Características</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Tipo de Tela</label>
+                <input className={f.input} type="text" value={tela} onChange={e => setTela(e.target.value)} placeholder="Ej: Algodón, Poliéster" />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Marca</label>
+                <input className={f.input} type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Marca" />
+              </div>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Colores Disponibles</label>
+                <AddTagInput tags={colores} onTagsChange={setColores} placeholder="Ej: Azul, Rojo claro, Verde oscuro" colorMode={true} />
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Tallas Disponibles</label>
+                <AddTagInput tags={tallas} onTagsChange={setTallas} placeholder="Ej: S, M, L, XL" />
+              </div>
+            </div>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Subcategoría</label>
+                <input className={f.input} type="text" value={subcategoria} onChange={e => setSubcategoria(e.target.value)} placeholder="Ej: Básicas, Premium" />
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Imágenes</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Imagen Principal</label>
+                <select
+                  className={f.select}
+                  value={imagenPrincipal}
+                  onChange={e => setImagenPrincipal(e.target.value)}
+                >
+                  <option value="">Sin imagen principal</option>
+                  {imagenes.map((url, index) => (
+                    <option key={index} value={url}>Imagen {index + 1}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>Galería de Imágenes</label>
+              <div
+                className={s.uploadContainer}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleAddLocalImages(e.dataTransfer.files);
+                  }
+                }}
+              >
+                <label className={s.uploadPlaceholder}>
+                  <Upload size={22} />
+                  <span>Arrastra imágenes aquí o haz clic para seleccionar</span>
+                  <span style={{ fontSize: '0.78rem', opacity: 0.7 }}>JPG, PNG, WEBP (máx 4)</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className={s.hiddenFileInput}
+                    onChange={e => {
+                      handleAddLocalImages(e.target.files);
+                      if (e.target.value) e.target.value = '';
+                    }}
+                  />
                 </label>
-                );
-              })}
+
+                {imagenes.length > 0 && (
+                  <div className={s.previewGrid}>
+                    {imagenes.map((url, index) => (
+                      <div key={index} className={s.previewBox} style={{ width: '100%' }}>
+                        <img src={url} alt={`Imagen ${index + 1}`} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                        <div style={{ position: 'absolute', top: '4px', right: '4px', display: 'flex', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrincipal(url)}
+                            style={{
+                              width: '22px',
+                              height: '22px',
+                              borderRadius: '50%',
+                              background: imagenPrincipal === url ? 'var(--color-accent)' : 'rgba(0,0,0,0.5)',
+                              color: 'white',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                            }}
+                            title="Establecer como principal"
+                          >
+                            ★
+                          </button>
+                          <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn}>
+                            <span style={{ fontSize: '14px' }}>×</span>
+                          </button>
+                        </div>
+                        {imagenPrincipal === url && (
+                          <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--color-accent)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                            Principal
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className={f.formSection}>
+            <h3 className={f.sectionTitle}>Publicación</h3>
+            <div className={f.formRow}>
+              <div className={f.field}>
+                <label className={f.label}>Estado</label>
+                <select className={f.select} value={estado} onChange={e => setEstado(e.target.value as 'Activo' | 'Inactivo')}>
+                  <option value="Activo">Activo</option>
+                  <option value="Inactivo">Inactivo (Oculto)</option>
+                </select>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Etiquetas</label>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {ETIQUETAS_PRODUCTO.map(({ key, label }) => {
+                    const state = key === 'destacado' ? destacado : key === 'oferta' ? oferta : key === 'nuevo' ? nuevo : masVendido;
+                    const set = key === 'destacado' ? setDestacado : key === 'oferta' ? setOferta : key === 'nuevo' ? setNuevo : setMasVendido;
+                    return (
+                    <label key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text-secondary)', padding: '6px 12px', background: state ? 'rgba(244,162,97,0.15)' : 'rgba(255,255,255,0.04)', borderRadius: '8px', border: `1px solid ${state ? 'rgba(244,162,97,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
+                      <input type="checkbox" checked={state} onChange={e => set(e.target.checked)} />
+                      {label}
+                    </label>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -578,7 +605,7 @@ export const AdminProductosTerminados: React.FC = () => {
         onConfirm={async () => {
           if (!deleteConfirm) return;
           try {
-            await productsApi.remove(deleteConfirm.ref);
+            await catalogApi.remove(deleteConfirm.ref);
             setProductos(prev => prev.filter(p => p.ref !== deleteConfirm.ref));
             toast.success(`Producto "${deleteConfirm.nombre}" eliminado`);
           } catch {

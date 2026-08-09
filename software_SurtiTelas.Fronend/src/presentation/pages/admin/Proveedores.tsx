@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Star, Phone, MapPin, Package } from 'lucide-react';
 import s from './Proveedores.module.css';
+import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -66,10 +67,6 @@ export const AdminProveedores: React.FC = () => {
   const [formEmail, setFormEmail] = useState('');
   const [formDireccion, setFormDireccion] = useState('');
   const [formCiudad, setFormCiudad] = useState('');
-  const [formTipoDocumento, setFormTipoDocumento] = useState('');
-  const [formNumeroDocumento, setFormNumeroDocumento] = useState('');
-  const [formPassword, setFormPassword] = useState('');
-  const [formConfirmPassword, setFormConfirmPassword] = useState('');
   const [formMateriales, setFormMateriales] = useState('');
   const [formCalificacion, setFormCalificacion] = useState(3);
   const [formEstado, setFormEstado] = useState<Proveedor['estado']>('Activo');
@@ -83,10 +80,6 @@ export const AdminProveedores: React.FC = () => {
     setFormEmail('');
     setFormDireccion('');
     setFormCiudad('');
-    setFormTipoDocumento('');
-    setFormNumeroDocumento('');
-    setFormPassword('');
-    setFormConfirmPassword('');
     setFormMateriales('');
     setFormCalificacion(3);
     setFormEstado('Activo');
@@ -109,8 +102,6 @@ export const AdminProveedores: React.FC = () => {
     setFormEmail(proveedor.email);
     setFormDireccion(proveedor.direccion);
     setFormCiudad(proveedor.ciudad);
-    setFormTipoDocumento(proveedor.tipoDocumento ?? '');
-    setFormNumeroDocumento(proveedor.numeroDocumento ?? '');
     setFormMateriales(proveedor.materiales.join(', '));
     setFormCalificacion(proveedor.calificacion);
     setFormEstado(proveedor.estado);
@@ -136,16 +127,6 @@ export const AdminProveedores: React.FC = () => {
     if (!formNit || !isValidNit(formNit)) newErrors.nit = 'NIT inválido';
     if (!formDireccion || formDireccion.length < 5) newErrors.direccion = 'Dirección muy corta';
     if (!formCiudad || formCiudad.length < 3) newErrors.ciudad = 'Ciudad inválida';
-    if (formTipoDocumento && !formNumeroDocumento) newErrors.numeroDocumento = 'Requerido';
-    if (!selectedProveedor) {
-      if (!formPassword) newErrors.password = 'La contraseña es obligatoria';
-      else if (formPassword.length < 8) newErrors.password = 'Mínimo 8 caracteres';
-      else if (!/[A-Z]/.test(formPassword)) newErrors.password = 'Debe contener mayúscula';
-      else if (!/[a-z]/.test(formPassword)) newErrors.password = 'Debe contener minúscula';
-      else if (!/[0-9]/.test(formPassword)) newErrors.password = 'Debe contener número';
-      if (!formConfirmPassword) newErrors.confirmPassword = 'Confirma la contraseña';
-      else if (formPassword !== formConfirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       setSaving(false);
@@ -161,8 +142,6 @@ export const AdminProveedores: React.FC = () => {
       email: formEmail,
       direccion: formDireccion,
       ciudad: formCiudad,
-      tipoDocumento: formTipoDocumento || undefined,
-      numeroDocumento: formNumeroDocumento || undefined,
       materiales: materialesArr,
       estado: formEstado,
       calificacion: formCalificacion,
@@ -184,7 +163,11 @@ export const AdminProveedores: React.FC = () => {
         await stockApi.suppliers.create(data);
         setError(null);
         toast.success('Proveedor creado');
-        pagination.setPage(1);
+        if (pagination.page === 1) {
+          void fetchProveedores();
+        } else {
+          pagination.setPage(1);
+        }
       }
       closeModals();
     } catch {
@@ -329,9 +312,9 @@ export const AdminProveedores: React.FC = () => {
         title={selectedProveedor ? 'Editar proveedor' : 'Nuevo proveedor'}
         size="lg"
       >
-        <form className={s.form} onSubmit={handleSubmit}>
+        <form className={f.form} onSubmit={handleSubmit}>
           <div className={s.formSection}>
-            <h3 className={s.formSectionTitle}>Información básica</h3>
+            <h3 className={s.formSectionTitle}>Datos generales</h3>
             <div className={s.formRow}>
               <div className={s.field}>
                 <label className={s.label}>Nombre / Razón social</label>
@@ -360,6 +343,17 @@ export const AdminProveedores: React.FC = () => {
 
             <div className={s.formRow}>
               <div className={s.field}>
+                <label className={s.label}>NIT</label>
+                <input
+                  type="text"
+                  className={`${s.input} ${errors.nit ? s.inputError : ''}`}
+                  value={formNit}
+                  onChange={e => { setFormNit(e.target.value); delete errors.nit; setErrors({...errors}); }}
+                  maxLength={20}
+                />
+                {errors.nit && <span className={s.errorText}>{errors.nit}</span>}
+              </div>
+              <div className={s.field}>
                 <label className={s.label}>Email</label>
                 <input
                   type="email"
@@ -369,6 +363,9 @@ export const AdminProveedores: React.FC = () => {
                 />
                 {errors.email && <span className={s.errorText}>{errors.email}</span>}
               </div>
+            </div>
+
+            <div className={s.formRow}>
               <div className={s.field}>
                 <label className={s.label}>Teléfono</label>
                 <input
@@ -382,7 +379,10 @@ export const AdminProveedores: React.FC = () => {
                 {errors.telefono && <span className={s.errorText}>{errors.telefono}</span>}
               </div>
             </div>
+          </div>
 
+          <div className={s.formSection}>
+            <h3 className={s.formSectionTitle}>Ubicación</h3>
             <div className={s.formRow}>
               <div className={s.field}>
                 <label className={s.label}>Ciudad</label>
@@ -406,67 +406,6 @@ export const AdminProveedores: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className={s.formSection}>
-            <h3 className={s.formSectionTitle}>Documento</h3>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <label className={s.label}>Tipo de documento</label>
-                <select
-                  className={`${s.select} ${errors.tipoDocumento ? s.inputError : ''}`}
-                  value={formTipoDocumento}
-                  onChange={e => { setFormTipoDocumento(e.target.value); delete errors.tipoDocumento; setErrors({...errors}); }}
-                >
-                  <option value="">Selecciona...</option>
-                  <option value="CC">C.C.</option>
-                  <option value="CE">C.E.</option>
-                  <option value="NIT">NIT</option>
-                </select>
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Número de documento</label>
-                <input
-                  type="text"
-                  className={`${s.input} ${errors.numeroDocumento ? s.inputError : ''}`}
-                  value={formNumeroDocumento}
-                  onChange={e => { setFormNumeroDocumento(e.target.value); delete errors.numeroDocumento; setErrors({...errors}); }}
-                  maxLength={20}
-                />
-                {errors.numeroDocumento && <span className={s.errorText}>{errors.numeroDocumento}</span>}
-              </div>
-            </div>
-          </div>
-
-          {!selectedProveedor && (
-            <div className={s.formSection}>
-              <h3 className={s.formSectionTitle}>Credenciales de acceso</h3>
-              <div className={s.formRow}>
-                <div className={s.field}>
-                  <label className={s.label}>Contraseña</label>
-                  <input
-                    type="password"
-                    className={`${s.input} ${errors.password ? s.inputError : ''}`}
-                    value={formPassword}
-                    onChange={e => { setFormPassword(e.target.value); delete errors.password; setErrors({...errors}); }}
-                    minLength={8}
-                  />
-                  {errors.password && <span className={s.errorText}>{errors.password}</span>}
-                  <p className={s.hint}>Mínimo 8 caracteres: 1 mayúscula, 1 minúscula, 1 número</p>
-                </div>
-                <div className={s.field}>
-                  <label className={s.label}>Confirmar contraseña</label>
-                  <input
-                    type="password"
-                    className={`${s.input} ${errors.confirmPassword ? s.inputError : ''}`}
-                    value={formConfirmPassword}
-                    onChange={e => { setFormConfirmPassword(e.target.value); delete errors.confirmPassword; setErrors({...errors}); }}
-                    minLength={8}
-                  />
-                  {errors.confirmPassword && <span className={s.errorText}>{errors.confirmPassword}</span>}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className={s.formSection}>
             <h3 className={s.formSectionTitle}>Información adicional</h3>
@@ -503,7 +442,7 @@ export const AdminProveedores: React.FC = () => {
 
           <div className={s.formSection}>
             <h3 className={s.formSectionTitle}>Estado</h3>
-            <div className={s.field} style={{ maxWidth: '200px' }}>
+            <div className={s.field} style={{ maxWidth: '240px' }}>
               <label className={s.label}>Estado</label>
               <select
                 className={s.select}

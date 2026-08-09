@@ -173,6 +173,12 @@ returnRouter.patch(
   sensitiveUserRateLimiter,
   asyncHandler(controller.changeReturnStatus)
 );
+returnRouter.post(
+  '/:id/status',
+  requirePermission('orders:update'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.changeReturnStatus)
+);
 
 returnRouter.delete(
   '/:id',

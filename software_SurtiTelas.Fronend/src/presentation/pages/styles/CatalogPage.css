@@ -524,6 +524,30 @@
   opacity: 1;
 }
 
+.card-image-thumbs {
+  position: absolute;
+  bottom: var(--space-sm);
+  left: var(--space-sm);
+  display: flex;
+  gap: var(--space-xs);
+  z-index: 2;
+}
+
+.card-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: transform 0.2s var(--transition-smooth);
+}
+
+.card-thumb:hover {
+  transform: scale(1.1);
+}
+
 /* Card Info - Flex Grow for Consistent Height */
 .card-info {
   padding: var(--space-lg);
@@ -632,6 +656,25 @@
   font-weight: 700;
 }
 
+.card-colores {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: var(--space-sm);
+}
+
+.color-tag {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-soft-gray);
+  color: var(--color-brand-medium-gray);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid var(--color-brand-light-gray);
+}
+
 /* =========================
    EMPTY STATE
    ========================= */
@@ -684,6 +727,27 @@
 }
 
 .btn-reset-filters:hover {
+  background: var(--color-brand-dark-gray);
+  transform: translateY(-2px);
+}
+
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--color-brand-charcoal);
+  border: none;
+  color: var(--color-brand-white);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  margin-top: 12px;
+}
+
+.retry-btn:hover {
   background: var(--color-brand-dark-gray);
   transform: translateY(-2px);
 }

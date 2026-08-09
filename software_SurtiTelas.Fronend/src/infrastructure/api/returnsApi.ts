@@ -115,6 +115,23 @@ export const returnsApi = {
     return toReturn(dto);
   },
 
+  async createClient(input: CreateReturnInput): Promise<Return> {
+    const dto = await api.post<ReturnDTO>('/client/returns', {
+      orderId: input.numeroOrden,
+      prenda: input.prenda,
+      referencia: input.referencia,
+      motivo: input.motivo,
+      cantidad: input.cantidad,
+      cantidadInspeccionada: input.cantidadInspeccionada,
+      destino: input.destino,
+      cliente: input.cliente,
+      responsable: input.responsable,
+      observaciones: input.observaciones,
+      fechaDevolucion: input.fechaDevolucion,
+    });
+    return toReturn(dto);
+  },
+
   async update(
     id: string,
     changes: Partial<Omit<CreateReturnInput, 'numeroOrden'>>,

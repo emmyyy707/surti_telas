@@ -33,18 +33,21 @@ export const ProductUpdateSchema = ProductSchema.partial();
 export const CategorySchema = z.object({
   nombre: z.string().min(1),
   slug: z.string().min(1),
-  parentId: z.string().optional(),
+  parentId: z.string().nullable().optional(),
 });
+
+export const CategoryUpdateSchema = CategorySchema.partial();
 
 export const CategoryFiltersSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
-  limit: z.coerce.number().int().positive().max(100).optional(),
+  limit: z.coerce.number().int().positive().max(500).optional(),
 });
 
 export const ProductFiltersSchema = z.object({
   search: z.string().optional(),
   categoriaId: z.string().optional(),
   categoria: z.string().optional(),
+  marca: z.string().optional(),
   publicado: z.boolean().optional(),
   destacado: z.boolean().optional(),
   page: z.coerce.number().int().positive().optional(),
@@ -52,4 +55,7 @@ export const ProductFiltersSchema = z.object({
   cursor: z.string().optional(),
   sort: z.enum(['nombre', 'precio', 'createdAt', 'cantidadStock']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
+  marcas: z.array(z.string()).optional(),
+  categoriasEspeciales: z.array(z.string()).optional(),
+  tallas: z.array(z.string()).optional(),
 });

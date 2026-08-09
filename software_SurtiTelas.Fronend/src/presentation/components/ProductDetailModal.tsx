@@ -16,46 +16,14 @@ import './ProductDetailModal.css'
 
 import { sanitizeImageUrl } from '@shared/utils/image-utils'
 import { useCart } from '@/app/providers/AppProviders'
-import type { ProductoDetalle } from '@/core/types'
+import type { Producto } from '@/core/types'
+import { resolveColor } from '@/shared/utils/colorUtils'
 
 type Props = {
-  product: ProductoDetalle | null
+  product: Producto | null
   isOpen: boolean
   onClose: () => void
 }
-
-const COLORS = [
-  {
-    id: 'Blanco',
-    label: 'Blanco',
-    hex: '#f9fafb'
-  },
-  {
-    id: 'Negro',
-    label: 'Negro',
-    hex: '#111827'
-  },
-  {
-    id: 'Beige',
-    label: 'Beige',
-    hex: '#b5ada1'
-  },
-  {
-    id: 'Gris',
-    label: 'Gris',
-    hex: '#6b7280'
-  },
-  {
-    id: 'Azul',
-    label: 'Azul',
-    hex: '#1e40af'
-  },
-  {
-    id: 'Rojo',
-    label: 'Rojo',
-    hex: '#b91c1c'
-  }
-]
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
@@ -66,14 +34,60 @@ export const ProductDetailModal: React.FC<Props> = ({
 }) => {
   const { addToCart } = useCart()
 
-  const [selectedColor, setSelectedColor] =
-    useState<string>('Blanco')
+  const productSizes = useMemo(() => {
+    if (product?.tallas && product.tallas.length > 0) {
+      return product.tallas
+    }
+    return SIZES
+  }, [product?.tallas])
+
+const productColors = useMemo(() => {
+  if (product?.colores && product.colores.length > 0) {
+    return product.colores.map((raw) => {
+      const resolved = resolveColor(raw);
+      return {
+        id: raw,
+        label: resolved?.label ?? raw,
+        hex: resolved?.value ?? '#b5ada1',
+      };
+    });
+  }
+  return [
+    { id: 'Blanco', label: 'Blanco', hex: '#f9fafb' },
+    { id: 'Negro', label: 'Negro', hex: '#111827' },
+    { id: 'Beige', label: 'Beige', hex: '#b5ada1' },
+    { id: 'Gris', label: 'Gris', hex: '#6b7280' },
+    { id: 'Azul', label: 'Azul', hex: '#1e40af' },
+    { id: 'Rojo', label: 'Rojo', hex: '#b91c1c' },
+  ];
+}, [product?.colores]);
+
+  const [selectedColors, setSelectedColors] = useState<string[]>([])
+
+  const toggleSelectedColor = (id: string) => {
+    setSelectedColors(prev => {
+      const exists = prev.includes(id)
+      const next = exists ? prev.filter(x => x !== id) : [...prev, id]
+      return next
+    })
+  }
+
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([])
+
+  const toggleSelectedSize = (id: string) => {
+    setSelectedSizes(prev => {
+      const exists = prev.includes(id)
+      const next = exists ? prev.filter(x => x !== id) : [...prev, id]
+      return next
+    })
+  }
 
   const [selectedSize, setSelectedSize] =
-    useState<string>('M')
+    useState<string>(productSizes[0] || 'M')
 
-  const [quantity, setQuantity] =
-    useState<number>(1)
+  const [variantQuantities, setVariantQuantities] = useState<Record<string, number>>({})
+
+  const [variantQuantityTexts, setVariantQuantityTexts] = useState<Record<string, string>>({})
 
   const [isWishlisted, setIsWishlisted] =
     useState<boolean>(false)
@@ -82,53 +96,118 @@ export const ProductDetailModal: React.FC<Props> = ({
     useState<number>(0)
 
   const productImages = useMemo(() => {
-    if (!product?.imagen) {
-      return [
-        '/assets/images/placeholders/product.svg',
-        '/assets/images/placeholders/product.svg',
-        '/assets/images/placeholders/product.svg'
-      ]
+    const rawPrincipal = product?.imagenPrincipal
+    const rawList = product?.imagenes
+    const principal = rawPrincipal && rawPrincipal.trim() !== '' ? rawPrincipal : ''
+    const list = Array.isArray(rawList) ? rawList : []
+
+    if (list.length > 0) {
+      return list.map(imagen => sanitizeImageUrl(imagen))
     }
 
-    const image = sanitizeImageUrl(product.imagen)
-
-    return [image, image, image]
-  }, [product?.imagen])
-
-  const totalPrice = useMemo(() => {
-    if (!product) return 0
-
-    return product.precio * quantity
-  }, [product, quantity])
+    const imagen = principal ? sanitizeImageUrl(principal) : '/assets/images/placeholders/product.svg'
+    return [imagen, imagen, imagen]
+  }, [product?.imagenes, product?.imagenPrincipal])
 
   const handleClose = () => {
-    setSelectedColor('Blanco')
-    setSelectedSize('M')
-    setQuantity(1)
+    setSelectedColors([])
+    setSelectedSizes([])
+    setSelectedSize(productSizes[0] || 'M')
+    setVariantQuantities({})
+    setVariantQuantityTexts({})
     setCurrentImageIndex(0)
 
     onClose()
   }
 
-  const handleQuantityChange = (delta: number) => {
-    setQuantity(prev => Math.max(1, prev + delta))
+  const updateVariantQuantity = (colorId: string, sizeId: string, delta: number) => {
+    const key = `${colorId}|${sizeId}`
+    setVariantQuantities(prev => {
+      const current = prev[key] || 0
+      const next = Math.max(0, Math.min(product?.cantidadStock ?? 0, current + delta))
+      if (next === 0) {
+        const nextState = { ...prev }
+        delete nextState[key]
+        setVariantQuantityTexts(prevTexts => {
+          const nextTexts = { ...prevTexts }
+          delete nextTexts[key]
+          return nextTexts
+        })
+        return nextState
+      }
+      setVariantQuantityTexts(prevTexts => ({ ...prevTexts, [key]: String(next) }))
+      return { ...prev, [key]: next }
+    })
   }
 
-  const handleAddToCart = () => {
-    if (!product) return
+  const setVariantQuantityInput = (colorId: string, sizeId: string, value: string) => {
+    const key = `${colorId}|${sizeId}`
+    setVariantQuantityTexts(prev => ({ ...prev, [key]: value }))
+    const parsed = Number(value)
+    if (Number.isNaN(parsed) || parsed < 0) return
+    setVariantQuantities(prev => ({ ...prev, [key]: parsed }))
+  }
 
-    addToCart({
-      cartId: product.id,
-      nombre: product.nombre,
-      precio: product.precio,
-      imagen:
-        product.imagen ??
-        '/assets/images/placeholders/product.svg',
-      categoria: product.categoria ?? 'Premium',
-      talla: selectedSize,
-      color: selectedColor,
-      stock: 99,
-      quantity
+  const handleVariantQuantityBlur = (colorId: string, sizeId: string) => {
+    const key = `${colorId}|${sizeId}`
+    const text = variantQuantityTexts[key] ?? ''
+    const parsed = Number(text)
+    const current = variantQuantities[key] || 0
+    const next = Number.isNaN(parsed) || !Number.isFinite(parsed) ? current : Math.min(Math.max(parsed, 0), product?.cantidadStock ?? 0)
+    setVariantQuantities(prev => ({ ...prev, [key]: next }))
+    setVariantQuantityTexts(prev => ({ ...prev, [key]: String(next) }))
+  }
+
+  const selectedVariants = useMemo(() => {
+    return selectedColors.flatMap(colorId =>
+      selectedSizes.map(sizeId => {
+        const key = `${colorId}|${sizeId}`
+        const quantity = variantQuantities[key] || 0
+        if (quantity <= 0) return null
+        const color = productColors.find(c => c.id === colorId)
+        return {
+          colorId,
+          sizeId,
+          colorLabel: color?.label ?? colorId,
+          colorHex: color?.hex ?? '#b5ada1',
+          quantity,
+        }
+      })
+    ).filter((v): v is NonNullable<typeof v> => v != null)
+  }, [selectedColors, selectedSizes, variantQuantities, productColors])
+
+  const totalUnits = useMemo(() => {
+    return selectedVariants.reduce((sum, v) => sum + v.quantity, 0)
+  }, [selectedVariants])
+
+  const totalPrice = useMemo(() => {
+    if (!product) return 0
+    return product.precio * totalUnits
+  }, [product, totalUnits])
+
+  const handleAddToCart = () => {
+    if (!product || selectedVariants.length === 0) return
+
+    const imagen =
+      product.imagenPrincipal && product.imagenPrincipal.trim() !== ''
+        ? product.imagenPrincipal
+        : product.imagenes && product.imagenes.length > 0
+          ? product.imagenes[0]
+          : '/assets/images/placeholders/product.svg'
+
+    selectedVariants.forEach(variant => {
+      addToCart({
+        productId: product.id,
+        cartId: `${product.id}-${variant.sizeId}-${variant.colorId}`,
+        nombre: product.nombre,
+        precio: product.precio,
+        imagen,
+        categoria: product.categoria ?? 'Premium',
+        talla: variant.sizeId,
+        color: variant.colorLabel,
+        stock: product.cantidadStock,
+        quantity: variant.quantity,
+      })
     })
 
     handleClose()
@@ -289,41 +368,15 @@ export const ProductDetailModal: React.FC<Props> = ({
                     {product.nombre}
                   </h1>
 
-                  {/* RATING */}
-                  {product.rating && (
-                    <div className="pd-rating-premium">
-
-                      <div className="pd-stars">
-                        {[...Array(5)].map(
-                          (_, i) => (
-                            <Star
-                              key={i}
-                              size={15}
-                              fill={
-                                i <
-                                Math.floor(
-                                  product.rating!
-                                )
-                                  ? 'currentColor'
-                                  : 'none'
-                              }
-                            />
-                          )
-                        )}
-                      </div>
-
-                      <span className="pd-rating-value">
-                        {product.rating}
-                      </span>
-
-                      <span className="pd-divider" />
-
-                      <span className="pd-reviews-count">
-                        {product.reviews || 0}
-                        {' '}
-                        reviews
-                      </span>
-
+                  {/* DESCRIPTION */}
+                  {(product.descripcion || product.descripcionCorta) && (
+                    <div className="pd-description-premium">
+                      {product.descripcionCorta && (
+                        <p className="pd-short-description">{product.descripcionCorta}</p>
+                      )}
+                      {product.descripcion && product.descripcionCorta !== product.descripcion && (
+                        <p>{product.descripcion}</p>
+                      )}
                     </div>
                   )}
 
@@ -356,59 +409,77 @@ export const ProductDetailModal: React.FC<Props> = ({
 
                   </div>
 
-                  {/* DESCRIPTION */}
-                  {product.descripcion && (
-                    <p className="pd-description-premium">
-                      {product.descripcion}
-                    </p>
-                  )}
-
                 </div>
 
-                {/* COLORS */}
+                 {/* COLORS */}
                 <div className="pd-selector-section">
 
                   <div className="pd-section-title-row">
                     <h3>Color</h3>
-
-                    <span>
-                      {selectedColor}
-                    </span>
+                    <span>{selectedColors.join(', ') || '—'}</span>
                   </div>
 
                   <div className="pd-color-selector">
 
-                    {COLORS.map((color) => (
-                      <button
-                        key={color.id}
-                        className={`pd-color-option ${
-                          selectedColor ===
-                          color.id
-                            ? 'active'
-                            : ''
-                        }`}
-                        onClick={() =>
-                          setSelectedColor(
-                            color.id
-                          )
-                        }
-                      >
-                        <div
-                          className="pd-color-swatch"
-                          style={{
-                            backgroundColor:
-                              color.hex
-                          }}
-                        />
-
-                        {selectedColor ===
-                          color.id && (
-                          <Check size={12} />
-                        )}
-                      </button>
-                    ))}
+                    {productColors.map((color) => {
+                      const active = selectedColors.includes(color.id)
+                      return (
+                        <button
+                          key={color.id}
+                          className={`pd-color-option ${active ? 'active' : ''}`}
+                          onClick={() => toggleSelectedColor(color.id)}
+                          type="button"
+                          aria-pressed={active}
+                        >
+                          <div className="pd-color-swatch" style={{ backgroundColor: color.hex }} />
+                          {active && <Check size={12} />}
+                        </button>
+                      )
+                    })}
 
                   </div>
+
+                  <div className="pd-variant-rows">
+                    {selectedColors.map(colorId => {
+                      const color = productColors.find(c => c.id === colorId)
+                      if (!color) return null
+                      return selectedSizes.map(sizeId => {
+                        const key = `${colorId}|${sizeId}`
+                        const qty = variantQuantities[key] || 0
+                        const text = variantQuantityTexts[key] ?? String(qty)
+                        return (
+                          <div key={key} className="pd-variant-row">
+                            <div className="pd-variant-info">
+                              <div className="pd-color-swatch-sm" style={{ backgroundColor: color.hex }} />
+                              <span>{color.label}</span>
+                              <span className="pd-variant-size">{sizeId}</span>
+                            </div>
+                            <div className="pd-variant-controls">
+                              <button className="pd-quantity-btn" onClick={() => updateVariantQuantity(colorId, sizeId, -1)} type="button"><Minus size={14} /></button>
+                              <input
+                                type="number"
+                                className="pd-quantity-input"
+                                min={0}
+                                max={product.cantidadStock}
+                                value={text}
+                                onChange={(e) => setVariantQuantityInput(colorId, sizeId, e.target.value)}
+                                onBlur={() => handleVariantQuantityBlur(colorId, sizeId)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                              />
+                              <button className="pd-quantity-btn" onClick={() => updateVariantQuantity(colorId, sizeId, 1)} type="button"><Plus size={14} /></button>
+                            </div>
+                          </div>
+                        )
+                      })
+                    })}
+                  </div>
+
+                  {selectedVariants.length > 0 && (
+                    <div className="pd-selected-summary">
+                      <span>Total unidades: {totalUnits}</span>
+                      <span>Total: ${totalPrice.toLocaleString()}</span>
+                    </div>
+                  )}
 
                 </div>
 
@@ -416,29 +487,25 @@ export const ProductDetailModal: React.FC<Props> = ({
                 <div className="pd-selector-section">
 
                   <div className="pd-section-title-row">
-
                     <h3>Talla</h3>
-
-                    <button className="pd-size-guide-btn">
-                      Guía
-                    </button>
-
+                    <span>{selectedSizes.join(', ') || '—'}</span>
                   </div>
 
                   <div className="pd-size-selector">
 
-                    {SIZES.map((size) => (
+                    {productSizes.map((size) => (
                       <button
                         key={size}
                         className={`pd-size-option ${
-                          selectedSize ===
-                          size
+                          selectedSizes.includes(size)
                             ? 'active'
                             : ''
                         }`}
                         onClick={() =>
-                          setSelectedSize(size)
+                          toggleSelectedSize(size)
                         }
+                        type="button"
+                        aria-pressed={selectedSizes.includes(size)}
                       >
                         {size}
                       </button>
@@ -448,6 +515,53 @@ export const ProductDetailModal: React.FC<Props> = ({
 
                 </div>
 
+                  {/* EXTRA INFO */}
+                 {product && (
+                   <div className="pd-selector-section">
+                     <div className="pd-section-title-row">
+                       <h3>Detalle del producto</h3>
+                     </div>
+                     <div className="pd-meta-grid">
+                       <div className="pd-meta-item">
+                         <span className="pd-meta-label">Código</span>
+                         <span className="pd-meta-value">{product.codigo || product.ref}</span>
+                       </div>
+                       {product.marca && (
+                         <div className="pd-meta-item">
+                           <span className="pd-meta-label">Marca</span>
+                           <span className="pd-meta-value">{product.marca}</span>
+                         </div>
+                       )}
+                       {product.tela && (
+                         <div className="pd-meta-item">
+                           <span className="pd-meta-label">Tela</span>
+                           <span className="pd-meta-value">{product.tela}</span>
+                         </div>
+                       )}
+                       <div className="pd-meta-item">
+                         <span className="pd-meta-label">Stock</span>
+                         <span className="pd-meta-value">{product.cantidadStock} uds</span>
+                       </div>
+                       <div className="pd-meta-item">
+                         <span className="pd-meta-label">Estado</span>
+                         <span className="pd-meta-value">{product.estado || 'Activo'}</span>
+                       </div>
+                       {product.descuento ? (
+                         <div className="pd-meta-item">
+                           <span className="pd-meta-label">Descuento</span>
+                           <span className="pd-meta-value">{product.descuento}%</span>
+                         </div>
+                       ) : null}
+                       {product.precioAnterior ? (
+                         <div className="pd-meta-item">
+                           <span className="pd-meta-label">Precio anterior</span>
+                           <span className="pd-meta-value">${product.precioAnterior.toLocaleString()}</span>
+                         </div>
+                       ) : null}
+                     </div>
+                   </div>
+                 )}
+
               </div>
 
               {/* PURCHASE */}
@@ -455,40 +569,13 @@ export const ProductDetailModal: React.FC<Props> = ({
 
                 <div className="pd-purchase-top">
 
-                  <div className="pd-quantity-wrapper">
-
-                    <button
-                      className="pd-quantity-btn"
-                      onClick={() =>
-                        handleQuantityChange(-1)
-                      }
-                      disabled={quantity <= 1}
-                    >
-                      <Minus size={15} />
-                    </button>
-
-                    <span className="pd-quantity-value">
-                      {quantity}
-                    </span>
-
-                    <button
-                      className="pd-quantity-btn"
-                      onClick={() =>
-                        handleQuantityChange(1)
-                      }
-                    >
-                      <Plus size={15} />
-                    </button>
-
-                  </div>
-
                   <div className="pd-total-premium">
 
                     <span>Total</span>
 
                     <strong>
                       $
-                      {totalPrice.toLocaleString()}
+                      {Number.isFinite(totalPrice) ? totalPrice.toLocaleString() : '0'}
                     </strong>
 
                   </div>
@@ -509,7 +596,7 @@ export const ProductDetailModal: React.FC<Props> = ({
                 </button>
 
                 <div className="pd-bottom-meta">
-                  Env Marketing - Envío gratis en pedidos superiores a $200.000
+                  Envío gratis en pedidos superiores a $200.000
                 </div>
 
               </div>
