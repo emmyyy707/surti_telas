@@ -49,6 +49,8 @@ import { commissionRouter } from '../modules/commission/presentation/routes/comm
 import { alertInventoryRouter } from '../modules/alert/presentation/routes/alert-inventory.routes';
 import { financialRouter } from '../modules/financial/presentation/routes/financial.routes';
 import { domiciliarioRouter } from '../modules/domiciliarios/presentation/routes/domiciliario.routes';
+import { customOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/custom-order.routes';
+import { adminCustomOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/admin-custom-order.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -107,6 +109,8 @@ export function createApp(): Express {
   }));
 
   app.use(cookieParser());
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, parameterLimit: 100000 }));
 
   app.use((req: Request, res: Response, next) => {
     const start = Date.now();
@@ -232,6 +236,8 @@ app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/admin/commissions', commissionRouter);
   app.use('/api/v1/admin/alerts', alertInventoryRouter);
   app.use('/api/v1/admin/financial', financialRouter);
+  app.use('/api/v1/custom-orders', customOrderRouter);
+  app.use('/api/v1/admin/custom-orders', adminCustomOrderRouter);
   app.use('/api/v1/domiciliarios', domiciliarioRouter);
   app.use('/api/v1/catalog', catalogRouter);
   app.use('/api/v1/customers', customerRouter);

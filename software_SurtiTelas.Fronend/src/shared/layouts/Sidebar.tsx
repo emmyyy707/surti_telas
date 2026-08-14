@@ -50,6 +50,7 @@ export interface SidebarProps {
   children?: React.ReactNode;
   className?: string;
   onToggleCollapse?: (collapsed: boolean) => void;
+  isActive?: (key: string) => boolean;
 }
 
 interface NavItemProps {
@@ -207,7 +208,8 @@ export const Sidebar = ({
    children,
    className,
    onToggleCollapse,
- }: SidebarProps) => {
+   isActive: activeMatcher,
+  }: SidebarProps) => {
    void roleBadge;
   const location = useLocation();
 
@@ -283,7 +285,7 @@ export const Sidebar = ({
     setOpenGroup((prev) => (prev === key ? null : key));
   }, []);
 
-  const isActive = useCallback(
+  const defaultIsActive = useCallback(
     (itemKey: string) => {
       const path = location.pathname;
       if (itemKey === 'dashboard' && (path === `${basePath}/` || path === `${basePath}/dashboard`)) {
@@ -293,6 +295,8 @@ export const Sidebar = ({
     },
     [location.pathname, basePath]
   );
+
+  const resolveIsActive = activeMatcher ?? defaultIsActive;
 
   const _userInitials = useMemo(() => {
     return user.initials || user.name.charAt(0).toUpperCase();
@@ -338,7 +342,7 @@ export const Sidebar = ({
               effectiveCollapsed={effectiveCollapsed}
               openGroup={openGroup}
               toggleGroup={toggleGroup}
-              isActive={isActive}
+               isActive={resolveIsActive}
             />
           ))}
         </nav>

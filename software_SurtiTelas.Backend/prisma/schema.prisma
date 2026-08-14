@@ -7,146 +7,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ------------- Enums globales -------------
-enum EstadoUsuario {
-  ACTIVO
-  INACTIVO
-}
-enum ProductStatus {
-  ACTIVO
-  INACTIVO
-}
-enum StockStatus {
-  OK
-  BAJO_STOCK
-  AGOTADO
-}
-enum OrderStatus {
-  NUEVO
-  EN_PRODUCCION
-  LISTO
-  DESPACHADO
-  EN_CAMINO
-  ENTREGADO
-  CANCELADO
-  PENDIENTE
-  EN_VALIDACION
-  ACEPTADO
-  RECHAZADO
-  RECIBO_GENERADO
-  RECIBO_ENVIADO
-}
-enum OrderPriority {
-  ESTANDAR
-  PRIORITARIO
-}
-enum ProductionStatus {
-  PENDIENTE
-  ASIGNADA
-  EN_PROCESO
-  TERMINADO
-}
-enum MovementType {
-  ENTRADA
-  SALIDA
-  AJUSTE
-}
-enum SupplierStatus {
-  ACTIVO
-  INACTIVO
-}
-enum WorkshopStatus {
-  ACTIVO
-  INACTIVO
-}
-enum NotificationType {
-  INFO
-  WARNING
-  SUCCESS
-  DANGER
-}
-enum PaymentMethod {
-  CASH
-  TRANSFER
-  CARD
-  OTHER
-}
-enum PaymentStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  REFUNDED
-}
-enum AlertState {
-  PENDIENTE
-  LEIDA
-  RESUELTA
-  CANCELADA
-}
-enum AlertPriority {
-  BAJA
-  MEDIA
-  ALTA
-  CRITICA
-}
-enum ControlPrendaEtapa {
-  CORTE
-  CONFECCION
-  ACABADO
-  CONTROL_CALIDAD
-  EMPAQUE
-}
-enum ControlPrendaEstado {
-  PROCESO
-  APROBADO
-  RECHAZADO
-}
-
-// ------------- Auth / RBAC -------------
 model User {
-  id                    String      @id @default(cuid())
-  email                 String      @unique
-  passwordHash          String      @map("password_hash")
-  nombre                String
-  apellidos             String?
-  telefono              String?
-  direccion             String?
-  tipoDocumento         String?     @map("tipo_documento")
-  numeroDocumento       String?     @map("numero_documento")
-  role                  String
-  estado                EstadoUsuario  @default(ACTIVO)
-  refreshToken          String?     @map("refresh_token")
-  twoFactorEnabled      Boolean     @default(false) @map("two_factor_enabled")
-  twoFactorSecret       String?     @map("two_factor_secret")
-  resetPasswordToken    String?     @map("reset_password_token")
-  resetPasswordExpires  DateTime?   @map("reset_password_expires")
-  failedLoginAttempts   Int         @default(0) @map("failed_login_attempts")
-  lockedUntil           DateTime?   @map("locked_until")
-  googleId              String?     @unique @map("google_id")
-  customers             Customer[]  @relation("AsesorClientes")
-  orders                Order[]     @relation("AsesorOrders")
-  productions           ProductionOrder[] @relation("OperarioProductions")
-  movements             InventoryMovement[] @relation("UsuarioMovements")
-  notifications         Notification[]
-  payments              Payment[]   @relation("AsesorPayments")
-   commissions           Commission[] @relation("AsesorCommissions")
-  alertsLeidas          Alert[]     @relation("AlertLeidaPor")
-  alertsResueltas       Alert[]     @relation("AlertResueltaPor")
-  controlPrendasCreadas ControlPrenda[] @relation("ControlPrendaCreadoPor")
-  controlPrendasRevisadas ControlPrenda[] @relation("ControlPrendaRevisadoPor")
-  auditLogs             AuditLog[]  @relation("AuditLogUsuario")
-  domiciliarioDeliveries Delivery[] @relation("DomiciliarioDeliveries")
-  clientConversations    Conversation[] @relation("ClientConversations")
-  advisorConversations   Conversation[] @relation("AdvisorConversations")
-  sentMessages           Message[]
-  ordersValidados        Order[]     @relation("OrderValidadoPor")
-  comprobantesCargados   Order[]     @relation("OrderComprobanteCargadoPor")
-  historialPedidos       OrderHistory[] @relation("OrderHistorialUsuario")
-  favorites              Favorite[]
-  domiciliario           Domiciliario?
-  createdAt               DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
-  deletedAt              DateTime?   @map("deleted_at")
+  id                          String                        @id @default(cuid())
+  email                       String                        @unique
+  passwordHash                String                        @map("password_hash")
+  nombre                      String
+  telefono                    String?
+  direccion                   String?
+  tipoDocumento               String?                       @map("tipo_documento")
+  numeroDocumento             String?                       @map("numero_documento")
+  role                        String
+  estado                      EstadoUsuario                 @default(ACTIVO)
+  refreshToken                String?                       @map("refresh_token")
+  twoFactorEnabled            Boolean                       @default(false) @map("two_factor_enabled")
+  twoFactorSecret             String?                       @map("two_factor_secret")
+  resetPasswordToken          String?                       @map("reset_password_token")
+  resetPasswordExpires        DateTime?                     @map("reset_password_expires")
+  failedLoginAttempts         Int                           @default(0) @map("failed_login_attempts")
+  lockedUntil                 DateTime?                     @map("locked_until")
+  googleId                    String?                       @unique @map("google_id")
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  deletedAt                   DateTime?                     @map("deleted_at")
+  apellidos                   String?
+  alertsLeidas                Alert[]                       @relation("AlertLeidaPor")
+  alertsResueltas             Alert[]                       @relation("AlertResueltaPor")
+  auditLogs                   AuditLog[]                    @relation("AuditLogUsuario")
+  commissions                 Commission[]                  @relation("AsesorCommissions")
+  controlPrendasCreadas       ControlPrenda[]               @relation("ControlPrendaCreadoPor")
+  controlPrendasRevisadas     ControlPrenda[]               @relation("ControlPrendaRevisadoPor")
+  advisorConversations        Conversation[]                @relation("AdvisorConversations")
+  clientConversations         Conversation[]                @relation("ClientConversations")
+  custom_order_attachments custom_order_attachments[]
+  custom_order_notes       custom_order_notes[]
+  custom_orders            custom_orders[]
+  customers                   Customer[]                    @relation("AsesorClientes")
+  domiciliarioDeliveries      Delivery[]                    @relation("DomiciliarioDeliveries")
+  domiciliario                Domiciliario?
+  favorites                   Favorite[]
+  movements                   InventoryMovement[]           @relation("UsuarioMovements")
+  message_templates           message_templates[]
+  sentMessages                Message[]
+  notifications               Notification[]
+  historialPedidos            OrderHistory[]                @relation("OrderHistorialUsuario")
+  orders                      Order[]                       @relation("AsesorOrders")
+  comprobantesCargados        Order[]                       @relation("OrderComprobanteCargadoPor")
+  ordersValidados             Order[]                       @relation("OrderValidadoPor")
+  payments                    Payment[]                     @relation("AsesorPayments")
+  productions                 ProductionOrder[]             @relation("OperarioProductions")
+  surveys                     surveys[]
+  technical_sheet_approvals   technical_sheet_approvals[]
+  technical_sheet_attachments technical_sheet_attachments[]
+  video_calls                 video_calls[]
 
   @@index([role])
   @@index([deletedAt])
@@ -162,21 +74,19 @@ model Domiciliario {
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("domiciliarios")
 }
 
 model Favorite {
-  id         String    @id @default(cuid())
-  userId     String    @map("user_id")
-  productId  String    @map("product_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
-
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@index([userId])
@@ -185,27 +95,29 @@ model Favorite {
 }
 
 model Permission {
-  id          String         @id @default(cuid())
-  code        String         @unique
+  id          String           @id @default(cuid())
+  code        String           @unique
   description String
   module      String
-  estado      String         @default("ACTIVO")
+  estado      String           @default("ACTIVO")
+  createdAt   DateTime         @default(now())
   roles       RolePermission[]
-  createdAt   DateTime       @default(now())
+
   @@map("permissions")
 }
 
 model RolePermission {
-  role         String       @map("role")
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         String     @map("role")
   permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
   @@id([role, permissionId])
   @@map("role_permissions")
 }
 
 model RoleConfig {
   id          String   @id @default(cuid())
-  role        String     @unique
+  role        String   @unique
   estado      String   @default("ACTIVO")
   descripcion String?
   createdAt   DateTime @default(now())
@@ -214,53 +126,53 @@ model RoleConfig {
   @@map("role_configs")
 }
 
-// ------------- Catálogo -------------
 model Category {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   nombre    String
-  slug      String    @unique
-  parentId  String?   @map("parent_id")
-  parent    Category? @relation("Subcategorias", fields: [parentId], references: [id], onDelete: SetNull)
+  slug      String     @unique
+  parentId  String?    @map("parent_id")
+  createdAt DateTime   @default(now())
+  parent    Category?  @relation("Subcategorias", fields: [parentId], references: [id])
   children  Category[] @relation("Subcategorias")
   products  Product[]
-  createdAt DateTime  @default(now())
+
   @@map("categories")
 }
 
 model Product {
-  id               String        @id @default(cuid())
-  ref              String        @unique
+  id               String              @id @default(cuid())
+  ref              String              @unique
   codigo           String?
   nombre           String
   descripcion      String?
-  descripcionCorta String?      @map("descripcion_corta")
-  categoriaId      String?       @map("categoria_id")
-  categoria        Category?     @relation(fields: [categoriaId], references: [id])
+  descripcionCorta String?             @map("descripcion_corta")
+  categoriaId      String?             @map("categoria_id")
   subcategoria     String?
   marca            String?
-  precio           Decimal       @db.Decimal(12, 2)
-  precioAnterior   Decimal?      @map("precio_anterior") @db.Decimal(12, 2)
-  descuento        Int           @default(0)
-  cantidadStock    Int           @map("cantidad_stock") @default(0)
-  stockStatus      StockStatus   @map("stock_status") @default(OK)
-  estado           ProductStatus @default(ACTIVO)
-  publicado        Boolean       @default(false)
-  fechaPublicacion DateTime?    @map("fecha_publicacion")
-  destacado        Boolean       @default(false)
-  oferta           Boolean       @default(false)
-  nuevo            Boolean       @default(false)
-  masVendido       Boolean       @map("mas_vendido") @default(false)
+  precio           Decimal             @db.Decimal(12, 2)
+  precioAnterior   Decimal?            @map("precio_anterior") @db.Decimal(12, 2)
+  descuento        Int                 @default(0)
+  cantidadStock    Int                 @default(0) @map("cantidad_stock")
+  stockStatus      StockStatus         @default(OK) @map("stock_status")
+  estado           ProductStatus       @default(ACTIVO)
+  publicado        Boolean             @default(false)
+  fechaPublicacion DateTime?           @map("fecha_publicacion")
+  destacado        Boolean             @default(false)
+  oferta           Boolean             @default(false)
+  nuevo            Boolean             @default(false)
+  masVendido       Boolean             @default(false) @map("mas_vendido")
   tela             String
   colores          String[]
   tallas           String[]
-  imagenPrincipal  String?       @map("imagen_principal")
-  imagenes         String[]      @default([])
-  orderItems       OrderItem[]
-  movements        InventoryMovement[]
+  imagenPrincipal  String?             @map("imagen_principal")
+  imagenes         String[]            @default([])
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  deletedAt        DateTime?           @map("deleted_at")
   favorites        Favorite[]
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  deletedAt        DateTime?     @map("deleted_at")
+  movements        InventoryMovement[]
+  orderItems       OrderItem[]
+  categoria        Category?           @relation(fields: [categoriaId], references: [id])
 
   @@index([categoriaId, deletedAt])
   @@index([publicado, estado])
@@ -270,28 +182,29 @@ model Product {
   @@map("products")
 }
 
-// ------------- Clientes -------------
 model Customer {
-  id                String      @id @default(cuid())
+  id                String             @id @default(cuid())
   nombre            String
-  apellidos         String?
-  email             String?     @db.VarChar(255)
+  email             String?            @db.VarChar(255)
   ciudad            String?
-  telefono          String?     @map("telefono")
+  telefono          String?            @map("telefono")
   nit               String?
-  asesorId          String?     @map("asesor_id")
-  asesor            User?       @relation("AsesorClientes", fields: [asesorId], references: [id])
-  cupoTotal         Decimal     @map("cupo_total") @default(0) @db.Decimal(12, 2)
-  cupoUsado         Decimal     @map("cupo_usado") @default(0) @db.Decimal(12, 2)
-  deudaVencida      Decimal     @map("deuda_vencida") @default(0) @db.Decimal(12, 2)
-  isTrustedCustomer Boolean    @map("is_trusted_customer") @default(false)
-  estado            EstadoUsuario @default(ACTIVO)
+  asesorId          String?            @map("asesor_id")
+  cupoTotal         Decimal            @default(0) @map("cupo_total") @db.Decimal(12, 2)
+  cupoUsado         Decimal            @default(0) @map("cupo_usado") @db.Decimal(12, 2)
+  deudaVencida      Decimal            @default(0) @map("deuda_vencida") @db.Decimal(12, 2)
+  isTrustedCustomer Boolean            @default(false) @map("is_trusted_customer")
+  estado            EstadoUsuario      @default(ACTIVO)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?          @map("deleted_at")
+  apellidos         String?
+  custom_orders     custom_orders[]
+  asesor            User?              @relation("AsesorClientes", fields: [asesorId], references: [id])
   orders            Order[]
   payments          Payment[]
   receipts          Receipt[]
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  deletedAt         DateTime?  @map("deleted_at")
+  survey_responses  survey_responses[]
 
   @@index([asesorId])
   @@index([asesorId, estado])
@@ -299,58 +212,58 @@ model Customer {
   @@map("customers")
 }
 
-// ------------- Pedidos -------------
 model Order {
-  id                      String       @id @default(cuid())
-  numero                  String       @unique
-  clienteId               String       @map("cliente_id")
-  cliente                 Customer     @relation(fields: [clienteId], references: [id])
-  clienteNombre           String       @map("cliente_nombre")
-  asesorId                String       @map("asesor_id")
-  asesor                  User         @relation("AsesorOrders", fields: [asesorId], references: [id])
-  asesorNombre            String       @map("asesor_nombre")
-  tipoFlujo               String       @map("tipo_flujo") @default("PRODUCCION")
-  fecha                   DateTime     @default(now())
-  subtotal                Decimal?     @map("subtotal") @db.Decimal(12, 2)
-  impuestos               Decimal?     @map("impuestos") @default(0) @db.Decimal(12, 2)
-  descuentos              Decimal?     @map("descuentos") @default(0) @db.Decimal(12, 2)
-  total                   Decimal      @db.Decimal(12, 2)
-  itemsCount              Int          @map("items_count") @default(0)
-  estado                  OrderStatus  @default(NUEVO)
-  prioridad               OrderPriority @default(ESTANDAR)
-  observaciones           String?
-  medioPago               String?      @map("medio_pago")
-  fechaValidacion         DateTime?    @map("fecha_validacion")
-  usuarioValidacionId     String?      @map("usuario_validacion_id")
-  usuarioValidacion       User?        @relation("OrderValidadoPor", fields: [usuarioValidacionId], references: [id])
-  razonRechazo            String?      @map("razon_rechazo")
-  observacionesRechazo    String?      @map("observaciones_rechazo")
-  comprobantePagoUrl      String?      @map("comprobante_pago_url")
-  comprobantePagoNombre   String?      @map("comprobante_pago_nombre")
-  comprobantePagoMime     String?      @map("comprobante_pago_mime")
-  comprobantePagoTamaño   Int?         @map("comprobante_pago_tamaño")
-  comprobantePagoCargadoEn DateTime?   @map("comprobante_pago_cargado_en")
-  comprobantePagoCargadoPorId String?  @map("comprobante_pago_cargado_por_id")
-  comprobantePagoCargadoPor User?     @relation("OrderComprobanteCargadoPor", fields: [comprobantePagoCargadoPorId], references: [id])
-  comprobantePagoEstado   String?      @map("comprobante_pago_estado")
-  comprobantePagoObservaciones String?      @map("comprobante_pago_observaciones")
-  diasCredito                Int?           @map("dias_credito") @default(0)
-  descuentoEspecial          Decimal?       @map("descuento_especial") @db.Decimal(5, 2) @default(0)
-  envioGratis                Boolean?       @map("envio_gratis") @default(false)
-  prioridadEnvio             String?        @map("prioridad_envio") @default("Normal")
-  items                   OrderItem[]
-  production              ProductionOrder?
-  commissions             Commission[]
-  payments                Payment[]
-  receipts                Receipt[]
-  deliveries              Delivery[]
-  conversationOrders      ConversationOrder[]
-  returns                 Return[]
-  historial               OrderHistory[]
-  venta                   Sale?
-  createdAt               DateTime     @default(now())
-  updatedAt               DateTime     @updatedAt
-  deletedAt               DateTime?    @map("deleted_at")
+  id                           String              @id @default(cuid())
+  numero                       String              @unique
+  clienteId                    String              @map("cliente_id")
+  clienteNombre                String              @map("cliente_nombre")
+  asesorId                     String              @map("asesor_id")
+  asesorNombre                 String              @map("asesor_nombre")
+  tipoFlujo                    String              @default("PRODUCCION") @map("tipo_flujo")
+  fecha                        DateTime            @default(now())
+  subtotal                     Decimal?            @map("subtotal") @db.Decimal(12, 2)
+  impuestos                    Decimal?            @default(0) @map("impuestos") @db.Decimal(12, 2)
+  descuentos                   Decimal?            @default(0) @map("descuentos") @db.Decimal(12, 2)
+  total                        Decimal             @db.Decimal(12, 2)
+  itemsCount                   Int                 @default(0) @map("items_count")
+  estado                       OrderStatus         @default(NUEVO)
+  prioridad                    OrderPriority       @default(ESTANDAR)
+  observaciones                String?
+  medioPago                    String?             @map("medio_pago")
+  fechaValidacion              DateTime?           @map("fecha_validacion")
+  usuarioValidacionId          String?             @map("usuario_validacion_id")
+  razonRechazo                 String?             @map("razon_rechazo")
+  observacionesRechazo         String?             @map("observaciones_rechazo")
+  comprobantePagoUrl           String?             @map("comprobante_pago_url")
+  comprobantePagoNombre        String?             @map("comprobante_pago_nombre")
+  comprobantePagoMime          String?             @map("comprobante_pago_mime")
+  comprobantePagoTamaño       Int?                @map("comprobante_pago_tamaño")
+  comprobantePagoCargadoEn     DateTime?           @map("comprobante_pago_cargado_en")
+  comprobantePagoCargadoPorId  String?             @map("comprobante_pago_cargado_por_id")
+  comprobantePagoEstado        String?             @map("comprobante_pago_estado")
+  comprobantePagoObservaciones String?             @map("comprobante_pago_observaciones")
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt
+  deletedAt                    DateTime?           @map("deleted_at")
+  descuentoEspecial            Decimal?            @default(0) @map("descuento_especial") @db.Decimal(5, 2)
+  diasCredito                  Int?                @default(0) @map("dias_credito")
+  envioGratis                  Boolean?            @default(false) @map("envio_gratis")
+  prioridadEnvio               String?             @default("Normal") @map("prioridad_envio")
+  commissions                  Commission[]
+  conversationOrders           ConversationOrder[]
+  custom_orders                custom_orders?
+  deliveries                   Delivery?
+  historial                    OrderHistory[]
+  items                        OrderItem[]
+  asesor                       User                @relation("AsesorOrders", fields: [asesorId], references: [id])
+  cliente                      Customer            @relation(fields: [clienteId], references: [id])
+  comprobantePagoCargadoPor    User?               @relation("OrderComprobanteCargadoPor", fields: [comprobantePagoCargadoPorId], references: [id])
+  usuarioValidacion            User?               @relation("OrderValidadoPor", fields: [usuarioValidacionId], references: [id])
+  payments                     Payment[]
+  production                   ProductionOrder?
+  receipts                     Receipt[]
+  returns                      Return[]
+  venta                        Sale?
 
   @@index([clienteId, deletedAt])
   @@index([asesorId])
@@ -364,180 +277,183 @@ model Order {
 model OrderItem {
   id        String   @id @default(cuid())
   orderId   String   @map("order_id")
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String?  @map("product_id")
-  product   Product? @relation(fields: [productId], references: [id])
   nombre    String
   precio    Decimal  @db.Decimal(12, 2)
   cantidad  Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+
   @@index([orderId])
   @@map("order_items")
 }
 
-// ------------- Stock -------------
 model Supplier {
-  id               String         @id @default(cuid())
-  nombre           String
-  nit              String         @unique
-  telefono         String?
-  email            String?
-  direccion        String?
-  ciudad           String?
-  materiales       String[]       @default([])
-  estado           SupplierStatus @default(ACTIVO)
-  calificacion     Float          @default(0)
-  pedidosRealizados Int           @map("pedidos_realizados") @default(0)
-  ultimoPedido     DateTime?      @map("ultimo_pedido")
-  rawMaterials     RawMaterial[]
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  deletedAt        DateTime?      @map("deleted_at")
+  id                String         @id @default(cuid())
+  nombre            String
+  nit               String         @unique
+  telefono          String?
+  email             String?
+  direccion         String?
+  ciudad            String?
+  materiales        String[]       @default([])
+  estado            SupplierStatus @default(ACTIVO)
+  calificacion      Float          @default(0)
+  pedidosRealizados Int            @default(0) @map("pedidos_realizados")
+  ultimoPedido      DateTime?      @map("ultimo_pedido")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?      @map("deleted_at")
+  rawMaterials      RawMaterial[]
+
   @@index([deletedAt])
   @@map("suppliers")
 }
 
 model RawMaterial {
-  id            String    @id @default(cuid())
-  nombre        String
-  categoria     String?
-  unidadMedida  String    @map("unidad_medida")
-  stockActual   Int       @map("stock_actual") @default(0)
-  stockMinimo   Int       @map("stock_minimo") @default(0)
-  proveedorId   String?   @map("proveedor_id")
-  proveedor     Supplier? @relation(fields: [proveedorId], references: [id])
-  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(12, 2)
-  movements     InventoryMovement[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime? @map("deleted_at")
+  id             String              @id @default(cuid())
+  nombre         String
+  categoria      String?
+  unidadMedida   String              @map("unidad_medida")
+  stockActual    Int                 @default(0) @map("stock_actual")
+  stockMinimo    Int                 @default(0) @map("stock_minimo")
+  proveedorId    String?             @map("proveedor_id")
+  precioUnitario Decimal             @map("precio_unitario") @db.Decimal(12, 2)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  deletedAt      DateTime?           @map("deleted_at")
+  movements      InventoryMovement[]
+  proveedor      Supplier?           @relation(fields: [proveedorId], references: [id])
+
   @@index([proveedorId])
   @@index([stockActual])
   @@map("raw_materials")
 }
 
 model InventoryMovement {
-  id           String       @id @default(cuid())
-  tipo         MovementType
-  productId    String?      @map("product_id")
-  product      Product?     @relation(fields: [productId], references: [id])
-  rawMaterialId String?     @map("raw_material_id")
-  rawMaterial  RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-  cantidad     Int
-  ajuste       Int?
-  motivo       String
-  usuarioId    String       @map("usuario_id")
-  usuario      User         @relation("UsuarioMovements", fields: [usuarioId], references: [id])
-  fecha        DateTime     @default(now())
-  deletedAt    DateTime?    @map("deleted_at")
+  id            String       @id @default(cuid())
+  tipo          MovementType
+  productId     String?      @map("product_id")
+  rawMaterialId String?      @map("raw_material_id")
+  cantidad      Int
+  ajuste        Int?
+  motivo        String
+  usuarioId     String       @map("usuario_id")
+  fecha         DateTime     @default(now())
+  deletedAt     DateTime?    @map("deleted_at")
+  product       Product?     @relation(fields: [productId], references: [id])
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  usuario       User         @relation("UsuarioMovements", fields: [usuarioId], references: [id])
+
   @@index([productId, fecha])
   @@index([rawMaterialId, fecha])
   @@index([deletedAt])
   @@map("inventory_movements")
 }
 
-// ------------- Producción -------------
 model Workshop {
-  id          String         @id @default(cuid())
+  id          String            @id @default(cuid())
   nombre      String
-  encargadoId String?        @map("encargado_id")
+  encargadoId String?           @map("encargado_id")
   direccion   String?
   ciudad      String?
-  telefono    String?
-  email       String?
-  estado      WorkshopStatus @default(ACTIVO)
+  estado      WorkshopStatus    @default(ACTIVO)
   capacidad   Int?
-  ocupacion   Int?           @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?         @map("deleted_at")
+  ocupacion   Int?              @default(0)
+  email       String?
+  telefono    String?
   productions ProductionOrder[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  deletedAt   DateTime?      @map("deleted_at")
+
   @@map("workshops")
 }
 
 model ProductionOrder {
-  id            String          @id @default(cuid())
-  pedidoId      String?         @map("pedido_id") @unique
-  pedido        Order?          @relation(fields: [pedidoId], references: [id])
-  operarioId    String?         @map("operario_id")
-  operario      User?           @relation("OperarioProductions", fields: [operarioId], references: [id])
-  tallerId      String?         @map("taller_id")
-  taller        Workshop?       @relation(fields: [tallerId], references: [id])
-  referencia    String
-  cantidad      Int
-  fechaInicio   DateTime        @map("fecha_inicio") @default(now())
-  fechaEstimada DateTime        @map("fecha_estimada")
-  avance        Int             @default(0)
-  estado        ProductionStatus @default(PENDIENTE)
-  tela          String?
-  colores       String[]
-  curvaTallas   Json?           @map("curva_tallas")
-  notasTecnicas String?         @map("notas_tecnicas")
-  controlPrendas ControlPrenda[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  deletedAt     DateTime?       @map("deleted_at")
+  id              String           @id @default(cuid())
+  pedidoId        String?          @unique @map("pedido_id")
+  operarioId      String?          @map("operario_id")
+  tallerId        String?          @map("taller_id")
+  referencia      String
+  cantidad        Int
+  fechaInicio     DateTime         @default(now()) @map("fecha_inicio")
+  fechaEstimada   DateTime         @map("fecha_estimada")
+  avance          Int              @default(0)
+  estado          ProductionStatus @default(PENDIENTE)
+  tela            String?
+  colores         String[]
+  curvaTallas     Json?            @map("curva_tallas")
+  notasTecnicas   String?          @map("notas_tecnicas")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?        @map("deleted_at")
+  custom_order_id String?          @unique
+  controlPrendas  ControlPrenda[]
+  custom_orders   custom_orders?   @relation(fields: [custom_order_id], references: [id])
+  operario        User?            @relation("OperarioProductions", fields: [operarioId], references: [id])
+  pedido          Order?           @relation(fields: [pedidoId], references: [id])
+  taller          Workshop?        @relation(fields: [tallerId], references: [id])
+
   @@index([pedidoId])
   @@index([estado])
   @@index([deletedAt])
+  @@index([custom_order_id])
   @@map("production_orders")
 }
 
-// ------------- Transversal: Notificaciones -------------
 model Notification {
-  id        String          @id @default(cuid())
+  id        String           @id @default(cuid())
   tipo      NotificationType
   titulo    String
   mensaje   String
-  leida     Boolean         @default(false)
-  usuarioId String?         @map("usuario_id")
-  usuario   User?           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  createdAt DateTime        @default(now())
-  deletedAt DateTime?       @map("deleted_at")
+  leida     Boolean          @default(false)
+  usuarioId String?          @map("usuario_id")
+  createdAt DateTime         @default(now())
+  deletedAt DateTime?        @map("deleted_at")
+  usuario   User?            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
   @@index([usuarioId, leida])
   @@index([deletedAt])
   @@map("notifications")
 }
 
 model PushSubscription {
-  id         String   @id @default(cuid())
-  userId     String   @map("user_id")
-  endpoint   String   @unique
-  keysP256dh String   @map("keys_p256dh")
-  keysAuth   String   @map("keys_auth")
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  endpoint   String    @unique
+  keysP256dh String    @map("keys_p256dh")
+  keysAuth   String    @map("keys_auth")
   userAgent  String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   deletedAt  DateTime? @map("deleted_at")
 
   @@index([userId])
   @@map("push_subscriptions")
 }
 
-// ------------- Webhooks -------------
 model WebhookSubscription {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   url       String
   secret    String?
-  events    String[] @default([])
-  active    Boolean  @default(true)
-  usuarioId String?  @map("usuario_id")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  events    String[]  @default([])
+  active    Boolean   @default(true)
+  usuarioId String?   @map("usuario_id")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime? @map("deleted_at")
+
   @@index([usuarioId])
   @@index([active])
   @@index([deletedAt])
   @@map("webhook_subscriptions")
 }
 
-// ------------- Pagos -------------
 model Payment {
   id         String        @id @default(cuid())
   orderId    String        @map("order_id")
-  order      Order         @relation(fields: [orderId], references: [id])
   customerId String        @map("customer_id")
-  customer   Customer      @relation(fields: [customerId], references: [id])
   asesorId   String?       @map("asesor_id")
-  asesor     User?         @relation("AsesorPayments", fields: [asesorId], references: [id])
   amount     Decimal       @db.Decimal(12, 2)
   method     PaymentMethod
   status     PaymentStatus @default(PENDING)
@@ -547,6 +463,10 @@ model Payment {
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
   deletedAt  DateTime?     @map("deleted_at")
+  asesor     User?         @relation("AsesorPayments", fields: [asesorId], references: [id])
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  order      Order         @relation(fields: [orderId], references: [id])
+
   @@index([orderId])
   @@index([customerId])
   @@index([asesorId])
@@ -555,28 +475,28 @@ model Payment {
   @@map("payments")
 }
 
-// ------------- Recibos -------------
 model Receipt {
-  id                String    @id @default(cuid())
-  orderId           String?   @map("order_id")
-  order             Order?    @relation(fields: [orderId], references: [id])
-  customerId        String    @map("customer_id")
-  customer          Customer  @relation(fields: [customerId], references: [id])
-  numero            String    @unique
-  total             Decimal   @db.Decimal(12, 2)
-  concepto          String
-  notas             String?
-  url               String?
-  emitidoPor        String?
-  emitidoAt         DateTime  @default(now()) @map("emitido_at")
-  estado            String    @default("BORRADOR")
-  estadoEnvio       String?   @map("estado_envio") @default("PENDIENTE")
-  fechaEnvio        DateTime? @map("fecha_envio")
-  intentosEnvio     Int       @map("intentos_envio") @default(0)
-  ultimoErrorEnvio  String?   @map("ultimo_error_envio")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  deletedAt         DateTime? @map("deleted_at")
+  id               String    @id @default(cuid())
+  orderId          String?   @map("order_id")
+  customerId       String    @map("customer_id")
+  numero           String    @unique
+  total            Decimal   @db.Decimal(12, 2)
+  concepto         String
+  notas            String?
+  url              String?
+  emitidoPor       String?
+  emitidoAt        DateTime  @default(now()) @map("emitido_at")
+  estado           String    @default("BORRADOR")
+  estadoEnvio      String?   @default("PENDIENTE") @map("estado_envio")
+  fechaEnvio       DateTime? @map("fecha_envio")
+  intentosEnvio    Int       @default(0) @map("intentos_envio")
+  ultimoErrorEnvio String?   @map("ultimo_error_envio")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime? @map("deleted_at")
+  customer         Customer  @relation(fields: [customerId], references: [id])
+  order            Order?    @relation(fields: [orderId], references: [id])
+
   @@index([customerId])
   @@index([orderId])
   @@index([estado])
@@ -584,25 +504,24 @@ model Receipt {
   @@map("receipts")
 }
 
-// ------------- Ventas -------------
 model Sale {
-  id              String    @id @default(cuid())
-  orderId         String    @unique @map("order_id")
-  order           Order     @relation(fields: [orderId], references: [id])
-  clienteId       String    @map("cliente_id")
-  clienteNombre   String    @map("cliente_nombre")
-  asesorId        String    @map("asesor_id")
-  asesorNombre    String    @map("asesor_nombre")
-  fechaVenta      DateTime  @default(now()) @map("fecha_venta")
-  subtotal        Decimal   @db.Decimal(12, 2)
-  impuestos       Decimal   @db.Decimal(12, 2)
-  descuentos      Decimal   @db.Decimal(12, 2)
-  total           Decimal   @db.Decimal(12, 2)
-  estado          String    @default("COMPLETADA")
-  medioPago       String?   @map("medio_pago")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime? @map("deleted_at")
+  id            String    @id @default(cuid())
+  orderId       String    @unique @map("order_id")
+  clienteId     String    @map("cliente_id")
+  clienteNombre String    @map("cliente_nombre")
+  asesorId      String    @map("asesor_id")
+  asesorNombre  String    @map("asesor_nombre")
+  fechaVenta    DateTime  @default(now()) @map("fecha_venta")
+  subtotal      Decimal   @db.Decimal(12, 2)
+  impuestos     Decimal   @db.Decimal(12, 2)
+  descuentos    Decimal   @db.Decimal(12, 2)
+  total         Decimal   @db.Decimal(12, 2)
+  estado        String    @default("COMPLETADA")
+  medioPago     String?   @map("medio_pago")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? @map("deleted_at")
+  order         Order     @relation(fields: [orderId], references: [id])
 
   @@index([clienteId])
   @@index([asesorId])
@@ -611,20 +530,19 @@ model Sale {
   @@map("sales")
 }
 
-// ------------- Historial de pedidos -------------
 model OrderHistory {
-  id           String   @id @default(cuid())
-  pedidoId     String   @map("pedido_id")
-  pedido       Order    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-  usuarioId    String?  @map("usuario_id")
-  usuario      User?    @relation("OrderHistorialUsuario", fields: [usuarioId], references: [id])
-  accion       String
-  estadoAnterior String @map("estado_anterior")
-  estadoNuevo  String   @map("estado_nuevo")
-  razon        String?
-  informacion  Json?
-  createdAt    DateTime @default(now())
-  deletedAt    DateTime? @map("deleted_at")
+  id             String    @id @default(cuid())
+  pedidoId       String    @map("pedido_id")
+  usuarioId      String?   @map("usuario_id")
+  accion         String
+  estadoAnterior String    @map("estado_anterior")
+  estadoNuevo    String    @map("estado_nuevo")
+  razon          String?
+  informacion    Json?
+  createdAt      DateTime  @default(now())
+  deletedAt      DateTime? @map("deleted_at")
+  pedido         Order     @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  usuario        User?     @relation("OrderHistorialUsuario", fields: [usuarioId], references: [id])
 
   @@index([pedidoId])
   @@index([usuarioId])
@@ -633,13 +551,10 @@ model OrderHistory {
   @@map("order_history")
 }
 
-// ------------- Comisiones -------------
 model Commission {
   id         String    @id @default(cuid())
   asesorId   String    @map("asesor_id")
-  asesor     User      @relation("AsesorCommissions", fields: [asesorId], references: [id])
   orderId    String?   @map("order_id")
-  order      Order?    @relation(fields: [orderId], references: [id])
   monto      Decimal   @db.Decimal(12, 2)
   porcentaje Decimal   @db.Decimal(5, 2)
   estado     String    @default("pendiente")
@@ -647,13 +562,15 @@ model Commission {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime? @map("deleted_at")
+  asesor     User      @relation("AsesorCommissions", fields: [asesorId], references: [id])
+  order      Order?    @relation(fields: [orderId], references: [id])
+
   @@index([asesorId])
   @@index([orderId])
   @@index([deletedAt])
   @@map("commissions")
 }
 
-// ------------- Configuración de empresa -------------
 model CompanyConfig {
   id        String   @id @default("company")
   nombre    String   @default("SurtiTelas")
@@ -666,26 +583,26 @@ model CompanyConfig {
   moneda    String   @default("COP")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@map("company_config")
 }
 
-// ------------- CMS -------------
 model CmsPage {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  titulo      String
-  contenido   String?
-  publicado   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime? @map("deleted_at")
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  titulo    String
+  contenido String?
+  publicado Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
   @@index([slug])
   @@index([publicado])
   @@index([deletedAt])
   @@map("cms_pages")
 }
 
-// ------------- Contacto -------------
 model ContactMessage {
   id            String    @id @default(cuid())
   nombre        String
@@ -702,13 +619,13 @@ model ContactMessage {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime? @map("deleted_at")
+
   @@index([leida])
   @@index([estado])
   @@index([deletedAt])
   @@map("contact_messages")
 }
 
-// ------------- Alertas -------------
 model Alert {
   id            String        @id @default(cuid())
   tipo          String
@@ -719,14 +636,15 @@ model Alert {
   prioridad     AlertPriority @default(MEDIA)
   leida         Boolean       @default(false)
   leidaPorId    String?       @map("leida_por_id")
-  leidaPor      User?         @relation("AlertLeidaPor", fields: [leidaPorId], references: [id])
   resueltaPorId String?       @map("resuelta_por_id")
-  resueltaPor   User?         @relation("AlertResueltaPor", fields: [resueltaPorId], references: [id])
   resueltaEn    DateTime?
   metadata      Json?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?     @map("deleted_at")
+  leidaPor      User?         @relation("AlertLeidaPor", fields: [leidaPorId], references: [id])
+  resueltaPor   User?         @relation("AlertResueltaPor", fields: [resueltaPorId], references: [id])
+
   @@index([estado])
   @@index([prioridad])
   @@index([modulo])
@@ -735,11 +653,9 @@ model Alert {
   @@map("alerts")
 }
 
-// ------------- Auditoría -------------
 model AuditLog {
   id           String   @id @default(cuid())
   usuarioId    String?  @map("usuario_id")
-  usuario      User?    @relation("AuditLogUsuario", fields: [usuarioId], references: [id])
   accion       String
   modulo       String
   referenciaId String?  @map("referencia_id")
@@ -747,17 +663,17 @@ model AuditLog {
   userAgent    String?
   metadata     Json?
   createdAt    DateTime @default(now())
+  usuario      User?    @relation("AuditLogUsuario", fields: [usuarioId], references: [id])
+
   @@index([usuarioId])
   @@index([modulo])
   @@index([createdAt])
   @@map("audit_logs")
 }
 
-// ------------- Control de prendas -------------
 model ControlPrenda {
   id                String              @id @default(cuid())
   produccionId      String              @map("produccion_id")
-  produccion        ProductionOrder     @relation(fields: [produccionId], references: [id])
   etapa             ControlPrendaEtapa
   estado            ControlPrendaEstado @default(PROCESO)
   cantidadTotal     Int
@@ -766,12 +682,14 @@ model ControlPrenda {
   cantidadRechazada Int
   observaciones     String?
   revisadoPorId     String?             @map("revisado_por_id")
-  revisadoPor       User?               @relation("ControlPrendaRevisadoPor", fields: [revisadoPorId], references: [id])
   creadoPorId       String              @map("creado_por_id")
-  creadoPor         User                @relation("ControlPrendaCreadoPor", fields: [creadoPorId], references: [id])
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   deletedAt         DateTime?           @map("deleted_at")
+  creadoPor         User                @relation("ControlPrendaCreadoPor", fields: [creadoPorId], references: [id])
+  produccion        ProductionOrder     @relation(fields: [produccionId], references: [id])
+  revisadoPor       User?               @relation("ControlPrendaRevisadoPor", fields: [revisadoPorId], references: [id])
+
   @@index([produccionId])
   @@index([estado])
   @@index([etapa])
@@ -779,13 +697,10 @@ model ControlPrenda {
   @@map("control_prendas")
 }
 
-// ------------- Entregas / Domicilios -------------
 model Delivery {
   id             String    @id @default(cuid())
   orderId        String    @unique @map("order_id")
-  order          Order     @relation(fields: [orderId], references: [id])
   domiciliarioId String?   @map("domiciliario_id")
-  domiciliario   User?     @relation("DomiciliarioDeliveries", fields: [domiciliarioId], references: [id])
   estado         String    @default("ASIGNADO")
   direccion      String
   ciudad         String?
@@ -796,17 +711,18 @@ model Delivery {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime? @map("deleted_at")
+  domiciliario   User?     @relation("DomiciliarioDeliveries", fields: [domiciliarioId], references: [id])
+  order          Order     @relation(fields: [orderId], references: [id])
+
   @@index([domiciliarioId])
   @@index([deletedAt])
   @@map("deliveries")
 }
 
-// ------------- Devoluciones -------------
 model Return {
   id                    String    @id @default(cuid())
   numeroDevolucion      String    @unique @map("numero_devolucion")
   orderId               String    @map("order_id")
-  order                 Order     @relation(fields: [orderId], references: [id])
   prenda                String
   referencia            String
   motivo                String
@@ -816,37 +732,38 @@ model Return {
   estado                String    @default("RECIBIDO")
   destino               String?
   cliente               String?
-  clienteId             String?   @map("cliente_id")
   responsable           String?
   observaciones         String?
-  imagenes             String[]   @default([])
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   deletedAt             DateTime? @map("deleted_at")
+  imagenes              String[]  @default([])
+  clienteId             String?   @map("cliente_id")
+  order                 Order     @relation(fields: [orderId], references: [id])
+
   @@index([orderId])
   @@index([clienteId])
   @@index([deletedAt])
   @@map("returns")
 }
 
-// ------------- Chat -------------
 model Conversation {
-  id            String   @id @default(cuid())
-  clientId      String   @map("client_id")
-  advisorId     String?  @map("advisor_id")
-  status        String   @default("OPEN")
-  subject       String?
-  lastMessageAt DateTime? @map("last_message_at")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  deletedAt     DateTime? @map("deleted_at")
-
-  client  User    @relation("ClientConversations", fields: [clientId], references: [id])
-  advisor User?   @relation("AdvisorConversations", fields: [advisorId], references: [id])
-  messages Message[]
+  id                 String                   @id @default(cuid())
+  clientId           String                   @map("client_id")
+  advisorId          String?                  @map("advisor_id")
+  status             String                   @default("OPEN")
+  subject            String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  deletedAt          DateTime?                @map("deleted_at")
+  lastMessageAt      DateTime?                @map("last_message_at")
+  surveys            ChatSatisfactionSurvey[]
+  tickets            ChatTicket[]
   conversationOrders ConversationOrder[]
-  surveys ChatSatisfactionSurvey[]
-  tickets ChatTicket[]
+  advisor            User?                    @relation("AdvisorConversations", fields: [advisorId], references: [id])
+  client             User                     @relation("ClientConversations", fields: [clientId], references: [id])
+  custom_orders      custom_orders?
+  messages           Message[]
 
   @@index([clientId])
   @@index([advisorId])
@@ -857,28 +774,27 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(cuid())
-  conversationId String   @map("conversation_id")
-  senderId       String   @map("sender_id")
-  senderRole     String   @default("CLIENTE") @map("sender_role")
-  content        String
-  messageType    String   @default("text") @map("message_type")
-  status         String   @default("sent")
-  read           Boolean  @default(false)
-  referenceId    String?  @map("reference_id")
-  referenceType  String?  @map("reference_type")
-  quotedMessageId String? @map("quoted_message_id")
-  editedAt       DateTime? @map("edited_at")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  deletedAt      DateTime? @map("deleted_at")
-
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User          @relation(fields: [senderId], references: [id])
-  quotedMessage  Message?      @relation("MessageQuotes", fields: [quotedMessageId], references: [id])
-  quotes         Message[]     @relation("MessageQuotes")
-  attachments    MessageAttachment[]
-  reactions      MessageReaction[]
+  id              String              @id @default(cuid())
+  conversationId  String              @map("conversation_id")
+  senderId        String              @map("sender_id")
+  content         String
+  read            Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?           @map("deleted_at")
+  messageType     String              @default("text") @map("message_type")
+  senderRole      String              @default("CLIENTE") @map("sender_role")
+  status          String              @default("sent")
+  referenceId     String?             @map("reference_id")
+  referenceType   String?             @map("reference_type")
+  editedAt        DateTime?           @map("edited_at")
+  quotedMessageId String?             @map("quoted_message_id")
+  attachments     MessageAttachment[]
+  reactions       MessageReaction[]
+  conversation    Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  quotedMessage   Message?            @relation("MessageQuotes", fields: [quotedMessageId], references: [id])
+  quotes          Message[]           @relation("MessageQuotes")
+  sender          User                @relation(fields: [senderId], references: [id])
 
   @@index([conversationId])
   @@index([senderId])
@@ -888,30 +804,28 @@ model Message {
 }
 
 model MessageAttachment {
-  id        String   @id @default(cuid())
-  messageId String   @map("message_id")
+  id        String    @id @default(cuid())
+  messageId String    @map("message_id")
   url       String
-  mimeType  String   @map("mime_type")
+  mimeType  String    @map("mime_type")
   size      Int
   filename  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   deletedAt DateTime? @map("deleted_at")
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
   @@map("message_attachments")
 }
 
 model MessageReaction {
-  id        String   @id @default(cuid())
-  messageId String   @map("message_id")
-  userId    String   @map("user_id")
+  id        String    @id @default(cuid())
+  messageId String    @map("message_id")
+  userId    String    @map("user_id")
   emoji     String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   deletedAt DateTime? @map("deleted_at")
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
   @@index([messageId])
@@ -919,13 +833,12 @@ model MessageReaction {
 }
 
 model ConversationOrder {
-  id             String   @id @default(cuid())
-  conversationId String   @map("conversation_id")
-  orderId        String   @map("order_id")
-  createdAt      DateTime @default(now())
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  conversationId String       @map("conversation_id")
+  orderId        String       @map("order_id")
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, orderId])
   @@index([conversationId])
@@ -934,15 +847,14 @@ model ConversationOrder {
 }
 
 model ChatSatisfactionSurvey {
-  id             String   @id @default(cuid())
-  conversationId String   @map("conversation_id")
-  userId         String   @map("user_id")
-  userRole       String   @map("user_role")
+  id             String       @id @default(cuid())
+  conversationId String       @map("conversation_id")
+  userId         String       @map("user_id")
+  userRole       String       @map("user_role")
   rating         Int
   comment        String?
-  createdAt      DateTime @default(now())
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([userId])
@@ -950,21 +862,20 @@ model ChatSatisfactionSurvey {
 }
 
 model ChatTicket {
-  id             String      @id @default(cuid())
-  conversationId String      @map("conversation_id")
-  userId         String      @map("user_id")
-  userRole       String      @map("user_role")
+  id             String       @id @default(cuid())
+  conversationId String       @map("conversation_id")
+  userId         String       @map("user_id")
+  userRole       String       @map("user_role")
   subject        String
   description    String?
-  priority       String      @default("MEDIA")
-  status         String      @default("ABIERTO")
+  priority       String       @default("MEDIA")
+  status         String       @default("ABIERTO")
+  deletedAt      DateTime?    @map("deleted_at")
   assignedTo     String?
+  createdAt      DateTime     @default(now())
   resolvedAt     DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  deletedAt      DateTime?   @map("deleted_at")
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  updatedAt      DateTime     @updatedAt
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([userId])
@@ -972,3 +883,535 @@ model ChatTicket {
   @@map("chat_tickets")
 }
 
+model custom_order_attachments {
+  id              String        @id @default(cuid())
+  custom_order_id String
+  url             String
+  nombre          String
+  mime_type       String
+  tamano          Int
+  tipo            String
+  uploaded_by_id  String?
+  createdAt       DateTime      @default(now())
+  custom_orders   custom_orders @relation(fields: [custom_order_id], references: [id], onDelete: Cascade)
+  users           User?         @relation(fields: [uploaded_by_id], references: [id])
+
+  @@index([custom_order_id])
+}
+
+model custom_order_notes {
+  id              String        @id @default(cuid())
+  custom_order_id String
+  autor_id        String
+  tipo            String        @default("INTERNA")
+  contenido       String
+  createdAt       DateTime      @default(now())
+  users           User          @relation(fields: [autor_id], references: [id])
+  custom_orders   custom_orders @relation(fields: [custom_order_id], references: [id], onDelete: Cascade)
+
+  @@index([custom_order_id])
+}
+
+model custom_orders {
+  id                       String                     @id @default(cuid())
+  numero                   String                     @unique
+  cliente_id               String
+  asesor_id                String?
+  estado                   CustomOrderStatus          @default(SOLICITUD_RECIBIDA)
+  tipo_prenda              String
+  tecnica_personalizacion  String
+  descripcion_diseno       String?
+  referencias              String[]                   @default([])
+  telaSolicitada           String?
+  colores_solicitados      String[]                   @default([])
+  tallas                   Json?
+  cantidad_total           Int
+  fecha_deseada            DateTime?
+  presupuesto_id           String?                    @unique
+  orden_produccion_id      String?                    @unique
+  orden_id                 String?                    @unique
+  conversacion_id          String?                    @unique
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @default(now()) @updatedAt
+  deleted_at               DateTime?
+  anticipo_pagado          Boolean?
+  fecha_aceptacion         DateTime?                  @map("fecha_aceptacion")
+  fecha_limite             Boolean?                   @default(false) @map("fecha_limite")
+  fecha_limite_produccion  DateTime?                  @map("fecha_limite_produccion")
+  motivo_rechazo           String?
+  notas_cliente            String?                    @map("notas_cliente")
+  notas_internas           String?
+  payment_key              String?
+  payment_proof_url        String?
+  payment_status           String?
+  custom_order_attachments custom_order_attachments[]
+  custom_order_notes       custom_order_notes[]
+  custom_order_items       custom_order_items[] @relation("CustomOrderItems")
+  users                    User?                      @relation(fields: [asesor_id], references: [id])
+  customers                Customer                   @relation(fields: [cliente_id], references: [id])
+  conversations            Conversation?              @relation(fields: [conversacion_id], references: [id])
+  orders                   Order?                     @relation(fields: [orden_id], references: [id])
+  digital_approvals        digital_approvals?
+  production_orders        ProductionOrder?
+  quotes                   quotes?
+  surveys                  surveys?
+  technical_sheets         technical_sheets[]
+  video_calls              video_calls?
+
+  @@index([asesor_id])
+  @@index([cliente_id, deleted_at])
+  @@index([deleted_at])
+  @@index([estado])
+}
+
+model digital_approvals {
+  id              String         @id
+  custom_order_id String         @unique
+  tipo            String
+  documento_url   String?
+  aprobado_por    String?
+  aprobado_en     DateTime?
+  rechazado_por   String?
+  rechazado_en    DateTime?
+  motivo_rechazo  String?
+  firma_url       String?
+  estado          ApprovalStatus @default(PENDING)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime
+  deleted_at      DateTime?
+  custom_orders   custom_orders  @relation(fields: [custom_order_id], references: [id])
+
+  @@index([custom_order_id])
+  @@index([deleted_at])
+  @@index([estado])
+}
+
+model message_templates {
+  id            String              @id
+  nombre        String
+  tipo          MessageTemplateType
+  canal         String
+  asunto        String?
+  contenido     String
+  variables     String[]            @default([])
+  activo        Boolean             @default(true)
+  creado_por_id String
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime
+  deleted_at    DateTime?
+  users         User                @relation(fields: [creado_por_id], references: [id])
+
+  @@index([deleted_at])
+  @@index([tipo])
+}
+
+model quote_items {
+  id              String   @id
+  quote_id        String
+  concepto        String
+  descripcion     String?
+  cantidad        Int
+  precio_unitario Decimal  @db.Decimal(12, 2)
+  subtotal        Decimal  @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+  observaciones   String?
+  orden           Int      @default(0)
+  tipo            String?
+  unidad_medida   String?
+  quotes          quotes   @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+
+  @@index([quote_id])
+}
+
+model custom_order_items {
+  id                   String    @id @default(cuid())
+  custom_order_id      String
+  producto_id          String?
+  producto_nombre      String?
+  descripcion          String
+  tipo_personalizacion String
+  especificaciones     String?
+  cantidad             Int
+  talla                String?
+  color                String?
+  material             String?
+  ubicacion            Json?
+  orden                Int       @default(0)
+  deleted_at           DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  custom_orders custom_orders @relation("CustomOrderItems", fields: [custom_order_id], references: [id], onDelete: Cascade)
+  personalizations personalizations[] @relation("CustomOrderItemPersonalizations")
+
+  @@index([custom_order_id])
+}
+
+model personalizations {
+  id                    String    @id @default(cuid())
+  custom_order_item_id  String
+  tipo                  String
+  tecnica               String?
+  ubicacion             Json?
+  descripcion           String
+  archivos              String[]
+  orden                 Int       @default(0)
+  deleted_at            DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  custom_order_items custom_order_items @relation("CustomOrderItemPersonalizations", fields: [custom_order_item_id], references: [id], onDelete: Cascade)
+  variants           variants[] @relation("PersonalizationVariants")
+
+  @@index([custom_order_item_id])
+}
+
+model variants {
+  id                        String    @id @default(cuid())
+  custom_order_personalization_id String
+  talla                     String
+  color                     String
+  cantidad                  Int
+  deleted_at                DateTime?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  personalizations personalizations @relation("PersonalizationVariants", fields: [custom_order_personalization_id], references: [id], onDelete: Cascade)
+
+  @@index([custom_order_personalization_id])
+}
+
+model quotes {
+  id                   String        @id
+  custom_order_id      String        @unique
+  numero               String        @unique
+  estado               QuoteStatus   @default(BORRADOR)
+  subtotal             Decimal       @db.Decimal(12, 2)
+  impuestos            Decimal       @default(0) @db.Decimal(12, 2)
+  descuentos           Decimal       @default(0) @db.Decimal(12, 2)
+  total                Decimal       @db.Decimal(12, 2)
+  tiempo_estimado_dias Int
+  validez_dias         Int           @default(15)
+  observaciones        String?
+  aprobado_por         String?
+  aprobado_at          DateTime?
+  motivo_rechazo       String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime
+  deleted_at           DateTime?
+  condiciones_pago     String?
+  generado_por_id      String?
+  generado_por_nombre  String?
+  porcentaje_anticipo  Int           @default(50)
+  valida_hasta         DateTime?
+  saldo                Decimal       @default(0) @db.Decimal(12, 2)
+  valor_anticipo       Decimal       @default(0) @map("valor_anticipo") @db.Decimal(12, 2)
+  quote_items          quote_items[]
+  custom_orders        custom_orders @relation(fields: [custom_order_id], references: [id])
+
+  @@index([custom_order_id])
+  @@index([deleted_at])
+  @@index([estado])
+}
+
+model survey_responses {
+  id            String    @id
+  survey_id     String
+  customer_id   String
+  respuestas    Json?
+  calificacion  Int?
+  comentarios   String?
+  completada    Boolean   @default(false)
+  completada_at DateTime?
+  createdAt     DateTime  @default(now())
+  customers     Customer  @relation(fields: [customer_id], references: [id])
+  surveys       surveys   @relation(fields: [survey_id], references: [id], onDelete: Cascade)
+
+  @@index([customer_id])
+  @@index([survey_id])
+}
+
+model surveys {
+  id               String             @id
+  codigo           String             @unique
+  titulo           String
+  descripcion      String?
+  estado           SurveyStatus       @default(BORRADOR)
+  tipo             String
+  preguntas        Json?
+  custom_order_id  String?            @unique
+  created_by_id    String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  deleted_at       DateTime?
+  survey_responses survey_responses[]
+  users            User               @relation(fields: [created_by_id], references: [id])
+  custom_orders    custom_orders?     @relation(fields: [custom_order_id], references: [id])
+
+  @@index([deleted_at])
+  @@index([estado])
+}
+
+model technical_sheet_approvals {
+  id                 String           @id
+  technical_sheet_id String
+  accion             String
+  comentario         String?
+  usuario_id         String
+  createdAt          DateTime         @default(now())
+  technical_sheets   technical_sheets @relation(fields: [technical_sheet_id], references: [id], onDelete: Cascade)
+  users              User             @relation(fields: [usuario_id], references: [id])
+
+  @@index([technical_sheet_id])
+}
+
+model technical_sheet_attachments {
+  id                 String           @id
+  technical_sheet_id String
+  url                String
+  nombre             String
+  mime_type          String
+  tamano             Int
+  tipo               String
+  uploaded_by_id     String?
+  createdAt          DateTime         @default(now())
+  technical_sheets   technical_sheets @relation(fields: [technical_sheet_id], references: [id], onDelete: Cascade)
+  users              User?            @relation(fields: [uploaded_by_id], references: [id])
+
+  @@index([technical_sheet_id])
+}
+
+model technical_sheets {
+  id                          String                        @id
+  numero                      String                        @unique
+  custom_order_id             String
+  version                     Int                           @default(1)
+  estado                      TechnicalSheetStatus          @default(BORRADOR)
+  tipo_prenda                 String
+  tecnica_personalizacion     String
+  tela_solicitada             String?
+  colores_solicitados         String[]                      @default([])
+  tallas                      Json?
+  cantidad_total              Int
+  descripcion_diseno          String?
+  referencias                 String[]                      @default([])
+  observaciones               String?
+  aprobado_por                String?
+  aprobado_at                 DateTime?
+  rechazado_por               String?
+  rechazado_at                DateTime?
+  motivo_rechazo              String?
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime
+  deleted_at                  DateTime?
+  canal                       String?
+  entregada_en                DateTime?
+  enviada_en                  DateTime?
+  produccion_iniciada_en      DateTime?
+  tiempo_respuesta_horas      Decimal?                      @db.Decimal(10, 2)
+  technical_sheet_approvals   technical_sheet_approvals[]
+  technical_sheet_attachments technical_sheet_attachments[]
+  custom_orders               custom_orders                 @relation(fields: [custom_order_id], references: [id])
+
+  @@index([custom_order_id])
+  @@index([deleted_at])
+  @@index([estado])
+}
+
+model video_calls {
+  id              String            @id
+  custom_order_id String            @unique
+  proveedor       VideoCallProvider
+  enlace          String
+  codigo_acceso   String?
+  contrasena      String?
+  fecha_inicio    DateTime?
+  fecha_fin       DateTime?
+  creado_por_id   String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  deleted_at      DateTime?
+  users           User              @relation(fields: [creado_por_id], references: [id])
+  custom_orders   custom_orders     @relation(fields: [custom_order_id], references: [id])
+
+  @@index([custom_order_id])
+  @@index([deleted_at])
+}
+
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+}
+
+enum ProductStatus {
+  ACTIVO
+  INACTIVO
+}
+
+enum StockStatus {
+  OK
+  BAJO_STOCK
+  AGOTADO
+}
+
+enum OrderStatus {
+  NUEVO
+  EN_PRODUCCION
+  LISTO
+  DESPACHADO
+  EN_CAMINO
+  ENTREGADO
+  CANCELADO
+  PENDIENTE
+  EN_VALIDACION
+  ACEPTADO
+  RECHAZADO
+  RECIBO_GENERADO
+  RECIBO_ENVIADO
+}
+
+enum OrderPriority {
+  ESTANDAR
+  PRIORITARIO
+}
+
+enum ProductionStatus {
+  PENDIENTE
+  EN_PROCESO
+  TERMINADO
+  ASIGNADA
+}
+
+enum MovementType {
+  ENTRADA
+  SALIDA
+  AJUSTE
+}
+
+enum SupplierStatus {
+  ACTIVO
+  INACTIVO
+}
+
+enum WorkshopStatus {
+  ACTIVO
+  INACTIVO
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+  DANGER
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+enum AlertState {
+  PENDIENTE
+  LEIDA
+  RESUELTA
+  CANCELADA
+}
+
+enum AlertPriority {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum ControlPrendaEtapa {
+  CORTE
+  CONFECCION
+  ACABADO
+  CONTROL_CALIDAD
+  EMPAQUE
+}
+
+enum ControlPrendaEstado {
+  PROCESO
+  APROBADO
+  RECHAZADO
+}
+
+enum CustomOrderStatus {
+  SOLICITUD_RECIBIDA
+  EN_REVISION
+  COTIZADO
+  COTIZACION_ACEPTADA
+  COTIZACION_RECHAZADA
+  EN_PRODUCCION
+  COMPLETADO
+  CANCELADO
+  CONVERTIDO_A_PEDIDO
+  PAGO_PENDIENTE
+  PAGO_EN_VERIFICACION
+  PAGO_APROBADO
+  VENCIDO
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MessageTemplateType {
+  INFORMATION_REQUEST
+  QUOTE
+  PAYMENT_REMINDER
+  STATUS_UPDATE
+  APPROVAL_REQUEST
+  PRODUCTION_START
+  QC_PASSED
+  DELIVERY
+}
+
+enum QuoteStatus {
+  BORRADOR
+  ENVIADA
+  ACEPTADA
+  RECHAZADA
+  VENCIDA
+}
+
+enum SurveyQuestionType {
+  RADIO
+  CHECKBOX
+  TEXT
+  RATING
+}
+
+enum SurveyStatus {
+  BORRADOR
+  ACTIVA
+  CERRADA
+}
+
+enum TechnicalSheetStatus {
+  BORRADOR
+  EN_REVISION
+  APROBADA
+  RECHAZADA
+  EN_PRODUCCION
+}
+
+enum VideoCallProvider {
+  ZOOM
+  MEET
+  MS_TEAMS
+  CUSTOM
+}

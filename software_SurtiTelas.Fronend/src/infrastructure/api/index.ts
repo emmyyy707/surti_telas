@@ -37,3 +37,4 @@ export { productsApi } from './productsApi';
 export { controlPrendaApi } from './controlPrendaApi';
 export { accessApi } from './accessApi';
 export { domiciliariosApi } from './domiciliariosApi';
+export { customOrdersApi } from './customOrdersApi';

@@ -301,7 +301,6 @@ authRouter.get('/users/:id', authenticate, requireRole('ADMIN'), asyncHandler(co
  */
 authRouter.get('/permissions', authenticate, requireRole('ADMIN'), asyncHandler(controller.listPermissions));
 authRouter.get('/permissions/:id', authenticate, requireRole('ADMIN'), asyncHandler(controller.getPermission));
-authRouter.post('/permissions', authenticate, requireRole('ADMIN'), asyncHandler(controller.createPermission));
 authRouter.patch('/permissions/:id', authenticate, requireRole('ADMIN'), asyncHandler(controller.updatePermission));
 authRouter.delete('/permissions/:id', authenticate, requireRole('ADMIN'), asyncHandler(controller.deletePermission));
 

@@ -97,6 +97,24 @@ export const AdminWebhooks: React.FC = () => {
     setFormEvents(prev => prev.includes(event) ? prev.filter(e => e !== event) : [...prev, event]);
   };
 
+  const [testingId, setTestingId] = useState<string | null>(null);
+
+  const handleTest = async (id: string) => {
+    setTestingId(id);
+    try {
+      const result = await webhooksApi.test(id);
+      if (result.success) {
+        toast.success(result.message || 'Webhook de prueba enviado correctamente');
+      } else {
+        toast.error(result.message || 'No se pudo enviar el webhook de prueba');
+      }
+    } catch {
+      toast.error('Error al probar el webhook');
+    } finally {
+      setTestingId(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formEvents.length === 0) {
@@ -148,11 +166,18 @@ export const AdminWebhooks: React.FC = () => {
   };
 
   const handleTestWebhook = async (webhook: Webhook) => {
+    setTestingId(webhook.id);
     try {
-      await webhooksApi.update(webhook.id, { active: webhook.active });
-      toast.success('Webhook de prueba enviado');
+      const result = await webhooksApi.test(webhook.id);
+      if (result.success) {
+        toast.success(result.message || 'Webhook de prueba enviado correctamente');
+      } else {
+        toast.error(result.message || 'No se pudo enviar el webhook de prueba');
+      }
     } catch {
-      toast.error('No se pudo enviar el webhook de prueba');
+      toast.error('Error al probar el webhook');
+    } finally {
+      setTestingId(null);
     }
   };
 
@@ -189,7 +214,7 @@ export const AdminWebhooks: React.FC = () => {
     { label: 'Editar', icon: <Edit size={14} />, onClick: () => openEditModal(w) },
     { label: w.active ? 'Desactivar' : 'Activar', icon: w.active ? <XCircle size={14} /> : <CheckCircle2 size={14} />, onClick: () => handleToggleActive(w) },
     { label: 'Copiar secret', icon: <Copy size={14} />, onClick: () => handleCopySecret(w) },
-    { label: 'Probar', icon: <RefreshCw size={14} />, onClick: () => handleTestWebhook(w) },
+    { label: testingId === w.id ? 'Probando...' : 'Probar', icon: testingId === w.id ? <RefreshCw size={14} className={s.spin} /> : <RefreshCw size={14} />, onClick: () => handleTestWebhook(w), disabled: testingId === w.id },
     { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(w), danger: true },
   ];
 
@@ -293,6 +318,7 @@ export const AdminWebhooks: React.FC = () => {
                   placeholder={editingWebhook ? 'Dejar vacío para mantener el actual' : 'Secret para validar la firma HMAC'}
                   required={!editingWebhook}
                   minLength={8}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"

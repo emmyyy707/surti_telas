@@ -26,7 +26,7 @@ export class PrismaReportRepository implements ReportRepository {
     const [orders, orderItems, ordersByAsesor] = await this.prisma.$transaction([
       this.prisma.order.findMany({
         where,
-        select: { total: true, estado: true, asesorId: true, asesorNombre: true },
+        select: { total: true, estado: true, asesorId: true, asesorNombre: true, clienteId: true, createdAt: true },
       }),
       this.prisma.orderItem.findMany({
         where: { order: where },
@@ -40,11 +40,14 @@ export class PrismaReportRepository implements ReportRepository {
 
     const totalSales = orders.reduce((acc, o) => acc + Number(o.total), 0);
 
-    const statusMap = new Map<string, number>();
+    const statusMap = new Map<string, { cantidad: number; total: number }>();
     for (const o of orders) {
-      statusMap.set(o.estado, (statusMap.get(o.estado) ?? 0) + 1);
+      const current = statusMap.get(o.estado) ?? { cantidad: 0, total: 0 };
+      current.cantidad += 1;
+      current.total += Number(o.total);
+      statusMap.set(o.estado, current);
     }
-    const ordersByStatus = Array.from(statusMap, ([estado, cantidad]) => ({ estado, cantidad }));
+    const salesByStatus = Array.from(statusMap, ([estado, data]) => ({ estado, cantidad: data.cantidad, total: data.total }));
 
     const productMap = new Map<string, { productId: string; nombre: string; cantidad: number; total: number }>();
     for (const item of orderItems) {
@@ -63,26 +66,50 @@ export class PrismaReportRepository implements ReportRepository {
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
 
-    const asesorMap = new Map<string, { asesorId: string; asesorNombre: string; total: number; ordenes: number }>();
+    const asesorMap = new Map<string, { asesorId: string; asesorNombre: string; total: number; cantidad: number }>();
     for (const o of ordersByAsesor) {
       const current = asesorMap.get(o.asesorId) ?? {
         asesorId: o.asesorId,
         asesorNombre: o.asesorNombre,
         total: 0,
-        ordenes: 0,
+        cantidad: 0,
       };
       current.total += Number(o.total);
-      current.ordenes += 1;
+      current.cantidad += 1;
       asesorMap.set(o.asesorId, current);
     }
     const salesByAsesor = Array.from(asesorMap.values()).sort((a, b) => b.total - a.total);
 
+    const totalCustomers = new Set(orders.map(o => o.clienteId).filter(Boolean)).size;
+    const averageTicket = orders.length > 0 ? Math.round((totalSales / orders.length) * 100) / 100 : 0;
+
+    const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const monthMap = new Map<string, { mes: string; ventas: number; pedidos: number }>();
+    for (const o of orders) {
+      const date = new Date(o.createdAt);
+      const mes = `${MESES[date.getMonth()]} ${date.getFullYear().toString().slice(-2)}`;
+      const current = monthMap.get(mes) ?? { mes, ventas: 0, pedidos: 0 };
+      current.ventas += Number(o.total);
+      current.pedidos += 1;
+      monthMap.set(mes, current);
+    }
+    const monthlyTrend = Array.from(monthMap.values()).sort((a, b) => {
+      const [mesA, añoA] = a.mes.split(' ');
+      const [mesB, añoB] = b.mes.split(' ');
+      const idxA = MESES.indexOf(mesA);
+      const idxB = MESES.indexOf(mesB);
+      return (parseInt(añoA) * 12 + idxA) - (parseInt(añoB) * 12 + idxB);
+    });
+
     return {
       totalSales,
       totalOrders: orders.length,
-      ordersByStatus,
+      totalCustomers,
+      averageTicket,
+      salesByStatus,
       topProducts,
       salesByAsesor,
+      monthlyTrend,
     };
   }
 

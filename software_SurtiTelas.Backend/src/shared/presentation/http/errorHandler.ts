@@ -40,9 +40,8 @@ export const errorHandler = (
   }
 
   if (err instanceof Prisma.PrismaClientValidationError) {
-    return res
-      .status(400)
-      .json({ success: false, error: 'bad_request', message: 'Datos inválidos para la base de datos' });
+    const message = (err as Error).message || 'Datos inválidos para la base de datos';
+    return res.status(400).json({ success: false, error: 'bad_request', message });
   }
 
   if (err instanceof ValidationError) {

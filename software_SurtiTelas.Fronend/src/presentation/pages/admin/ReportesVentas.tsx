@@ -60,7 +60,7 @@ export const AdminReportesVentas: React.FC = () => {
       const cantidad = Number(item.cantidad) || 0;
       return {
         id: `A-${String(index + 1).padStart(3, '0')}`,
-        asesor: item.asesorNombre || item.asesor || `Asesor ${index + 1}`,
+        asesor: item.asesorNombre || `Asesor ${index + 1}`,
         ventasMes: total,
         pedidosMes: cantidad,
         clientesNuevos: 0,

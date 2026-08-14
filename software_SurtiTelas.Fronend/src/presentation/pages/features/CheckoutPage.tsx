@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CreditCard, Upload, BadgePercent } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ type PaymentType = 'immediate' | 'installments';
   const installmentOptions = appContent.checkout.installmentOptions;
 
 const CheckoutPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { clientes } = useClientes();
   const {
@@ -37,6 +38,7 @@ const CheckoutPage: React.FC = () => {
   const [installments, setInstallments] = useState(2);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTrustedCustomer, setIsTrustedCustomer] = useState(false);
+  const [referencia, setReferencia] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const clienteActual = useMemo(() => {
@@ -126,11 +128,10 @@ const CheckoutPage: React.FC = () => {
         proofFile ? `Comprobante: ${proofFile.name}` : null,
         paymentType === 'installments' ? `Pago por abonos: ${installments} cuotas` : 'Pago inmediato',
         clienteActual?.asesorId ? `Asesor: ${clienteActual.asesorId}` : null,
+        referencia ? `Referencia: ${referencia}` : null,
       ]
         .filter(Boolean)
         .join(' | ');
-
-      const validItemsList = itemsList.filter(it => it.nombre.trim() && it.cantidad > 0 && it.precio >= 0);
 
       const createInput = {
         clienteId: clienteActual?.id,
@@ -160,6 +161,7 @@ const CheckoutPage: React.FC = () => {
 
       clearCart();
       toast.success('Pago registrado. Tu pedido será confirmado en breve.');
+      navigate('/catalogo');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo registrar el pedido. Intenta nuevamente.';
       toast.error(message);
@@ -354,8 +356,20 @@ const CheckoutPage: React.FC = () => {
             </div>
           )}
 
-          {/* Proof upload */}
-          <div className="ch-field">
+           {/* Reference / personal note */}
+           <div className="ch-field">
+             <label className="ch-label">Referencia o nota personal (opcional)</label>
+             <textarea
+               className="ch-textarea"
+               placeholder="Ej: referencias del producto, detalles adicionales, etc."
+               value={referencia}
+               onChange={(e) => setReferencia(e.target.value)}
+               rows={3}
+             />
+           </div>
+
+           {/* Proof upload */}
+           <div className="ch-field">
             <label className="ch-label">Comprobante de Pago *</label>
             <div className="ch-upload-zone" onClick={handleUploadClick} role="button" tabIndex={0}>
               <Upload size={22} />

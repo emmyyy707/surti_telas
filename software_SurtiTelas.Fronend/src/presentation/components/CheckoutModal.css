@@ -518,9 +518,37 @@
   background: white;
 }
 
+.ch-textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px 16px;
+  border-radius: var(--ch-radius-md);
+  border: 1px solid var(--ch-border);
+  background: rgba(255,255,255,0.95);
+  font-family: var(--ch-font);
+  font-size: 0.92rem;
+  color: var(--ch-text);
+  outline: none;
+  transition:
+    border-color var(--ch-transition),
+    box-shadow var(--ch-transition),
+    background var(--ch-transition);
+  resize: vertical;
+}
+
+.ch-textarea:hover {
+  border-color: rgba(37,99,235,0.22);
+}
+
+.ch-textarea:focus {
+  border-color: var(--ch-primary);
+  box-shadow: 0 0 0 4px var(--ch-primary-ring);
+  background: white;
+}
+
 /* ============================================================
-   PAYMENT GRID
-   ============================================================ */
+    PAYMENT GRID
+    ============================================================ */
 
 .ch-payment-grid {
   display: grid;

@@ -255,6 +255,29 @@
   box-shadow: 0 0 0 3px var(--color-accent-dim, rgba(139, 115, 85, 0.08));
 }
 
+.ch-textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--input-bg);
+  font-size: 0.95rem;
+  color: var(--input-text);
+  outline: none;
+  resize: vertical;
+  transition: var(--btn-transition);
+}
+
+.ch-textarea:hover {
+  border-color: var(--border-strong);
+}
+
+.ch-textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-dim, rgba(139, 115, 85, 0.08));
+}
+
 /* Payment Grid */
 .ch-payment-grid {
   display: grid;

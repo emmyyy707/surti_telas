@@ -6,7 +6,7 @@ import s from './Dashboard.module.css';
 import { Badge } from '../../../shared/ui/Badge';
 import { Users, ShoppingBag, DollarSign, TrendingUp, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import { ordersApi, type OrdersListResult } from '@/infrastructure/api/ordersApi';
+import { ordersApi, type OrdersListResult, type DashboardMetrics } from '@/infrastructure/api/ordersApi';
 import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
 import { productsApi, type ProductTerminado } from '@/infrastructure/api/productsApi';
 import { adminContent } from '@/shared/config/adminContent';
@@ -21,23 +21,6 @@ const formatoMes = (iso: string) => {
   if (Number.isNaN(d.getTime())) return iso;
   return new Intl.DateTimeFormat('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
 };
-
-interface DashboardMetrics {
-  totalOrders: number;
-  totalCustomers: number;
-  totalSales: number;
-  ordersByStatus: { estado: string; cantidad: number }[];
-  recentOrders: Array<{
-    id: string;
-    numero: string;
-    clienteNombre: string;
-    asesorNombre: string;
-    total: number;
-    estado: string;
-    createdAt: string;
-  }>;
-  lowStockProducts: Array<{ id: string; ref: string; nombre: string; cantidadStock: number }>;
-}
 
 export const AdminDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -56,57 +39,36 @@ export const AdminDashboard: React.FC = () => {
     }
 
     try {
-      const [usersResult, ordersResult, paymentsResult, productsResult] = await Promise.all([
-        authApi.listUsers({ limit: 100, role: 'CLIENTE' }),
-        ordersApi.list({ page: 1, limit: 100 }),
-        paymentsApi.list(),
-        productsApi.list(),
-      ]);
+      const metrics = await ordersApi.getDashboard();
 
-      const clientes = (usersResult.data ?? []).filter((u: BackendAuthUser) => u.role === 'CLIENTE');
-      const clientesIds = new Set(clientes.map(u => u.id));
-      const pedidos = (ordersResult.pedidos ?? []).filter((p: OrdersListResult['pedidos'][number]) => p.clienteId && clientesIds.has(p.clienteId));
-      const pagos: Payment[] = paymentsResult ?? [];
-
-      const totalCustomers = clientes.length;
-      const totalOrders = pedidos.length;
-      const totalSales = pagos.reduce((sum: number, p: Payment) => sum + (Number(p.amount) || 0), 0);
-
-      const estadoMap = new Map<string, number>();
-      for (const p of pedidos) {
-        estadoMap.set(p.estado, (estadoMap.get(p.estado) ?? 0) + 1);
-      }
-      const ordersByStatus = Array.from(estadoMap, ([estado, cantidad]) => ({ estado, cantidad }));
-
-      const recentOrders = pedidos
+      const recentOrders = (metrics.recentOrders ?? [])
         .slice()
-        .sort((a: OrdersListResult['pedidos'][number], b: OrdersListResult['pedidos'][number]) => String(b.id).localeCompare(String(a.id)))
+        .sort((a, b) => String(b.id).localeCompare(String(a.id)))
         .slice(0, 6)
         .map(p => ({
           id: p.id,
           numero: p.numero || p.id,
-          clienteNombre: p.cliente,
-          asesorNombre: p.asesor,
+          clienteNombre: p.clienteNombre,
+          asesorNombre: p.asesorNombre,
           total: Number(p.total) || 0,
           estado: p.estado,
-          createdAt: p.createdAt ?? p.fecha,
+          createdAt: p.createdAt,
         }));
 
-      const lowStockProducts = (productsResult ?? [])
-        .filter((p: ProductTerminado) => (p.stock ?? 0) <= 5)
+      const lowStockProducts = (metrics.lowStockProducts ?? [])
         .slice(0, 10)
         .map(p => ({
           id: p.id,
-          ref: p.codigo,
+          ref: p.ref ?? p.id,
           nombre: p.nombre,
-          cantidadStock: p.stock ?? 0,
+          cantidadStock: p.cantidadStock ?? 0,
         }));
 
       setMetrics({
-        totalOrders,
-        totalCustomers,
-        totalSales,
-        ordersByStatus,
+        totalOrders: metrics.totalOrders,
+        totalCustomers: metrics.totalCustomers,
+        totalSales: Number(metrics.totalSales) || 0,
+        ordersByStatus: metrics.ordersByStatus,
         recentOrders,
         lowStockProducts,
       });

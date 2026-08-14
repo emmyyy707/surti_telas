@@ -3,9 +3,12 @@ import { DateRangeFilter } from '../../application/use-cases/GetSalesReport';
 export interface SalesReport {
   totalSales: number;
   totalOrders: number;
-  ordersByStatus: { estado: string; cantidad: number }[];
+  totalCustomers: number;
+  averageTicket: number;
+  salesByStatus: { estado: string; cantidad: number; total: number }[];
   topProducts: { productId: string; nombre: string; cantidad: number; total: number }[];
-  salesByAsesor: { asesorId: string; asesorNombre: string; total: number; ordenes: number }[];
+  salesByAsesor: { asesorId: string; asesorNombre: string; total: number; cantidad: number }[];
+  monthlyTrend: { mes: string; ventas: number; pedidos: number }[];
 }
 
 export interface InventoryReport {

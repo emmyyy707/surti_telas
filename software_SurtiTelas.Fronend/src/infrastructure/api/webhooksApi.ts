@@ -76,4 +76,9 @@ export const webhooksApi = {
   async remove(id: string): Promise<void> {
     await api.delete<void>(`/webhooks/${encodeURIComponent(id)}`);
   },
+
+  async test(id: string): Promise<{ success: boolean; message?: string }> {
+    const result = await api.post<{ success: boolean; message?: string }>(`/webhooks/${encodeURIComponent(id)}/test`, {});
+    return result;
+  },
 };

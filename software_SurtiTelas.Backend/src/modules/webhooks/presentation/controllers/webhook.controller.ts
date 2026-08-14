@@ -3,7 +3,11 @@ import { created, noContent, ok } from '../../../../shared/presentation/http/Htt
 import { buildHateoasLinks, buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { webhookUseCases } from '../../infrastructure/container/webhookContainer';
+import type { DomainEvent } from '../../../../shared/application/EventBus';
 import type { WebhookSubscription, WebhookSubscriptionData } from '../../domain/entities/WebhookSubscription';
+import { PrismaWebhookSubscriptionRepository } from '../../infrastructure/repositories/PrismaWebhookSubscriptionRepository';
+import { WebhookDispatcher } from '../../application/WebhookDispatcher';
+import { prisma } from '../../../../config/database';
 import { CreateWebhookSchema, UpdateWebhookSchema, WebhookFiltersSchema } from '../validators/webhook.validators';
 
 type PublicWebhook = Omit<WebhookSubscriptionData, 'secret'>;
@@ -60,4 +64,25 @@ export const updateWebhook = async (req: Request, res: Response) => {
 export const deleteWebhook = async (req: Request, res: Response) => {
   await webhookUseCases.deleteWebhook.execute(req.params.id);
   return noContent(res);
+};
+
+export const testWebhook = async (req: Request, res: Response) => {
+  const webhook = await webhookUseCases.getWebhookById.execute(req.params.id);
+  const sanitized = sanitize(webhook);
+  const event: DomainEvent = {
+    type: 'order.created',
+    occurredAt: new Date(),
+    payload: {
+      orderId: 'TEST-' + Date.now(),
+      orderNumero: 'TEST-' + Date.now(),
+      clienteNombre: 'Cliente de prueba',
+      total: 100000,
+      itemsCount: 1,
+      paymentMethod: 'OTHER',
+    },
+  };
+  const repo = new PrismaWebhookSubscriptionRepository(prisma);
+  const dispatcher = new WebhookDispatcher(repo);
+  await dispatcher.dispatch(event);
+  return ok(res, { ...sanitized, testEvent: event }, 'Webhook de prueba enviado');
 };

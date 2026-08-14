@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { RotateCcw, CheckCircle, AlertTriangle, Package, Clock, Download, FileText, Plus, ChevronDown, Save, Loader2, AlertCircle, Edit3, Trash2, Image as ImageIcon, History, X, Upload } from 'lucide-react';
+import { RotateCcw, CheckCircle, AlertTriangle, Package, Clock, Download, FileText, Plus, ChevronDown, Save, Loader2, AlertCircle, Edit3, Trash2, Upload } from 'lucide-react';
 import s from './StockDevuelto.module.css';
 import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { returnsApi, type Return } from '@/infrastructure/api/returnsApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
+import type { Pedido } from '@/core/types';
 import { workshopsApi } from '@/infrastructure/api/workshopsApi';
 
 interface Devolucion {
@@ -132,15 +133,15 @@ export const AdminStockDevuelto: React.FC = () => {
   const [batchEstado, setBatchEstado] = useState('');
   const [batchDestino, setBatchDestino] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [evidencias, setEvidencias] = useState<Record<string, string[]>>({});
+  const [_evidencias, setEvidencias] = useState<Record<string, string[]>>({});
   const [historial, setHistorial] = useState<HistorialCambio[]>([]);
   const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'Recibido' | 'En inspección' | 'Aprobado' | 'Rechazado' | 'En reparación' | 'Reingresado' | 'Descartado'>('Todos');
   const [filtroDestino, setFiltroDestino] = useState<'Todos' | 'Reingreso a inventario' | 'Reparación' | 'Descarte' | 'Devolución a proveedor'>('Todos');
   const [referencias, setReferencias] = useState<{ ref: string; nombre: string }[]>([]);
   const [loadingReferencias, setLoadingReferencias] = useState(false);
-  const [ordenes, setOrdenes] = useState<OrderDTO[]>([]);
+  const [ordenes, setOrdenes] = useState<Pedido[]>([]);
   const [talleres, setTalleres] = useState<{ id: string; nombre: string }[]>([]);
-  const [loadingTalleres, setLoadingTalleres] = useState(false);
+  const [_loadingTalleres, setLoadingTalleres] = useState(false);
   const [referenciaAbierta, setReferenciaAbierta] = useState(false);
 
   const load = async () => {
@@ -178,7 +179,7 @@ export const AdminStockDevuelto: React.FC = () => {
     const loadOrdenes = async () => {
       try {
         const result = await ordersApi.adminList({ limit: 100 });
-        setOrdenes(result.data ?? []);
+        setOrdenes(result.pedidos ?? []);
       } catch {
         setOrdenes([]);
       }
@@ -225,7 +226,8 @@ export const AdminStockDevuelto: React.FC = () => {
     if (producto) {
       setForm({ prenda: producto.nombre });
     }
-    const ordenEncontrada = ordenes.find(o => (o.itemsList ?? []).some(item => item.referencia === ref || item.productId === ref || item.nombre === producto?.nombre));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ordenEncontrada = ordenes.find(o => (o.itemsList ?? []).some((item) => (item as any).referencia === ref || (item as any).productId === ref || item.nombre === producto?.nombre));
     if (ordenEncontrada) {
       setForm({ numeroOrden: ordenEncontrada.numero });
     }
@@ -750,7 +752,7 @@ export const AdminStockDevuelto: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Eliminar devolución" description="Esta acción no se puede deshacer" size="sm" variant="danger">
+      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Eliminar devolución" description="Esta acción no se puede deshacer" size="sm" variant="default">
         <div className={s.deleteBody}>
           <AlertTriangle size={40} className={s.deleteIcon} />
           <p>¿Deseas eliminar la devolución <strong>{deleteConfirm?.numeroDevolucion}</strong>?</p>

@@ -51,8 +51,15 @@ interface PaymentForm {
   notes: string;
 }
 
-const facturasFromPayments = (payments: Payment[]): Factura[] =>
-  payments.map((p) => {
+const facturasFromPayments = (payments: Payment[]): Factura[] => {
+  const seen = new Set<string>();
+  return payments
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
+    .map((p) => {
     const aprobado = p.status === 'Aprobado';
     const rechazado = p.status === 'Rechazado';
     const reembolsado = p.status === 'Reembolsado';
@@ -82,10 +89,17 @@ const facturasFromPayments = (payments: Payment[]): Factura[] =>
       vendedor: p.asesorId ?? 'Sin asesor',
     };
   });
+};
 
-const abonosFromPayments = (payments: Payment[]): Abono[] =>
-  payments
-    .filter((p) => p.status === 'Aprobado')
+const abonosFromPayments = (payments: Payment[]): Abono[] => {
+  const seen = new Set<string>();
+  return payments
+    .filter((p) => {
+      if (p.status !== 'Aprobado') return false;
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
     .map((p) => ({
       id: p.id,
       facturaId: p.orderId,
@@ -97,6 +111,7 @@ const abonosFromPayments = (payments: Payment[]): Abono[] =>
       concepto: p.reference ?? p.notes ?? 'Pago de factura',
       recibidoPor: p.asesorId ?? 'Sistema',
     }));
+};
 
 export const AdminPagos: React.FC = () => {
   const [search, setSearch] = useState('');

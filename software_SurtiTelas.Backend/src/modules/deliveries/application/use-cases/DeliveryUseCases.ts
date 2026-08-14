@@ -54,7 +54,7 @@ export class ListRutaDelDia {
         where: {
           deletedAt: null,
           estado: 'DESPACHADO',
-          deliveries: { none: {} },
+          deliveries: null,
         },
         include: {
           cliente: {

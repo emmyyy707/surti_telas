@@ -8,11 +8,8 @@ import { startTracing, shutdownTracing } from './config/tracing';
 const app = createApp();
 
 import { eventBus } from './shared/infrastructure/eventBus';
-import { logger } from './shared/infrastructure/logger';
 import { notificationSubscriber } from './modules/notifications/infrastructure/container/notificationContainer';
 import { OrderReceiptPaymentSubscriber } from './modules/orders/application/use-cases/OrderReceiptPaymentSubscriber';
-import { PrismaWebhookSubscriptionRepository } from './modules/webhooks/infrastructure/repositories/PrismaWebhookSubscriptionRepository';
-import { WebhookDispatcher } from './modules/webhooks/application/WebhookDispatcher';
 import { SalesOrderNotificationSubscriber } from './modules/sales-orders/application/use-cases/SalesOrderNotificationSubscriber';
 import { ReceiptSendSubscriber } from './modules/sales-orders/application/use-cases/ReceiptSendSubscriber';
 import { PrismaOrderRepository } from './modules/orders/infrastructure/repositories/PrismaOrderRepository';
@@ -22,6 +19,7 @@ import { PrismaCompanyConfigRepository } from './modules/company/infrastructure/
 import { receiptSender } from './modules/sales-orders/infrastructure/container/salesOrderContainer';
 import { ReceiptPaymentSubscriber } from './modules/receipts/application/use-cases/ReceiptPaymentSubscriber';
 import { OrderDeliverySubscriber } from './modules/orders/application/use-cases/OrderDeliverySubscriber';
+import { WebhookSubscriber } from './modules/webhooks/infrastructure/subscribers/WebhookSubscriber';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
@@ -35,23 +33,7 @@ const receiptRepository = new PrismaReceiptRepository(prisma);
 const companyRepository = new PrismaCompanyConfigRepository(prisma);
 new ReceiptSendSubscriber(eventBus, orderRepository, saleRepository, receiptRepository, companyRepository, receiptSender);
 
-const webhookRepo = new PrismaWebhookSubscriptionRepository(prisma);
-const webhookDispatcher = new WebhookDispatcher(webhookRepo);
-const WEBHOOK_EVENT_TYPES = [
-  'order.created',
-  'order.status.updated',
-  'order.delivered',
-  'order.canceled',
-  'stock.below_minimum',
-  'production.completed',
-];
-for (const eventType of WEBHOOK_EVENT_TYPES) {
-  eventBus.subscribe(eventType, (event) => {
-    webhookDispatcher.dispatch(event).catch((err) => {
-      logger.error(`[Webhook] Unhandled dispatch error for ${eventType}`, { error: (err as Error).message });
-    });
-  });
-}
+new WebhookSubscriber().register(eventBus);
 
 async function bootstrap() {
   try {

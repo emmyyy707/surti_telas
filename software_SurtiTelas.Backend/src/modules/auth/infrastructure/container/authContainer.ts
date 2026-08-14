@@ -3,6 +3,7 @@ import { BcryptPasswordHasher } from '../services/BcryptPasswordHasher';
 import { JwtTokenService } from '../services/JwtTokenService';
 import { PrismaAuthRepository } from '../repositories/PrismaAuthRepository';
 import { SmtpEmailService } from '../../../shared/infrastructure/services/SmtpEmailService';
+import { ConsoleEmailService } from '../../../shared/infrastructure/services/ConsoleEmailService';
 import { LoginUser } from '../../application/use-cases/LoginUser';
 import { RegisterUser } from '../../application/use-cases/RegisterUser';
 import { RefreshToken } from '../../application/use-cases/RefreshToken';
@@ -39,15 +40,19 @@ import { env } from '../../../../config/env';
 const authRepository = new PrismaAuthRepository(prisma);
 const tokenService = new JwtTokenService();
 const passwordHasher = new BcryptPasswordHasher();
-const emailService = new SmtpEmailService({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_SECURE,
-  user: env.SMTP_USER ?? '',
-  pass: env.SMTP_PASS ?? '',
-  fromName: env.SMTP_FROM_NAME,
-  fromEmail: env.SMTP_FROM_EMAIL ?? '',
-});
+
+const hasSmtpConfig = Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.SMTP_FROM_EMAIL);
+const emailService = hasSmtpConfig
+  ? new SmtpEmailService({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_SECURE,
+      user: env.SMTP_USER!,
+      pass: env.SMTP_PASS!,
+      fromName: env.SMTP_FROM_NAME,
+      fromEmail: env.SMTP_FROM_EMAIL!,
+    })
+  : new ConsoleEmailService();
 
 export const authUseCases = {
   login: new LoginUser(authRepository, tokenService, passwordHasher),

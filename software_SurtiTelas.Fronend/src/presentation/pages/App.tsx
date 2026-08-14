@@ -21,12 +21,14 @@ const AdminPedidos = React.lazy(() => import('@/presentation/pages/admin/Pedidos
 const AdminProduccion = React.lazy(() => import('@/presentation/pages/admin/Produccion').then(m => ({ default: m.AdminProduccion })));
 const AdminInventario = React.lazy(() => import('@/presentation/pages/admin/Inventario').then(m => ({ default: m.AdminInventario })));
 const GestionUsuariosAsesores = React.lazy(() => import('@/presentation/pages/admin/GestionUsuariosAsesores').then(m => ({ default: m.GestionUsuariosAsesores })));
-const AdminReportes = React.lazy(() => import('@/presentation/pages/admin/AdminReportes').then(m => ({ default: m.AdminReportes })));
+const AdminReportes = React.lazy(() => import('@/presentation/pages/admin/AdminReportesLayout').then(m => ({ default: m.AdminReportesLayout })));
 const AdminDashboardAnalitico = React.lazy(() => import('@/presentation/pages/admin/DashboardAnalitico').then(m => ({ default: m.AdminDashboardAnalitico })));
 const PortalCliente = React.lazy(() => import('@/presentation/pages/admin/PortalCliente').then(m => ({ default: m.PortalCliente })));
 
 const AdminConfiguracion = React.lazy(() => import('@/presentation/pages/admin/AdminConfiguracion').then(m => ({ default: m.AdminConfiguracion })));
 const AdminDomicilios = React.lazy(() => import('@/presentation/pages/admin/AdminDomicilios').then(m => ({ default: m.AdminDomicilios })));
+const AdminDomiciliosLayout = React.lazy(() => import('@/presentation/pages/admin/AdminDomiciliosLayout').then(m => ({ default: m.AdminDomiciliosLayout })));
+const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/RutaDelDiaAdmin').then(m => ({ default: m.RutaDelDiaAdmin })));
 const AdminRoles = React.lazy(() => import('@/presentation/pages/admin/Roles').then(m => ({ default: m.AdminRoles })));
 const AdminPermisos = React.lazy(() => import('@/presentation/pages/admin/Permisos').then(m => ({ default: m.AdminPermisos })));
 const AdminGestionUsuarios = React.lazy(() => import('@/presentation/pages/admin/GestionUsuarios').then(m => ({ default: m.AdminGestionUsuarios })));
@@ -52,7 +54,7 @@ const AdminWebhooks = React.lazy(() => import('@/presentation/pages/admin/Webhoo
 const AdminNotificaciones = React.lazy(() => import('@/presentation/pages/admin/AdminNotificaciones').then(m => ({ default: m.AdminNotificaciones })));
 const AdminComisiones = React.lazy(() => import('@/presentation/pages/admin/AdminComisiones').then(m => ({ default: m.AdminComisiones })));
 const AdminFinanzas = React.lazy(() => import('@/presentation/pages/admin/AdminFinanzas').then(m => ({ default: m.AdminFinanzas })));
-const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/RutaDelDiaAdmin').then(m => ({ default: m.RutaDelDiaAdmin })));
+const AdminPedidosPersonalizados = React.lazy(() => import('@/presentation/pages/admin/PedidosPersonalizados').then(m => ({ default: m.AdminPedidosPersonalizados })));
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
 const AsesorDashboard = React.lazy(() => import('@/presentation/pages/asesor/Dashboard').then(m => ({ default: m.AsesorDashboard })));
 const AsesorClientes = React.lazy(() => import('@/presentation/pages/asesor/MisClientes').then(m => ({ default: m.AsesorClientes })));
@@ -78,6 +80,7 @@ const OrderTracking = React.lazy(() => import('@/presentation/pages/cliente/Orde
 const Recibos = React.lazy(() => import('@/presentation/pages/cliente/Recibos').then(m => ({ default: m.Recibos })));
 const Favoritos = React.lazy(() => import('@/presentation/pages/cliente/Favoritos').then(m => ({ default: m.Favoritos })));
 const ReportarDevolucion = React.lazy(() => import('@/presentation/pages/cliente/ReportarDevolucion').then(m => ({ default: m.ReportarDevolucion })));
+const MisPedidosPersonalizados = React.lazy(() => import('@/presentation/pages/cliente/MisPedidosPersonalizados').then(m => ({ default: m.MisPedidosPersonalizados })));
 const HomePage = React.lazy(() => import('@/presentation/pages/public/HomePage'));
 const CatalogPage = React.lazy(() => import('@/presentation/pages/features/CatalogPage'));
 const CartPage = React.lazy(() => import('@/presentation/pages/features/CartPage'));
@@ -126,9 +129,22 @@ const App: React.FC = () => {
             <Route path="produccion" element={<AdminProduccion />} />
             <Route path="inventario" element={<AdminInventario />} />
             <Route path="categorias" element={<AdminCategorias />} />
-            <Route path="domicilios" element={<AdminDomicilios />} />
+            <Route path="domicilios" element={<AdminDomiciliosLayout />}>
+              <Route index element={<AdminDomicilios />} />
+            </Route>
+            <Route path="ruta-del-dia" element={<AdminDomiciliosLayout />}>
+              <Route index element={<AdminRutaDelDia />} />
+            </Route>
+            <Route path="webhooks" element={<AdminWebhooks />} />
             <Route path="asesores" element={<GestionUsuariosAsesores />} />
-            <Route path="reportes" element={<AdminReportes />} />
+            <Route path="reportes" element={<AdminReportes />}>
+              <Route index element={<Navigate to="ventas" replace />} />
+              <Route path="ventas" element={<AdminReportesVentas />} />
+              <Route path="finanzas" element={<AdminFinanzas />} />
+              <Route path="usuarios" element={<AdminReportesUsuarios />} />
+              <Route path="produccion" element={<AdminReportesProduccion />} />
+              <Route path="inventario" element={<AdminReportesInventario />} />
+            </Route>
             <Route path="configuracion" element={<AdminConfiguracion />} />
             <Route path="roles" element={<AdminRoles />} />
             <Route path="permisos" element={<AdminPermisos />} />
@@ -147,17 +163,14 @@ const App: React.FC = () => {
             <Route path="facturacion" element={<AdminRecibos />} />
             <Route path="pagos" element={<AdminPagos />} />
             <Route path="ventas-pedidos" element={<AdminPedidos />} />
-            <Route path="reportes-ventas" element={<AdminReportesVentas />} />
+            <Route path="reportes-ventas" element={<Navigate to="/admin/reportes/ventas" replace />} />
             <Route path="dashboard-analitico" element={<AdminDashboardAnalitico />} />
             <Route path="portal-cliente" element={<PortalCliente />} />
-            <Route path="reportes-usuarios" element={<AdminReportesUsuarios />} />
-            <Route path="reportes-produccion" element={<AdminReportesProduccion />} />
-            <Route path="reportes-inventario" element={<AdminReportesInventario />} />
-            <Route path="webhooks" element={<AdminWebhooks />} />
-            <Route path="notificaciones" element={<AdminNotificaciones />} />
-            <Route path="comisiones" element={<AdminComisiones />} />
-            <Route path="finanzas" element={<AdminFinanzas />} />
-            <Route path="ruta-del-dia" element={<AdminRutaDelDia />} />
+            <Route path="reportes-usuarios" element={<Navigate to="/admin/reportes/usuarios" replace />} />
+            <Route path="reportes-produccion" element={<Navigate to="/admin/reportes/produccion" replace />} />
+            <Route path="reportes-inventario" element={<Navigate to="/admin/reportes/inventario" replace />} />
+            <Route path="finanzas" element={<Navigate to="/admin/reportes/finanzas" replace />} />
+            <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
           </Route>
 
           {/* ASESOR - Protected routes for asesor role */}
@@ -207,6 +220,8 @@ const App: React.FC = () => {
             <Route path="seguimiento/:orderId" element={<OrderTracking />} />
             <Route path="perfil" element={<PerfilCliente />} />
             <Route path="reportar-devolucion" element={<ReportarDevolucion />} />
+            <Route path="pedidos-personalizados" element={<MisPedidosPersonalizados />} />
+            <Route path="cotizaciones/nueva" element={<MisPedidosPersonalizados />} />
           </Route>
 
           {/* REDIRECT */}

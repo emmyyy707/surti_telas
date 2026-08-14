@@ -1,5 +1,5 @@
 ﻿import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/app/providers/AppProviders';
 import { toast } from 'sonner';
@@ -27,6 +27,7 @@ declare global {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { loginWithCredentials, clearReturnTo, login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -35,7 +36,10 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, _setSuccess] = useState(false);
 
-  const getDashboardByRole = (role: string | undefined): string => {
+  const getDestination = (role: string | undefined): string => {
+    const state = location.state as { redirectTo?: string } | null;
+    const redirectTo = state?.redirectTo;
+    if (redirectTo) return redirectTo;
     if (role === 'admin') return '/admin/dashboard';
     if (role === 'asesor') return '/asesor/dashboard';
     if (role === 'domiciliario') return '/domiciliario/dashboard';
@@ -51,7 +55,7 @@ const LoginPage: React.FC = () => {
     if (result.success) {
       clearReturnTo();
       toast.success('¡Sesión iniciada exitosamente!');
-      const destination = getDashboardByRole(result.role);
+      const destination = getDestination(result.role);
       setTimeout(() => navigate(destination, { replace: true }), 800);
     } else {
       toast.error(result.error || 'Credenciales incorrectas');
@@ -79,14 +83,14 @@ const LoginPage: React.FC = () => {
       });
       clearReturnTo();
       toast.success('¡Autenticado con Google!');
-      const destination = getDashboardByRole(mapRole(result.user.role));
+      const destination = getDestination(mapRole(result.user.role));
       setTimeout(() => navigate(destination, { replace: true }), 1000);
     } catch {
       toast.error('Error al autenticar con Google');
     } finally {
       setLoading(false);
     }
-  }, [login, clearReturnTo, navigate]);
+  }, [login, clearReturnTo, navigate, location.state]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || typeof window === 'undefined' || !window.google) return;

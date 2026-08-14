@@ -12,8 +12,8 @@ export interface SalesReport {
   totalCustomers: number;
   averageTicket: number;
   salesByStatus: { estado: string; cantidad: number; total: number }[];
-  topProducts: { nombre: string; cantidad: number; total: number }[];
-  salesByAsesor: { asesor?: string; asesorNombre?: string; cantidad: number; total: number }[];
+  topProducts: { productId: string; nombre: string; cantidad: number; total: number }[];
+  salesByAsesor: { asesorId: string; asesorNombre: string; total: number; cantidad: number }[];
   monthlyTrend: { mes: string; ventas: number; pedidos: number }[];
 }
 

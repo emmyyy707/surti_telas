@@ -1,15 +1,27 @@
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function main() {
+async function checkTables() {
   const tables = await prisma.$queryRaw`
-    SELECT table_name FROM information_schema.tables
+    SELECT table_name
+    FROM information_schema.tables
     WHERE table_schema = 'public'
-    AND (table_name LIKE '%delivery%' OR table_name LIKE '%return%')
+    AND table_type = 'BASE TABLE'
     ORDER BY table_name
   `;
-  console.log('Tables:', tables);
+  console.log('Tables in public schema:');
+  tables.forEach(t => console.log(' -', t.table_name));
+  
+  const pedidosTable = tables.find(t => t.table_name === 'pedidos_personalizados');
+  console.log('\npedidos_personalizados exists:', !!pedidosTable);
+  
+  const auditTable = tables.find(t => t.table_name === 'audit_logs');
+  console.log('audit_logs exists:', !!auditTable);
+
   await prisma.$disconnect();
 }
 
-main().catch(console.error);
+checkTables().catch(err => {
+  console.error('Error:', err);
+  process.exit(1);
+});

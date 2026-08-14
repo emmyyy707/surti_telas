@@ -76,4 +76,5 @@ export const OrderFiltersSchema = z.object({
   order: z.enum(['asc', 'desc']).optional(),
   tieneComprobante: z.boolean().optional(),
   numero: z.string().optional(),
+  _t: z.string().optional(),
 });

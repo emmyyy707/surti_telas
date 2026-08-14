@@ -348,13 +348,13 @@ export const AdminGestionUsuarios: React.FC = () => {
               <div className={f.formRow}>
                 <div className={f.field}>
                   <label className={f.label}>Contraseña</label>
-                  <input type="password" className={`${f.input} ${errors.password ? f.inputError : ''}`} name="password" minLength={8} />
+                  <input type="password" className={`${f.input} ${errors.password ? f.inputError : ''}`} name="password" minLength={8} autoComplete="new-password" />
                   {errors.password && <span className={f.errorText}>{errors.password}</span>}
                   <p className={s.hint}>Mínimo 8 caracteres, con mayúscula, minúscula y número</p>
                 </div>
                 <div className={f.field}>
                   <label className={f.label}>Confirmar contraseña</label>
-                  <input type="password" className={`${f.input} ${errors.confirmPassword ? f.inputError : ''}`} name="confirmPassword" minLength={8} />
+                  <input type="password" className={`${f.input} ${errors.confirmPassword ? f.inputError : ''}`} name="confirmPassword" minLength={8} autoComplete="new-password" />
                   {errors.confirmPassword && <span className={f.errorText}>{errors.confirmPassword}</span>}
                 </div>
               </div>

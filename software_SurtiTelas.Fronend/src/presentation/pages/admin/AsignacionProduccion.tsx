@@ -181,17 +181,17 @@ export const AdminAsignacionProduccion: React.FC = () => {
           notasTecnicas: formNotas || undefined,
           tela: formTela || undefined,
           colores: formColores ? formColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
-           curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
-           fechaInicio: formFechaInicio || undefined,
-         });
-         setOrdenes(prev => prev.map(o => o.id === editingId ? {
-           ...o,
-           referencia: updated.referencia,
-           cantidad: updated.cantidad,
-           fechaPrometida: updated.fechaEstimada,
-           estado: updated.estado === 'En produccion' ? 'En produccion' : updated.estado === 'Completada' ? 'Completada' : updated.estado === 'Pendiente' ? 'Pendiente' : 'Asignada',
-         } : o));
-         toast.success('Orden actualizada');
+          curvaTallas: formCurvaTallas ? (() => { try { return JSON.parse(formCurvaTallas); } catch { return undefined; } })() : undefined,
+          fechaInicio: formFechaInicio || undefined,
+        });
+        setOrdenes(prev => prev.map(o => o.id === editingId ? {
+          ...o,
+          referencia: updated.referencia,
+          cantidad: updated.cantidad,
+          fechaPrometida: updated.fechaEstimada,
+          estado: updated.estado === 'En produccion' ? 'En produccion' : updated.estado === 'Completada' ? 'Completada' : updated.estado === 'Pendiente' ? 'Pendiente' : 'Asignada',
+        } : o));
+        toast.success('Orden actualizada');
       } else {
         const created = await productionApi.create({
           referencia: formReferencia,
@@ -201,10 +201,9 @@ export const AdminAsignacionProduccion: React.FC = () => {
           notasTecnicas: formNotas || undefined,
           tela: formTela || undefined,
           colores: formColores ? formColores.split(',').map((c) => c.trim()).filter(Boolean) : undefined,
-           curvaTallas: formCurvaTallas ? JSON.parse(formCurvaTallas) : undefined,
-           fechaInicio: formFechaInicio || undefined,
-         });
-         setOrdenes(prev => [{
+          curvaTallas: formCurvaTallas ? (() => { try { return JSON.parse(formCurvaTallas); } catch { return undefined; } })() : undefined,
+        });
+        setOrdenes(prev => [{
           id: created.id,
           numeroOrden: created.pedidoNumero || created.referencia,
           prenda: created.pedidoItemNombre || created.referencia,

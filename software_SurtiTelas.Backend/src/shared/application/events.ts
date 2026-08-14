@@ -400,7 +400,114 @@ export class OrderReceiptRetryEvent implements DomainEvent {
       orderNumero: string;
       clienteId: string;
       clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
       receiptId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderCreatedEvent implements DomainEvent {
+  readonly type = 'custom_order.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId?: string;
+      asesorNombre?: string;
+      itemsCount: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderSubmittedEvent implements DomainEvent {
+  readonly type = 'custom_order.submitted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      clienteId: string;
+      clienteNombre: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class QuotationGeneratedEvent implements DomainEvent {
+  readonly type = 'quotation.generated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      numeroCotizacion: string;
+      clienteId: string;
+      clienteNombre: string;
+      total: number;
+      valorAnticipo: number;
+      saldo: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class QuotationAcceptedEvent implements DomainEvent {
+  readonly type = 'quotation.accepted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      numeroCotizacion: string;
+      clienteId: string;
+      clienteNombre: string;
+      total: number;
+      valorAnticipo: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class QuotationRejectedEvent implements DomainEvent {
+  readonly type = 'quotation.rejected';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      numeroCotizacion: string;
+      clienteId: string;
+      clienteNombre: string;
+      motivoRechazo?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderConvertedEvent implements DomainEvent {
+  readonly type = 'custom_order.converted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      total: number;
     },
     public readonly requestId?: string
   ) {}

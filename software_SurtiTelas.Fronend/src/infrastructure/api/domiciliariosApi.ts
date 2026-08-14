@@ -34,7 +34,7 @@ export interface UpdateDomiciliarioInput {
 
 export const domiciliariosApi = {
   list: (filters?: DomiciliarioFilters) =>
-    api.get<{ items: Domiciliario[]; meta: { total: number; page: number; limit: number; nextCursor?: string } }>('/domiciliarios', { query: filters as Record<string, string | number | boolean | undefined | null> }),
+    api.get<{ items: Domiciliario[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/domiciliarios', { query: filters as Record<string, string | number | boolean | undefined | null> }),
 
   get: (id: string) =>
     api.get<Domiciliario>(`/domiciliarios/${id}`),

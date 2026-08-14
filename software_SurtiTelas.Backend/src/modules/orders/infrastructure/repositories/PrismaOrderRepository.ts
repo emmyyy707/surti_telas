@@ -19,7 +19,7 @@ export class PrismaOrderRepository implements OrderRepository {
     if (filters.estado) where.estado = orderStatusToDb(filters.estado);
     if (filters.clienteId) where.clienteId = filters.clienteId;
     if (filters.asesorId) where.asesorId = filters.asesorId;
-    if (filters.domiciliarioId) where.deliveries = { some: { domiciliarioId: filters.domiciliarioId } };
+    if (filters.domiciliarioId) where.deliveries = { domiciliarioId: filters.domiciliarioId };
     if (filters.tipoFlujo) where.tipoFlujo = filters.tipoFlujo;
     if (filters.numero) where.numero = { contains: filters.numero };
     if (filters.tieneComprobante !== undefined) {

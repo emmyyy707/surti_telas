@@ -12,7 +12,7 @@ import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import { ESTADOS_PEDIDO, ORDER_STATUS_COLORS } from '@/shared/constants/options';
+import { ESTADOS_PEDIDO, ORDER_STATUS_COLORS, type EstadoPedido } from '@/shared/constants/options';
 import type { Pedido, PedidoItem } from '@/core/types';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
@@ -86,7 +86,9 @@ export const AdminPedidos: React.FC = () => {
           setClientes(clientesResult.data ?? []);
           setAsesores(asesoresResult.data ?? []);
 
-          const ESTADOS_OCULTOS = new Set(showEntregados ? [] : [ESTADOS_PEDIDO[4], ESTADOS_PEDIDO[5]]);
+          const ESTADO_ENTREGADO = ESTADOS_PEDIDO[4];
+          const ESTADO_RECHAZADO = ESTADOS_PEDIDO[5];
+          const ESTADOS_OCULTOS = new Set(showEntregados ? [] : [ESTADO_ENTREGADO, ESTADO_RECHAZADO] as [EstadoPedido, EstadoPedido]);
           const pedidos = (ordersResult.pedidos ?? []).filter((p) => !ESTADOS_OCULTOS.has(p.estado));
           setPageData(pedidos);
           pagination.setTotalRecords(ordersResult.meta.totalRecords);

@@ -116,6 +116,18 @@ export const ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger
   Rechazado: 'danger',
 };
 
+export const CUSTOM_ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default'> = {
+  SOLICITUD_RECIBIDA: 'info',
+  EN_REVISION: 'warning',
+  COTIZADO: 'success',
+  COTIZACION_ACEPTADA: 'success',
+  COTIZACION_RECHAZADA: 'danger',
+  EN_PRODUCCION: 'info',
+  COMPLETADO: 'success',
+  CANCELADO: 'danger',
+  CONVERTIDO_A_PEDIDO: 'default',
+};
+
 export const ORDER_STATUS_BACKEND_MAP: Record<string, string> = {
   Pendiente: 'PENDIENTE',
   Aceptado: 'ACEPTADO',

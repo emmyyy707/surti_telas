@@ -30,6 +30,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [paymentResult, setPaymentResult] = useState<'success' | 'error' | null>(null)
   const [isTrustedCustomer, setIsTrustedCustomer] = useState(false)
+  const [referencia, setReferencia] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const clienteActual = useMemo(() => {
@@ -130,6 +131,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
         `Beneficiario: ${appContent.checkout.bankingKey.beneficiary}`,
         paymentType === 'installments' ? `Pago por abonos: ${installments} cuotas` : 'Pago inmediato',
         clienteActual?.asesorId ? `Asesor: ${clienteActual.asesorId}` : null,
+        referencia ? `Referencia: ${referencia}` : null,
       ]
         .filter(Boolean)
         .join(' | ');
@@ -383,6 +385,18 @@ clearCart();
                 </div>
               </div>
             )}
+
+             {/* Reference / personal note */}
+             <div className="ch-field">
+               <label className="ch-label">Referencia o nota personal (opcional)</label>
+               <textarea
+                 className="ch-textarea"
+                 placeholder="Ej: referencias del producto, detalles adicionales, etc."
+                 value={referencia}
+                 onChange={(e) => setReferencia(e.target.value)}
+                 rows={3}
+               />
+             </div>
 
              {/* Proof upload */}
              <div className="ch-field">

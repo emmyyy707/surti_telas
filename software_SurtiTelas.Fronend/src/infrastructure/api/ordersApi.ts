@@ -100,7 +100,29 @@ export interface PaginatedApiResponse<T> {
   nextCursor?: string | null;
 }
 
+export interface DashboardMetrics {
+  totalOrders: number;
+  totalCustomers: number;
+  totalSales: number;
+  ordersByStatus: { estado: string; cantidad: number }[];
+  recentOrders: Array<{
+    id: string;
+    numero: string;
+    clienteNombre: string;
+    asesorNombre: string;
+    total: number;
+    estado: string;
+    createdAt: string;
+  }>;
+  lowStockProducts: Array<{ id: string; ref: string; nombre: string; cantidadStock: number }>;
+}
+
 export const ordersApi = {
+  async getDashboard(): Promise<DashboardMetrics> {
+    const data = await api.get<DashboardMetrics>('/orders/dashboard');
+    return data;
+  },
+
   async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<OrdersListResult> {
     const response = await api.get<PaginatedApiResponse<OrderDTO>>('/orders', { query });
     const data = response?.items ?? [];

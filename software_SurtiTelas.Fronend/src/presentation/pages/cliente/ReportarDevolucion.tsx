@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Package, AlertCircle, CheckCircle, Image as ImageIcon, X, Clock, ChevronRight, List, FileText } from 'lucide-react';
+import { CheckCircle, Image as ImageIcon, X, List, FileText } from 'lucide-react';
 import s from './ReportarDevolucion.module.css';
 import { Button } from '@/shared/ui/Button';
 import { returnsApi, type Return } from '@/infrastructure/api/returnsApi';
@@ -57,16 +57,16 @@ export const ReportarDevolucion: React.FC = () => {
         setForm(prev => ({ ...prev, cliente: clienteNombre || prev.cliente }));
         const primerPedido = misPedidos.pedidos?.[0];
         if (primerPedido) {
-          setForm(prev => ({ ...prev, orderId: primerPedido.numero, ordenId: primerPedido.id }));
+          setForm(prev => ({ ...prev, orderId: primerPedido.numero ?? '', ordenId: primerPedido.id }));
         }
         const mapped = (misPedidos.pedidos ?? []).map(p => ({
           id: p.id,
-          numero: p.numero,
+          numero: p.numero ?? '',
           fecha: p.fecha,
           estado: p.estado,
         }));
-        setOrdenes(mapped);
-        setPedidosFiltrados(mapped);
+        setOrdenes(mapped as OrderOption[]);
+        setPedidosFiltrados(mapped as OrderOption[]);
       } catch {
         // Si falla, el usuario puede escribir manualmente
       }
@@ -89,11 +89,6 @@ export const ReportarDevolucion: React.FC = () => {
     } finally {
       setLoadingHistory(false);
     }
-  };
-
-  const refreshHistory = () => {
-    loadMyReturns();
-    setActiveTab('history');
   };
 
   const handleReferenciaChange = (ref: string) => {
@@ -274,7 +269,7 @@ export const ReportarDevolucion: React.FC = () => {
               </div>
               <div className={s.field}>
                 <label className={s.label}>Destino previsto</label>
-                <select className={s.input} value={form.destino} onChange={e => setForm({ ...form, destino: e.target.value as any })}>
+                <select className={s.input} value={form.destino} onChange={e => setForm({ ...form, destino: e.target.value as 'REINGRESO_INVENTARIO' | 'REPARACION' | 'DESCARTE' | 'DEVOLUCION_PROVEEDOR' })}>
                   <option value="REINGRESO_INVENTARIO">Reingreso a inventario</option>
                   <option value="REPARACION">Reparación</option>
                   <option value="DESCARTE">Descarte</option>
@@ -400,31 +395,4 @@ const DESTINO_TO_UI: Record<string, string> = {
   REPARACION: 'Reparación',
   DESCARTE: 'Descarte',
   DEVOLUCION_PROVEEDOR: 'Devolución a proveedor',
-};
-
-const TimelineStep: React.FC<{ estado: Return['estado'] }> = ({ estado }) => {
-  const steps = [
-    { key: 'RECIBIDO', label: 'Recibida' },
-    { key: 'EN_INSPECCION', label: 'En inspección' },
-    { key: 'APROBADO', label: 'Aprobada' },
-    { key: 'EN_REPARACION', label: 'En reparación' },
-    { key: 'REINGRESADO', label: 'Finalizada' },
-  ];
-
-  const currentIndex = steps.findIndex(s => s.key === estado);
-
-  return (
-    <div className={s.timelineTrack}>
-      {steps.map((step, idx) => {
-        const isCompleted = idx < currentIndex || estado === 'REINGRESADO' || estado === 'DESCARTADO';
-        const isCurrent = idx === currentIndex && estado !== 'REINGRESADO' && estado !== 'DESCARTADO';
-        return (
-          <div key={step.key} className={`${s.timelineStep} ${isCompleted ? s.timelineCompleted : ''} ${isCurrent ? s.timelineCurrent : ''}`}>
-            <div className={s.timelineDot} />
-            <span className={s.timelineLabel}>{step.label}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
 };

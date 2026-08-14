@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, FolderTree, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin } from 'lucide-react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, FolderTree, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin, FileText } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
@@ -26,6 +26,7 @@ const adminMenu: SidebarItem[] = [
     subItems: [
       { icon: Shield, label: adminContent.layout.menu.configuracion.roles.label, key: 'roles' },
       { icon: UserCog, label: adminContent.layout.menu.configuracion.permisos.label, key: 'permisos' },
+      { icon: Webhook, label: adminContent.layout.menu.webhooks.label, key: 'webhooks' },
     ],
   },
   {
@@ -50,6 +51,7 @@ const adminMenu: SidebarItem[] = [
       { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
       { icon: AlertTriangle, label: adminContent.layout.menu.inventario.alertasStock.label, key: 'alertas-stock' },
       { icon: Archive, label: adminContent.layout.menu.inventario.stockDevuelto.label, key: 'stock-devuelto' },
+      { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
     ],
   },
   {
@@ -67,6 +69,10 @@ const adminMenu: SidebarItem[] = [
     icon: Truck,
     label: adminContent.layout.menu.domicilios.label,
     key: 'domicilios',
+    subItems: [
+      { icon: Users2, label: 'Domiciliarios', key: 'domicilios' },
+      { icon: MapPin, label: 'Ruta del Día', key: 'ruta-del-dia' },
+    ],
   },
   {
     icon: ShoppingCart,
@@ -74,6 +80,7 @@ const adminMenu: SidebarItem[] = [
     key: 'ventas-pedidos',
     subItems: [
       { icon: ShoppingCart, label: adminContent.layout.menu.ventas.pedidos.label, key: 'pedidos' },
+      { icon: FileText, label: 'Pedidos Personalizados', key: 'pedidos-personalizados' },
       { icon: Receipt, label: adminContent.layout.menu.ventas.facturacion.label, key: 'facturacion' },
       { icon: DollarSign, label: adminContent.layout.menu.ventas.pagos.label, key: 'pagos' },
       { icon: Users2, label: adminContent.layout.menu.ventas.clientes.label, key: 'clientes' },
@@ -84,18 +91,14 @@ const adminMenu: SidebarItem[] = [
     label: adminContent.layout.menu.reportes.label,
     key: 'reportes',
     subItems: [
-      { icon: BarChart3, label: adminContent.layout.menu.reportes.ventas.label, key: 'reportes-ventas' },
-      { icon: Users2, label: adminContent.layout.menu.reportes.usuarios.label, key: 'reportes-usuarios' },
-      { icon: Factory, label: adminContent.layout.menu.reportes.produccion.label, key: 'reportes-produccion' },
-      { icon: Package, label: adminContent.layout.menu.reportes.inventario.label, key: 'reportes-inventario' },
+      { icon: BarChart3, label: adminContent.layout.menu.reportes.ventas.label, key: 'reportes/ventas' },
+      { icon: DollarSign, label: adminContent.layout.menu.finanzas.label, key: 'reportes/finanzas' },
+      { icon: Users2, label: adminContent.layout.menu.reportes.usuarios.label, key: 'reportes/usuarios' },
+      { icon: Factory, label: adminContent.layout.menu.reportes.produccion.label, key: 'reportes/produccion' },
+      { icon: Package, label: adminContent.layout.menu.reportes.inventario.label, key: 'reportes/inventario' },
     ],
   },
-  { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
-  { icon: Webhook, label: adminContent.layout.menu.webhooks.label, key: 'webhooks' },
-  { icon: MapPin, label: adminContent.layout.menu.rutaDelDia.label, key: 'ruta-del-dia' },
-  { icon: DollarSign, label: adminContent.layout.menu.finanzas.label, key: 'finanzas' },
 ];
-
 
 export const AdminLayout: React.FC = () => {
   useUserRole('admin');
@@ -145,6 +148,28 @@ export const AdminLayout: React.FC = () => {
     void hydrate();
     return () => { active = false; };
   }, []);
+
+  const location = useLocation();
+
+  const isActive = useCallback(
+    (itemKey: string) => {
+      const path = location.pathname;
+      if (itemKey === 'dashboard' && (path === '/admin/' || path === '/admin/dashboard')) {
+        return true;
+      }
+      if (itemKey === 'inventario') {
+        return path.includes('/inventario') || path.includes('/catalogo');
+      }
+      if (itemKey === 'domicilios') {
+        return path.includes('/domicilios') || path.includes('/ruta-del-dia');
+      }
+      if (itemKey === 'configuracion') {
+        return path.includes('/configuracion') || path.includes('/roles') || path.includes('/permisos') || path.includes('/webhooks');
+      }
+      return path.includes(`/${itemKey}`);
+    },
+    [location.pathname]
+  );
 
   const handleLogout = async () => {
     // Clean theme state scoped to dashboards so public pages remain unaffected
@@ -223,6 +248,7 @@ export const AdminLayout: React.FC = () => {
         showCollapse={true}
         homeHref="/"
         onToggleCollapse={handleSidebarToggle}
+        isActive={isActive}
       />
 
       <div className={s.mainContent}>
