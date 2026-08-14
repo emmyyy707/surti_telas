@@ -698,7 +698,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
     <div className={s.page}>
       <div className={s.header}>
         <div>
-          <h1 className={s.pageTitle}>Mis Pedidos Personalizados</h1>
+           <h1 className={s.pageTitle}>Mis Cotizaciones</h1>
           <p className={s.pageSubtitle}>Gestiona tus solicitudes, cotizaciones y envíos</p>
         </div>
         <Button onClick={openCreate} className="inline-flex items-center gap-2">

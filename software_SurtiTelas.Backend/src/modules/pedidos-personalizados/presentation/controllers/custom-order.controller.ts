@@ -11,6 +11,7 @@ import {
   RejectQuotationSchema,
   CustomOrderFiltersSchema,
   CreateCustomOrderSchema,
+  UpdateCustomOrderSchema,
 } from '../validators/custom-order.validators';
 import path from 'path';
 import fs from 'fs';
@@ -35,7 +36,7 @@ export const createCustomOrder = async (req: Request, res: Response) => {
     } else {
       const createdCustomer = await prisma.customer.create({
         data: {
-          nombre: user.name || input.clienteNombre || 'Cliente',
+          nombre: user.nombre || input.clienteNombre || 'Cliente',
           email: user.email || null,
           telefono: null,
           ciudad: null,
@@ -58,7 +59,7 @@ export const createCustomOrder = async (req: Request, res: Response) => {
     } else {
       const createdCustomer = await prisma.customer.create({
         data: {
-          nombre: user.name || input.clienteNombre || 'Cliente',
+          nombre: user.nombre || input.clienteNombre || 'Cliente',
           email: user.email || null,
           telefono: null,
           ciudad: null,
@@ -162,7 +163,7 @@ export const uploadPaymentProof = async (req: Request, res: Response) => {
 
   const fileName = `${Date.now()}-${file.originalname}`;
   const filePath = path.join(PAYMENT_UPLOAD_DIR, fileName);
-  fs.writeFileSync(filePath, file.buffer);
+  fs.copyFileSync(file.path, filePath);
 
   const relativePath = `/uploads/custom-orders/payments/${fileName}`;
   return ok(res, { paymentProofUrl: relativePath }, 'Comprobante subido correctamente');
@@ -177,7 +178,7 @@ export const updatePaymentInfo = async (req: Request, res: Response) => {
 };
 
 export const updateCustomOrder = async (req: Request, res: Response) => {
-  const input = parseDto(CreateCustomOrderSchema, req.body);
+  const input = parseDto(UpdateCustomOrderSchema, req.body);
   const user = (req as any).user;
   let clienteId = input.clienteId;
 
@@ -190,7 +191,7 @@ export const updateCustomOrder = async (req: Request, res: Response) => {
     } else {
       const createdCustomer = await prisma.customer.create({
         data: {
-          nombre: user.name || input.clienteNombre || 'Cliente',
+          nombre: user.nombre || input.clienteNombre || 'Cliente',
           email: user.email || null,
           telefono: null,
           ciudad: null,

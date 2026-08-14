@@ -17,7 +17,7 @@ const clienteMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: 'Inicio', key: 'inicio' },
   { icon: MessageSquare, label: 'Servicio al Cliente', key: 'catalogo' },
   { icon: ShoppingBag, label: 'Mis Pedidos', key: 'pedidos' },
-  { icon: FileText, label: 'Mis Pedidos Personalizados', key: 'pedidos-personalizados' },
+  { icon: FileText, label: 'Mis Cotizaciones', key: 'pedidos-personalizados' },
   { icon: ReceiptText, label: 'Mis Recibos', key: 'recibos' },
   { icon: Heart, label: 'Mis Favoritos', key: 'favoritos' },
   { icon: Route, label: 'Seguimiento', key: 'seguimiento' },

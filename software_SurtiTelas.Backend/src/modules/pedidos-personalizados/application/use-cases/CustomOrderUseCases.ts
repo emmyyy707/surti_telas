@@ -1,4 +1,4 @@
-import { NotFoundError, ConflictError } from '../../../../shared/domain/errors';
+import { NotFoundError, ConflictError, BadRequestError } from '../../../../shared/domain/errors';
 import type { CustomOrderFilters, CustomOrderRepository, QuotationRepository } from '../../domain/repositories/CustomOrderRepository';
 import { PedidoPersonalizado } from '../../domain/entities/PedidoPersonalizado';
 import { CustomOrderStatus, QuotationStatus } from '../../domain/value-objects/CustomOrderStatus';
@@ -541,17 +541,20 @@ export class ConvertToOrder {
     const anticipo = Number((totalCotizacion * (porcentaje / 100)).toFixed(2));
 
     const result = await this.prisma.$transaction(async (tx) => {
-      const customer = await tx.customer.findFirst({
-        where: {
-          OR: [
-            { email: pedido.clienteEmail ?? undefined },
-            { nombre: pedido.clienteNombre },
-          ],
-        },
+      if (!pedido.clienteId) {
+        throw new BadRequestError('El pedido personalizado no tiene cliente asignado');
+      }
+
+      const customer = await tx.customer.findUnique({
+        where: { id: pedido.clienteId },
         select: { id: true },
       });
 
-      const clienteId = customer?.id ?? pedido.clienteId;
+      if (!customer) {
+        throw new BadRequestError(`El cliente ${pedido.clienteId} no existe en la base de datos`);
+      }
+
+      const clienteId = customer.id;
 
       const order = await tx.order.create({
         data: {

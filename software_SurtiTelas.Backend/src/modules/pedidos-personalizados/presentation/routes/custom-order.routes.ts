@@ -33,7 +33,7 @@ export async function authorizeCustomOrderAccess(req: any, _res: any, next: any)
   const customer = await prisma.customer.findFirst({
     where: {
       OR: [
-        { nombre: { contains: req.user?.name || '', mode: 'insensitive' } },
+        { nombre: { contains: req.user?.nombre || '', mode: 'insensitive' } },
         { email: { contains: req.user?.email || '', mode: 'insensitive' } },
       ],
     },

@@ -157,6 +157,10 @@ export const RejectQuotationSchema = z.object({
   motivoRechazo: z.string().min(1, 'El motivo de rechazo es obligatorio'),
 });
 
+export const UpdateCustomOrderSchema = CreateCustomOrderSchema.partial().extend({
+  items: z.array(CreateCustomOrderItemSchema).optional(),
+});
+
 export const CustomOrderFiltersSchema = z.object({
   estado: CustomOrderStatusEnum.optional(),
   search: z.string().optional(),

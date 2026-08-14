@@ -647,7 +647,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     <div>
       <div className={s.header}>
         <div>
-          <h1 className={s.pageTitle}>Pedidos Personalizados</h1>
+           <h1 className={s.pageTitle}>Cotizaciones</h1>
           <p className={s.pageSubtitle}>Gestiona solicitudes, cotizaciones y conversión a pedidos</p>
         </div>
         <Button onClick={openCreate} className="inline-flex items-center gap-2">

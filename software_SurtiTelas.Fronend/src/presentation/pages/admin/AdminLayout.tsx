@@ -80,7 +80,7 @@ const adminMenu: SidebarItem[] = [
     key: 'ventas-pedidos',
     subItems: [
       { icon: ShoppingCart, label: adminContent.layout.menu.ventas.pedidos.label, key: 'pedidos' },
-      { icon: FileText, label: 'Pedidos Personalizados', key: 'pedidos-personalizados' },
+      { icon: FileText, label: 'Cotizaciones', key: 'pedidos-personalizados' },
       { icon: Receipt, label: adminContent.layout.menu.ventas.facturacion.label, key: 'facturacion' },
       { icon: DollarSign, label: adminContent.layout.menu.ventas.pagos.label, key: 'pagos' },
       { icon: Users2, label: adminContent.layout.menu.ventas.clientes.label, key: 'clientes' },
