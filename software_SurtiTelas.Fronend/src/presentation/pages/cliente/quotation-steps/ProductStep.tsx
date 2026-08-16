@@ -1,0 +1,447 @@
+import React from 'react';
+import { PlusCircle, Check, Trash2 } from 'lucide-react';
+import { type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control } from 'react-hook-form';
+import { type FormValues } from '../MisPedidosPersonalizados';
+import { CollapsibleSection } from './CollapsibleSection';
+import { Skeleton } from './Skeleton';
+
+export interface ProductStepProps {
+  register: UseFormRegister<FormValues>;
+  errors: FieldErrors<FormValues>;
+  watch: UseFormWatch<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
+  _control: Control<FormValues>;
+  styles: Record<string, string>;
+  itemFields: any[];
+  activeItemIndex: number;
+  setActiveItemIndex: (idx: number) => void;
+  editingPersonalizacionIndex: number | null;
+  setEditingPersonalizacionIndex: (idx: number | null) => void;
+  showPersonalizacionForm: boolean;
+  setShowPersonalizacionForm: (show: boolean) => void;
+  productos: { id: string; nombre: string; tela?: string; colores?: string[]; tallas?: string[] }[];
+  agregarProducto: () => void;
+  agregarPersonalizacion: () => void;
+  actualizarPersonalizacion: (persIndex: number, field: string, value: any) => void;
+  agregarVariante: (persIndex: number) => void;
+  eliminarVariante: (persIndex: number, varIndex: number) => void;
+  actualizarVariante: (persIndex: number, varIndex: number, field: string, value: any) => void;
+  eliminarPersonalizacion: (persIndex: number) => void;
+  eliminarProducto: (idx: number) => void;
+  imagenesReferencia: string[];
+  handleReferenceImageChange: (itemIndex: number, e: React.ChangeEvent<HTMLInputElement>) => void;
+  removeReferenceImage: (itemIndex: number, imgIndex: number) => void;
+}
+
+export const ProductStep = ({
+  register,
+  errors,
+  watch,
+  setValue,
+  _control,
+  styles,
+  itemFields,
+  activeItemIndex,
+  setActiveItemIndex,
+  editingPersonalizacionIndex,
+  setEditingPersonalizacionIndex,
+  showPersonalizacionForm,
+  setShowPersonalizacionForm,
+  productos,
+  agregarProducto,
+  agregarPersonalizacion,
+  actualizarPersonalizacion,
+  agregarVariante,
+  eliminarVariante,
+  actualizarVariante,
+  eliminarPersonalizacion,
+  eliminarProducto,
+  imagenesReferencia,
+  handleReferenceImageChange,
+  removeReferenceImage,
+}: ProductStepProps) => {
+  return (
+    <div className={styles.sectionBlock}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        {productos.length === 0
+          ? Array.from({ length: 2 }).map((_, idx) => (
+              <div key={idx} style={{ flex: '1 1 220px' }}>
+                <Skeleton width="100%" height={72} radius="var(--radius-lg)" />
+              </div>
+            ))
+          : itemFields.map((item, idx) => {
+              const persCount = (item.personalizaciones || []).length;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => { setActiveItemIndex(idx); setEditingPersonalizacionIndex(null); setShowPersonalizacionForm(false); }}
+                  className={`${styles.productCard} ${idx === activeItemIndex ? styles.productCardActive : ''}`}
+                  style={{ flex: '1 1 220px' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div className={styles.productCardName}>{item.productoNombre || `Producto ${idx + 1}`}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); eliminarProducto(idx); }}
+                      className={styles.removeFileBtn}
+                      title="Eliminar producto"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className={styles.productCardMeta}>
+                    <span>{item.cantidad || 0} unidades</span>
+                    <span>·</span>
+                    <span>{persCount} personalización{persCount !== 1 ? 'es' : ''}</span>
+                  </div>
+                  {idx === activeItemIndex && (
+                    <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+                      <Check size={16} className="text-blue-600" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+        <button
+          type="button"
+          onClick={agregarProducto}
+          className={styles.btnSecondary}
+          style={{ flex: '0 0 auto', minHeight: '80px' }}
+        >
+          <PlusCircle size={18} />
+          Agregar producto
+        </button>
+      </div>
+
+      {/* Formulario del producto activo */}
+      {itemFields[activeItemIndex] && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className={styles.formRowAttr4}>
+            <div className={`${styles.field} ${styles.colSpan2}`}>
+              <label htmlFor="producto-base" className={styles.label}>Producto base <span className={styles.labelRequired}>*</span></label>
+              <input
+                id="producto-base"
+                className={styles.input}
+                placeholder="Escribe el nombre del producto o selecciona uno del catálogo"
+                aria-required="true"
+                {...register(`items.${activeItemIndex}.productoNombre` as const, { required: 'El producto es obligatorio' })}
+                list="productos-sugeridos-cliente"
+              />
+              <datalist id="productos-sugeridos-cliente">
+                {productos.map(p => (
+                  <option key={p.id} value={p.nombre} />
+                ))}
+              </datalist>
+              {productos.length > 0 && <span className={styles.hintText}>Sugerencias del catálogo disponibles.</span>}
+              {errors.items?.[activeItemIndex]?.productoNombre && <span className={styles.errorText}>{errors.items[activeItemIndex].productoNombre.message as string}</span>}
+            </div>
+          </div>
+          <div className={styles.formRowAttr4}>
+            <div className={styles.field}>
+              <label htmlFor="item-cantidad" className={styles.label}>Cantidad <span className={styles.labelRequired}>*</span></label>
+              <input id="item-cantidad" type="number" className={styles.input} placeholder="Cantidad" aria-required="true" {...register(`items.${activeItemIndex}.cantidad` as const, { valueAsNumber: true, required: 'La cantidad es obligatoria', min: { value: 1, message: 'La cantidad debe ser mayor a 0' } })} />
+              {errors.items?.[activeItemIndex]?.cantidad && <span className={styles.errorText}>{errors.items[activeItemIndex].cantidad.message as string}</span>}
+            </div>
+            <div className={styles.field}>
+              <label htmlFor="item-material" className={styles.label}>Material/Tela</label>
+              <input id="item-material" className={styles.input} placeholder="Material" {...register(`items.${activeItemIndex}.material` as const)} />
+            </div>
+          </div>
+
+          <CollapsibleSection title="Distribución de prendas" defaultOpen={false} styles={styles}>
+            <div className={styles.distributionGrid}>
+              {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((talla) => (
+                <div key={talla} className={styles.distributionItem}>
+                  <label className={styles.distributionLabel}>{talla}</label>
+                  <input
+                    className={styles.distributionInput}
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={watch(`items.${activeItemIndex}.distribucionTallas.${talla}`) || ''}
+                    onChange={(e) => {
+                      const val = e.target.value ? Number(e.target.value) : null;
+                      setValue(`items.${activeItemIndex}.distribucionTallas.${talla}`, val as any);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className={styles.distributionTotal}>
+              <span>Total</span>
+              <span className={(() => {
+                const total = Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+                const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
+                if (cantidad > 0 && total !== cantidad) {
+                  return `${styles.distributionTotalValue} ${styles.distributionTotalValueError}`;
+                }
+                return styles.distributionTotalValueSuccess;
+              })()}>
+                {Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)}
+              </span>
+            </div>
+          </CollapsibleSection>
+
+           <CollapsibleSection title="Personalizaciones" defaultOpen={false} styles={styles}>
+             {/* Formulario de personalización */}
+             {showPersonalizacionForm && (
+               <div className={styles.personalizationForm}>
+                 <div className={styles.personalizationFormTitle}>
+                   {editingPersonalizacionIndex !== null ? 'Editar personalización' : 'Nueva personalización'}
+                 </div>
+                 <div className={styles.formRowAttr4}>
+                   <div className={styles.field}>
+                     <label className={styles.label}>Tipo <span className={styles.labelRequired}>*</span></label>
+                      <select
+                        className={styles.select}
+                        aria-required="true"
+                        value={watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.tipo`) || 'ESTAMPADO'}
+                        onChange={(e) => {
+                          const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
+                          actualizarPersonalizacion(idx, 'tipo', e.target.value);
+                        }}
+                      >
+                       <option value="ESTAMPADO">Estampado</option>
+                       <option value="BORDADO">Bordado</option>
+                       <option value="SUBLIMACION">Sublimación</option>
+                       <option value="VINILO">Vinilo</option>
+                       <option value="OTRO">Otro</option>
+                     </select>
+                   </div>
+                   <div className={styles.field}>
+                     <label className={styles.label}>Técnica</label>
+                     <input
+                       className={styles.input}
+                       placeholder="Ej: DTF, Serigrafía..."
+                       value={watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.tecnica`) || ''}
+                       onChange={(e) => {
+                         const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
+                         actualizarPersonalizacion(idx, 'tecnica', e.target.value);
+                       }}
+                     />
+                   </div>
+                 </div>
+                 <div className={styles.field}>
+                   <label className={styles.label}>Ubicación</label>
+                   <div className={styles.multiSelectContainer}>
+                     <div className={styles.multiSelectOptions}>
+                       {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'OTRA'].map((option) => {
+                         const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
+                         const current = (watch(`items.${activeItemIndex}.personalizaciones.${idx}.ubicacion`) as string[]) || [];
+                         const isSelected = current.includes(option);
+                         return (
+                           <button
+                             key={option}
+                             type="button"
+                             className={`${styles.multiSelectOption} ${isSelected ? styles.multiSelectOptionSelected : ''}`}
+                             onClick={() => {
+                               const next = isSelected ? current.filter((u) => u !== option) : [...current, option];
+                               actualizarPersonalizacion(idx, 'ubicacion', next);
+                             }}
+                           >
+                             {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
+                           </button>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 </div>
+                 <div className={styles.field}>
+                   <label className={styles.label}>Descripción del diseño <span className={styles.labelRequired}>*</span></label>
+                    <textarea
+                      className={styles.textarea}
+                      rows={2}
+                      aria-required="true"
+                      placeholder="Describe el diseño..."
+                      value={watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.descripcion`) || ''}
+                      onChange={(e) => {
+                        const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
+                        actualizarPersonalizacion(idx, 'descripcion', e.target.value);
+                      }}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Imágenes de referencia para personalizaciones</label>
+                    <input
+                      id={`ref-images-${activeItemIndex}`}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className={styles.hiddenInput}
+                      onChange={(e) => handleReferenceImageChange(activeItemIndex, e)}
+                    />
+                    <label htmlFor={`ref-images-${activeItemIndex}`} className={styles.uploadLabel}>
+                      Seleccionar imágenes
+                    </label>
+                    {imagenesReferencia.length > 0 && (
+                      <div className={styles.filePreview}>
+                        {imagenesReferencia.map((url, idx) => (
+                          <div key={idx} className={styles.fileChip}>
+                            <img src={url} alt={`Referencia ${idx + 1}`} className={styles.fileChipImage} />
+                            <span className={styles.fileChipName}>Imagen {idx + 1}</span>
+                            <button type="button" className={styles.removeFileBtn} onClick={() => removeReferenceImage(activeItemIndex, idx)}>Eliminar</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <span className={styles.hintText}>Aquí también puedes adjuntar la imagen del diseño que quieres.</span>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Variantes a personalizar</label>
+                    {(watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).map((variante: any, varIndex: number) => (
+                      <div key={varIndex} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                        <div className={styles.field} style={{ flex: '1 1 0' }}>
+                          <input className={styles.input} placeholder="Talla" value={variante.talla} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex, 'talla', e.target.value)} />
+                        </div>
+                        <div className={styles.field} style={{ flex: '1 1 0' }}>
+                          <input className={styles.input} placeholder="Color" value={variante.color} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex, 'color', e.target.value)} />
+                        </div>
+                        <div className={styles.field} style={{ flex: '1 1 0' }}>
+                          <input className={styles.input} type="number" min="0" placeholder="Cant." value={variante.cantidad} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex, 'cantidad', Number(e.target.value))} />
+                        </div>
+                        <div className={styles.field} style={{ flex: '0 0 auto' }}>
+                          <button type="button" className={styles.removeFileBtn} onClick={() => eliminarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex)}><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+                    ))}
+                   <button type="button" className={styles.quotationAddLine} onClick={() => agregarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0))}>
+                     <PlusCircle size={16} />
+                     <span>Agregar variante</span>
+                   </button>
+                   <div className={styles.personalizationTotal}>
+                     {(() => {
+                       const total = (watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
+                       const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
+                       const exceeds = cantidad > 0 && total > cantidad;
+                       return (
+                         <>
+                           Total personalización: <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>
+                             {total}{exceeds ? ` (supera las ${cantidad} unidades disponibles)` : ''}
+                           </span>
+                         </>
+                       );
+                     })()}
+                   </div>
+                 </div>
+                 <div className={styles.personalizationFormActions}>
+                   <button type="button" className={styles.quotationAddLine} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
+                     Cancelar
+                   </button>
+                   <button type="button" className={styles.btnPrimary} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
+                     Guardar personalización
+                   </button>
+                 </div>
+               </div>
+             )}
+
+             {/* Tarjetas de personalizaciones existentes */}
+             <div className={styles.personalizationCardsList}>
+               {(itemFields[activeItemIndex]?.personalizaciones || []).length === 0 ? (
+                 <div className={styles.personalizationEmpty}>
+                   <span>No hay personalizaciones creadas para este producto.</span>
+                   <button type="button" className={styles.quotationAddLine} onClick={() => {
+                     const newIndex = itemFields[activeItemIndex]?.personalizaciones?.length ?? 0;
+                     agregarPersonalizacion();
+                     setEditingPersonalizacionIndex(newIndex);
+                     setShowPersonalizacionForm(true);
+                   }}>
+                     <PlusCircle size={16} />
+                     <span>Agregar personalización</span>
+                   </button>
+                 </div>
+               ) : (
+                 (itemFields[activeItemIndex]?.personalizaciones || [])
+                   .filter((pers: any) => {
+                     const hasTipo = !!pers.tipo;
+                     const hasDescripcion = !!pers.descripcion && pers.descripcion.trim() !== '';
+                     const hasUbicacion = Array.isArray(pers.ubicacion) && pers.ubicacion.length > 0;
+                     const hasVariantes = (pers.variantes || []).some((v: any) => Number(v.cantidad) > 0);
+                     return hasTipo && (hasDescripcion || hasUbicacion || hasVariantes);
+                   })
+                   .map((pers: any, persIndex: number) => (
+                   <div key={persIndex} className={styles.personalizationCard}>
+                     {editingPersonalizacionIndex === persIndex ? (
+                       <div className={styles.personalizationCardEdit}>
+                         <div className={styles.personalizationCardTitle}>Editar personalización</div>
+                         <div className={styles.formRowAttr4}>
+                           <div className={styles.field}>
+                             <label className={styles.label}>Tipo</label>
+                             <select className={styles.select} value={pers.tipo} onChange={(e) => actualizarPersonalizacion(persIndex, 'tipo', e.target.value)}>
+                               <option value="ESTAMPADO">Estampado</option>
+                               <option value="BORDADO">Bordado</option>
+                               <option value="SUBLIMACION">Sublimación</option>
+                               <option value="VINILO">Vinilo</option>
+                               <option value="OTRO">Otro</option>
+                             </select>
+                           </div>
+                           <div className={styles.field}>
+                             <label className={styles.label}>Técnica</label>
+                             <input className={styles.input} value={pers.tecnica || ''} onChange={(e) => actualizarPersonalizacion(persIndex, 'tecnica', e.target.value)} />
+                           </div>
+                         </div>
+                         <div className={styles.field}>
+                           <label className={styles.label}>Ubicación</label>
+                           <div className={styles.multiSelectContainer}>
+                             <div className={styles.multiSelectOptions}>
+                               {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'OTRA'].map((option) => {
+                                 const isSelected = (pers.ubicacion || []).includes(option);
+                                 return (
+                                   <button
+                                     key={option}
+                                     type="button"
+                                     className={`${styles.multiSelectOption} ${isSelected ? styles.multiSelectOptionSelected : ''}`}
+                                     onClick={() => {
+                                       const current = pers.ubicacion || [];
+                                       const next = isSelected ? current.filter((u: string) => u !== option) : [...current, option];
+                                       actualizarPersonalizacion(persIndex, 'ubicacion', next);
+                                     }}
+                                   >
+                                     {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
+                                   </button>
+                                 );
+                               })}
+                             </div>
+                           </div>
+                         </div>
+                         <div className={styles.field}>
+                           <label className={styles.label}>Descripción</label>
+                           <textarea className={styles.textarea} rows={2} value={pers.descripcion || ''} onChange={(e) => actualizarPersonalizacion(persIndex, 'descripcion', e.target.value)} />
+                         </div>
+                         <div className={styles.personalizationCardActions}>
+                           <button type="button" className={styles.quotationAddLine} onClick={() => setEditingPersonalizacionIndex(null)}>Cancelar</button>
+                           <button type="button" className={styles.btnPrimary} onClick={() => setEditingPersonalizacionIndex(null)}>Guardar</button>
+                         </div>
+                       </div>
+                     ) : (
+                       <div className={styles.personalizationCardHeader}>
+                         <div>
+                           <div className={styles.personalizationCardTitle}>{pers.tipo}</div>
+                           <div className={styles.personalizationCardMeta}>
+                             {(pers.ubicacion || []).map((u: string) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')).join(', ')}
+                           </div>
+                           <div className={styles.personalizationCardDescription}>{pers.descripcion}</div>
+                           <div className={styles.personalizationCardMeta}>
+                             {(() => {
+                               const total = (pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
+                               const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
+                               const exceeds = cantidad > 0 && total > cantidad;
+                               return <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>{total} unidades{exceeds ? ` (supera las ${cantidad} disponibles)` : ''}</span>;
+                             })()}
+                           </div>
+                         </div>
+                         <div className={styles.personalizationCardActions}>
+                           <button type="button" className={styles.quotationAddLine} onClick={() => setEditingPersonalizacionIndex(persIndex)}>Editar</button>
+                           <button type="button" className={styles.removeFileBtn} onClick={() => eliminarPersonalizacion(persIndex)}>Eliminar</button>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 ))
+               )}
+             </div>
+           </CollapsibleSection>
+         </div>
+       )}
+     </div>
+   );
+ };

@@ -184,4 +184,19 @@ export class PrismaCustomOrderRepository implements CustomOrderRepository {
     }
     return `SOL-${String(seq).padStart(4, '0')}`;
   }
+
+  async remove(id: string, tx?: any) {
+    const prisma = tx ?? this.prisma;
+    try {
+      await prisma.custom_orders.update({
+        where: { id },
+        data: { deleted_at: new Date() },
+      });
+    } catch (error: any) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+      }
+      throw error;
+    }
+  }
 }

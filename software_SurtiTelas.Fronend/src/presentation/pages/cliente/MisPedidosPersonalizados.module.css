@@ -1,4 +1,4 @@
-.pageTitle {
+﻿.pageTitle {
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -35,7 +35,7 @@
   padding: 18px 20px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   transition: var(--transition);
   min-width: 0;
@@ -217,7 +217,7 @@
 .tableWrapper {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -273,7 +273,9 @@
 .textarea:focus {
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 .inputReadOnly {
@@ -520,31 +522,18 @@
   border: none;
   color: var(--color-danger);
   font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .removeFileBtn:hover {
   background: rgba(220, 38, 38, 0.08);
-}
-
-.sectionBlock {
-  padding: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-card);
-  margin-bottom: 16px;
-}
-
-.sectionTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .colSpan2 {
@@ -614,16 +603,11 @@
 }
 
 .sectionBlock {
-  padding: 20px;
+  padding: 18px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-bg-card);
-  margin-bottom: 18px;
-  border-left: 4px solid transparent;
-}
-
-.sectionBlockAccent {
-  border-left-color: var(--color-accent);
+  margin-bottom: 16px;
 }
 
 .sectionHeader {
@@ -631,16 +615,6 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 4px;
-}
-
-.sectionTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
 }
 
 .sectionDescription {
@@ -668,6 +642,21 @@
   .formRowAttr4 {
     grid-template-columns: 1fr;
   }
+
+  .productCard {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .distributionGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .distributionGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .qrCard {
@@ -675,7 +664,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
 }
@@ -919,7 +908,7 @@
   gap: 10px;
   padding: 16px;
   background: var(--color-bg-elevated);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
 }
 
@@ -1064,11 +1053,11 @@
 }
 
 .summarySection {
-  padding: 12px 16px;
+  padding: 16px;
   background: var(--color-bg-elevated);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .summaryTitle {
@@ -1095,16 +1084,19 @@
 .quotationAddLine {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-top: 8px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border: 1px dashed var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-secondary);
   font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  min-height: 40px;
 }
 
 .quotationAddLine:hover {
@@ -1112,7 +1104,70 @@
   color: var(--color-primary);
 }
 
-/* Mejoras del modal de cotización */
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.btnGhost:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border);
+}
+
+.btnLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.btnLink:hover {
+  text-decoration: underline;
+}
+
+/* Mejoras del modal de cotizaciÃ³n */
 .modalHeader {
   display: flex;
   flex-direction: column;
@@ -1210,13 +1265,14 @@
 /* Cards de productos */
 .productCard {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: 12px;
   background: var(--color-bg-card);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  min-height: 72px;
 }
 
 .productCard:hover {
@@ -1246,11 +1302,11 @@
   gap: 6px;
 }
 
-/* Distribución de prendas */
+/* DistribuciÃ³n de prendas */
 .distributionSection {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 20px;
   margin-top: 16px;
 }
@@ -1263,12 +1319,13 @@
 }
 
 .distributionTitle {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
 .distributionGrid {
@@ -1342,17 +1399,18 @@
 .personalizationHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-bottom: 16px;
 }
 
 .personalizationTitle {
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 0.9rem;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
 .personalizationSubtitle {
@@ -1364,7 +1422,7 @@
 .personalizationCard {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 12px;
   transition: all 0.2s ease;
@@ -1421,11 +1479,11 @@
   gap: 8px;
 }
 
-/* Formulario de personalización */
+/* Formulario de personalizaciÃ³n */
 .personalizationForm {
   background: var(--color-bg-card);
   border: 1px solid var(--color-accent);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 20px;
   margin-bottom: 16px;
   box-shadow: 0 0 0 1px var(--color-accent);
@@ -1456,6 +1514,21 @@
   gap: 8px;
 }
 
+.personalizationEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
 .personalizationCardEdit {
   display: flex;
   flex-direction: column;
@@ -1473,7 +1546,7 @@
 .summarySection {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -1482,10 +1555,10 @@
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--color-text-primary);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
 }
 
 .summaryRow {
@@ -1509,7 +1582,7 @@
   flex: 1;
 }
 
-/* Validación messages */
+/* ValidaciÃ³n messages */
 .validationError {
   display: flex;
   align-items: center;
@@ -1550,6 +1623,7 @@
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+  min-height: 44px;
 }
 
 .btnPrimary:hover {
@@ -1585,6 +1659,7 @@
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+  min-height: 40px;
 }
 
 .btnSecondary:hover {
@@ -1592,7 +1667,7 @@
   border-color: var(--color-text-muted);
 }
 
-/* Botones de acción en cards */
+/* Botones de acciÃ³n en cards */
 .cardActions {
   display: flex;
   gap: 6px;
@@ -1651,7 +1726,7 @@
 .summaryProductCard {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 12px;
 }
@@ -1715,3 +1790,9 @@
   padding-top: 8px;
   border-top: 1px solid var(--color-border-subtle);
 }
+
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+

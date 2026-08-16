@@ -72,6 +72,17 @@ type QuotationLine = {
   observaciones?: string;
 };
 
+type QuotationProduct = {
+  id: string;
+  nombre: string;
+  cantidad: number;
+  talla?: string;
+  color?: string;
+  material?: string;
+  conceptos: QuotationLine[];
+  expanded: boolean;
+};
+
 const emptyForm: FormState = {
   clienteNombre: '',
   clienteEmail: '',
@@ -111,7 +122,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [paymentConfirm, setPaymentConfirm] = useState<CustomOrder | null>(null);
 
   const [quotationOpen, setQuotationOpen] = useState(false);
-  const [quotationLines, setQuotationLines] = useState<QuotationLine[]>([]);
+  const [quotationProducts, setQuotationProducts] = useState<QuotationProduct[]>([]);
   const [quotationDiscount, setQuotationDiscount] = useState(0);
   const [quotationTaxRate, setQuotationTaxRate] = useState(19);
   const [quotationAdvanceRate, setQuotationAdvanceRate] = useState(50);
@@ -131,6 +142,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [clientes, setClientes] = useState<{ id: string; nombre: string; email?: string; telefono?: string }[]>([]);
   const [productos, setProductos] = useState<{ id: string; nombre: string; tela?: string; colores?: string[]; tallas?: string[] }[]>([]);
   const [, setLoadingCatalog] = useState(false);
+
+  const [deleteConfirm, setDeleteConfirm] = useState<CustomOrder | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(o => o.estado === 'SOLICITUD_RECIBIDA' || o.estado === 'EN_REVISION').length;
@@ -442,64 +456,113 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     return Object.keys(next).length === 0;
   };
 
-  const handleChangeStatus = async () => {
-    if (!statusConfirm || !selectedStatus) return;
-    try {
-      await customOrdersApi.updateStatus(statusConfirm.id, selectedStatus);
-      await loadOrders();
-      toast.success(`Solicitud ${statusConfirm.numeroSolicitud} actualizada a ${getStatusLabel(selectedStatus)}`);
-      setStatusConfirm(null);
-      setSelectedStatus(null);
-    } catch {
-      toast.error('No se pudo actualizar el estado');
-    }
-  };
+   const handleChangeStatus = async () => {
+     if (!statusConfirm || !selectedStatus) return;
+     try {
+       await customOrdersApi.updateStatus(statusConfirm.id, selectedStatus);
+       await loadOrders();
+       toast.success(`Solicitud ${statusConfirm.numeroSolicitud} actualizada a ${getStatusLabel(selectedStatus)}`);
+       setStatusConfirm(null);
+       setSelectedStatus(null);
+     } catch {
+       toast.error('No se pudo actualizar el estado');
+     }
+   };
+
+   const handleDelete = async () => {
+     if (!deleteConfirm) return;
+     setDeleting(true);
+     try {
+       await customOrdersApi.remove(deleteConfirm.id);
+       toast.success(`Solicitud ${deleteConfirm.numeroSolicitud} eliminada`);
+       setDeleteConfirm(null);
+       void loadOrders();
+     } catch {
+       toast.error('Error al eliminar');
+     } finally {
+       setDeleting(false);
+     }
+   };
 
   const openQuotationEditor = (order: CustomOrder) => {
-    const existingLines: QuotationLine[] = order.cotizacion?.detalles?.map((d, idx) => ({
-      id: d.id ?? `line-${idx}`,
-      tipo: d.tipo,
-      descripcion: d.descripcion,
-      cantidad: d.cantidad,
-      unidadMedida: d.unidadMedida ?? 'unidad',
-      precioUnitario: Number(d.precioUnitario),
-      observaciones: d.observaciones ?? '',
-    })) ?? [];
+    let existingLines: QuotationLine[] = [];
     
-    if (existingLines.length === 0 && order.items.length > 0) {
+    if (order.cotizacion?.detalles && order.cotizacion.detalles.length > 0) {
+      existingLines = order.cotizacion.detalles.map((d, idx) => ({
+        id: d.id ?? `line-${idx}`,
+        tipo: d.tipo,
+        descripcion: d.descripcion,
+        cantidad: d.cantidad,
+        unidadMedida: d.unidadMedida ?? 'unidad',
+        precioUnitario: Number(d.precioUnitario),
+        observaciones: d.observaciones ?? '',
+      }));
+    }
+
+    const products: QuotationProduct[] = [];
+    
+    if (order.items.length > 0) {
       order.items.forEach((item, idx) => {
-        existingLines.push({
-          id: `line-${Date.now()}-${idx}-producto`,
-          tipo: 'PRODUCTO_BASE',
-          descripcion: item.descripcion || `Producto ${idx + 1}`,
+        const productLines: QuotationLine[] = [];
+        
+        if (existingLines.length > 0) {
+          const linesPerProduct = Math.ceil(existingLines.length / order.items.length);
+          const startIdx = idx * linesPerProduct;
+          const endIdx = Math.min(startIdx + linesPerProduct, existingLines.length);
+          for (let i = startIdx; i < endIdx; i++) {
+            productLines.push(existingLines[i]);
+          }
+        } else {
+          productLines.push({
+            id: `line-${Date.now()}-${idx}-producto`,
+            tipo: 'PRODUCTO_BASE',
+            descripcion: item.descripcion || `Producto ${idx + 1}`,
+            cantidad: Number(item.cantidad) || 1,
+            unidadMedida: 'unidad',
+            precioUnitario: 0,
+            observaciones: '',
+          });
+          productLines.push({
+            id: `line-${Date.now()}-${idx}-personalizacion`,
+            tipo: 'MANO_OBRA',
+            descripcion: (item.tipoPersonalizacion || 'Personalización').replace(/_/g, ' '),
+            cantidad: Number(item.cantidad) || 1,
+            unidadMedida: 'unidad',
+            precioUnitario: 0,
+            observaciones: Array.isArray(item.ubicacion) ? item.ubicacion.join(', ') : (item.ubicacion ?? ''),
+          });
+        }
+
+        products.push({
+          id: `product-${idx}`,
+          nombre: item.descripcion || `Producto ${idx + 1}`,
           cantidad: Number(item.cantidad) || 1,
+          talla: item.talla ?? undefined,
+          color: item.color ?? undefined,
+          material: item.material ?? undefined,
+          conceptos: productLines,
+          expanded: true,
+        });
+      });
+    } else {
+      products.push({
+        id: 'product-0',
+        nombre: 'Producto personalizado',
+        cantidad: 1,
+        conceptos: existingLines.length > 0 ? existingLines : [{
+          id: `line-${Date.now()}`,
+          tipo: 'PRODUCTO_BASE',
+          descripcion: 'Producto personalizado',
+          cantidad: 1,
           unidadMedida: 'unidad',
           precioUnitario: 0,
           observaciones: '',
-        });
-        existingLines.push({
-          id: `line-${Date.now()}-${idx}-personalizacion`,
-          tipo: 'MANO_OBRA',
-          descripcion: (item.tipoPersonalizacion || 'Personalización').replace(/_/g, ' '),
-          cantidad: Number(item.cantidad) || 1,
-          unidadMedida: 'unidad',
-          precioUnitario: 0,
-          observaciones: Array.isArray(item.ubicacion) ? item.ubicacion.join(', ') : (item.ubicacion ?? ''),
-        });
-      });
-    } else if (existingLines.length === 0) {
-      existingLines.push({
-        id: `line-${Date.now()}`,
-        tipo: 'PRODUCTO_BASE',
-        descripcion: order.items[0]?.descripcion ?? 'Producto personalizado',
-        cantidad: order.items[0]?.cantidad ?? 1,
-        unidadMedida: 'unidad',
-        precioUnitario: 0,
-        observaciones: '',
+        }],
+        expanded: true,
       });
     }
 
-    setQuotationLines(existingLines);
+    setQuotationProducts(products);
     setQuotationDiscount(order.cotizacion?.descuento ? Number(order.cotizacion.descuento) : 0);
     setQuotationTaxRate(19);
     setQuotationAdvanceRate(50);
@@ -511,8 +574,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setQuotationOpen(true);
   };
 
-  const addQuotationLine = () => {
-    setQuotationLines(prev => [...prev, {
+  const addQuotationLine = (productId?: string) => {
+    const newLine: QuotationLine = {
       id: `line-${Date.now()}`,
       tipo: 'OTRO',
       descripcion: '',
@@ -520,22 +583,72 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       unidadMedida: 'unidad',
       precioUnitario: 0,
       observaciones: '',
-    }]);
+    };
+
+    if (productId) {
+      setQuotationProducts(prev => prev.map(product => {
+        if (product.id !== productId) return product;
+        return {
+          ...product,
+          conceptos: [...product.conceptos, newLine],
+          expanded: true,
+        };
+      }));
+    } else {
+      setQuotationProducts(prev => {
+        if (prev.length === 0) {
+          return [{
+            id: `product-${Date.now()}`,
+            nombre: 'Producto personalizado',
+            cantidad: 1,
+            conceptos: [newLine],
+            expanded: true,
+          }];
+        }
+        return prev.map((product, idx) => {
+          if (idx !== 0) return product;
+          return {
+            ...product,
+            conceptos: [...product.conceptos, newLine],
+            expanded: true,
+          };
+        });
+      });
+    }
   };
 
-  const removeQuotationLine = (id: string) => {
-    setQuotationLines(prev => prev.filter(line => line.id !== id));
+  const removeQuotationLine = (productId: string, lineId: string) => {
+    setQuotationProducts(prev => prev.map(product => {
+      if (product.id !== productId) return product;
+      return {
+        ...product,
+        conceptos: product.conceptos.filter(line => line.id !== lineId),
+      };
+    }));
   };
 
-  const updateQuotationLine = (id: string, field: keyof QuotationLine, value: string | number) => {
-    setQuotationLines(prev => prev.map(line => {
-      if (line.id !== id) return line;
-      const updated = { ...line, [field]: value };
-      if (field === 'cantidad' || field === 'precioUnitario') {
-        updated.precioUnitario = Number(updated.precioUnitario);
-        updated.cantidad = Number(updated.cantidad);
-      }
-      return updated;
+  const updateQuotationLine = (productId: string, lineId: string, field: keyof QuotationLine, value: string | number) => {
+    setQuotationProducts(prev => prev.map(product => {
+      if (product.id !== productId) return product;
+      return {
+        ...product,
+        conceptos: product.conceptos.map(line => {
+          if (line.id !== lineId) return line;
+          const updated = { ...line, [field]: value };
+          if (field === 'cantidad' || field === 'precioUnitario') {
+            updated.precioUnitario = Number(updated.precioUnitario);
+            updated.cantidad = Number(updated.cantidad);
+          }
+          return updated;
+        }),
+      };
+    }));
+  };
+
+  const toggleProductExpanded = (productId: string) => {
+    setQuotationProducts(prev => prev.map(product => {
+      if (product.id !== productId) return product;
+      return { ...product, expanded: !product.expanded };
     }));
   };
 
@@ -543,8 +656,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     if (!selectedOrder) return;
     setQuotationSaving(true);
     try {
+      const allLines = quotationProducts.flatMap(product => product.conceptos);
       const payload = {
-        detalles: quotationLines.map((line, index) => ({
+        detalles: allLines.map((line, index) => ({
           tipo: line.tipo,
           descripcion: line.descripcion,
           cantidad: Number(line.cantidad),
@@ -566,8 +680,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       };
 
       await customOrdersApi.generateQuotation(selectedOrder.id, payload);
-      toast.success('Cotización generada y enviada al cliente');
-      setQuotationOpen(false);
+      toast.success('Cotización guardada en estado PENDIENTE');
       void loadOrders();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al generar cotización';
@@ -576,6 +689,22 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       } else {
         toast.error(message || 'Error al generar cotización');
       }
+    } finally {
+      setQuotationSaving(false);
+    }
+  };
+
+  const handleSendQuotation = async () => {
+    if (!selectedOrder) return;
+    setQuotationSaving(true);
+    try {
+      await customOrdersApi.sendQuotation(selectedOrder.id);
+      toast.success('Cotización enviada al cliente');
+      setQuotationOpen(false);
+      void loadOrders();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al enviar cotización';
+      toast.error(message || 'Error al enviar cotización');
     } finally {
       setQuotationSaving(false);
     }
@@ -624,10 +753,17 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
   };
 
+  const getQuotationAdminStatus = (estado: string) => {
+    if (estado === 'PENDIENTE' || estado === 'ENVIADA') return { label: 'Editable', variant: 'warning' as const };
+    if (estado === 'ACEPTADA' || estado === 'CANCELADA') return { label: 'Cerrada', variant: 'success' as const };
+    return { label: estado, variant: 'default' as const };
+  };
+
   const calcLineSubtotal = (line: QuotationLine) => Number((line.cantidad * line.precioUnitario).toFixed(2));
 
   const calcQuotation = useMemo(() => {
-    const subtotal = Number(quotationLines.reduce((sum, line) => sum + calcLineSubtotal(line), 0).toFixed(2));
+    const allLines = quotationProducts.flatMap(product => product.conceptos);
+    const subtotal = Number(allLines.reduce((sum, line) => sum + calcLineSubtotal(line), 0).toFixed(2));
     const discount = Number(Math.min(quotationDiscount, subtotal).toFixed(2));
     const base = subtotal - discount;
     const taxes = Number((base * (quotationTaxRate / 100)).toFixed(2));
@@ -635,7 +771,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     const advance = Number((total * (quotationAdvanceRate / 100)).toFixed(2));
     const balance = Number((total - advance).toFixed(2));
     return { subtotal, discount, base, taxes, total, advance, balance };
-  }, [quotationLines, quotationDiscount, quotationTaxRate, quotationAdvanceRate]);
+  }, [quotationProducts, quotationDiscount, quotationTaxRate, quotationAdvanceRate]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return orders;
@@ -726,20 +862,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             totalPages={totalPages}
             totalItems={totalItems}
             onPageChange={setPage}
-            actions={(row) => [
-              { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => { setSelectedOrder(row); setDetailOpen(true); } },
-              { label: 'Editar', icon: <Edit3 size={14} />, onClick: () => openEdit(row) },
-              { label: 'Cambiar estado', onClick: () => { setStatusConfirm(row); setSelectedStatus(null); } },
-              ...(!row.anticipoPagado && (row.paymentKey || row.paymentProofUrl) ? [{ label: 'Confirmar pago', onClick: () => setPaymentConfirm(row) }] : []),
-              { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => {
-                if (window.confirm('¿Eliminar este pedido?')) {
-                  customOrdersApi.remove(row.id).then(() => {
-                    toast.success('Pedido eliminado');
-                    void loadOrders();
-                  }).catch(() => toast.error('Error al eliminar'));
-                }
-              }, danger: true },
-            ]}
+             actions={(row) => [
+               { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => { setSelectedOrder(row); setDetailOpen(true); } },
+               { label: 'Editar', icon: <Edit3 size={14} />, onClick: () => openEdit(row) },
+               { label: 'Cambiar estado', onClick: () => { setStatusConfirm(row); setSelectedStatus(null); } },
+               ...(!row.anticipoPagado && (row.paymentKey || row.paymentProofUrl) ? [{ label: 'Confirmar pago', onClick: () => setPaymentConfirm(row) }] : []),
+               { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(row), danger: true },
+             ]}
           />
         </div>
       </div>
@@ -820,7 +949,10 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                   </div>
                   <div className={s.field}>
                     <span className={s.label}>Estado</span>
-                    <Badge variant={selectedOrder.cotizacion.estado === 'ACEPTADA' ? 'success' : selectedOrder.cotizacion.estado === 'RECHAZADA' ? 'danger' : 'info'}>{selectedOrder.cotizacion.estado}</Badge>
+                    {selectedOrder.cotizacion && (() => {
+                      const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
+                      return <Badge variant={status.variant}>{status.label}</Badge>;
+                    })()}
                   </div>
                   <div className={s.field}>
                     <span className={s.label}>Válida hasta</span>
@@ -942,58 +1074,118 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       <Modal open={!!quotationOpen} onClose={() => setQuotationOpen(false)} title="Editor de Cotización" description="Construye la cotización con conceptos, precios y condiciones." size="xl">
         {selectedOrder && (
           <div className={s.form}>
+            {selectedOrder.cotizacion && (
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Estado de la cotización</div>
+                </div>
+                <div className={s.quotationStatusRow}>
+                  {selectedOrder.cotizacion && (() => {
+                    const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
+                    return (
+                      <>
+                        <Badge variant={status.variant}>{status.label}</Badge>
+                        <span className={s.quotationNegotiation}>
+                          Negociaciones: {selectedOrder.cotizacion.negotiationCount ?? 0}/3
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
+                {selectedOrder.cotizacion.negotiationHistory && selectedOrder.cotizacion.negotiationHistory.length > 0 && (
+                  <div className={s.negotiationHistory}>
+                    <div className={s.sectionTitle}>Historial de negociaciones</div>
+                    {selectedOrder.cotizacion.negotiationHistory.map((entry: any, idx: number) => (
+                      <div key={idx} className={s.negotiationEntry}>
+                        <strong>Negociación {entry.step ?? idx + 1}</strong>
+                        <span>{entry.reason}</span>
+                        <span className={s.negotiationDate}>{new Date(entry.date).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className={s.sectionBlock}>
               <div className={s.sectionHeader}>
                 <FileText size={18} />
-                <div className={s.sectionTitle}>Conceptos de la cotización</div>
+                <div className={s.sectionTitle}>Productos y conceptos</div>
               </div>
-              <p className={s.sectionDescription}>Agrega los conceptos que componen el precio del pedido personalizado.</p>
+              <p className={s.sectionDescription}>Organiza la cotización por producto. Cada producto puede tener múltiples conceptos.</p>
               
-              <div className={s.quotationTable}>
-                <div className={s.quotationHeader}>
-                  <span className={s.quotationColType}>Tipo</span>
-                  <span className={s.quotationColDesc}>Descripción</span>
-                  <span className={s.quotationColCant}>Cantidad</span>
-                  <span className={s.quotationColUnit}>Precio unitario</span>
-                  <span className={s.quotationColSub}>Subtotal</span>
-                  <span className={s.quotationColActions}></span>
-                </div>
-                {quotationLines.map((line) => (
-                  <div key={line.id} className={s.quotationRow}>
-                    <div className={s.quotationColType}>
-                      <select className={s.select} value={line.tipo} onChange={(e) => updateQuotationLine(line.id, 'tipo', e.target.value)}>
-                        <option value="PRODUCTO_BASE">Producto base</option>
-                        <option value="MATERIA_PRIMA">Materia prima</option>
-                        <option value="MANO_OBRA">Mano de obra</option>
-                        <option value="DISENO">Diseño</option>
-                        <option value="LOGISTICA">Logística</option>
-                        <option value="OTRO">Otro</option>
-                      </select>
+              {quotationProducts.map((product) => (
+                <div key={product.id} className={s.productCard}>
+                  <div className={s.productHeader} onClick={() => toggleProductExpanded(product.id)}>
+                    <div className={s.productInfo}>
+                      <div>
+                        <div className={s.productTitle}>{product.nombre}</div>
+                        <div className={s.productMeta}>
+                          <span>Cantidad: {product.cantidad}</span>
+                          {product.talla && <span>Talla: {product.talla}</span>}
+                          {product.color && <span>Color: {product.color}</span>}
+                          {product.material && <span>Material: {product.material}</span>}
+                        </div>
+                      </div>
                     </div>
-                    <div className={s.quotationColDesc}>
-                      <input className={s.input} placeholder="Concepto" value={line.descripcion} onChange={(e) => updateQuotationLine(line.id, 'descripcion', e.target.value)} />
-                    </div>
-                    <div className={s.quotationColCant}>
-                      <input className={s.input} type="number" min="1" value={line.cantidad} onChange={(e) => updateQuotationLine(line.id, 'cantidad', e.target.value)} />
-                    </div>
-                    <div className={s.quotationColUnit}>
-                      <input className={s.input} type="number" min="0" step="1" value={line.precioUnitario} onChange={(e) => updateQuotationLine(line.id, 'precioUnitario', Number(e.target.value))} />
-                    </div>
-                    <div className={s.quotationColSub}>
-                      <span className={s.quotationSubtotal}>{formatCurrency(calcLineSubtotal(line))}</span>
-                    </div>
-                    <div className={s.quotationColActions}>
-                      <button type="button" className={s.removeFileBtn} onClick={() => removeQuotationLine(line.id)}>
-                        <Trash2 size={14} />
-                      </button>
+                    <div className={s.productSubtotal}>
+                      {formatCurrency(product.conceptos.reduce((sum, line) => sum + calcLineSubtotal(line), 0))}
                     </div>
                   </div>
-                ))}
-                <button type="button" className={s.quotationAddLine} onClick={addQuotationLine}>
-                  <PlusCircle size={16} />
-                  <span>Agregar concepto</span>
-                </button>
-              </div>
+                  
+                  {product.expanded && (
+                    <div className={s.productBody}>
+                      <div className={s.productConceptsTable}>
+                        <div className={s.productConceptsHeader}>
+                          <span>Concepto</span>
+                          <span>Cant.</span>
+                          <span>P. unitario</span>
+                          <span>Subtotal</span>
+                        </div>
+                        {product.conceptos.map((line) => (
+                          <div key={line.id} className={s.productConceptRow}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <select className={s.select} value={line.tipo} onChange={(e) => updateQuotationLine(product.id, line.id, 'tipo', e.target.value)}>
+                                <option value="PRODUCTO_BASE">Producto base</option>
+                                <option value="MATERIA_PRIMA">Materia prima</option>
+                                <option value="MANO_OBRA">Mano de obra</option>
+                                <option value="DISENO">Diseño</option>
+                                <option value="LOGISTICA">Logística</option>
+                                <option value="OTRO">Otro</option>
+                              </select>
+                              <input className={s.input} placeholder="Descripción del concepto" value={line.descripcion} onChange={(e) => updateQuotationLine(product.id, line.id, 'descripcion', e.target.value)} />
+                            </div>
+                            <div>
+                              <input className={s.input} type="number" min="1" value={line.cantidad} onChange={(e) => updateQuotationLine(product.id, line.id, 'cantidad', Number(e.target.value))} />
+                            </div>
+                            <div>
+                              <input className={s.input} type="number" min="0" step="1" value={line.precioUnitario} onChange={(e) => updateQuotationLine(product.id, line.id, 'precioUnitario', Number(e.target.value))} />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                              <span className={s.quotationSubtotal}>{formatCurrency(calcLineSubtotal(line))}</span>
+                              <div className={s.productConceptActions}>
+                                <button type="button" className={s.removeFileBtn} onClick={() => removeQuotationLine(product.id, line.id)}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine(product.id)}>
+                          <PlusCircle size={16} />
+                          <span>Agregar concepto</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine()} style={{ marginTop: '8px' }}>
+                <PlusCircle size={16} />
+                <span>Agregar producto</span>
+              </button>
             </div>
 
             <div className={s.sectionBlock}>
@@ -1056,8 +1248,17 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
             <div className={s.formActions}>
               <Button variant="secondary" onClick={() => setQuotationOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSaveQuotation} disabled={quotationSaving || quotationLines.length === 0}>
-                {quotationSaving ? 'Guardando...' : 'Generar y enviar cotización'}
+              <Button 
+                onClick={handleSaveQuotation} 
+                disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0) || !selectedOrder?.cotizacion || selectedOrder.cotizacion.estado !== 'PENDIENTE'}
+              >
+                {quotationSaving ? 'Guardando...' : 'Guardar cotización'}
+              </Button>
+              <Button 
+                onClick={handleSendQuotation} 
+                disabled={quotationSaving || !selectedOrder?.cotizacion || selectedOrder.cotizacion.estado !== 'PENDIENTE'}
+              >
+                Enviar cotización
               </Button>
             </div>
           </div>
@@ -1448,14 +1649,34 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               onSelectedStatusChange={setSelectedStatus}
             />
           )}
-          <ModalFooter
-            actions={[
-              { label: 'Cancelar', variant: 'secondary', onClick: () => { setStatusConfirm(null); setSelectedStatus(null); }, disabled: saving },
-              { label: saving ? 'Guardando...' : 'Guardar cambios', onClick: handleChangeStatus, disabled: saving || !selectedStatus || selectedStatus === statusConfirm?.estado },
-            ]}
-          />
-        </div>
-      </Modal>
-    </div>
-  );
-};
+           <ModalFooter
+             actions={[
+               { label: 'Cancelar', variant: 'secondary', onClick: () => { setStatusConfirm(null); setSelectedStatus(null); }, disabled: saving },
+               { label: saving ? 'Guardando...' : 'Guardar cambios', onClick: handleChangeStatus, disabled: saving || !selectedStatus || selectedStatus === statusConfirm?.estado },
+             ]}
+           />
+         </div>
+       </Modal>
+
+       <Modal
+         open={!!deleteConfirm}
+         onClose={() => setDeleteConfirm(null)}
+         title="Eliminar solicitud"
+         description={`¿Estás seguro de eliminar la solicitud ${deleteConfirm?.numeroSolicitud ?? ''}? Esta acción no se puede deshacer.`}
+         size="sm"
+         variant="premium"
+         footer={
+           <ModalFooter
+             align="end"
+             actions={[
+               { label: 'Cancelar', variant: 'secondary', onClick: () => setDeleteConfirm(null), disabled: deleting },
+               { label: deleting ? 'Eliminando...' : 'Eliminar', variant: 'danger', onClick: handleDelete, disabled: deleting, leftIcon: <Trash2 size={14} /> },
+             ]}
+           />
+         }
+       >
+         <div />
+       </Modal>
+     </div>
+   );
+ };

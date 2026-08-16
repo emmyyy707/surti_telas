@@ -38,6 +38,9 @@ export class PrismaQuotationRepository implements QuotationRepository {
     if (changes.motivoRechazo !== undefined) data.motivo_rechazo = changes.motivoRechazo;
     if (changes.generadoPorId !== undefined) data.generado_por_id = changes.generadoPorId;
     if (changes.generadoPorNombre !== undefined) data.generado_por_nombre = changes.generadoPorNombre;
+    if (changes.respondidaEn !== undefined) data.respondida_en = changes.respondidaEn;
+    if (changes.negotiationCount !== undefined) data.negotiation_count = changes.negotiationCount;
+    if (changes.negotiationHistory !== undefined) data.negotiation_history = changes.negotiationHistory;
 
     const row = await prisma.quotes.update({
       where: { id },

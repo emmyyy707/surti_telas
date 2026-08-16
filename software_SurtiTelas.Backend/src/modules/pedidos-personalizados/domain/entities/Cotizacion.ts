@@ -22,6 +22,8 @@ export interface CotizacionData {
   detalles?: any[];
   createdAt?: Date;
   updatedAt?: Date;
+  negotiationCount?: number;
+  negotiationHistory?: any[];
 }
 
 export class Cotizacion {
@@ -48,6 +50,8 @@ export class Cotizacion {
   detalles: any[];
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
+  negotiationCount?: number;
+  negotiationHistory?: any[];
 
   constructor(data: CotizacionData) {
     this.id = data.id;
@@ -73,6 +77,8 @@ export class Cotizacion {
     this.detalles = data.detalles ?? [];
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
+    this.negotiationCount = data.negotiationCount ?? 0;
+    this.negotiationHistory = data.negotiationHistory ?? [];
   }
 
   toDTO() {
@@ -100,6 +106,8 @@ export class Cotizacion {
       detalles: this.detalles,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      negotiationCount: this.negotiationCount,
+      negotiationHistory: this.negotiationHistory,
     };
   }
 }

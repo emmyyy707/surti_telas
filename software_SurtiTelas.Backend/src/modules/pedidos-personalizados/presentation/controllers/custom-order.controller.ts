@@ -140,8 +140,13 @@ export const acceptQuotation = async (req: Request, res: Response) => {
 
 export const rejectQuotation = async (req: Request, res: Response) => {
   const input = parseDto(RejectQuotationSchema, req.body);
-  const pedido = await customOrderUseCases.rejectQuotation.execute(req.params.id, input.motivoRechazo);
+  const pedido = await customOrderUseCases.rejectQuotation.execute(req.params.id, input.motivoRechazo, req.user?.email);
   return ok(res, pedido.toDTO(), 'Cotización rechazada');
+};
+
+export const sendQuotation = async (req: Request, res: Response) => {
+  const pedido = await customOrderUseCases.sendQuotation.execute(req.params.id, req.user?.id);
+  return ok(res, pedido.toDTO(), 'Cotización enviada al cliente');
 };
 
 export const generateQuotation = async (req: Request, res: Response) => {
@@ -231,4 +236,9 @@ export const updatePaymentStatus = async (req: Request, res: Response) => {
 
   const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, changes);
   return ok(res, pedido.toDTO(), 'Estado de pago actualizado');
+};
+
+export const removeCustomOrder = async (req: Request, res: Response) => {
+  await customOrderUseCases.deleteCustomOrder.execute(req.params.id);
+  return ok(res, { id: req.params.id }, 'Solicitud eliminada');
 };

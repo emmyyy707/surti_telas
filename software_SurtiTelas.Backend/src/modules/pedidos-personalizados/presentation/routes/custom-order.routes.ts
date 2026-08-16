@@ -53,6 +53,7 @@ customOrderRouter.patch('/:id', loadCustomOrder, authorizeCustomOrderAccess, wra
 customOrderRouter.patch('/:id/submit', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.submitForReview));
 customOrderRouter.patch('/:id/accept-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.acceptQuotation));
 customOrderRouter.patch('/:id/reject-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.rejectQuotation));
+customOrderRouter.patch('/:id/send-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.sendQuotation));
 customOrderRouter.post('/:id/convert', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.convertToOrder));
 customOrderRouter.post('/:id/payment-proof', loadCustomOrder, authorizeCustomOrderAccess, customOrderUpload.single('paymentProof'), wrap(controller.uploadPaymentProof));
 customOrderRouter.patch('/:id/payment', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.updatePaymentStatus));

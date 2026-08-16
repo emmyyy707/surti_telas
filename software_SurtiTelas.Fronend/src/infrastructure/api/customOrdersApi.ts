@@ -27,6 +27,8 @@ export interface CustomOrderItem {
   color?: string | null;
   material?: string | null;
   ubicacion?: string[] | null;
+  distribucionTallas?: Record<string, number> | null;
+  imagenesReferencia?: string[] | null;
   referenciaImagen?: string | null;
   archivosReferencia?: string[];
   imagenesAdjuntas?: string[];
@@ -80,6 +82,8 @@ export interface Cotizacion {
   generadoPorId?: string | null;
   generadoPorNombre?: string | null;
   detalles: CotizacionDetalle[];
+  negotiationCount?: number;
+  negotiationHistory?: any[];
 }
 
 export interface CustomOrder {
@@ -174,6 +178,7 @@ export interface CreateCustomOrderInput {
     ubicacion?: string[];
     distribucionTallas?: Record<string, number>;
     distribucionColores?: Record<string, number>;
+    imagenesReferencia?: string[];
     referenciaImagen?: string;
     archivosReferencia?: string[];
     imagenesAdjuntas?: string[];
@@ -255,6 +260,10 @@ export const customOrdersApi = {
 
   async rejectQuotation(id: string, motivoRechazo: string): Promise<CustomOrder> {
     return api.patch<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/reject-quotation`, { motivoRechazo });
+  },
+
+  async sendQuotation(id: string): Promise<CustomOrder> {
+    return api.patch<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/send-quotation`, {});
   },
 
   async generateQuotation(id: string, input: QuotationInput): Promise<{ pedido: CustomOrder; cotizacion: Cotizacion }> {

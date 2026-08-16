@@ -18,9 +18,11 @@ export const CustomOrderStatusEnum = z.enum([
 
 export const QuotationStatusEnum = z.enum([
   'BORRADOR',
+  'PENDIENTE',
   'ENVIADA',
   'ACEPTADA',
   'RECHAZADA',
+  'CANCELADA',
   'VENCIDA',
 ]);
 
@@ -147,6 +149,13 @@ export const QuotationSchema = z.object({
   generadoPorId: z.string().optional(),
   generadoPorNombre: z.string().optional(),
   detalles: z.array(QuotationDetalleSchema).min(1, 'Debe incluir al menos un detalle'),
+  negotiationCount: z.number().int().nonnegative().optional(),
+  negotiationHistory: z.array(z.object({
+    step: z.number().int().positive(),
+    reason: z.string().min(1),
+    date: z.string().datetime(),
+    user: z.string().min(1),
+  })).optional(),
 });
 
 export const AcceptQuotationSchema = z.object({

@@ -57,3 +57,10 @@ adminCustomOrderRouter.patch(
   sensitiveUserRateLimiter,
   asyncHandler(controller.updatePaymentStatus)
 );
+
+adminCustomOrderRouter.delete(
+  '/:id',
+  requirePermission('customOrders:delete'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.removeCustomOrder)
+);

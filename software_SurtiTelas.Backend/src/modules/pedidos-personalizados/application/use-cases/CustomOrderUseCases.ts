@@ -270,8 +270,8 @@ export class GenerateQuotation {
     if (!pedido) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
 
     const existing = await this.quotationRepo.getByPedidoId(pedidoPersonalizadoId);
-    if (existing && existing.estado !== QuotationStatus.BORRADOR && existing.estado !== QuotationStatus.VENCIDA) {
-      throw new ConflictError('Ya existe una cotizaciÃ³n enviada o aceptada para esta solicitud');
+    if (existing && existing.estado !== QuotationStatus.BORRADOR && existing.estado !== QuotationStatus.VENCIDA && existing.estado !== QuotationStatus.PENDIENTE && existing.estado !== QuotationStatus.RECHAZADA) {
+      throw new ConflictError('Ya existe una cotización enviada o aceptada para esta solicitud');
     }
 
     const subtotal = input.detalles.reduce((sum: number, d: any) => sum + (Number(d.subtotal) || 0), 0);
@@ -286,13 +286,14 @@ export class GenerateQuotation {
       ? existing.numeroCotizacion
       : await this.quotationRepo.nextNumero();
 
-    const estado = existing ? (existing.estado === QuotationStatus.BORRADOR ? QuotationStatus.ENVIADA : existing.estado) : QuotationStatus.ENVIADA;
+    const negotiationCount = existing?.negotiationCount ?? 0;
+    const estado = existing ? existing.estado : QuotationStatus.PENDIENTE;
 
     const cotizacionData = {
       id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       pedidoPersonalizadoId,
       numeroCotizacion,
-      estado: estado === QuotationStatus.VENCIDA ? QuotationStatus.BORRADOR : estado,
+      estado,
       subtotal,
       impuestos,
       descuento,
@@ -307,6 +308,7 @@ export class GenerateQuotation {
       generadoPorId: input.generadoPorId,
       generadoPorNombre: input.generadoPorNombre,
       detalles: input.detalles,
+      negotiationCount: negotiationCount,
     };
 
     const result = await this.prisma.$transaction(async (tx) => {
@@ -411,25 +413,38 @@ export class AcceptQuotation {
 
 export class RejectQuotation {
   constructor(private readonly repo: CustomOrderRepository, private readonly quotationRepo: QuotationRepository, private readonly prisma: PrismaClient, private readonly eventBus?: EventBus) {}
-  async execute(id: string, motivoRechazo: string) {
+  async execute(id: string, motivoRechazo: string, rechazadoPor?: string) {
     const pedido = await this.repo.getById(id);
     if (!pedido) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
 
     const cotizacion = await this.quotationRepo.getByPedidoId(id);
-    if (!cotizacion) throw new NotFoundError('CotizaciÃ³n no encontrada');
+    if (!cotizacion) throw new NotFoundError('Cotización no encontrada');
     if (cotizacion.estado !== QuotationStatus.ENVIADA) {
-      throw new ConflictError('La cotizaciÃ³n debe estar en estado ENVIADA para rechazarse');
+      throw new ConflictError('La cotización debe estar en estado ENVIADA para rechazarse');
     }
+
+    const negotiationCount = (cotizacion.negotiationCount ?? 0) + 1;
+    const maxNegotiations = 3;
+    const nuevoEstado = negotiationCount >= maxNegotiations ? QuotationStatus.CANCELADA : QuotationStatus.PENDIENTE;
+
+    const historyEntry = {
+      step: negotiationCount,
+      reason: motivoRechazo,
+      date: new Date().toISOString(),
+      user: rechazadoPor ?? 'Cliente',
+    };
 
     await this.prisma.$transaction(async (tx) => {
       await this.quotationRepo.update(cotizacion.id, {
-        estado: QuotationStatus.RECHAZADA,
+        estado: nuevoEstado,
         respondidaEn: new Date(),
-        motivoRechazo,
+        motivo_rechazo: motivoRechazo,
+        negotiationCount,
+        negotiationHistory: [...(cotizacion.negotiationHistory ?? []), historyEntry],
       }, tx);
 
       await this.repo.update(id, {
-        estado: CustomOrderStatus.COTIZACION_RECHAZADA,
+        estado: nuevoEstado === QuotationStatus.CANCELADA ? CustomOrderStatus.CANCELADO : CustomOrderStatus.COTIZACION_RECHAZADA,
         motivoRechazo,
       }, tx);
     });
@@ -448,6 +463,44 @@ export class RejectQuotation {
     }
 
     return updated;
+  }
+}
+
+export class SendQuotation {
+  constructor(private readonly repo: CustomOrderRepository, private readonly quotationRepo: QuotationRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, enviadoPorId?: string) {
+    const pedido = await this.repo.getById(id);
+    if (!pedido) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+
+    const cotizacion = await this.quotationRepo.getByPedidoId(id);
+    if (!cotizacion) throw new NotFoundError('Cotización no encontrada');
+    if (cotizacion.estado !== QuotationStatus.PENDIENTE && cotizacion.estado !== QuotationStatus.BORRADOR) {
+      throw new ConflictError('La cotización debe estar en estado PENDIENTE o BORRADOR para enviarse');
+    }
+
+    const updatedCotizacion = await this.quotationRepo.update(cotizacion.id, {
+      estado: QuotationStatus.ENVIADA,
+      generado_por_id: enviadoPorId ?? cotizacion.generadoPorId,
+    });
+
+    const updatedPedido = await this.repo.update(id, {
+      estado: CustomOrderStatus.COTIZADO,
+    });
+
+    if (this.eventBus && updatedPedido && updatedCotizacion) {
+      this.eventBus.publish(new QuotationGeneratedEvent({
+        customOrderId: updatedPedido.id,
+        numeroSolicitud: updatedPedido.numeroSolicitud,
+        numeroCotizacion: updatedCotizacion.numeroCotizacion,
+        clienteId: updatedPedido.clienteId,
+        clienteNombre: updatedPedido.clienteNombre,
+        total: Number(updatedCotizacion.total ?? 0),
+        valorAnticipo: Number(updatedCotizacion.valorAnticipo ?? 0),
+        saldo: Number(updatedCotizacion.saldo ?? 0),
+      }));
+    }
+
+    return updatedPedido;
   }
 }
 
@@ -641,3 +694,16 @@ export class ConvertToOrder {
     return result;
   }
 }
+
+export class DeleteCustomOrder {
+  constructor(private readonly repo: CustomOrderRepository) {}
+
+  async execute(id: string) {
+    const order = await this.repo.getById(id);
+    if (!order) {
+      throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+    }
+    await this.repo.remove(id);
+  }
+}
+

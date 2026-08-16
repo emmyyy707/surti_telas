@@ -1199,3 +1199,133 @@ textarea.input {
   font-weight: 500;
   color: var(--color-text-muted);
 }
+
+.quotationStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.quotationNegotiation {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.negotiationHistory {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.negotiationEntry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.negotiationEntry:last-child {
+  border-bottom: none;
+}
+
+.negotiationDate {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.productCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.productHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.productHeader:hover {
+  background: var(--color-bg-surface);
+}
+
+.productInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.productTitle {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.productMeta {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.productSubtotal {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.productBody {
+  padding: 12px 16px;
+  background: var(--color-bg-surface);
+}
+
+.productConceptsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.productConceptsHeader {
+  display: grid;
+  grid-template-columns: 1fr 80px 120px 120px;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.productConceptRow {
+  display: grid;
+  grid-template-columns: 1fr 80px 120px 120px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.productConceptRow:last-child {
+  border-bottom: none;
+}
+
+.productConceptActions {
+  display: flex;
+  justify-content: flex-end;
+}
+

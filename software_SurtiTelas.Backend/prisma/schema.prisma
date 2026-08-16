@@ -1082,32 +1082,37 @@ model variants {
 }
 
 model quotes {
-  id                   String        @id
-  custom_order_id      String        @unique
-  numero               String        @unique
-  estado               QuoteStatus   @default(BORRADOR)
-  subtotal             Decimal       @db.Decimal(12, 2)
-  impuestos            Decimal       @default(0) @db.Decimal(12, 2)
-  descuentos           Decimal       @default(0) @db.Decimal(12, 2)
-  total                Decimal       @db.Decimal(12, 2)
-  tiempo_estimado_dias Int
-  validez_dias         Int           @default(15)
-  observaciones        String?
-  aprobado_por         String?
-  aprobado_at          DateTime?
-  motivo_rechazo       String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime
-  deleted_at           DateTime?
-  condiciones_pago     String?
-  generado_por_id      String?
-  generado_por_nombre  String?
-  porcentaje_anticipo  Int           @default(50)
-  valida_hasta         DateTime?
-  saldo                Decimal       @default(0) @db.Decimal(12, 2)
-  valor_anticipo       Decimal       @default(0) @map("valor_anticipo") @db.Decimal(12, 2)
-  quote_items          quote_items[]
-  custom_orders        custom_orders @relation(fields: [custom_order_id], references: [id])
+  id                      String        @id
+  custom_order_id         String        @unique
+  numero                  String        @unique
+  estado                  QuoteStatus   @default(BORRADOR)
+  subtotal                Decimal       @db.Decimal(12, 2)
+  impuestos               Decimal       @default(0) @db.Decimal(12, 2)
+  descuentos              Decimal       @default(0) @db.Decimal(12, 2)
+  total                   Decimal       @db.Decimal(12, 2)
+  tiempo_estimado_dias    Int
+  validez_dias            Int           @default(15)
+  observaciones           String?
+  aprobado_por            String?
+  aprobado_at             DateTime?
+  motivo_rechazo          String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime
+  deleted_at              DateTime?
+  condiciones_pago        String?
+  generado_por_id         String?
+  generado_por_nombre     String?
+  porcentaje_anticipo     Int           @default(50)
+  valida_hasta            DateTime?
+  saldo                   Decimal       @default(0) @db.Decimal(12, 2)
+  valor_anticipo          Decimal       @default(0) @map("valor_anticipo") @db.Decimal(12, 2)
+  enviada_en              DateTime?
+  respondida_en           DateTime?
+  negotiation_count       Int?          @default(0)
+  negotiation_history     Json?         @default("[]")
+  version                 Int?          @default(1)
+  quote_items             quote_items[]
+  custom_orders           custom_orders @relation(fields: [custom_order_id], references: [id])
 
   @@index([custom_order_id])
   @@index([deleted_at])
@@ -1382,9 +1387,11 @@ enum MessageTemplateType {
 
 enum QuoteStatus {
   BORRADOR
+  PENDIENTE
   ENVIADA
   ACEPTADA
   RECHAZADA
+  CANCELADA
   VENCIDA
 }
 

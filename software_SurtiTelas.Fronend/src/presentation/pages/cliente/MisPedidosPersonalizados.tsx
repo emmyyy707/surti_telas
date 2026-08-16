@@ -16,6 +16,7 @@ import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { CUSTOM_ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import { useAuthStore } from '@/core/stores/authStore';
 import { CustomOrderFormModal } from '@/presentation/components/CustomOrderFormModal';
+import { ClientStep, DeliveryStep, ProductStep, SummaryStep } from './quotation-steps';
 import { useLocation } from 'react-router-dom';
 import s from './MisPedidosPersonalizados.module.css';
 
@@ -31,6 +32,7 @@ const customOrderItemSchema = z.object({
   material: z.string().optional(),
   ubicacion: z.array(z.string()).optional(),
   distribucionTallas: z.record(z.string(), z.number().nullable()).optional(),
+  imagenesReferencia: z.array(z.string()).optional(),
   personalizaciones: z.array(
     z.object({
       tipo: z.string().min(1, 'El tipo es obligatorio'),
@@ -64,7 +66,7 @@ const formSchema = z.object({
   items: z.array(customOrderItemSchema).min(1, 'Agrega al menos un item'),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
 const emptyForm: FormValues = {
   clienteNombre: '',
@@ -91,6 +93,7 @@ const emptyForm: FormValues = {
       material: '',
       ubicacion: [],
       distribucionTallas: {},
+      imagenesReferencia: [],
       personalizaciones: [],
     },
   ],
@@ -156,6 +159,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const [itemReferenceImages, setItemReferenceImages] = useState<Record<number, { files: File[]; urls: string[] }>>({});
   const [stepperStep, setStepperStep] = useState(1);
   const [colorRows, setColorRows] = useState<{ id: number; color: string; cantidad: string }[]>([{ id: Date.now(), color: '', cantidad: '' }]);
   const [activeItemIndex, setActiveItemIndex] = useState(0);
@@ -194,6 +198,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
         distribucionTallas: Object.fromEntries(
           Object.entries(item.distribucionTallas || {}).filter(([, v]) => v !== undefined && v !== null)
         ) as Record<string, number | null>,
+        imagenesReferencia: item.imagenesReferencia || [],
         personalizaciones: (item.personalizaciones || [])
           .map((pers) => ({
             ...pers,
@@ -242,6 +247,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
       color: current.color || '',
       material: current.material || '',
       ubicacion: current.ubicacion || [],
+      distribucionTallas: current.distribucionTallas || {},
+      imagenesReferencia: current.imagenesReferencia || [],
       personalizaciones: current.personalizaciones || [],
     });
     setValue(`items.${activeItemIndex}.productoNombre`, '');
@@ -400,6 +407,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
         color: item.color ?? '',
         material: item.material ?? '',
         ubicacion: toUbicacionArray(item.ubicacion),
+        distribucionTallas: item.distribucionTallas ?? {},
+        imagenesReferencia: item.imagenesReferencia || [],
         personalizaciones: (item.personalizaciones || []).map((pers: any) => ({
           tipo: pers.tipo,
           tecnica: pers.tecnica ?? '',
@@ -434,12 +443,75 @@ export const MisPedidosPersonalizados: React.FC = () => {
     setFileUrls(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleReferenceImageChange = (itemIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const urls = files.map(f => URL.createObjectURL(f));
+    setItemReferenceImages(prev => {
+      const newUrls = [...(prev[itemIndex]?.urls || []), ...urls];
+      setValue(`items.${itemIndex}.imagenesReferencia` as const, newUrls);
+      return {
+        ...prev,
+        [itemIndex]: {
+          files: [...(prev[itemIndex]?.files || []), ...files],
+          urls: newUrls,
+        }
+      };
+    });
+  };
+
+  const removeReferenceImage = (itemIndex: number, imgIndex: number) => {
+    setItemReferenceImages(prev => {
+      const current = prev[itemIndex] || { files: [], urls: [] };
+      const newUrls = current.urls.filter((_, i) => i !== imgIndex);
+      setValue(`items.${itemIndex}.imagenesReferencia` as const, newUrls);
+      return {
+        ...prev,
+        [itemIndex]: {
+          files: current.files.filter((_, i) => i !== imgIndex),
+          urls: newUrls,
+        }
+      };
+    });
+  };
+
+  const eliminarProducto = (idx: number) => {
+    if (itemFields.length <= 1) {
+      toast.error('Debe haber al menos un producto');
+      return;
+    }
+    const nextLength = itemFields.length - 1;
+    removeItem(idx);
+    setItemReferenceImages(prev => {
+      const next: Record<number, { files: File[]; urls: string[] }> = {};
+      Object.entries(prev).forEach(([key, value]) => {
+        const keyNum = Number(key);
+        if (keyNum < idx) {
+          next[keyNum] = value;
+        } else if (keyNum > idx) {
+          next[keyNum - 1] = value;
+        }
+      });
+      return next;
+    });
+    setActiveItemIndex(prev => {
+      if (prev === idx) {
+        return Math.min(prev, nextLength - 1);
+      }
+      if (prev > idx) {
+        return prev - 1;
+      }
+      return prev;
+    });
+  };
+
   const onSubmit = handleSubmit(
     async (values) => {
       console.log('[QUOTE] onSubmit ejecutado', values);
       const onSubmitPayload = { ...values, items: values.items.map((item: FormValues['items'][number], index: number) => ({
         ...item,
         orden: index,
+        imagenesReferencia: item.imagenesReferencia || [],
         personalizaciones: (item.personalizaciones || [])
           .filter((pers: any) => {
             const hasTipo = !!pers.tipo;
@@ -536,6 +608,10 @@ export const MisPedidosPersonalizados: React.FC = () => {
           color: item.color || undefined,
           material: item.material || undefined,
           ubicacion: item.ubicacion || undefined,
+          distribucionTallas: Object.fromEntries(
+            Object.entries(item.distribucionTallas || {}).filter(([, v]) => v !== undefined && v !== null)
+          ) as Record<string, number> | undefined,
+          imagenesReferencia: item.imagenesReferencia || undefined,
           orden: index,
           personalizaciones: (item.personalizaciones || []).map((pers: any, pIndex: number) => ({
             tipo: pers.tipo,
@@ -1028,541 +1104,65 @@ export const MisPedidosPersonalizados: React.FC = () => {
       >
         <form onSubmit={handleFormSubmit} className={s.form}>
           {stepperStep === 1 && (
-            <div className={`${s.sectionBlock} ${s.sectionBlockAcccent}`}>
-              <div className={s.sectionHeader}>
-                <User size={18} />
-                <div className={s.sectionTitle}>Cliente</div>
-              </div>
-              <p className={s.sectionDescription}>Selecciona el cliente que solicita la personalización.</p>
-              <div className={s.formRow}>
-                <div className={`${s.field} ${s.colSpan2}`}>
-                  <label htmlFor="cliente-nombre" className={s.label}>Cliente <span className={s.labelRequired}>*</span></label>
-                  <input
-                    id="cliente-nombre"
-                    className={`${s.input}`}
-                    placeholder="Cliente"
-                    {...register('clienteNombre')}
-                  />
-                  {formErrorsHook.clienteNombre && <span className={s.errorText}>{formErrorsHook.clienteNombre.message as string}</span>}
-                </div>
-              </div>
-              <div className={s.formRow}>
-                <div className={s.field}>
-                  <label htmlFor="cliente-email" className={s.label}>Email</label>
-                  <input id="cliente-email" className={s.input} placeholder="Email" {...register('clienteEmail')} />
-                  {formErrorsHook.clienteEmail && <span className={s.errorText}>{formErrorsHook.clienteEmail.message as string}</span>}
-                </div>
-                <div className={s.field}>
-                  <label htmlFor="cliente-telefono" className={s.label}>Teléfono</label>
-                  <input id="cliente-telefono" className={s.input} placeholder="Teléfono" {...register('clienteTelefono')} />
-                </div>
-              </div>
-            </div>
+            <ClientStep
+              register={register}
+              errors={formErrorsHook}
+              styles={s}
+            />
           )}
 
-           {stepperStep === 2 && (
-              <div className={s.sectionBlock}>
-                <div className={s.sectionHeader}>
-                  <Package size={18} />
-                  <div className={s.sectionTitle}>Producto y personalización</div>
-                </div>
-                <p className={s.sectionDescription}>Configura cada producto por separado. Selecciona un producto para editar sus detalles y personalizaciones.</p>
+            {stepperStep === 2 && (
+              <ProductStep
+                register={register}
+                errors={formErrorsHook}
+                watch={watch}
+                setValue={setValue}
+                _control={control}
+                styles={s}
+                itemFields={itemFields}
+                activeItemIndex={activeItemIndex}
+                setActiveItemIndex={setActiveItemIndex}
+                editingPersonalizacionIndex={editingPersonalizacionIndex}
+                setEditingPersonalizacionIndex={setEditingPersonalizacionIndex}
+                showPersonalizacionForm={showPersonalizacionForm}
+                setShowPersonalizacionForm={setShowPersonalizacionForm}
+                productos={productos}
+                agregarProducto={agregarProducto}
+                agregarPersonalizacion={agregarPersonalizacion}
+                actualizarPersonalizacion={actualizarPersonalizacion}
+                agregarVariante={agregarVariante}
+                eliminarVariante={eliminarVariante}
+                actualizarVariante={actualizarVariante}
+                eliminarPersonalizacion={eliminarPersonalizacion}
+                eliminarProducto={eliminarProducto}
+                imagenesReferencia={itemReferenceImages[activeItemIndex]?.urls || []}
+                handleReferenceImageChange={handleReferenceImageChange}
+                removeReferenceImage={removeReferenceImage}
+              />
+            )}
 
-                {/* Selector de productos */}
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                  {itemFields.map((item, idx) => {
-                    const persCount = (item.personalizaciones || []).length;
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => { setActiveItemIndex(idx); setEditingPersonalizacionIndex(null); setShowPersonalizacionForm(false); }}
-                        className={`${s.productCard} ${idx === activeItemIndex ? s.productCardActive : ''}`}
-                        style={{ flex: '1 1 220px' }}
-                      >
-                        <div className={s.productCardName}>{item.productoNombre || `Producto ${idx + 1}`}</div>
-                        <div className={s.productCardMeta}>
-                          <span>{item.cantidad || 0} unidades</span>
-                          <span>·</span>
-                          <span>{persCount} personalización{persCount !== 1 ? 'es' : ''}</span>
-                        </div>
-                        {idx === activeItemIndex && (
-                          <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
-                            <Check size={16} className="text-blue-600" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    onClick={agregarProducto}
-                    className={s.btnSecondary}
-                    style={{ flex: '0 0 auto', minHeight: '80px' }}
-                  >
-                    <PlusCircle size={18} />
-                    Agregar producto
-                  </button>
-                </div>
+            {stepperStep === 3 && (
+              <DeliveryStep
+                register={register}
+                styles={s}
+                selectedFiles={selectedFiles}
+                _setSelectedFiles={setSelectedFiles}
+                fileUrls={fileUrls}
+                _setFileUrls={setFileUrls}
+                handleFileChange={handleFileChange}
+                removeFile={removeFile}
+              />
+            )}
 
-                    {/* Formulario del producto activo */}
-                    {itemFields[activeItemIndex] && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div className={s.formRowAttr4}>
-                          <div className={`${s.field} ${s.colSpan2}`}>
-                            <label htmlFor="producto-base" className={s.label}>Producto base <span className={s.labelRequired}>*</span></label>
-                            <input
-                              id="producto-base"
-                              className={s.input}
-                              placeholder="Escribe el nombre del producto o selecciona uno del catálogo"
-                              {...register(`items.${activeItemIndex}.productoNombre` as const, { required: 'El producto es obligatorio' })}
-                              list="productos-sugeridos-cliente"
-                            />
-                            <datalist id="productos-sugeridos-cliente">
-                              {productos.map(p => (
-                                <option key={p.id} value={p.nombre} />
-                              ))}
-                            </datalist>
-                            {productos.length > 0 && <span className={s.hintText}>Sugerencias del catálogo disponibles.</span>}
-                            {formErrorsHook.items?.[activeItemIndex]?.productoNombre && <span className={s.errorText}>{formErrorsHook.items[activeItemIndex].productoNombre.message as string}</span>}
-                          </div>
-                        </div>
-                    <div className={s.formRowAttr4}>
-                      <div className={s.field}>
-                        <label htmlFor="item-cantidad" className={s.label}>Cantidad <span className={s.labelRequired}>*</span></label>
-                        <input id="item-cantidad" type="number" className={s.input} placeholder="Cantidad" {...register(`items.${activeItemIndex}.cantidad` as const, { valueAsNumber: true, required: 'La cantidad es obligatoria', min: { value: 1, message: 'La cantidad debe ser mayor a 0' } })} />
-                        {formErrorsHook.items?.[activeItemIndex]?.cantidad && <span className={s.errorText}>{formErrorsHook.items[activeItemIndex].cantidad.message as string}</span>}
-                      </div>
-                      <div className={s.field}>
-                        <label htmlFor="item-material" className={s.label}>Material/Tela</label>
-                        <input id="item-material" className={s.input} placeholder="Material" {...register(`items.${activeItemIndex}.material` as const)} />
-                      </div>
-                    </div>
-
-                    {/* Distribución de prendas */}
-                    <div className={s.distributionSection}>
-                      <div className={s.distributionHeader}>
-                        <div className={s.distributionTitle}>
-                          <Package size={16} />
-                          Distribución de prendas
-                        </div>
-                      </div>
-                      <div className={s.distributionGrid}>
-                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((talla) => (
-                          <div key={talla} className={s.distributionItem}>
-                            <label className={s.distributionLabel}>{talla}</label>
-                            <input
-                              className={s.distributionInput}
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={watch(`items.${activeItemIndex}.distribucionTallas.${talla}`) || ''}
-                               onChange={(e) => {
-                                 const val = e.target.value ? Number(e.target.value) : null;
-                                 setValue(`items.${activeItemIndex}.distribucionTallas.${talla}`, val as any);
-                               }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <div className={s.distributionTotal}>
-                        <span>Total</span>
-                        <span className={(() => {
-                          const total = Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
-                          const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-                          if (cantidad > 0 && total !== cantidad) {
-                            return `${s.distributionTotalValue} ${s.distributionTotalValueError}`;
-                          }
-                          return s.distributionTotalValueSuccess;
-                        })()}>
-                          {Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)}
-                        </span>
-                      </div>
-                    </div>
-
-                      {/* Personalizaciones */}
-                      <div className={s.personalizationSection}>
-                        <div className={s.personalizationHeader}>
-                          <div>
-                            <div className={s.personalizationTitle}>Personalizaciones</div>
-                            <div className={s.personalizationSubtitle}>
-                              Agrega una o varias personalizaciones para este producto.
-                            </div>
-                          </div>
-                          <button type="button" className={s.quotationAddLine} onClick={() => {
-                            const newIndex = itemFields[activeItemIndex]?.personalizaciones?.length ?? 0;
-                            agregarPersonalizacion();
-                            setEditingPersonalizacionIndex(newIndex);
-                            setShowPersonalizacionForm(true);
-                          }}>
-                            <PlusCircle size={16} />
-                            <span>Agregar personalización</span>
-                          </button>
-                        </div>
-
-                      {/* Formulario de personalización */}
-                      {showPersonalizacionForm && (
-                        <div className={s.personalizationForm}>
-                          <div className={s.personalizationFormTitle}>
-                            {editingPersonalizacionIndex !== null ? 'Editar personalización' : 'Nueva personalización'}
-                          </div>
-                          <div className={s.formRowAttr4}>
-                            <div className={s.field}>
-                              <label className={s.label}>Tipo <span className={s.labelRequired}>*</span></label>
-                              <select
-                                className={s.select}
-                                value={watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.tipo`) || 'ESTAMPADO'}
-                                onChange={(e) => {
-                                  const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
-                                  actualizarPersonalizacion(idx, 'tipo', e.target.value);
-                                }}
-                              >
-                                <option value="ESTAMPADO">Estampado</option>
-                                <option value="BORDADO">Bordado</option>
-                                <option value="SUBLIMACION">Sublimación</option>
-                                <option value="VINILO">Vinilo</option>
-                                <option value="OTRO">Otro</option>
-                              </select>
-                            </div>
-                            <div className={s.field}>
-                              <label className={s.label}>Técnica</label>
-                              <input
-                                className={s.input}
-                                placeholder="Ej: DTF, Serigrafía..."
-                                value={watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.tecnica`) || ''}
-                                onChange={(e) => {
-                                  const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
-                                  actualizarPersonalizacion(idx, 'tecnica', e.target.value);
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className={s.field}>
-                            <label className={s.label}>Ubicación</label>
-                            <div className={s.multiSelectContainer}>
-                              <div className={s.multiSelectOptions}>
-                                {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'OTRA'].map((option) => {
-                                  const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
-                                  const current = (watch(`items.${activeItemIndex}.personalizaciones.${idx}.ubicacion`) as string[]) || [];
-                                  const isSelected = current.includes(option);
-                                  return (
-                                    <button
-                                      key={option}
-                                      type="button"
-                                      className={`${s.multiSelectOption} ${isSelected ? s.multiSelectOptionSelected : ''}`}
-                                      onClick={() => {
-                                        const next = isSelected ? current.filter((u) => u !== option) : [...current, option];
-                                        actualizarPersonalizacion(idx, 'ubicacion', next);
-                                      }}
-                                    >
-                                      {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                          <div className={s.field}>
-                            <label className={s.label}>Descripción del diseño <span className={s.labelRequired}>*</span></label>
-                            <textarea
-                              className={s.textarea}
-                              rows={2}
-                              placeholder="Describe el diseño..."
-                              value={watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.descripcion`) || ''}
-                              onChange={(e) => {
-                                const idx = editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0);
-                                actualizarPersonalizacion(idx, 'descripcion', e.target.value);
-                              }}
-                            />
-                          </div>
-                          <div className={s.field}>
-                            <label className={s.label}>Variantes a personalizar</label>
-                            {(watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).map((variante: any, varIndex: number) => (
-                              <div key={varIndex} className={s.formRow}>
-                                <div className={s.field}>
-                                  <input className={s.input} placeholder="Talla" value={variante.talla} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex, 'talla', e.target.value)} />
-                                </div>
-                                <div className={s.field}>
-                                  <input className={s.input} placeholder="Color" value={variante.color} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex, 'color', e.target.value)} />
-                                </div>
-                                <div className={s.field}>
-                                  <input className={s.input} type="number" min="0" placeholder="Cant." value={variante.cantidad} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex, 'cantidad', Number(e.target.value))} />
-                                </div>
-                                <div className={s.field}>
-                                  <button type="button" className={s.removeFileBtn} onClick={() => eliminarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0), varIndex)}><Trash2 size={14} /></button>
-                                </div>
-                              </div>
-                            ))}
-                            <button type="button" className={s.quotationAddLine} onClick={() => agregarVariante(editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length || 0))}>
-                              <PlusCircle size={16} />
-                              <span>Agregar variante</span>
-                            </button>
-                            <div className={s.personalizationTotal}>
-                              {(() => {
-                                const total = (watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (itemFields[activeItemIndex]?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
-                                const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-                                const exceeds = cantidad > 0 && total > cantidad;
-                                return (
-                                  <>
-                                    Total personalización: <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>
-                                      {total}{exceeds ? ` (supera las ${cantidad} unidades disponibles)` : ''}
-                                    </span>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                          <div className={s.personalizationFormActions}>
-                            <button type="button" className={s.quotationAddLine} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
-                              Cancelar
-                            </button>
-                            <button type="button" className={s.btnPrimary} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
-                              Guardar personalización
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tarjetas de personalizaciones existentes */}
-                      <div className={s.personalizationCardsList}>
-                        {(itemFields[activeItemIndex]?.personalizaciones || [])
-                          .filter((pers: any) => {
-                            const hasTipo = !!pers.tipo;
-                            const hasDescripcion = !!pers.descripcion && pers.descripcion.trim() !== '';
-                            const hasUbicacion = Array.isArray(pers.ubicacion) && pers.ubicacion.length > 0;
-                            const hasVariantes = (pers.variantes || []).some((v: any) => Number(v.cantidad) > 0);
-                            return hasTipo && (hasDescripcion || hasUbicacion || hasVariantes);
-                          })
-                          .map((pers: any, persIndex: number) => (
-                          <div key={persIndex} className={s.personalizationCard}>
-                            {editingPersonalizacionIndex === persIndex ? (
-                              <div className={s.personalizationCardEdit}>
-                                <div className={s.personalizationCardTitle}>Editar personalización</div>
-                                <div className={s.formRowAttr4}>
-                                  <div className={s.field}>
-                                    <label className={s.label}>Tipo</label>
-                                    <select className={s.select} value={pers.tipo} onChange={(e) => actualizarPersonalizacion(persIndex, 'tipo', e.target.value)}>
-                                      <option value="ESTAMPADO">Estampado</option>
-                                      <option value="BORDADO">Bordado</option>
-                                      <option value="SUBLIMACION">Sublimación</option>
-                                      <option value="VINILO">Vinilo</option>
-                                      <option value="OTRO">Otro</option>
-                                    </select>
-                                  </div>
-                                  <div className={s.field}>
-                                    <label className={s.label}>Técnica</label>
-                                    <input className={s.input} value={pers.tecnica || ''} onChange={(e) => actualizarPersonalizacion(persIndex, 'tecnica', e.target.value)} />
-                                  </div>
-                                </div>
-                                <div className={s.field}>
-                                  <label className={s.label}>Ubicación</label>
-                                  <div className={s.multiSelectContainer}>
-                                    <div className={s.multiSelectOptions}>
-                                      {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'OTRA'].map((option) => {
-                                        const isSelected = (pers.ubicacion || []).includes(option);
-                                        return (
-                                          <button
-                                            key={option}
-                                            type="button"
-                                            className={`${s.multiSelectOption} ${isSelected ? s.multiSelectOptionSelected : ''}`}
-                                            onClick={() => {
-                                              const current = pers.ubicacion || [];
-                                              const next = isSelected ? current.filter((u: string) => u !== option) : [...current, option];
-                                              actualizarPersonalizacion(persIndex, 'ubicacion', next);
-                                            }}
-                                          >
-                                            {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className={s.field}>
-                                  <label className={s.label}>Descripción</label>
-                                  <textarea className={s.textarea} rows={2} value={pers.descripcion || ''} onChange={(e) => actualizarPersonalizacion(persIndex, 'descripcion', e.target.value)} />
-                                </div>
-                                <div className={s.personalizationCardActions}>
-                                  <button type="button" className={s.quotationAddLine} onClick={() => setEditingPersonalizacionIndex(null)}>Cancelar</button>
-                                  <button type="button" className={s.btnPrimary} onClick={() => setEditingPersonalizacionIndex(null)}>Guardar</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className={s.personalizationCardHeader}>
-                                <div>
-                                  <div className={s.personalizationCardTitle}>{pers.tipo}</div>
-                                  <div className={s.personalizationCardMeta}>
-                                    {(pers.ubicacion || []).map((u: string) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')).join(', ')}
-                                  </div>
-                                  <div className={s.personalizationCardDescription}>{pers.descripcion}</div>
-                                  <div className={s.personalizationCardMeta}>
-                                    {(() => {
-                                      const total = (pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
-                                      const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-                                      const exceeds = cantidad > 0 && total > cantidad;
-                                      return <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>{total} unidades{exceeds ? ` (supera las ${cantidad} disponibles)` : ''}</span>;
-                                    })()}
-                                  </div>
-                                </div>
-                                <div className={s.personalizationCardActions}>
-                                  <button type="button" className={s.quotationAddLine} onClick={() => setEditingPersonalizacionIndex(persIndex)}>Editar</button>
-                                  <button type="button" className={s.removeFileBtn} onClick={() => eliminarPersonalizacion(persIndex)}>Eliminar</button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}{stepperStep === 3 && (
-            <div className={s.sectionBlock}>
-              <div className={s.sectionHeader}>
-                <Image size={18} />
-                <div className={s.sectionTitle}>Archivos y Entrega</div>
-              </div>
-              <p className={s.sectionDescription}>Adjunta referencias visuales y define la fecha esperada de entrega.</p>
-              <div className={s.formRow}>
-                <div className={`${s.field} ${s.colSpan2}`}>
-                  <label htmlFor="ref-files" className={s.label}>Archivos de referencia (JPG, PNG, PDF)</label>
-                  <input id="ref-files" type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className={s.hiddenInput} onChange={handleFileChange} />
-                  <label htmlFor="ref-files" className={s.uploadLabel}>Seleccionar archivos</label>
-                  {selectedFiles.length > 0 && (
-                    <div className={s.filePreview}>
-                      {selectedFiles.map((file, idx) => (
-                        <div key={idx} className={s.fileChip}>
-                          {file.type.startsWith('image/') && fileUrls[idx] ? (
-                            <img src={fileUrls[idx]} alt={file.name} className={s.fileChipImage} />
-                          ) : (
-                            <FileText size={16} />
-                          )}
-                          <span className={s.fileChipName}>{file.name}</span>
-                          <button type="button" className={s.removeFileBtn} onClick={() => removeFile(idx)}>Eliminar</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <span className={s.hintText}>Puedes adjuntar múltiples archivos.</span>
-                </div>
-                <div className={s.field}>
-                  <label htmlFor="fecha-entrega" className={s.label}>Fecha solicitada de entrega</label>
-                  <input id="fecha-entrega" type="date" className={s.input} {...register('fechaEntregaDeseada')} />
-                </div>
-              </div>
-              <div className={s.field}>
-                <label htmlFor="uso-pedido" className={s.label}>Uso del pedido</label>
-                <select id="uso-pedido" className={s.select} {...register('usoFinal')}>
-                  <option value="">Selecciona</option>
-                  <option value="USO_PERSONAL">Uso personal</option>
-                  <option value="EMPRESA">Empresa</option>
-                  <option value="UNIFORME">Uniforme</option>
-                  <option value="EVENTO">Evento</option>
-                  <option value="REGALO">Regalo</option>
-                  <option value="OTRO">Otro</option>
-                </select>
-              </div>
-              <div className={s.field}>
-                <label htmlFor="notas-cliente" className={s.label}>Observaciones</label>
-                <textarea id="notas-cliente" className={s.textarea} placeholder="Notas adicionales..." {...register('notasCliente')} />
-              </div>
-             </div>
-           )}
-
-           {stepperStep === 4 && (
-             <div className={s.sectionBlock}>
-               <div className={s.sectionHeader}>
-                 <FileText size={18} />
-                 <div className={s.sectionTitle}>Resumen de la solicitud</div>
-               </div>
-               <p className={s.sectionDescription}>Verifica la información antes de enviar.</p>
-
-              <div className={s.summarySection}>
-                <div className={s.summaryTitle}>Cliente</div>
-                <div className={s.summaryRow}><span>Nombre</span><span>{watch('clienteNombre') || '-'}</span></div>
-                <div className={s.summaryRow}><span>Email</span><span>{watch('clienteEmail') || '-'}</span></div>
-                <div className={s.summaryRow}><span>Teléfono</span><span>{watch('clienteTelefono') || '-'}</span></div>
-              </div>
-
-                 <div className={s.summarySection}>
-                   <div className={s.summaryTitle}>Productos</div>
-                     {(watch('items') || []).map((item: any, idx: number) => {
-                       const distribucion = Object.entries(item.distribucionTallas || {}).filter(([, v]) => Number(v as any) > 0) as [string, number][];
-                       const totalDistribucion = distribucion.reduce((sum: number, [, v]) => sum + v, 0);
-                       const totalPersonalizado = (item.personalizaciones || []).reduce((sum: number, pers: any) => sum + (pers.variantes || []).reduce((s: number, v: any) => s + (Number(v.cantidad) || 0), 0), 0);
-                      return (
-                         <div key={item.id || idx} className={s.summaryProductCard}>
-                           <div className={s.summaryProductTitle}>Producto #{idx + 1}: {item.productoNombre || item.descripcion || 'Sin nombre'}</div>
-                           <div className={s.summaryRow}><span>Cantidad</span><span>{item.cantidad || '-'}</span></div>
-                           <div className={s.summaryRow}><span>Material</span><span>{item.material || '-'}</span></div>
-                           {(!item.personalizaciones || item.personalizaciones.length === 0) && (
-                             <>
-                               <div className={s.summaryRow}><span>Tipo</span><span>{item.tipoPersonalizacion || '-'}</span></div>
-                               <div className={s.summaryRow}><span>Descripción</span><span>{item.descripcion || item.productoNombre || '-'}</span></div>
-                             </>
-                           )}
-                         {distribucion.length > 0 && (
-                           <>
-                             <div className={s.summarySubTitle}>Distribución de prendas</div>
-                             {distribucion.map(([talla, cant]) => (
-                               <div key={talla} className={s.summaryRow}><span>{talla}</span><span>{cant}</span></div>
-                             ))}
-                             <div className={s.summaryRow}><span>Total</span><span>{totalDistribucion}</span></div>
-                           </>
-                         )}
-                         {(() => {
-                           const validPersonalizaciones = (item.personalizaciones || []).filter((pers: any) => {
-                             const hasTipo = !!pers.tipo;
-                             const hasDescripcion = !!pers.descripcion && pers.descripcion.trim() !== '';
-                             const hasUbicacion = Array.isArray(pers.ubicacion) && pers.ubicacion.length > 0;
-                             const hasVariantes = (pers.variantes || []).some((v: any) => Number(v.cantidad) > 0);
-                             return hasTipo && (hasDescripcion || hasUbicacion || hasVariantes);
-                           });
-                           if (validPersonalizaciones.length === 0) return null;
-                           return (
-                             <>
-                               <div className={s.summarySubTitle}>Personalizaciones</div>
-                               {validPersonalizaciones.map((pers: any, pIdx: number) => {
-                                 const varianteTotal = (pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
-                                 return (
-                                   <div key={pIdx} className={s.summaryPersonalizationCard}>
-                                     <div className={s.summaryPersonalizationTitle}>{pers.tipo}</div>
-                                     <div className={s.summaryPersonalizationMeta}>
-                                       {(pers.ubicacion || []).map((u: string) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')).join(', ') || '-'}
-                                     </div>
-                                     <div className={s.summaryPersonalizationDescription}>{pers.descripcion || '-'}</div>
-                                     {(pers.variantes || []).length > 0 && (
-                                       <div className={s.summaryPersonalizationVariants}>
-                                         {(pers.variantes || []).map((variante: any, vIdx: number) => (
-                                           <div key={vIdx} className={s.summaryRow}>
-                                             <span>{variante.talla || '-'} / {variante.color || '-'}</span>
-                                             <span>{Number(variante.cantidad) || 0}</span>
-                                           </div>
-                                         ))}
-                                       </div>
-                                     )}
-                                     <div className={s.summaryPersonalizationTotal}>
-                                       {varianteTotal} unidad{varianteTotal !== 1 ? 'es' : ''}
-                                     </div>
-                                   </div>
-                                 );
-                               })}
-                             </>
-                           );
-                         })()}
-                        </div>
-                      );
-                    })}
-                </div>
-
-              <div className={s.summarySection}>
-                <div className={s.summaryTitle}>Entrega</div>
-                <div className={s.summaryRow}><span>Fecha solicitada</span><span>{watch('fechaEntregaDeseada') ? new Date(watch('fechaEntregaDeseada') as string).toLocaleDateString('es-CO') : '-'}</span></div>
-                <div className={s.summaryRow}><span>Uso</span><span>{watch('usoFinal') || '-'}</span></div>
-                <div className={s.summaryRow}><span>Observaciones</span><span>{watch('notasCliente') || '-'}</span></div>
-              </div>
-            </div>
-          )}
+            {stepperStep === 4 && (
+              <SummaryStep
+                watch={watch}
+                styles={s}
+                onEditClient={() => setStepperStep(1)}
+                onEditProducts={() => setStepperStep(2)}
+                onEditDelivery={() => setStepperStep(3)}
+              />
+            )}
         </form>
       </CustomOrderFormModal>
 

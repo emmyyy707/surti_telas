@@ -1,4 +1,6 @@
 import { Modal } from '@/shared/ui/Modal';
+import { Badge } from '@/shared/ui/Badge';
+import styles from './CustomOrderFormModal.module.css';
 
 interface CustomOrderFormModalProps {
   open: boolean;
@@ -13,6 +15,7 @@ interface CustomOrderFormModalProps {
   isEditing: boolean;
   children: React.ReactNode;
   footerActions?: React.ReactNode;
+  onValidateStep?: (step: number) => boolean;
 }
 
 export function CustomOrderFormModal({
@@ -28,8 +31,34 @@ export function CustomOrderFormModal({
   isEditing,
   children,
   footerActions,
+  onValidateStep,
 }: CustomOrderFormModalProps) {
   const isLastStep = step === steps.length;
+  const currentStepLabel = steps[step - 1] ?? '';
+  const progressPercent = (step / steps.length) * 100;
+
+  const getStepStatus = (stepIndex: number) => {
+    if (stepIndex + 1 < step) return 'completed';
+    if (stepIndex + 1 === step) return 'active';
+    return 'pending';
+  };
+
+  const handleNext = () => {
+    if (onValidateStep && !onValidateStep(step)) return;
+    onStepChange(step + 1);
+  };
+
+  const stepStatusClasses = (status: string) => {
+    if (status === 'completed') return styles.quotationStepperDotCompleted;
+    if (status === 'active') return styles.quotationStepperDotActive;
+    return '';
+  };
+
+  const labelClasses = (status: string) => {
+    if (status === 'active') return `${styles.quotationStepperLabel} ${styles.quotationStepperLabelActive}`;
+    if (status === 'completed') return `${styles.quotationStepperLabel} ${styles.quotationStepperLabelCompleted}`;
+    return styles.quotationStepperLabel;
+  };
 
   return (
     <Modal
@@ -37,21 +66,31 @@ export function CustomOrderFormModal({
       onClose={onClose}
       title={title}
       size="xl"
+      variant="form"
+      closeOnOverlay={false}
+      className={styles.quotationModal}
+      headerActions={
+        <div className={styles.quotationStepBadgeWrap} aria-live="polite">
+          <Badge variant="default" className={styles.quotationStepBadge}>
+            Paso {step} de {steps.length}
+          </Badge>
+        </div>
+      }
       footer={
-        <div className="flex items-center justify-between">
+        <>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className={`${styles.quotationBtn} ${styles.quotationBtnGhost}`}
           >
             Cancelar
           </button>
-          <div className="flex items-center gap-2">
+          <div className={styles.quotationFooterActions}>
             {step > 1 && (
               <button
                 type="button"
                 onClick={onBack}
-                className="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className={`${styles.quotationBtn} ${styles.quotationBtnSecondary}`}
               >
                 Anterior
               </button>
@@ -59,8 +98,8 @@ export function CustomOrderFormModal({
             {step < steps.length && (
               <button
                 type="button"
-                onClick={() => onStepChange(step + 1)}
-                className="px-4 py-2 rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700"
+                onClick={handleNext}
+                className={`${styles.quotationBtn} ${styles.quotationBtnPrimary}`}
               >
                 Siguiente
               </button>
@@ -70,61 +109,79 @@ export function CustomOrderFormModal({
                 type="button"
                 onClick={onSubmit}
                 disabled={saving}
-                className="px-4 py-2 rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className={`${styles.quotationBtn} ${styles.quotationBtnPrimary} ${styles.quotationBtnSubmit}`}
               >
-                {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Solicitar cotización'}
+                {saving ? (
+                  <>
+                    <span className={styles.quotationSpinner} aria-hidden="true" />
+                    Enviando...
+                  </>
+                ) : isEditing ? 'Guardar cambios' : 'Solicitar cotización'}
               </button>
             )}
             {footerActions}
           </div>
-        </div>
+        </>
       }
+      footerClassName={styles.quotationFooter}
+      bodyClassName={styles.quotationModalBody}
     >
-      <div className="space-y-6">
-        {/* Stepper mejorado */}
-        <div className="flex items-center justify-between">
-          {steps.map((label, idx) => {
-            const isActive = step === idx + 1;
-            const isCompleted = step > idx + 1;
-            return (
-              <div key={label} className="flex items-center flex-1">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors ${
-                      isActive
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : isCompleted
-                        ? 'bg-blue-50 text-blue-600 border-blue-600'
-                        : 'bg-gray-50 text-gray-500 border-gray-300'
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      idx + 1
+      <div className={styles.quotationLayout}>
+        <div className={styles.quotationStepperShell} aria-label={`Progreso del formulario: paso ${step} de ${steps.length}`}>
+          <div className={styles.quotationStepperProgress} aria-hidden="true">
+            <span className={styles.quotationStepperProgressBar} style={{ width: `${progressPercent}%` }} />
+          </div>
+          <div className={styles.quotationStepper} role="list">
+            {steps.map((label, idx) => {
+              const status = getStepStatus(idx);
+              return (
+                <div key={label} className={styles.quotationStepperItem} role="listitem">
+                  <div className={styles.quotationStepperConnector}>
+                    <div
+                      className={`${styles.quotationStepperDot} ${stepStatusClasses(status)}`}
+                      aria-current={status === 'active' ? 'step' : undefined}
+                    >
+                      {status === 'completed' ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : (
+                        <span className={styles.quotationStepperNumber}>{idx + 1}</span>
+                      )}
+                    </div>
+                    {idx < steps.length - 1 && (
+                      <div
+                        className={`${styles.quotationStepperLine} ${status === 'completed' ? styles.quotationStepperLineCompleted : ''}`}
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
-                  <span className={`text-xs mt-1.5 text-center ${
-                    isActive ? 'text-blue-600 font-semibold' : 'text-gray-500'
-                  }`}>
-                    {label}
-                  </span>
+                  <div className={styles.quotationStepperLabelWrapper}>
+                    <span className={labelClasses(status)}>
+                      {label}
+                    </span>
+                  </div>
                 </div>
-                {idx < steps.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 rounded transition-colors ${
-                    isCompleted ? 'bg-blue-600' : 'bg-gray-300'
-                  }`} />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {/* Contenido del formulario con padding mejorado */}
-        <div className="rounded-lg">
-          {children}
+        <div className={styles.quotationBody}>
+          <div className={styles.quotationStepHeader}>
+            <div className={styles.quotationStepKicker}>Paso {step} de {steps.length}</div>
+            <h2 className={styles.quotationStepTitle}>{currentStepLabel}</h2>
+            <p className={styles.quotationStepDescription}>
+              {step === 1 && 'Identifica quién solicita la cotización.'}
+              {step === 2 && 'Configura el producto y sus personalizaciones.'}
+              {step === 3 && 'Adjunta referencias y define la entrega esperada.'}
+              {step === 4 && 'Revisa la información antes de enviar.'}
+            </p>
+          </div>
+
+          <div className={styles.quotationContent}>
+            {children}
+          </div>
         </div>
       </div>
     </Modal>

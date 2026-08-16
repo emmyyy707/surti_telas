@@ -18,9 +18,11 @@ export type CustomOrderStatusType = typeof CustomOrderStatus[keyof typeof Custom
 
 export const QuotationStatus = {
   BORRADOR: 'BORRADOR',
+  PENDIENTE: 'PENDIENTE',
   ENVIADA: 'ENVIADA',
   ACEPTADA: 'ACEPTADA',
   RECHAZADA: 'RECHAZADA',
+  CANCELADA: 'CANCELADA',
   VENCIDA: 'VENCIDA',
 } as const;
 

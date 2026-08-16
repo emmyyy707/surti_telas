@@ -23,6 +23,7 @@ export interface CustomOrderRepository {
   getByNumero(numero: string): Promise<any>;
   create(data: any, tx?: any): Promise<any>;
   update(id: string, changes: any, tx?: any): Promise<any>;
+  remove(id: string, tx?: any): Promise<void>;
   nextNumero(): Promise<string>;
 }
 

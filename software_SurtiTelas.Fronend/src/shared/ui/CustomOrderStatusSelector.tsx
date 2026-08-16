@@ -105,10 +105,17 @@ export const CustomOrderStatusSelector: React.FC<CustomOrderStatusSelectorProps>
   const allowedTransitions = CUSTOM_ORDER_STATUS_TRANSITIONS[currentStatus] || [];
   const currentConfig = STATUS_CONFIG[currentStatus];
 
-  if (allowedTransitions.length === 0) {
-    if (import.meta.env.DEV) {
-      console.warn('[CustomOrderStatusSelector] No transitions allowed', { currentStatus, allowedTransitions });
+  const noTransitionsRef = React.useRef(false);
+  React.useEffect(() => {
+    if (allowedTransitions.length === 0 && !noTransitionsRef.current) {
+      noTransitionsRef.current = true;
+      if (import.meta.env.DEV) {
+        console.warn('[CustomOrderStatusSelector] No transitions allowed', { currentStatus, allowedTransitions });
+      }
     }
+  }, [currentStatus, allowedTransitions]);
+
+  if (allowedTransitions.length === 0) {
     return (
       <div className={styles.container}>
         <div className={styles.currentStatus}>

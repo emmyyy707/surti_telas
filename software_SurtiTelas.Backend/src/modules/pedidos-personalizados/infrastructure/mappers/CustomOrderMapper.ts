@@ -177,6 +177,8 @@ export function toCotizacionData(row: any): any {
     motivoRechazo: row.motivo_rechazo,
     generadoPorId: row.generado_por_id,
     generadoPorNombre: row.generado_por_nombre,
+    negotiationCount: row.negotiation_count ?? 0,
+    negotiationHistory: row.negotiation_history ?? [],
     detalles: (row.quote_items ?? []).map((item: any) => ({
       id: item.id,
       tipo: item.tipo,
@@ -215,6 +217,8 @@ export function toCreateCotizacionInput(d: any) {
     motivo_rechazo: d.motivoRechazo,
     generado_por_id: d.generadoPorId,
     generado_por_nombre: d.generadoPorNombre,
+    negotiation_count: d.negotiationCount ?? 0,
+    negotiation_history: d.negotiationHistory ?? [],
     updatedAt: new Date(),
   };
 }
