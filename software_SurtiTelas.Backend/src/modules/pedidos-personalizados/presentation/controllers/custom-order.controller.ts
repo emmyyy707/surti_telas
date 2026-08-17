@@ -112,6 +112,8 @@ export const listCustomOrders = async (req: Request, res: Response) => {
 
 export const getCustomOrder = async (req: Request, res: Response) => {
   const pedido = await customOrderUseCases.getCustomOrder.execute(req.params.id);
+  console.log('[backend][getCustomOrder] id', req.params.id, 'usoFinal', pedido.usoFinal, 'direccionEntrega', pedido.direccionEntrega, 'itemsCount', pedido.items?.length, 'firstItemKeys', pedido.items?.[0] ? Object.keys(pedido.items[0]) : []);
+  console.log('[backend][getCustomOrder] firstItem', pedido.items?.[0]);
   return ok(res, pedido.toDTO());
 };
 

@@ -1,20 +1,4 @@
-export interface PedidoPersonalizadoItemData {
-  id?: string;
-  pedidoPersonalizadoId?: string;
-  productoId?: string | null;
-  productoNombre?: string | null;
-  descripcion: string;
-  tipoPersonalizacion: string;
-  especificaciones?: string | null;
-  cantidad: number;
-  talla?: string | null;
-  color?: string | null;
-  material?: string | null;
-  ubicacion?: string[] | null;
-  orden?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { PedidoPersonalizadoItemData } from './PedidoPersonalizadoItemData';
 
 export class PedidoPersonalizadoItem {
   readonly id?: string;
@@ -29,6 +13,8 @@ export class PedidoPersonalizadoItem {
   color?: string | null;
   material?: string | null;
   ubicacion?: string[] | null;
+  distribucionTallas?: Record<string, number> | null;
+  imagenesReferencia?: string[] | null;
   orden: number;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
@@ -46,6 +32,8 @@ export class PedidoPersonalizadoItem {
     this.color = data.color ?? null;
     this.material = data.material ?? null;
     this.ubicacion = data.ubicacion ?? null;
+    this.distribucionTallas = data.distribucionTallas ?? null;
+    this.imagenesReferencia = data.imagenesReferencia ?? null;
     this.orden = data.orden ?? 0;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
@@ -65,6 +53,8 @@ export class PedidoPersonalizadoItem {
       color: this.color,
       material: this.material,
       ubicacion: this.ubicacion,
+      distribucionTallas: this.distribucionTallas,
+      imagenesReferencia: this.imagenesReferencia,
       orden: this.orden,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

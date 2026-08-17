@@ -4,45 +4,25 @@ import { type FormValues } from '../MisPedidosPersonalizados';
 export interface DeliveryStepProps {
   register: UseFormRegister<FormValues>;
   styles: Record<string, string>;
-  selectedFiles: File[];
-  _setSelectedFiles: React.Dispatch<React.SetStateAction<File[]>>;
-  fileUrls: string[];
-  _setFileUrls: React.Dispatch<React.SetStateAction<string[]>>;
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  removeFile: (index: number) => void;
+  direccionEntrega: string;
 }
 
 export const DeliveryStep = ({
   register,
   styles,
-  selectedFiles,
-  _setSelectedFiles,
-  fileUrls,
-  _setFileUrls,
-  handleFileChange,
-  removeFile,
+  direccionEntrega,
 }: DeliveryStepProps) => {
   return (
     <div className={styles.sectionBlock}>
       <div className={styles.summarySection}>
-        <label htmlFor="ref-files" className={styles.label}>Archivos de referencia (JPG, PNG, PDF)</label>
-        <input id="ref-files" type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className={styles.hiddenInput} onChange={handleFileChange} />
-        <label htmlFor="ref-files" className={styles.uploadLabel}>Seleccionar archivos</label>
-        {selectedFiles.length > 0 && (
-          <div className={styles.filePreview}>
-            {selectedFiles.map((file, idx) => (
-              <div key={idx} className={styles.fileChip}>
-                {file.type.startsWith('image/') && fileUrls[idx] ? (
-                  <img src={fileUrls[idx]} alt={file.name} className={styles.fileChipImage} />
-                ) : (
-                  <span className={styles.fileChipName}>{file.name}</span>
-                )}
-                <button type="button" className={styles.removeFileBtn} onClick={() => removeFile(idx)}>Eliminar</button>
-              </div>
-            ))}
-          </div>
-        )}
-        <span className={styles.hintText}>Puedes adjuntar múltiples archivos.</span>
+        <label htmlFor="direccion-entrega" className={styles.label}>Dirección de entrega</label>
+        <input
+          id="direccion-entrega"
+          type="text"
+          className={styles.input}
+          placeholder="Ingresa la dirección de entrega"
+          {...register('direccionEntrega')}
+        />
       </div>
 
       <div className={styles.summarySection}>

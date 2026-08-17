@@ -16,6 +16,7 @@ export interface PedidoPersonalizadoData {
   presupuestoMaximo?: number | null;
   notasCliente?: string | null;
   notasInternas?: string | null;
+  direccionEntrega?: string | null;
   notasReferencia?: string | null;
   motivoRechazo?: string | null;
   fechaAceptacion?: Date | null;
@@ -52,6 +53,7 @@ export class PedidoPersonalizado {
   presupuestoMaximo?: number | null;
   notasCliente?: string | null;
   notasInternas?: string | null;
+  direccionEntrega?: string | null;
   notasReferencia?: string | null;
   motivoRechazo?: string | null;
   fechaAceptacion?: Date | null;
@@ -87,6 +89,7 @@ export class PedidoPersonalizado {
     this.presupuestoMaximo = data.presupuestoMaximo ?? null;
     this.notasCliente = data.notasCliente ?? null;
     this.notasInternas = data.notasInternas ?? null;
+    this.direccionEntrega = data.direccionEntrega ?? null;
     this.notasReferencia = data.notasReferencia ?? null;
     this.motivoRechazo = data.motivoRechazo ?? null;
     this.fechaAceptacion = data.fechaAceptacion ?? null;
@@ -124,6 +127,7 @@ export class PedidoPersonalizado {
       presupuestoMaximo: this.presupuestoMaximo,
       notasCliente: this.notasCliente,
       notasInternas: this.notasInternas,
+      direccionEntrega: this.direccionEntrega,
       notasReferencia: this.notasReferencia,
       motivoRechazo: this.motivoRechazo,
       fechaAceptacion: this.fechaAceptacion ? new Date(this.fechaAceptacion).toISOString() : null,

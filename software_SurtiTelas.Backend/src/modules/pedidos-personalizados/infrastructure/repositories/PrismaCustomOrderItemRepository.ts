@@ -18,6 +18,8 @@ export class PrismaCustomOrderItemRepository implements CustomOrderItemRepositor
       color: item.color ?? null,
       material: item.material ?? null,
       ubicacion: item.ubicacion ?? [],
+      distribucion_tallas: item.distribucionTallas ?? null,
+      imagenes_referencia: item.imagenesReferencia ?? [],
       orden: item.orden ?? 0,
     }));
 

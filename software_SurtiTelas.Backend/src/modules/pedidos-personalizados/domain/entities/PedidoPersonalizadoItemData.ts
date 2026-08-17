@@ -11,6 +11,8 @@ export interface PedidoPersonalizadoItemData {
   color?: string | null;
   material?: string | null;
   ubicacion?: string[] | null;
+  distribucionTallas?: Record<string, number> | null;
+  imagenesReferencia?: string[] | null;
   orden?: number;
   createdAt?: Date;
   updatedAt?: Date;

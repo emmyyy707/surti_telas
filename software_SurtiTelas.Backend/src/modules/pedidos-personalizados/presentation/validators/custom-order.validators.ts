@@ -114,6 +114,7 @@ export const CreateCustomOrderSchema = z.object({
   clienteTelefono: z.string().optional(),
   descripcionGeneral: z.string().optional(),
   usoFinal: z.string().optional(),
+  direccionEntrega: z.string().optional(),
   fechaEntregaDeseada: z.string().optional(),
   notasCliente: z.string().optional(),
   notasReferencia: z.string().optional(),

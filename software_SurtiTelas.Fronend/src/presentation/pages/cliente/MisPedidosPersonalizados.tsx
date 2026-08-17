@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Eye, Edit3, Trash2, CheckCircle, FileText, RefreshCcw, User, Package, Paintbrush, Image, X, PlusCircle, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -21,30 +21,31 @@ import { useLocation } from 'react-router-dom';
 import s from './MisPedidosPersonalizados.module.css';
 
 const customOrderItemSchema = z.object({
+  id: z.string().optional(),
   productoId: z.string().optional(),
   productoNombre: z.string().optional(),
-  descripcion: z.string().min(1, 'La descripción es obligatoria'),
-  tipoPersonalizacion: z.string().min(1, 'El tipo es obligatorio'),
+  descripcion: z.string().optional(),
+  tipoPersonalizacion: z.string().optional(),
   especificaciones: z.string().optional(),
-  cantidad: z.number().min(1, 'La cantidad es obligatoria'),
+  cantidad: z.union([z.number(), z.string()]).optional(),
   talla: z.string().optional(),
   color: z.string().optional(),
   material: z.string().optional(),
   ubicacion: z.array(z.string()).optional(),
-  distribucionTallas: z.record(z.string(), z.number().nullable()).optional(),
+  distribucionTallas: z.record(z.string(), z.union([z.number(), z.string(), z.null()])).optional(),
   imagenesReferencia: z.array(z.string()).optional(),
   personalizaciones: z.array(
     z.object({
-      tipo: z.string().min(1, 'El tipo es obligatorio'),
+      tipo: z.string().optional(),
       tecnica: z.string().optional(),
       ubicacion: z.array(z.string()).optional(),
-      descripcion: z.string().min(1, 'La descripción es obligatoria'),
+      descripcion: z.string().optional(),
       archivos: z.array(z.string()).optional(),
       variantes: z.array(
         z.object({
-          talla: z.string().min(1, 'La talla es obligatoria'),
-          color: z.string().min(1, 'El color es obligatorio'),
-          cantidad: z.number().int().positive('La cantidad debe ser mayor a 0'),
+          talla: z.string().optional(),
+          color: z.string().optional(),
+          cantidad: z.union([z.number(), z.string()]).optional(),
         })
       ).optional(),
     })
@@ -59,10 +60,7 @@ const formSchema = z.object({
   fechaEntregaDeseada: z.string().optional(),
   notasCliente: z.string().optional(),
   notasReferencia: z.string().optional(),
-  tecnica: z.string().optional(),
-  tamano: z.string().optional(),
-  cantidadDisenos: z.coerce.number().int().positive().optional(),
-  numeroColores: z.string().optional(),
+  direccionEntrega: z.string().optional(),
   items: z.array(customOrderItemSchema).min(1, 'Agrega al menos un item'),
 });
 
@@ -76,12 +74,10 @@ const emptyForm: FormValues = {
   fechaEntregaDeseada: '',
   notasCliente: '',
   notasReferencia: '',
-  tecnica: '',
-  tamano: '',
-  cantidadDisenos: 1,
-  numeroColores: '',
+  direccionEntrega: '',
   items: [
     {
+      id: 'empty-item-1',
       productoId: '',
       productoNombre: '',
       descripcion: '',
@@ -142,6 +138,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const pendingEditOrder = useRef<CustomOrder | null>(null);
 
   const [deleteConfirm, setDeleteConfirm] = useState<CustomOrder | null>(null);
 
@@ -157,8 +154,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const [productos, setProductos] = useState<{ id: string; nombre: string; tela?: string; colores?: string[]; tallas?: string[] }[]>([]);
   const [, setLoadingCatalog] = useState(false);
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [fileUrls, setFileUrls] = useState<string[]>([]);
   const [itemReferenceImages, setItemReferenceImages] = useState<Record<number, { files: File[]; urls: string[] }>>({});
   const [stepperStep, setStepperStep] = useState(1);
   const [colorRows, setColorRows] = useState<{ id: number; color: string; cantidad: string }[]>([{ id: Date.now(), color: '', cantidad: '' }]);
@@ -182,49 +177,66 @@ export const MisPedidosPersonalizados: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(formSchema) as any,
     defaultValues: emptyForm,
+    shouldUnregister: false,
   });
 
-  const { fields: itemFields, append: appendItem, remove: removeItem } = useFieldArray({
+  const { fields: itemFields, append: appendItem, remove: removeItem, replace: replaceItems } = useFieldArray({
     control,
     name: 'items',
+    shouldUnregister: false,
   });
 
   const cleanFormValues = (values: FormValues): FormValues => {
     return {
       ...values,
-      items: values.items.map((item) => ({
-        ...item,
-        ubicacion: Array.isArray(item.ubicacion) ? item.ubicacion : [],
-        distribucionTallas: Object.fromEntries(
-          Object.entries(item.distribucionTallas || {}).filter(([, v]) => v !== undefined && v !== null)
-        ) as Record<string, number | null>,
-        imagenesReferencia: item.imagenesReferencia || [],
-        personalizaciones: (item.personalizaciones || [])
-          .map((pers) => ({
-            ...pers,
-            ubicacion: Array.isArray(pers.ubicacion) ? pers.ubicacion : [],
-            variantes: (pers.variantes || [])
-              .filter((v) => Number(v.cantidad) > 0)
+      items: values.items.map((item) => {
+        const normalizedDistribucionTallas: Record<string, number | null> = {};
+        Object.entries(item.distribucionTallas || {}).forEach(([key, raw]) => {
+          if (raw === undefined || raw === null) return;
+          const num = typeof raw === 'number' ? raw : Number(raw);
+          normalizedDistribucionTallas[key] = Number.isNaN(num) ? null : num;
+        });
+
+        const normalizedPersonalizaciones = (item.personalizaciones || [])
+          .map((pers) => {
+            const normalizedVariantes = (pers.variantes || [])
               .map((v) => ({
-                ...v,
-                cantidad: Number(v.cantidad),
-              })),
-          }))
+                talla: typeof v.talla === 'string' ? v.talla : String(v.talla ?? ''),
+                color: typeof v.color === 'string' ? v.color : String(v.color ?? ''),
+                cantidad: typeof v.cantidad === 'number' ? v.cantidad : Number(v.cantidad ?? 0),
+              }))
+              .filter((v) => Number(v.cantidad) > 0);
+
+            return {
+              tipo: typeof pers.tipo === 'string' ? pers.tipo : '',
+              tecnica: typeof pers.tecnica === 'string' ? pers.tecnica : '',
+              ubicacion: Array.isArray(pers.ubicacion) ? pers.ubicacion : [],
+              descripcion: typeof pers.descripcion === 'string' ? pers.descripcion : '',
+              archivos: Array.isArray(pers.archivos) ? pers.archivos : [],
+              variantes: normalizedVariantes,
+            };
+          })
           .filter((pers) => {
             const hasDesc = !!pers.descripcion && pers.descripcion.trim() !== '';
             const hasUbic = Array.isArray(pers.ubicacion) && pers.ubicacion.length > 0;
             const hasVar = (pers.variantes || []).length > 0;
             return hasDesc || hasUbic || hasVar;
-          }),
-      })),
+          });
+
+        return {
+          ...item,
+          cantidad: typeof item.cantidad === 'number' ? item.cantidad : Number(item.cantidad ?? 0),
+          ubicacion: Array.isArray(item.ubicacion) ? item.ubicacion : [],
+          distribucionTallas: normalizedDistribucionTallas,
+          imagenesReferencia: Array.isArray(item.imagenesReferencia) ? item.imagenesReferencia : [],
+          personalizaciones: normalizedPersonalizaciones,
+        };
+      }),
     };
   };
 
   const handleFormSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const values = getValues();
-    const cleaned = cleanFormValues(values);
-    reset(cleaned);
     await onSubmit(e);
   };
 
@@ -331,6 +343,99 @@ export const MisPedidosPersonalizados: React.FC = () => {
   }, [loadOrders]);
 
   useEffect(() => {
+    if (!editingId) return;
+    const fullOrder = pendingEditOrder.current;
+    if (!fullOrder) return;
+
+    const nextItems = fullOrder.items.map((item, index) => ({
+      id: item.id || `edit-item-${fullOrder.id}-${index}`,
+      productoId: item.productoId ?? '',
+      productoNombre: item.productoNombre || item.descripcion || '',
+      descripcion: item.descripcion,
+      tipoPersonalizacion: item.tipoPersonalizacion,
+      especificaciones: item.especificaciones ?? '',
+      cantidad: item.cantidad,
+      talla: item.talla ?? '',
+      color: item.color ?? '',
+      material: item.material ?? '',
+      ubicacion: toUbicacionArray(item.ubicacion),
+      distribucionTallas: item.distribucionTallas ?? {},
+      imagenesReferencia: item.imagenesReferencia || [],
+      personalizaciones: (item.personalizaciones || []).map((pers: any) => ({
+        tipo: pers.tipo,
+        tecnica: pers.tecnica ?? '',
+        ubicacion: toUbicacionArray(pers.ubicacion),
+        descripcion: pers.descripcion,
+        archivos: pers.archivos || [],
+        variantes: (pers.variantes || []).map((v: any) => ({
+          talla: v.talla,
+          color: v.color,
+          cantidad: v.cantidad,
+        })),
+      })),
+    }));
+
+    const imagenUrls = nextItems.reduce<Record<number, { files: File[]; urls: string[] }>>((acc, item, idx) => {
+      const itemUrls = item.imagenesReferencia || [];
+      const persUrls = (item.personalizaciones || [])
+        .flatMap((pers: any) => (Array.isArray(pers.archivos) ? pers.archivos : []))
+        .filter((url: any): url is string => typeof url === 'string' && !!url);
+      const allUrls = [...itemUrls, ...persUrls];
+      if (allUrls.length > 0) acc[idx] = { files: [], urls: allUrls };
+      return acc;
+    }, {});
+
+    const payload = {
+      clienteNombre: fullOrder.clienteNombre,
+      clienteEmail: fullOrder.clienteEmail ?? '',
+      clienteTelefono: fullOrder.clienteTelefono ?? '',
+      usoFinal: fullOrder.usoFinal ?? '',
+      fechaEntregaDeseada: fullOrder.fechaEntregaDeseada ? new Date(fullOrder.fechaEntregaDeseada).toISOString().slice(0, 10) : '',
+      notasCliente: fullOrder.notasCliente ?? '',
+      notasReferencia: fullOrder.notasReferencia ?? '',
+      direccionEntrega: fullOrder.direccionEntrega ?? '',
+      items: nextItems,
+    };
+
+    reset(payload, { keepDefaultValues: false });
+    replaceItems(nextItems);
+
+    nextItems.forEach((item, idx) => {
+      setValue(`items.${idx}.distribucionTallas`, item.distribucionTallas || {});
+      setValue(`items.${idx}.imagenesReferencia`, item.imagenesReferencia || []);
+      setValue(`items.${idx}.ubicacion`, item.ubicacion || []);
+      Object.entries(item.distribucionTallas || {}).forEach(([talla, cantidad]) => {
+        setValue(`items.${idx}.distribucionTallas.${talla}` as any, cantidad as any);
+      });
+      (item.personalizaciones || []).forEach((pers: any, pIdx: number) => {
+        setValue(`items.${idx}.personalizaciones.${pIdx}.tipo`, pers.tipo || 'ESTAMPADO');
+        setValue(`items.${idx}.personalizaciones.${pIdx}.tecnica`, pers.tecnica || '');
+        setValue(`items.${idx}.personalizaciones.${pIdx}.ubicacion`, pers.ubicacion || []);
+        setValue(`items.${idx}.personalizaciones.${pIdx}.descripcion`, pers.descripcion || '');
+        setValue(`items.${idx}.personalizaciones.${pIdx}.archivos`, pers.archivos || []);
+        (pers.variantes || []).forEach((v: any, vIdx: number) => {
+          setValue(`items.${idx}.personalizaciones.${pIdx}.variantes.${vIdx}.talla`, v.talla || '');
+          setValue(`items.${idx}.personalizaciones.${pIdx}.variantes.${vIdx}.color`, v.color || '');
+          setValue(`items.${idx}.personalizaciones.${pIdx}.variantes.${vIdx}.cantidad`, Number(v.cantidad) || 0);
+        });
+      });
+    });
+
+    setValue('direccionEntrega', fullOrder.direccionEntrega ?? '');
+    setValue('usoFinal', fullOrder.usoFinal ?? '');
+
+    setItemReferenceImages(imagenUrls);
+    setPaymentProofFile(null);
+    setPaymentProofUrl(fullOrder.paymentProofUrl ?? '');
+    setStepperStep(1);
+    setActiveItemIndex(0);
+    setShowPersonalizacionForm(false);
+    setEditingPersonalizacionIndex(null);
+    setColorRows([{ id: Date.now(), color: '', cantidad: '' }]);
+    setFormOpen(true);
+  }, [editingId, reset, replaceItems, setValue, setItemReferenceImages, setPaymentProofFile, setPaymentProofUrl, setStepperStep, setActiveItemIndex, setShowPersonalizacionForm, setEditingPersonalizacionIndex, setColorRows, setFormOpen]);
+
+  useEffect(() => {
     if (!formOpen) return;
     let cancelled = false;
     (async () => {
@@ -371,76 +476,29 @@ export const MisPedidosPersonalizados: React.FC = () => {
     });
     setPaymentProofFile(null);
     setPaymentProofUrl('');
-    setSelectedFiles([]);
-    setFileUrls([]);
     setStepperStep(1);
     setColorRows([{ id: Date.now(), color: '', cantidad: '' }]);
     setFormOpen(true);
   };
 
-  const openEdit = (order: CustomOrder) => {
-    if (order.estado !== 'SOLICITUD_RECIBIDA') {
-      toast.error('Solo puedes editar solicitudes en estado "Solicitud recibida"');
+  const editableStates = ['SOLICITUD_RECIBIDA', 'EN_REVISION', 'COTIZADO', 'COTIZACION_ACEPTADA'];
+
+  const openEdit = async (order: CustomOrder) => {
+    if (!editableStates.includes(order.estado)) {
+      toast.error('Solo puedes editar solicitudes en estados iniciales');
       return;
     }
-    setEditingId(order.id);
-    reset({
-      clienteNombre: order.clienteNombre,
-      clienteEmail: order.clienteEmail ?? '',
-      clienteTelefono: order.clienteTelefono ?? '',
-      usoFinal: order.usoFinal ?? '',
-      fechaEntregaDeseada: order.fechaEntregaDeseada ? new Date(order.fechaEntregaDeseada).toISOString().slice(0, 10) : '',
-      notasCliente: order.notasCliente ?? '',
-      notasReferencia: order.notasReferencia ?? '',
-      tecnica: '',
-      tamano: '',
-      cantidadDisenos: 1,
-      numeroColores: '',
-      items: order.items.map((item) => ({
-        productoId: item.productoId ?? '',
-        productoNombre: item.productoNombre ?? '',
-        descripcion: item.descripcion,
-        tipoPersonalizacion: item.tipoPersonalizacion,
-        especificaciones: item.especificaciones ?? '',
-        cantidad: item.cantidad,
-        talla: item.talla ?? '',
-        color: item.color ?? '',
-        material: item.material ?? '',
-        ubicacion: toUbicacionArray(item.ubicacion),
-        distribucionTallas: item.distribucionTallas ?? {},
-        imagenesReferencia: item.imagenesReferencia || [],
-        personalizaciones: (item.personalizaciones || []).map((pers: any) => ({
-          tipo: pers.tipo,
-          tecnica: pers.tecnica ?? '',
-          ubicacion: toUbicacionArray(pers.ubicacion),
-          descripcion: pers.descripcion,
-          archivos: pers.archivos || [],
-          variantes: (pers.variantes || []).map((v: any) => ({
-            talla: v.talla,
-            color: v.color,
-            cantidad: v.cantidad,
-          })),
-        })),
-      })),
-    });
-    setPaymentProofFile(null);
-    setPaymentProofUrl(order.paymentProofUrl ?? '');
-    setSelectedFiles([]);
-    setFileUrls([]);
-    setStepperStep(1);
-    setColorRows([{ id: Date.now(), color: '', cantidad: '' }]);
-    setFormOpen(true);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    setSelectedFiles(files);
-    setFileUrls(files.map(f => URL.createObjectURL(f)));
-  };
-
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setFileUrls(prev => prev.filter((_, i) => i !== index));
+    let fullOrder = order;
+    try {
+      const fullOrderData = await customOrdersApi.getById(order.id);
+      if (fullOrderData) {
+        fullOrder = fullOrderData;
+      }
+    } catch {
+      fullOrder = order;
+    }
+    pendingEditOrder.current = fullOrder;
+    setEditingId(fullOrder.id);
   };
 
   const handleReferenceImageChange = (itemIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -507,8 +565,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
 
   const onSubmit = handleSubmit(
     async (values) => {
-      console.log('[QUOTE] onSubmit ejecutado', values);
-      const onSubmitPayload = { ...values, items: values.items.map((item: FormValues['items'][number], index: number) => ({
+      const cleaned = cleanFormValues(values);
+      const onSubmitPayload = { ...cleaned, items: cleaned.items.map((item: FormValues['items'][number], index: number) => ({
         ...item,
         orden: index,
         imagenesReferencia: item.imagenesReferencia || [],
@@ -530,8 +588,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
             })),
           })),
       })) };
-
-      console.log('[QUOTE] validación iniciada');
 
       const validationErrors: string[] = [];
       const validationDetails: string[] = [];
@@ -582,24 +638,22 @@ export const MisPedidosPersonalizados: React.FC = () => {
       }
 
       if (validationErrors.length > 0) {
-        console.log('[QUOTE] validación de negocio fallida', validationErrors);
         toast.error('Errores de validación', { description: validationErrors.join('\n') });
         return;
       }
 
-      console.log('[QUOTE] validación correcta');
-
       const basePayload = {
         clienteId: currentUser?.uid,
-        clienteNombre: values.clienteNombre,
-        clienteEmail: values.clienteEmail || undefined,
-        clienteTelefono: values.clienteTelefono || undefined,
-        notasReferencia: values.notasReferencia || undefined,
-        descripcionGeneral: values.items[0]?.descripcion || undefined,
-        usoFinal: values.usoFinal || undefined,
-        fechaEntregaDeseada: values.fechaEntregaDeseada || undefined,
-        notasCliente: values.notasCliente || undefined,
-        items: values.items.map((item: FormValues['items'][number], index: number) => ({
+        clienteNombre: cleaned.clienteNombre,
+        clienteEmail: cleaned.clienteEmail || undefined,
+        clienteTelefono: cleaned.clienteTelefono || undefined,
+        direccionEntrega: cleaned.direccionEntrega || undefined,
+        notasReferencia: cleaned.notasReferencia || undefined,
+        descripcionGeneral: cleaned.items[0]?.descripcion || undefined,
+        usoFinal: cleaned.usoFinal || undefined,
+        fechaEntregaDeseada: cleaned.fechaEntregaDeseada || undefined,
+        notasCliente: cleaned.notasCliente || undefined,
+        items: cleaned.items.map((item: FormValues['items'][number], index: number) => ({
           descripcion: item.descripcion,
           tipoPersonalizacion: item.tipoPersonalizacion,
           especificaciones: item.especificaciones || undefined,
@@ -629,8 +683,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
         })),
       };
 
-      console.log('[QUOTE] payload', basePayload);
-
       setSaving(true);
       try {
         let orderId = editingId;
@@ -638,9 +690,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
           await customOrdersApi.clientUpdate(editingId, { ...basePayload, paymentProofUrl: paymentProofUrl || undefined });
           toast.success('Solicitud actualizada');
         } else {
-          console.log('[QUOTE] POST /custom-orders');
           const created = await customOrdersApi.create(basePayload);
-          console.log('[QUOTE] respuesta', created);
           orderId = created.id;
           toast.success('Solicitud creada');
         }
@@ -657,7 +707,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
         setFormOpen(false);
         void loadOrders();
       } catch (err: unknown) {
-        console.log('[QUOTE] ERROR:', err);
         const message = err instanceof Error ? err.message : 'Error al guardar solicitud';
         toast.error(message);
       } finally {
@@ -666,14 +715,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
     },
     (errors) => {
       const values = getValues();
-      console.log('[QUOTE] valores items al validar', JSON.stringify(values.items, null, 2));
-      const manualParse = formSchema.safeParse(values);
-      if (!manualParse.success) {
-        console.error('[QUOTE] errores Zod:', manualParse.error.issues);
-      } else {
-        console.error('[QUOTE] errores Zod: validación manual pasó, pero RHF reportó errores');
-      }
-      console.log('[QUOTE] validación React Hook Form fallida', errors);
       toast.error('Errores de validación', {
         description: Object.entries(errors)
           .map(([key, value]) => {
@@ -694,8 +735,9 @@ export const MisPedidosPersonalizados: React.FC = () => {
       toast.success('Solicitud eliminada');
       setDeleteConfirm(null);
       void loadOrders();
-    } catch {
-      toast.error('No se pudo eliminar la solicitud');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'No se pudo eliminar la solicitud';
+      toast.error(message);
     }
   };
 
@@ -1072,8 +1114,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
             ),
           }}
           actions={(row) => [
-            ...(row.estado === 'SOLICITUD_RECIBIDA'
-              ? [{ label: 'Editar', icon: <Edit3 size={14} />, onClick: () => openEdit(row) }]
+            ...(editableStates.includes(row.estado)
+              ? [{ label: 'Editar', icon: <Edit3 size={14} />, onClick: () => { openEdit(row); } }]
               : []),
             { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(row), danger: true },
           ]}
@@ -1081,8 +1123,18 @@ export const MisPedidosPersonalizados: React.FC = () => {
       </div>
 
       <CustomOrderFormModal
+        key={editingId || 'new'}
         open={formOpen}
-        onClose={() => setFormOpen(false)}
+        onClose={() => {
+          setFormOpen(false);
+          setEditingId(null);
+          setStepperStep(1);
+          reset({
+            ...emptyForm,
+            clienteNombre: currentUser?.name ?? '',
+            clienteEmail: currentUser?.email ?? '',
+          });
+        }}
         title={editingId ? 'Editar solicitud' : 'Solicitar cotización'}
         step={stepperStep}
         steps={['Cliente', 'Producto y personalización', 'Entrega', 'Resumen']}
@@ -1111,7 +1163,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
             />
           )}
 
-            {stepperStep === 2 && (
+            {stepperStep === 2 && control && (
               <ProductStep
                 register={register}
                 errors={formErrorsHook}
@@ -1145,12 +1197,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
               <DeliveryStep
                 register={register}
                 styles={s}
-                selectedFiles={selectedFiles}
-                _setSelectedFiles={setSelectedFiles}
-                fileUrls={fileUrls}
-                _setFileUrls={setFileUrls}
-                handleFileChange={handleFileChange}
-                removeFile={removeFile}
+                direccionEntrega={watch('direccionEntrega') || ''}
               />
             )}
 

@@ -119,6 +119,7 @@ export const SummaryStep = ({ watch, styles, onEditClient, onEditProducts, onEdi
         </div>
         <div className={styles.summaryRow}><span>Fecha solicitada</span><span>{watch('fechaEntregaDeseada') ? new Date(watch('fechaEntregaDeseada') as string).toLocaleDateString('es-CO') : '-'}</span></div>
         <div className={styles.summaryRow}><span>Uso</span><span>{watch('usoFinal') || '-'}</span></div>
+        <div className={styles.summaryRow}><span>Dirección de entrega</span><span>{watch('direccionEntrega') || '-'}</span></div>
         <div className={styles.summaryRow}><span>Observaciones</span><span>{watch('notasCliente') || '-'}</span></div>
       </div>
     </div>

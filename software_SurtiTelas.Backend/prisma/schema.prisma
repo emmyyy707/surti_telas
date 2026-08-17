@@ -941,6 +941,8 @@ model custom_orders {
   motivo_rechazo           String?
   notas_cliente            String?                    @map("notas_cliente")
   notas_internas           String?
+  uso_final                String?                    @map("uso_final")
+  direccion_entrega        String?                    @map("direccion_entrega")
   payment_key              String?
   payment_proof_url        String?
   payment_status           String?
@@ -1036,6 +1038,8 @@ model custom_order_items {
   color                String?
   material             String?
   ubicacion            Json?
+  distribucion_tallas  Json?
+  imagenes_referencia  String[]
   orden                Int       @default(0)
   deleted_at           DateTime?
   createdAt            DateTime @default(now())

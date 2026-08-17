@@ -71,22 +71,25 @@ export class CreateCustomOrder {
       if (input.items && input.items.length > 0) {
         for (let index = 0; index < input.items.length; index++) {
           const item = input.items[index];
-          const savedItem = await tx.custom_order_items.create({
-            data: {
-              custom_order_id: created.id!,
-              producto_id: item.productoId ?? null,
-              producto_nombre: item.productoNombre ?? null,
-              descripcion: item.descripcion || 'Item',
-              tipo_personalizacion: item.tipoPersonalizacion || 'OTRO',
-              especificaciones: item.especificaciones ?? null,
-              cantidad: Number(item.cantidad ?? 0),
-              talla: item.talla ?? null,
-              color: item.color ?? null,
-              material: item.material ?? null,
-              ubicacion: this.normalizeUbicacion(item.ubicacion),
-              orden: item.orden ?? index,
-            } as any,
-          });
+      const savedItem = await tx.custom_order_items.create({
+        data: {
+          custom_order_id: created.id!,
+          producto_id: item.productoId ?? null,
+          producto_nombre: item.productoNombre ?? null,
+          descripcion: item.descripcion || 'Item',
+          tipo_personalizacion: item.tipoPersonalizacion || 'OTRO',
+          especificaciones: item.especificaciones ?? null,
+          cantidad: Number(item.cantidad ?? 0),
+          talla: item.talla ?? null,
+          color: item.color ?? null,
+          material: item.material ?? null,
+          ubicacion: this.normalizeUbicacion(item.ubicacion),
+          distribucion_tallas: item.distribucionTallas ?? null,
+          imagenes_referencia: item.imagenesReferencia ?? [],
+          orden: item.orden ?? index,
+        } as any,
+      });
+      console.log('[backend][createItem] saved distribucion_tallas', savedItem.distribucion_tallas, 'imagenes_referencia', savedItem.imagenes_referencia);
 
           if (item.personalizaciones && item.personalizaciones.length > 0) {
             for (const pers of item.personalizaciones) {
@@ -162,6 +165,11 @@ export class UpdateCustomOrder {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
 
+    console.log('[backend][UpdateCustomOrder] id', id, 'changes keys', Object.keys(changes), 'usoFinal', changes.usoFinal, 'direccionEntrega', changes.direccionEntrega, 'itemsCount', changes.items?.length);
+    if (changes.items?.length) {
+      console.log('[backend][UpdateCustomOrder] first item', changes.items[0]);
+    }
+
     const { items, ...cabecera } = changes;
 
     await this.repo.update(id, cabecera);
@@ -188,9 +196,12 @@ export class UpdateCustomOrder {
               color: item.color ?? null,
               material: item.material ?? null,
               ubicacion: this.normalizeUbicacion(item.ubicacion),
+              distribucion_tallas: item.distribucionTallas ?? null,
+              imagenes_referencia: item.imagenesReferencia ?? [],
               orden: item.orden ?? index,
             } as any,
           });
+          console.log('[backend][updateItem] saved distribucion_tallas', savedItem.distribucion_tallas, 'imagenes_referencia', savedItem.imagenes_referencia);
 
           if (item.personalizaciones && item.personalizaciones.length > 0) {
             for (const pers of item.personalizaciones) {

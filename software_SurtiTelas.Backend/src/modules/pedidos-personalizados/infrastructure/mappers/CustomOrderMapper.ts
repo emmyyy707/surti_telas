@@ -24,6 +24,7 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
     presupuestoMaximo: null,
     notasCliente: row.notas_cliente ?? null,
     notasInternas: row.notas_internas ?? null,
+    direccionEntrega: row.direccion_entrega ?? null,
     notasReferencia: null,
     motivoRechazo: row.motivo_rechazo ?? null,
     fechaAceptacion: row.fecha_aceptacion ?? null,
@@ -48,6 +49,8 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
         color: item.color,
         material: item.material,
         ubicacion: item.ubicacion,
+        distribucionTallas: item.distribucion_tallas ?? null,
+        imagenesReferencia: item.imagenes_referencia ?? null,
         orden: item.orden,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -118,6 +121,8 @@ export function toCreatePedidoInput(d: any) {
     conversacion_id: d.conversacionId ?? null,
     notas_cliente: d.notasCliente ?? null,
     notas_internas: d.notasInternas ?? null,
+    uso_final: d.usoFinal ?? null,
+    direccion_entrega: d.direccionEntrega ?? null,
     motivo_rechazo: d.motivoRechazo ?? null,
     fecha_aceptacion: d.fechaAceptacion ? new Date(d.fechaAceptacion) : null,
     payment_key: d.paymentKey ?? null,
@@ -148,6 +153,8 @@ export function toUpdatePedidoInput(changes: any) {
   if (changes.fechaLimiteProduccion !== undefined) data.fecha_limite_produccion = changes.fechaLimiteProduccion ? new Date(changes.fechaLimiteProduccion) : null;
   if (changes.notasCliente !== undefined) data.notas_cliente = changes.notasCliente;
   if (changes.notasInternas !== undefined) data.notas_internas = changes.notasInternas;
+  if (changes.usoFinal !== undefined) data.uso_final = changes.usoFinal;
+  if (changes.direccionEntrega !== undefined) data.direccion_entrega = changes.direccionEntrega;
   if (changes.motivoRechazo !== undefined) data.motivo_rechazo = changes.motivoRechazo;
   if (changes.fechaAceptacion !== undefined) data.fecha_aceptacion = changes.fechaAceptacion ? new Date(changes.fechaAceptacion) : null;
   if (changes.paymentKey !== undefined) data.payment_key = changes.paymentKey;

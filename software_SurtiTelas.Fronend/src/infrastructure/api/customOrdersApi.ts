@@ -104,6 +104,7 @@ export interface CustomOrder {
   presupuestoMaximo?: number | null;
   notasCliente?: string | null;
   notasReferencia?: string | null;
+  direccionEntrega?: string | null;
   motivoRechazo?: string | null;
   fechaAceptacion?: string | null;
   pedidoNormalId?: string | null;
@@ -287,7 +288,7 @@ export const customOrdersApi = {
   },
 
   async remove(id: string): Promise<void> {
-    return api.delete(`/admin/custom-orders/${encodeURIComponent(id)}`);
+    return api.delete(`/custom-orders/${encodeURIComponent(id)}`);
   },
 
   async uploadPaymentProof(id: string, file: File): Promise<{ paymentProofUrl: string }> {
