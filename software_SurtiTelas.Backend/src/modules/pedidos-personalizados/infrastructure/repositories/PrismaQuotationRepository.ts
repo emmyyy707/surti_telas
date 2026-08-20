@@ -29,7 +29,7 @@ export class PrismaQuotationRepository implements QuotationRepository {
     if (changes.estado !== undefined) data.estado = changes.estado;
     if (changes.subtotal !== undefined) data.subtotal = changes.subtotal;
     if (changes.impuestos !== undefined) data.impuestos = changes.impuestos;
-    if (changes.descuento !== undefined) data.descuento = changes.descuento;
+    if (changes.descuento !== undefined) data.descuentos = changes.descuento;
     if (changes.total !== undefined) data.total = changes.total;
     if (changes.tiempoEstimadoDias !== undefined) data.tiempo_estimado_dias = changes.tiempoEstimadoDias;
     if (changes.validaHasta !== undefined) data.valida_hasta = changes.validaHasta;
@@ -41,6 +41,9 @@ export class PrismaQuotationRepository implements QuotationRepository {
     if (changes.respondidaEn !== undefined) data.respondida_en = changes.respondidaEn;
     if (changes.negotiationCount !== undefined) data.negotiation_count = changes.negotiationCount;
     if (changes.negotiationHistory !== undefined) data.negotiation_history = changes.negotiationHistory;
+    if (changes.porcentajeAnticipo !== undefined) data.porcentaje_anticipo = changes.porcentajeAnticipo;
+    if (changes.valorAnticipo !== undefined) data.valor_anticipo = changes.valorAnticipo;
+    if (changes.saldo !== undefined) data.saldo = changes.saldo;
 
     const row = await prisma.quotes.update({
       where: { id },

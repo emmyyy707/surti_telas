@@ -85,6 +85,14 @@
   color: var(--color-text-inverse);
 }
 
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
 .perfilName {
   font-size: 1.4rem;
   font-weight: 700;

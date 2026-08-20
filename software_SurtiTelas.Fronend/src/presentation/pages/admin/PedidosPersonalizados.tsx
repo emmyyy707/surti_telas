@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, QrCode, X, PlusCircle } from 'lucide-react';
+import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, QrCode, X, PlusCircle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -11,6 +11,8 @@ import { customOrdersApi, type CustomOrder } from '@/infrastructure/api/customOr
 import { customersApi } from '@/infrastructure/api/customersApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { CustomOrderFormModal } from '@/presentation/components/CustomOrderFormModal';
+import { CustomOrderSummary, type CustomOrderSummaryData } from '../cliente/quotation-steps/CustomOrderSummary';
+import clienteS from '../cliente/MisPedidosPersonalizados.module.css';
 import s from './PedidosPersonalizados.module.css';
 
 const CUSTOM_ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default'> = {
@@ -147,7 +149,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.estado === 'SOLICITUD_RECIBIDA' || o.estado === 'EN_REVISION').length;
+  const pendingOrders = orders.filter(o => o.estado === 'SOLICITUD_RECIBIDA' || o.estado === 'PENDIENTE').length;
   const quotedOrders = orders.filter(o => o.estado === 'COTIZADO' || o.estado === 'COTIZACION_ACEPTADA').length;
   const productionOrders = orders.filter(o => o.estado === 'EN_PRODUCCION').length;
 
@@ -317,7 +319,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setForm({ ...form, items });
   };
 
-  const validate = () => {
+  const validate = (): boolean => {
     const next: Record<string, string> = {};
     if (!(form.clienteNombre || '').trim()) next.clienteNombre = 'Selecciona un cliente';
     const hasInvalidItem = form.items.some((item, idx) => {
@@ -330,6 +332,23 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       });
       return false;
     });
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const validateQuotation = (): boolean => {
+    const next: Record<string, string> = {};
+    const allLines = quotationProducts.flatMap(product => product.conceptos);
+    if (allLines.length === 0) {
+      next.detalles = 'Agrega al menos un concepto';
+    }
+    allLines.forEach((line, idx) => {
+      if (!line.descripcion?.trim()) next[`detalle-${idx}-descripcion`] = 'La descripción es obligatoria';
+      if (!line.cantidad || Number(line.cantidad) <= 0) next[`detalle-${idx}-cantidad`] = 'Cantidad inválida';
+      if (line.precioUnitario === undefined || line.precioUnitario === null || Number(line.precioUnitario) < 0) next[`detalle-${idx}-precio`] = 'Precio inválido';
+    });
+    if (!quotationDeliveryDays || Number(quotationDeliveryDays) <= 0) next.tiempoEstimadoDias = 'Tiempo estimado inválido';
+    if (!quotationPaymentTerms?.trim()) next.condicionesPago = 'Condiciones de pago obligatorias';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -654,6 +673,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
   const handleSaveQuotation = async () => {
     if (!selectedOrder) return;
+    if (!validateQuotation()) return;
     setQuotationSaving(true);
     try {
       const allLines = quotationProducts.flatMap(product => product.conceptos);
@@ -679,9 +699,14 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         generadoPorNombre: 'Administrador',
       };
 
-      await customOrdersApi.generateQuotation(selectedOrder.id, payload);
-      toast.success('Cotización guardada en estado PENDIENTE');
-      void loadOrders();
+      const result = await customOrdersApi.generateQuotation(selectedOrder.id, payload);
+      toast.success('Cotización guardada y enviada al cliente');
+      if (result?.pedido && result?.cotizacion) {
+        setSelectedOrder(result.pedido);
+        setOrders(prev => prev.map(o => o.id === result.pedido.id ? result.pedido : o));
+      } else {
+        void loadOrders();
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al generar cotización';
       if (message.includes('Ya existe una cotización') || message.includes('409')) {
@@ -694,23 +719,16 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     }
   };
 
-  const handleSendQuotation = async () => {
-    if (!selectedOrder) return;
-    setQuotationSaving(true);
-    try {
-      await customOrdersApi.sendQuotation(selectedOrder.id);
-      toast.success('Cotización enviada al cliente');
-      setQuotationOpen(false);
-      void loadOrders();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al enviar cotización';
-      toast.error(message || 'Error al enviar cotización');
-    } finally {
-      setQuotationSaving(false);
-    }
-  };
-
   const columns = [
+    { 
+      key: 'detalle', 
+      header: 'Detalle',
+      render: (row: CustomOrder) => (
+        <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(row); setDetailOpen(true); }} title="Ver detalle">
+          <Eye size={16} />
+        </Button>
+      )
+    },
     { 
       key: 'numeroSolicitud', 
       header: 'Solicitud',
@@ -779,8 +797,45 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     return orders.filter((o) => o.numeroSolicitud.toLowerCase().includes(q) || o.clienteNombre.toLowerCase().includes(q));
   }, [orders, search]);
 
+  const summaryStyles = { ...clienteS, ...s };
+  const summaryData: CustomOrderSummaryData | null = selectedOrder
+    ? {
+        clienteNombre: selectedOrder.clienteNombre,
+        clienteEmail: selectedOrder.clienteEmail ?? undefined,
+        clienteTelefono: selectedOrder.clienteTelefono ?? undefined,
+        descripcionGeneral: selectedOrder.descripcionGeneral ?? undefined,
+        notasReferencia: selectedOrder.notasReferencia ?? undefined,
+        estado: getStatusLabel(selectedOrder.estado),
+        items: (selectedOrder.items || []).map((item) => ({
+          id: item.id,
+          productoNombre: item.productoNombre,
+          descripcion: item.descripcion,
+          tipoPersonalizacion: item.tipoPersonalizacion,
+          cantidad: item.cantidad,
+          material: item.material,
+          talla: item.talla,
+          color: item.color,
+          especificaciones: item.especificaciones,
+          distribucionTallas: item.distribucionTallas ?? undefined,
+          imagenesReferencia: item.imagenesReferencia ?? undefined,
+          personalizaciones: (item.personalizaciones || []).map((pers) => ({
+            tipo: pers.tipo,
+            tecnica: pers.tecnica,
+            descripcion: pers.descripcion,
+            ubicacion: pers.ubicacion,
+            archivos: pers.archivos,
+            variantes: pers.variantes,
+          })),
+        })),
+        fechaEntregaDeseada: selectedOrder.fechaEntregaDeseada ?? undefined,
+        usoFinal: selectedOrder.usoFinal ?? undefined,
+        direccionEntrega: selectedOrder.direccionEntrega ?? undefined,
+        notasCliente: selectedOrder.notasCliente ?? undefined,
+      }
+    : null;
+
   return (
-    <div>
+    <div className={s.page}>
       <div className={s.header}>
         <div>
            <h1 className={s.pageTitle}>Cotizaciones</h1>
@@ -834,9 +889,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       <div className={s.tableWrapper}>
         <div className={s.filters}>
           <div className={s.searchBox}>
-            <span className={s.searchIcon}>
-              <Eye size={16} />
-            </span>
+            <span className={s.searchIcon}><Eye size={16} /></span>
             <input
               className={s.searchInput}
               placeholder="Buscar por solicitud o cliente..."
@@ -877,197 +930,31 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         title={`Solicitud ${selectedOrder?.numeroSolicitud ?? ''}`}
-        footer={
-          <div className={s.formActions}>
-            <Button variant="secondary" onClick={() => setDetailOpen(false)}>Cerrar</Button>
-            {selectedOrder && (selectedOrder.estado === 'EN_REVISION' || selectedOrder.estado === 'COTIZADO') && (
-              <Button onClick={() => openQuotationEditor(selectedOrder)}>
-                {selectedOrder.cotizacion ? 'Editar cotización' : 'Generar cotización'}
-              </Button>
-            )}
-            {selectedOrder && selectedOrder.estado === 'PAGO_PENDIENTE' && !selectedOrder.anticipoPagado && (
-              <Button onClick={() => { setPaymentConfirm(selectedOrder); setDetailOpen(false); }}>
-                Confirmar anticipo
-              </Button>
-            )}
-            {selectedOrder && selectedOrder.estado === 'PAGO_APROBADO' && (
-              <Button onClick={async () => {
-                try {
-                  await customOrdersApi.convertToOrder(selectedOrder.id);
-                  toast.success('Pedido convertido exitosamente');
-                  setDetailOpen(false);
-                  void loadOrders();
-                } catch {
-                  toast.error('Error al convertir a pedido');
-                }
-              }}>
-                Convertir a pedido
-              </Button>
-            )}
-            {selectedOrder && !selectedOrder.anticipoPagado && (selectedOrder.paymentKey || selectedOrder.paymentProofUrl) && selectedOrder.estado !== 'COTIZACION_ACEPTADA' && (
-              <Button onClick={() => { setPaymentConfirm(selectedOrder); setDetailOpen(false); }}>Confirmar anticipo</Button>
-            )}
-          </div>
-        }
+        footer={null}
       >
-        {selectedOrder && (
-          <div className={s.form}>
-            <div className={s.formRow}>
-              <div className={s.field}>
-                <span className={s.label}>Cliente</span>
-                <span className={s.infoValue}>{selectedOrder.clienteNombre}</span>
-              </div>
-              <div className={s.field}>
-                <span className={s.label}>Estado</span>
-                <Badge variant={CUSTOM_ORDER_STATUS_COLORS[selectedOrder.estado] ?? 'default'}>{getStatusLabel(selectedOrder.estado)}</Badge>
-              </div>
-              <div className={s.field}>
-                <span className={s.label}>Email</span>
-                <span className={s.infoValue}>{selectedOrder.clienteEmail ?? '-'}</span>
-              </div>
-              <div className={s.field}>
-                <span className={s.label}>Teléfono</span>
-                <span className={s.infoValue}>{selectedOrder.clienteTelefono ?? '-'}</span>
-              </div>
-              <div className={s.field}>
-                <span className={s.label}>Uso final</span>
-                <span className={s.infoValue}>{selectedOrder.usoFinal ?? '-'}</span>
-              </div>
-              <div className={s.field}>
-                <span className={s.label}>Fecha límite</span>
-                <span className={s.infoValue}>{selectedOrder.fechaEntregaDeseada ? new Date(selectedOrder.fechaEntregaDeseada).toLocaleDateString('es-CO') : '-'}</span>
-              </div>
-            </div>
-
-            {selectedOrder.cotizacion && (
-              <div className={s.registroInfo}>
-                <span className={s.label} style={{ marginBottom: '12px', display: 'block' }}>Cotización</span>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <span className={s.label}>Número</span>
-                    <span className={s.infoValue}>{selectedOrder.cotizacion.numeroCotizacion}</span>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Estado</span>
-                    {selectedOrder.cotizacion && (() => {
-                      const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
-                      return <Badge variant={status.variant}>{status.label}</Badge>;
-                    })()}
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Válida hasta</span>
-                    <span className={s.infoValue}>{selectedOrder.cotizacion.validaHasta ? new Date(selectedOrder.cotizacion.validaHasta).toLocaleDateString('es-CO') : '-'}</span>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Condiciones</span>
-                    <span className={s.infoValue}>{selectedOrder.cotizacion.condicionesPago ?? '-'}</span>
-                  </div>
-                </div>
-
-                {selectedOrder.cotizacion.detalles?.length > 0 && (
-                  <div style={{ marginTop: '12px' }}>
-                    <span className={s.label} style={{ marginBottom: '8px', display: 'block' }}>Desglose</span>
-                    <div className={s.quotationTable}>
-                      <div className={s.quotationHeader}>
-                        <span className={s.quotationColDesc}>Concepto</span>
-                        <span className={s.quotationColCant}>Cant.</span>
-                        <span className={s.quotationColUnit}>P. unitario</span>
-                        <span className={s.quotationColSub}>Subtotal</span>
-                      </div>
-                      {selectedOrder.cotizacion.detalles.map((detalle) => (
-                        <div key={detalle.id} className={s.quotationRow}>
-                          <div className={`${s.quotationColDesc} ${s.colSpan2}`}>
-                            <span className={s.infoValue}>{detalle.descripcion}</span>
-                            <span className={s.infoLabel} style={{ marginLeft: '8px' }}>{detalle.tipo.replace(/_/g, ' ')}</span>
-                          </div>
-                          <div className={s.quotationColCant}>
-                            <span className={s.infoValue}>{detalle.cantidad}</span>
-                          </div>
-                          <div className={s.quotationColUnit}>
-                            <span className={s.infoValue}>{formatCurrency(Number(detalle.precioUnitario))}</span>
-                          </div>
-                          <div className={s.quotationColSub}>
-                            <span className={s.infoValue}>{formatCurrency(Number(detalle.subtotal))}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className={s.quotationSummary} style={{ marginTop: '12px' }}>
-                      <div className={s.quotationSummaryRow}>
-                        <span>Subtotal</span>
-                        <span>{formatCurrency(Number(selectedOrder.cotizacion.subtotal))}</span>
-                      </div>
-                      <div className={s.quotationSummaryRow}>
-                        <span>Descuento</span>
-                        <span>{formatCurrency(Number(selectedOrder.cotizacion.descuento))}</span>
-                      </div>
-                      <div className={s.quotationSummaryRow}>
-                        <span>Impuestos</span>
-                        <span>{formatCurrency(Number(selectedOrder.cotizacion.impuestos))}</span>
-                      </div>
-                      <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                        <span>Total</span>
-                        <span>{formatCurrency(Number(selectedOrder.cotizacion.total))}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {selectedOrder.items.length > 0 && (
-              <div>
-                <span className={s.label} style={{ marginBottom: '10px', display: 'block' }}>Productos</span>
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  {selectedOrder.items.map((item, idx) => (
-                    <div key={item.id} className={s.registroInfo} style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{ flex: 1 }}>
-                          <span className={s.infoValue} style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>Producto #{idx + 1}: {item.descripcion || 'Sin nombre'}</span>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <span className={s.infoLabel}>Tipo: {(item.tipoPersonalizacion || '').replace(/_/g, ' ')}</span>
-                            <span className={s.infoLabel}>Cantidad: {item.cantidad}</span>
-                            {item.talla && <span className={s.infoLabel}>Talla: {item.talla}</span>}
-                            {item.color && <span className={s.infoLabel}>Color: {item.color}</span>}
-                            {item.material && <span className={s.infoLabel}>Material: {item.material}</span>}
-                            {item.especificaciones && <span className={s.infoLabel}>Especificaciones: {item.especificaciones}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {(selectedOrder.paymentKey || selectedOrder.paymentProofUrl) && (
-              <div className={s.registroInfo}>
-                <span className={s.label} style={{ marginBottom: '10px', display: 'block' }}>Pago</span>
-                <div className={s.formRow}>
-                  {selectedOrder.paymentKey && (
-                    <div className={s.field}>
-                      <span className={s.label}>Llave de pago</span>
-                      <span className={s.infoValue}>{selectedOrder.paymentKey}</span>
-                    </div>
-                  )}
-                  {selectedOrder.paymentProofUrl && (
-                    <div className={s.field}>
-                      <span className={s.label}>Comprobante</span>
-                      <a href={selectedOrder.paymentProofUrl} target="_blank" rel="noreferrer" className={s.fileLink}>
-                        Ver comprobante
-                      </a>
-                    </div>
-                  )}
-                </div>
-                <div className={s.field}>
-                  <span className={s.label}>Estado del pago</span>
-                  <Badge variant={selectedOrder.anticipoPagado ? 'success' : 'warning'}>
-                    {selectedOrder.anticipoPagado ? 'Anticipo confirmado' : selectedOrder.paymentStatus === 'PENDING' ? 'Pendiente de revisión' : 'Sin comprobante'}
-                  </Badge>
-                </div>
-              </div>
-            )}
-          </div>
+        {summaryData && (
+          <CustomOrderSummary
+            data={summaryData}
+            styles={summaryStyles}
+            cotizacion={selectedOrder?.cotizacion}
+            footerActions={
+              [
+                { label: 'Cerrar', variant: 'secondary', onClick: () => setDetailOpen(false) },
+                ...(selectedOrder && (selectedOrder.estado === 'ACEPTADO' || selectedOrder.estado === 'COTIZADO')
+                  ? [{ label: selectedOrder.cotizacion ? 'Editar cotización' : 'Generar cotización', onClick: () => openQuotationEditor(selectedOrder) }]
+                  : []),
+                ...(selectedOrder && selectedOrder.estado === 'PAGO_PENDIENTE' && !selectedOrder.anticipoPagado
+                  ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
+                  : []),
+                ...(selectedOrder && selectedOrder.estado === 'PAGO_APROBADO'
+                  ? [{ label: 'Convertir a pedido', onClick: async () => { try { await customOrdersApi.convertToOrder(selectedOrder.id); toast.success('Pedido convertido exitosamente'); setDetailOpen(false); void loadOrders(); } catch { toast.error('Error al convertir a pedido'); } } }]
+                  : []),
+                ...(selectedOrder && !selectedOrder.anticipoPagado && (selectedOrder.paymentKey || selectedOrder.paymentProofUrl) && selectedOrder.estado !== 'COTIZACION_ACEPTADA'
+                  ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
+                  : []),
+              ]
+            }
+          />
         )}
       </Modal>
 
@@ -1250,15 +1137,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               <Button variant="secondary" onClick={() => setQuotationOpen(false)}>Cancelar</Button>
               <Button 
                 onClick={handleSaveQuotation} 
-                disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0) || !selectedOrder?.cotizacion || selectedOrder.cotizacion.estado !== 'PENDIENTE'}
+                disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
               >
                 {quotationSaving ? 'Guardando...' : 'Guardar cotización'}
-              </Button>
-              <Button 
-                onClick={handleSendQuotation} 
-                disabled={quotationSaving || !selectedOrder?.cotizacion || selectedOrder.cotizacion.estado !== 'PENDIENTE'}
-              >
-                Enviar cotización
               </Button>
             </div>
           </div>

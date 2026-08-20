@@ -49,6 +49,7 @@ export interface DataTableAction<T> {
   onClick: (item: T) => void;
   danger?: boolean;
   disabled?: boolean | ((item: T) => boolean);
+  testId?: string | ((item: T) => string);
 }
 
 export interface DataTableDetailPanel<T> {

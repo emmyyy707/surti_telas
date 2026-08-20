@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-08-19T16-52-15-755Z",
+  "orders": [
+    {
+      "id": "cmsyr55sj000aigcgwqgc1gx0",
+      "numero": "SOL-0024",
+      "estado": "ACEPTADO",
+      "cliente_nombre": "Andrés Daniel",
+      "items": [
+        {
+          "id": "cmsyr55wb000cigcgzupza9tj",
+          "producto_nombre": null,
+          "descripcion": "b",
+          "imagenes_referencia": [],
+          "personalizaciones": [
+            {
+              "id": "cmsyr55wq000eigcghddydrza",
+              "tipo": "BORDADO",
+              "descripcion": "quiero el logo de pokemon en la espalda y a Pikachu en el pecho",
+              "archivos": [
+                "blob:http://localhost:5173/a82aedf1-6b47-443d-8ed7-8e7bb210caf3"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

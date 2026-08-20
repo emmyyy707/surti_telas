@@ -3,6 +3,7 @@ import { asyncHandler } from '../../../../shared/presentation/http/asyncHandler'
 import { authenticate } from '../middlewares/authenticate';
 import { requireRole } from '../middlewares/authorize';
 import { sensitiveUserRateLimiter } from '../../../../modules/shared/presentation/middlewares/sensitiveUserRateLimiter';
+import { avatarUpload } from '../middlewares/avatarUpload';
 import * as controller from '../controllers/auth.controller';
 
 export const authRouter = Router();
@@ -202,6 +203,8 @@ authRouter.post('/logout', authenticate, asyncHandler(controller.logout));
  *                       example: ['catalog:read', 'orders:create']
   */
   authRouter.get('/me', authenticate, asyncHandler(controller.me));
+
+  authRouter.post('/me/avatar', authenticate, avatarUpload.single('file'), asyncHandler(controller.uploadAvatar));
 
   /**
    * @swagger

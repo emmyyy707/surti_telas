@@ -12,6 +12,7 @@ export interface User {
   role: UserRole;
   name?: string;
   permissions?: string[];
+  avatar?: string | null;
 }
 
 export interface LoginResult {
@@ -91,6 +92,7 @@ export const useAuthStore = create<AuthState>()(
               name: result.user.nombre,
               role,
               permissions: result.user.permissions,
+              avatar: result.user.avatar,
             },
             isAuthenticated: true,
             sessionChecked: true,
@@ -131,6 +133,7 @@ export const useAuthStore = create<AuthState>()(
               name: profile.nombre,
               role: mapRole(profile.role),
               permissions: mergedPermissions,
+              avatar: profile.avatar,
             },
             isAuthenticated: true,
             sessionChecked: true,

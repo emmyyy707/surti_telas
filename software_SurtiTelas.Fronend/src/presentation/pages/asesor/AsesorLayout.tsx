@@ -33,7 +33,7 @@ export const AsesorLayout: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const storeUser = useAuthStore((s) => s.user);
-  const [sidebarUser, setSidebarUser] = useState({ name: 'Cargando...', role: 'asesor', initials: '' });
+  const [sidebarUser, setSidebarUser] = useState({ name: 'Cargando...', role: 'asesor', initials: '', avatar: '' });
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
@@ -43,11 +43,11 @@ export const AsesorLayout: React.FC = () => {
         const profile = await authApi.me();
         if (!active) return;
         const initials = profile.nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-        setSidebarUser({ name: profile.nombre, role: 'asesor', initials });
+        setSidebarUser({ name: profile.nombre, role: 'asesor', initials, avatar: (profile as any).avatar });
       } catch {
         if (storeUser) {
           const initials = storeUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? '';
-          setSidebarUser({ name: storeUser.name ?? 'Asesor', role: 'asesor', initials });
+          setSidebarUser({ name: storeUser.name ?? 'Asesor', role: 'asesor', initials, avatar: (storeUser as any).avatar });
         }
       }
     };
@@ -67,7 +67,8 @@ export const AsesorLayout: React.FC = () => {
       }
     };
     void load();
-    return () => { active = false; };
+    const interval = setInterval(load, 30000);
+    return () => { active = false; clearInterval(interval); };
   }, []);
 
   useEffect(() => {
@@ -118,6 +119,7 @@ export const AsesorLayout: React.FC = () => {
             email: storeUser?.email ?? '',
             role: 'asesor',
             initial: sidebarUser.initials,
+            avatar: sidebarUser.avatar,
           }}
           notificationCount={notificationCount}
           onSearch={() => {}}

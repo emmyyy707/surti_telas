@@ -8,6 +8,8 @@ export interface NotificationData {
   mensaje: string;
   leida: boolean;
   usuarioId?: string;
+  modulo?: string;
+  referenciaId?: string;
   createdAt?: Date;
 }
 
@@ -18,6 +20,8 @@ export class Notification {
   readonly mensaje: string;
   readonly leida: boolean;
   readonly usuarioId?: string;
+  readonly modulo?: string;
+  readonly referenciaId?: string;
   readonly createdAt?: Date;
 
   constructor(data: NotificationData) {
@@ -28,6 +32,8 @@ export class Notification {
     this.mensaje = data.mensaje;
     this.leida = data.leida;
     this.usuarioId = data.usuarioId;
+    this.modulo = data.modulo;
+    this.referenciaId = data.referenciaId;
     this.createdAt = data.createdAt;
   }
 

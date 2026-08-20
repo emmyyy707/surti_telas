@@ -5,6 +5,7 @@ import { NotFoundError, ForbiddenError } from '../../../../shared/domain/errors'
 import { customOrderUseCases } from '../../infrastructure/container/customOrderContainer';
 import * as controller from '../controllers/custom-order.controller';
 import { customOrderUpload } from '../middlewares/custom-order-upload';
+import { customOrderReferenceUpload } from '../middlewares/custom-order-reference-upload';
 import { prisma } from '../../../../config/database';
 
 export const customOrderRouter = Router();
@@ -52,6 +53,8 @@ export async function authorizeCustomOrderAccess(req: any, _res: any, next: any)
 customOrderRouter.get('/', wrap(controller.listCustomOrders));
 customOrderRouter.post('/', wrap(controller.createCustomOrder));
 customOrderRouter.get('/:id', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.getCustomOrder));
+customOrderRouter.get('/:id/history', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.getCustomOrderHistory));
+customOrderRouter.patch('/:id/status', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.updateCustomOrderStatus));
 customOrderRouter.patch('/:id', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.updateCustomOrder));
 customOrderRouter.patch('/:id/submit', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.submitForReview));
 customOrderRouter.patch('/:id/accept-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.acceptQuotation));
@@ -59,5 +62,6 @@ customOrderRouter.patch('/:id/reject-quotation', loadCustomOrder, authorizeCusto
 customOrderRouter.patch('/:id/send-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.sendQuotation));
 customOrderRouter.post('/:id/convert', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.convertToOrder));
 customOrderRouter.post('/:id/payment-proof', loadCustomOrder, authorizeCustomOrderAccess, customOrderUpload.single('paymentProof'), wrap(controller.uploadPaymentProof));
+customOrderRouter.post('/:id/upload-reference', loadCustomOrder, authorizeCustomOrderAccess, customOrderReferenceUpload.single('referenceImage'), wrap(controller.uploadReferenceImage));
 customOrderRouter.patch('/:id/payment', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.updatePaymentStatus));
 customOrderRouter.delete('/:id', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.removeCustomOrder));

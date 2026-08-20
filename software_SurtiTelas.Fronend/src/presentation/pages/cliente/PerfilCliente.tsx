@@ -57,7 +57,8 @@ export const PerfilCliente: React.FC = () => {
   const [deleteDireccion, setDeleteDireccion] = useState<Direccion | null>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
-  const [avatarDraft, setAvatarDraft] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -71,6 +72,7 @@ export const PerfilCliente: React.FC = () => {
         setTipoDocumento(profile.tipoDocumento ?? '');
         setNumeroDocumento(profile.numeroDocumento ?? '');
         setEmail(profile.email);
+        setAvatarUrl(profile.avatar ?? '');
       } catch {
         setLoadError('No se pudo cargar el perfil. Intenta nuevamente.');
         toast.error('No se pudo cargar el perfil');
@@ -186,14 +188,45 @@ export const PerfilCliente: React.FC = () => {
   };
 
   const abrirEditarAvatar = () => {
-    setAvatarDraft(avatarUrl);
+    setAvatarFile(null);
+    setAvatarPreview('');
     setAvatarModalOpen(true);
   };
 
-  const guardarAvatar = () => {
-    setAvatarUrl(avatarDraft.trim());
-    setAvatarModalOpen(false);
-    toast.success('Foto de perfil actualizada');
+  const onAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setAvatarFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setAvatarPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setAvatarPreview('');
+    }
+  };
+
+  const guardarAvatar = async () => {
+    if (!avatarFile) {
+      toast.error('Selecciona una imagen primero');
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await authApi.uploadAvatar(avatarFile);
+      const newAvatar = updated.avatar ?? '';
+      setAvatarUrl(newAvatar);
+      setAvatarPreview('');
+      setAvatarFile(null);
+      setAvatarModalOpen(false);
+      toast.success('Foto de perfil actualizada');
+      if (user) {
+        useAuthStore.setState({ user: { ...user, avatar: newAvatar } });
+      }
+    } catch {
+      toast.error('No fue posible actualizar la foto');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -228,7 +261,11 @@ export const PerfilCliente: React.FC = () => {
       <div className={s.perfilLayout}>
         <aside className={s.perfilCard}>
           <div className={s.avatar}>
-            {nombre ? nombre.charAt(0).toUpperCase() : 'U'}
+            {avatarUrl || avatarPreview ? (
+              <img src={avatarUrl || avatarPreview} alt="Avatar" className={s.avatarImage} />
+            ) : (
+              nombre.charAt(0).toUpperCase()
+            )}
             <Tooltip title="Cambiar foto">
               <button className={s.avatarEditBtn} type="button" onClick={abrirEditarAvatar}>
                 <Edit2 size={14} />
@@ -440,17 +477,25 @@ export const PerfilCliente: React.FC = () => {
       <Modal open={avatarModalOpen} onClose={() => setAvatarModalOpen(false)} title="Cambiar foto de perfil" size="sm">
         <div className="grid gap-4">
           <div className="flex items-center gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-3xl font-bold text-white">
-              {nombre.charAt(0)}
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-[var(--color-accent)]">
+              {avatarPreview || avatarUrl ? (
+                <img src={avatarPreview || avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-3xl font-bold text-white">{nombre.charAt(0)}</span>
+              )}
             </div>
             <div>
-              <div className="font-semibold text-[var(--color-text-primary)]">Imagen actual</div>
-              <div className="text-sm text-[var(--color-text-secondary)]">{avatarUrl || 'No hay imagen cargada en esta sesión'}</div>
+              <div className="font-semibold text-[var(--color-text-primary)]">Imagen</div>
+              <div className="text-sm text-[var(--color-text-secondary)]">{avatarPreview || avatarUrl ? 'Preview lista' : 'Sin imagen'}</div>
             </div>
           </div>
+          <div className={f.field}>
+            <label className={f.label}>Selecciona una imagen</label>
+            <input className={f.input} type="file" accept="image/*" onChange={onAvatarFileChange} />
+          </div>
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setAvatarModalOpen(false)}>Cancelar</Button>
-            <Button onClick={guardarAvatar}>Aplicar foto</Button>
+            <Button variant="secondary" onClick={() => setAvatarModalOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button onClick={guardarAvatar} loading={saving}>Guardar foto</Button>
           </div>
         </div>
       </Modal>

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import path from 'path';
 import { created, noContent, ok } from '../../../../shared/presentation/http/HttpResponse';
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
@@ -128,17 +129,34 @@ export const me = async (req: Request, res: Response) => {
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
-  const { nombre, telefono, direccion, tipoDocumento, numeroDocumento } = parseDto(UpdateProfileSchema, req.body);
-  const user = await authUseCases.updateProfile.execute(req.user!.id, { nombre, telefono, direccion, tipoDocumento, numeroDocumento });
+  const { nombre, telefono, direccion, tipoDocumento, numeroDocumento, avatar } = parseDto(UpdateProfileSchema, req.body);
+  console.log('[backend][updateProfile] avatar length', avatar?.length, 'avatar preview', avatar?.slice(0, 50));
+  const user = await authUseCases.updateProfile.execute(req.user!.id, { nombre, telefono, direccion, tipoDocumento, numeroDocumento, avatar: avatar || undefined });
+  console.log('[backend][updateProfile] saved avatar length', (user as any).avatar?.length, 'saved avatar preview', (user as any).avatar?.slice(0, 50));
   eventBus.publish(
     new UserUpdatedEvent({
       userId: user.id,
       nombre: user.nombre,
-      cambios: { nombre, telefono, direccion, tipoDocumento, numeroDocumento },
+      cambios: { nombre, telefono, direccion, tipoDocumento, numeroDocumento, avatar },
     }),
     req.requestId
   );
   return ok(res, user, 'Perfil actualizado');
+};
+
+export const uploadAvatar = async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+  const userId = req.user!.id;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ success: false, error: 'bad_request', message: 'No se proporcionó archivo' });
+  }
+
+  const avatarUrl = `/uploads/profile/${path.basename(file.filename)}`;
+
+  const user = await authUseCases.updateProfile.execute(userId, { avatar: avatarUrl });
+
+  return ok(res, user, 'Foto de perfil actualizada');
 };
 
 export const getUser = async (req: Request, res: Response) => {

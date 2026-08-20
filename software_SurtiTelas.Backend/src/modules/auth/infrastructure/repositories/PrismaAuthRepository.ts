@@ -25,6 +25,7 @@ const toRecord = (u: {
   lockedUntil?: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  avatar?: string | null;
 }): UserRecord => ({
   id: u.id,
   email: u.email,
@@ -46,6 +47,7 @@ const toRecord = (u: {
   lockedUntil: u.lockedUntil,
   createdAt: u.createdAt,
   updatedAt: u.updatedAt,
+  avatar: u.avatar ?? undefined,
 });
 
 import { BadRequestError } from '../../../../shared/domain/errors';
@@ -92,17 +94,21 @@ export class PrismaAuthRepository implements AuthRepository {
     return toRecord(user);
   }
 
-  async updateProfile(id: string, data: { nombre?: string; email?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null }): Promise<UserRecord> {
+  async updateProfile(id: string, data: { nombre?: string; email?: string; telefono?: string | null; direccion?: string | null; tipoDocumento?: string | null; numeroDocumento?: string | null; avatar?: string | null }): Promise<UserRecord> {
+    const updateData: any = {
+      nombre: data.nombre,
+      email: data.email,
+      telefono: data.telefono,
+      direccion: data.direccion,
+      tipoDocumento: data.tipoDocumento,
+      numeroDocumento: data.numeroDocumento,
+    };
+    if (data.avatar !== undefined) {
+      updateData.avatar = data.avatar;
+    }
     const user = await this.prisma.user.update({
       where: { id },
-      data: {
-        nombre: data.nombre,
-        email: data.email,
-        telefono: data.telefono,
-        direccion: data.direccion,
-        tipoDocumento: data.tipoDocumento,
-        numeroDocumento: data.numeroDocumento,
-      },
+      data: updateData,
     });
     return toRecord(user);
   }

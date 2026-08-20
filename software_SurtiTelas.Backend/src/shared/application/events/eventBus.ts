@@ -11,6 +11,16 @@ export type DomainEventMap = {
   'commission.calculated': { asesorId: string; totalSales: number; commission: number };
   'alert.triggered': { alertId: string; type: string; message: string };
   'delivery.updated': { orderId: string; status: string; location?: { lat: number; lng: number } };
+  'customOrder.status.updated': {
+    customOrderId: string;
+    numeroSolicitud: string;
+    previousStatus: string;
+    newStatus: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string | null;
+    asesorNombre: string | null;
+  };
 };
 
 export type DomainEvent<T extends keyof DomainEventMap = keyof DomainEventMap> = {

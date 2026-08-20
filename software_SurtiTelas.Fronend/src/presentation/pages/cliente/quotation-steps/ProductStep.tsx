@@ -32,19 +32,16 @@ export interface ProductStepProps {
   imagenesReferencia: string[];
   handleReferenceImageChange: (itemIndex: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   removeReferenceImage: (itemIndex: number, imgIndex: number) => void;
+  personalizacionFiles: Record<string, { file: File; blobUrl: string }[]>;
+  setPersonalizacionFiles: React.Dispatch<React.SetStateAction<Record<string, { file: File; blobUrl: string }[]>>>;
 }
 
-export const ProductStep = ({ register, errors, watch, setValue, styles, control, itemFields, activeItemIndex, setActiveItemIndex, editingPersonalizacionIndex, setEditingPersonalizacionIndex, showPersonalizacionForm, setShowPersonalizacionForm, productos, agregarProducto, agregarPersonalizacion, actualizarPersonalizacion, agregarVariante, eliminarVariante, actualizarVariante, eliminarPersonalizacion, eliminarProducto, imagenesReferencia, handleReferenceImageChange, removeReferenceImage }: ProductStepProps) => {
+export const ProductStep = ({ register, errors, watch, setValue, styles, control, itemFields, activeItemIndex, setActiveItemIndex, editingPersonalizacionIndex, setEditingPersonalizacionIndex, showPersonalizacionForm, setShowPersonalizacionForm, productos, agregarProducto, agregarPersonalizacion, actualizarPersonalizacion, agregarVariante, eliminarVariante, actualizarVariante, eliminarPersonalizacion, eliminarProducto, imagenesReferencia, handleReferenceImageChange, removeReferenceImage, personalizacionFiles, setPersonalizacionFiles }: ProductStepProps) => {
   const _control = control || null;
   const watchedItems = _control ? useWatch({ control: _control, name: 'items' }) || [] : [];
   const activeItem = watchedItems[activeItemIndex] || {};
   const distribucionTallas = _control ? useWatch({ control: _control, name: `items.${activeItemIndex}.distribucionTallas` }) || {} : {};
   const editingPersonalizacion: any = (editingPersonalizacionIndex !== null && activeItem?.personalizaciones?.[editingPersonalizacionIndex]) ? activeItem.personalizaciones[editingPersonalizacionIndex] : {};
-  console.log('[ProductStep] render activeItemIndex', activeItemIndex, 'activeItem keys', Object.keys(activeItem));
-  console.log('[ProductStep] personalizaciones count', (activeItem?.personalizaciones || []).length);
-  console.log('[ProductStep] editingPersonalizacionIndex', editingPersonalizacionIndex, 'showPersonalizacionForm', showPersonalizacionForm);
-  console.log('[ProductStep] editingPersonalizacion archivos', editingPersonalizacion?.archivos);
-  console.log('[ProductStep] watch archivos', _control ? watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.archivos`) : 'no-control');
 
   return (
     <div className={styles.sectionBlock}>
@@ -76,7 +73,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                     </button>
                   </div>
                   <div className={styles.productCardMeta}>
-                    <span>{activeItem?.cantidad || item.cantidad || 0} unidades</span>
+                    <span>{Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)} unidades</span>
                   <span>·</span>
                   <span>{persCount} personalización{persCount !== 1 ? 'es' : ''}</span>
                 </div>
@@ -124,11 +121,6 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
           </div>
           <div className={styles.formRowAttr4}>
             <div className={styles.field}>
-              <label htmlFor="item-cantidad" className={styles.label}>Cantidad <span className={styles.labelRequired}>*</span></label>
-              <input id="item-cantidad" type="number" className={styles.input} placeholder="Cantidad" aria-required="true" {...register(`items.${activeItemIndex}.cantidad` as const, { valueAsNumber: true, required: 'La cantidad es obligatoria', min: { value: 1, message: 'La cantidad debe ser mayor a 0' } })} />
-              {errors.items?.[activeItemIndex]?.cantidad && <span className={styles.errorText}>{errors.items[activeItemIndex].cantidad.message as string}</span>}
-            </div>
-            <div className={styles.field}>
               <label htmlFor="item-material" className={styles.label}>Material/Tela</label>
               <input id="item-material" className={styles.input} placeholder="Material" {...register(`items.${activeItemIndex}.material` as const)} />
             </div>
@@ -155,14 +147,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
             </div>
             <div className={styles.distributionTotal}>
               <span>Total</span>
-              <span className={(() => {
-                const total = Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
-                const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-                if (cantidad > 0 && total !== cantidad) {
-                  return `${styles.distributionTotalValue} ${styles.distributionTotalValueError}`;
-                }
-                return styles.distributionTotalValueSuccess;
-              })()}>
+              <span className={styles.distributionTotalValueSuccess}>
                 {Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)}
               </span>
             </div>
@@ -248,21 +233,27 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                    </div>
                    <div className={styles.field}>
                      <label className={styles.label}>Imágenes de referencia para personalizaciones</label>
-                     <input
-                       id={`pers-ref-images-${activeItemIndex}-${editingPersonalizacionIndex ?? 0}`}
-                       type="file"
-                       accept="image/*"
-                       multiple
-                       className={styles.hiddenInput}
-                       onChange={(e) => {
-                         const files = Array.from(e.target.files ?? []);
-                         if (!files.length) return;
-                         const urls = files.map(f => URL.createObjectURL(f));
-                         const idx = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0);
-                         const current = (editingPersonalizacion.archivos || watch(`items.${activeItemIndex}.personalizaciones.${idx}.archivos`) as string[] || []);
-                         setValue(`items.${activeItemIndex}.personalizaciones.${idx}.archivos` as const, [...current, ...urls]);
-                       }}
-                     />
+                       <input
+                         id={`pers-ref-images-${activeItemIndex}-${editingPersonalizacionIndex ?? 0}`}
+                         type="file"
+                         accept="image/*"
+                         multiple
+                         className={styles.hiddenInput}
+                         data-testid="reference-image-input"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files ?? []);
+                          if (!files.length) return;
+                          const newEntries = files.map((f) => ({ file: f, blobUrl: URL.createObjectURL(f) }));
+                          const urls = newEntries.map((entry) => entry.blobUrl);
+                          const idx = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0);
+                           const current = (editingPersonalizacion.archivos || watch(`items.${activeItemIndex}.personalizaciones.${idx}.archivos`) as string[] || []);
+                           setValue(`items.${activeItemIndex}.personalizaciones.${idx}.archivos` as const, [...current, ...urls]);
+                           setPersonalizacionFiles((prev) => {
+                             const key = `${activeItemIndex}-${idx}`;
+                             return { ...prev, [key]: [...(prev[key] || []), ...newEntries] };
+                           });
+                         }}
+                      />
                      <label htmlFor={`pers-ref-images-${activeItemIndex}-${editingPersonalizacionIndex ?? 0}`} className={styles.uploadLabel}>
                        Seleccionar imágenes
                      </label>
@@ -270,15 +261,12 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                        <div className={styles.filePreview}>
                          {(editingPersonalizacion.archivos || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.archivos`) as string[] || []).map((url: string, imgIdx: number) => (
                             <div key={imgIdx} className={styles.fileChip}>
-                              <img 
-                                src={url.startsWith('http') || url.startsWith('blob:') ? url : `http://localhost:3000${url}`} 
-                                alt={`Referencia personalización ${imgIdx + 1}`} 
-                                className={styles.fileChipImage}
-                                onError={(e) => { 
-                                  e.currentTarget.style.display = 'none'; 
-                                  console.error('Error loading image:', url); 
-                                }}
-                              />
+                               <img 
+                                 src={url.startsWith('http') || url.startsWith('blob:') ? url : url} 
+                                 alt={`Referencia personalización ${imgIdx + 1}`} 
+                                 className={styles.fileChipImage}
+                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                               />
                               <span className={styles.fileChipName}>Imagen {imgIdx + 1}</span>
                               <button type="button" className={styles.removeFileBtn} onClick={() => {
                                 const idx = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0);
@@ -291,44 +279,56 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                      )}
                      <span className={styles.hintText}>Aquí también puedes adjuntar la imagen del diseño que quieres.</span>
                    </div>
-                   <div className={styles.field}>
-                     <label className={styles.label}>Variantes a personalizar</label>
-                     {(editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).map((variante: any, varIndex: number) => (
-                       <div key={varIndex} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                         <div className={styles.field} style={{ flex: '1 1 0' }}>
-                           <input className={styles.input} placeholder="Talla" value={variante.talla} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex, 'talla', e.target.value)} />
-                         </div>
-                         <div className={styles.field} style={{ flex: '1 1 0' }}>
-                           <input className={styles.input} placeholder="Color" value={variante.color} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex, 'color', e.target.value)} />
-                         </div>
-                         <div className={styles.field} style={{ flex: '1 1 0' }}>
-                           <input className={styles.input} type="number" min="0" placeholder="Cant." value={variante.cantidad} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex, 'cantidad', Number(e.target.value))} />
-                         </div>
-                         <div className={styles.field} style={{ flex: '0 0 auto' }}>
-                           <button type="button" className={styles.removeFileBtn} onClick={() => eliminarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex)}><Trash2 size={14} /></button>
-                         </div>
-                       </div>
-                     ))}
-                    <button type="button" className={styles.quotationAddLine} onClick={() => agregarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0))}>
-                      <PlusCircle size={16} />
-                      <span>Agregar variante</span>
-                    </button>
-                    <div className={styles.personalizationTotal}>
-                      {(() => {
-                        const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []);
-                        const total = variantes.reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
-                        const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-                        const exceeds = cantidad > 0 && total > cantidad;
-                        return (
-                          <>
-                            Total personalización: <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>
-                              {total}{exceeds ? ` (supera las ${cantidad} unidades disponibles)` : ''}
-                            </span>
-                          </>
-                        );
-                      })()}
+                    <div className={styles.field}>
+                      <label className={styles.label}>Variantes a personalizar</label>
+                      {(editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).map((variante: any, varIndex: number) => (
+                        <div key={varIndex} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '8px' }}>
+                          <div className={styles.field} style={{ flex: '1 1 0' }}>
+                            <select
+                              className={styles.select}
+                              value={variante.talla}
+                              onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex, 'talla', e.target.value)}
+                            >
+                              <option value="">Talla</option>
+                              {['XS', 'S', 'M', 'L', 'XL', 'XXL']
+                                .filter((talla) => Number(watch(`items.${activeItemIndex}.distribucionTallas.${talla}`) || 0) > 0)
+                                .map((talla) => (
+                                  <option key={talla} value={talla}>{talla}</option>
+                                ))}
+                            </select>
+                          </div>
+                          <div className={styles.field} style={{ flex: '1 1 0' }}>
+                            <input className={styles.input} placeholder="Color" value={variante.color} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex, 'color', e.target.value)} />
+                          </div>
+                          <div className={styles.field} style={{ flex: '1 1 0' }}>
+                            <input className={styles.input} type="number" min="0" placeholder="Cant." value={variante.cantidad} onChange={(e) => actualizarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex, 'cantidad', Number(e.target.value))} />
+                          </div>
+                          <div className={styles.field} style={{ flex: '0 0 auto' }}>
+                            <button type="button" className={styles.removeFileBtn} onClick={() => eliminarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0), varIndex)}><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                      ))}
+                     <button type="button" className={styles.quotationAddLine} onClick={() => agregarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0))}>
+                       <PlusCircle size={16} />
+                       <span>Agregar variante</span>
+                     </button>
+                     <div className={styles.personalizationTotal}>
+                       {(() => {
+                         const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []);
+                         const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
+                         const resumenPorTalla: Record<string, { usado: number; total: number }> = {};
+                         for (const variante of variantes) {
+                           if (!variante.talla) continue;
+                           if (!resumenPorTalla[variante.talla]) resumenPorTalla[variante.talla] = { usado: 0, total: Number(distribucion[variante.talla]) || 0 };
+                           resumenPorTalla[variante.talla].usado += Number(variante.cantidad) || 0;
+                         }
+                         const resumen = Object.entries(resumenPorTalla)
+                           .map(([talla, datos]) => `${talla}: ${datos.usado} / ${datos.total} utilizadas`)
+                           .join('  |  ');
+                         return <span>{resumen}</span>;
+                       })()}
+                     </div>
                     </div>
-                   </div>
                    <div className={styles.personalizationFormActions}>
                      <button type="button" className={styles.quotationAddLine} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
                        Cancelar
@@ -345,15 +345,15 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                   {(activeItem?.personalizaciones || []).length === 0 ? (
                    <div className={styles.personalizationEmpty}>
                      <span>No hay personalizaciones creadas para este producto.</span>
-                     <button type="button" className={styles.quotationAddLine} onClick={() => {
-                       const newIndex = (activeItem?.personalizaciones?.length ?? 0);
-                       agregarPersonalizacion();
-                       setEditingPersonalizacionIndex(newIndex);
-                       setShowPersonalizacionForm(true);
-                     }}>
-                       <PlusCircle size={16} />
-                       <span>Agregar personalización</span>
-                     </button>
+                      <button type="button" className={styles.quotationAddLine} data-testid="add-personalization" onClick={() => {
+                        const newIndex = (activeItem?.personalizaciones?.length ?? 0);
+                        agregarPersonalizacion();
+                        setEditingPersonalizacionIndex(newIndex);
+                        setShowPersonalizacionForm(true);
+                      }}>
+                        <PlusCircle size={16} />
+                        <span>Agregar personalización</span>
+                      </button>
                    </div>
                  ) : (
                    (activeItem?.personalizaciones || [])
@@ -373,14 +373,14 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                              {(pers.ubicacion || []).map((u: string) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')).join(', ')}
                            </div>
                            <div className={styles.personalizationCardDescription}>{pers.descripcion}</div>
-                           <div className={styles.personalizationCardMeta}>
-                             {(() => {
-                               const total = (pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
-                               const cantidad = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-                               const exceeds = cantidad > 0 && total > cantidad;
-                               return <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>{total} unidades{exceeds ? ` (supera las ${cantidad} disponibles)` : ''}</span>;
-                             })()}
-                           </div>
+                            <div className={styles.personalizationCardMeta}>
+                              {(() => {
+                                const total = (pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
+                                const cantidad = Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+                                const exceeds = cantidad > 0 && total > cantidad;
+                                return <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>{total} unidades{exceeds ? ` (supera las ${cantidad} disponibles)` : ''}</span>;
+                              })()}
+                            </div>
                          </div>
                          <div className={styles.personalizationCardActions}>
                            <button type="button" className={styles.quotationAddLine} onClick={() => { setEditingPersonalizacionIndex(persIndex); setShowPersonalizacionForm(true); }}>Editar</button>

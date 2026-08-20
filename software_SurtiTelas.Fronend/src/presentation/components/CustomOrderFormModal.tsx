@@ -100,6 +100,7 @@ export function CustomOrderFormModal({
                 type="button"
                 onClick={handleNext}
                 className={`${styles.quotationBtn} ${styles.quotationBtnPrimary}`}
+                data-testid="quotation-next"
               >
                 Siguiente
               </button>
@@ -110,6 +111,7 @@ export function CustomOrderFormModal({
                 onClick={onSubmit}
                 disabled={saving}
                 className={`${styles.quotationBtn} ${styles.quotationBtnPrimary} ${styles.quotationBtnSubmit}`}
+                data-testid="quotation-submit"
               >
                 {saving ? (
                   <>

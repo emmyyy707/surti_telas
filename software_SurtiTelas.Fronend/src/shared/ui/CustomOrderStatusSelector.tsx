@@ -13,6 +13,21 @@ interface CustomOrderStatusSelectorProps {
 }
 
 const STATUS_CONFIG: Record<CustomOrderEstado, { icon: React.ReactNode; label: string; description: string }> = {
+  PENDIENTE: {
+    icon: <Clock size={18} />,
+    label: 'Pendiente',
+    description: 'La solicitud está pendiente de aceptación'
+  },
+  ACEPTADO: {
+    icon: <CheckCircle2 size={18} />,
+    label: 'Aceptado',
+    description: 'La solicitud fue aceptada'
+  },
+  CANCELADO: {
+    icon: <Ban size={18} />,
+    label: 'Cancelado',
+    description: 'La solicitud fue cancelada'
+  },
   SOLICITUD_RECIBIDA: {
     icon: <FileText size={18} />,
     label: 'Solicitud recibida',
@@ -63,11 +78,6 @@ const STATUS_CONFIG: Record<CustomOrderEstado, { icon: React.ReactNode; label: s
     label: 'Completado',
     description: 'La orden de producción fue finalizada'
   },
-  CANCELADO: {
-    icon: <Ban size={18} />,
-    label: 'Cancelado',
-    description: 'La solicitud fue cancelada'
-  },
   CONVERTIDO_A_PEDIDO: {
     icon: <FileText size={18} />,
     label: 'Convertido a pedido',
@@ -81,17 +91,19 @@ const STATUS_CONFIG: Record<CustomOrderEstado, { icon: React.ReactNode; label: s
 };
 
 export const CUSTOM_ORDER_STATUS_TRANSITIONS: Record<CustomOrderEstado, CustomOrderEstado[]> = {
-  SOLICITUD_RECIBIDA: ['EN_REVISION', 'CANCELADO'],
-  EN_REVISION: ['COTIZADO', 'CANCELADO'],
+  PENDIENTE: ['ACEPTADO', 'CANCELADO'],
+  ACEPTADO: ['CANCELADO'],
+  CANCELADO: [],
+  SOLICITUD_RECIBIDA: ['ACEPTADO', 'CANCELADO'],
+  EN_REVISION: ['CANCELADO'],
   COTIZADO: ['COTIZACION_ACEPTADA', 'COTIZACION_RECHAZADA', 'CANCELADO'],
   COTIZACION_ACEPTADA: ['PAGO_PENDIENTE', 'CANCELADO'],
   COTIZACION_RECHAZADA: ['SOLICITUD_RECIBIDA', 'CANCELADO'],
   PAGO_PENDIENTE: ['PAGO_EN_VERIFICACION', 'CANCELADO'],
   PAGO_EN_VERIFICACION: ['PAGO_APROBADO', 'CANCELADO'],
-  PAGO_APROBADO: ['CONVERTIDO_A_PEDIDO', 'CANCELADO'],
+  PAGO_APROBADO: ['CONVERTIDO_A_PEDIDO', 'EN_PRODUCCION', 'CANCELADO'],
   EN_PRODUCCION: ['COMPLETADO', 'CANCELADO'],
   COMPLETADO: [],
-  CANCELADO: [],
   CONVERTIDO_A_PEDIDO: [],
   VENCIDO: [],
 };

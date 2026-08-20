@@ -30,6 +30,7 @@ model User {
   updatedAt                   DateTime                      @updatedAt
   deletedAt                   DateTime?                     @map("deleted_at")
   apellidos                   String?
+  avatar                      String?                       @map("avatar")
   alertsLeidas                Alert[]                       @relation("AlertLeidaPor")
   alertsResueltas             Alert[]                       @relation("AlertResueltaPor")
   auditLogs                   AuditLog[]                    @relation("AuditLogUsuario")
@@ -50,6 +51,7 @@ model User {
   sentMessages                Message[]
   notifications               Notification[]
   historialPedidos            OrderHistory[]                @relation("OrderHistorialUsuario")
+  customOrderHistory          custom_order_history[]        @relation("CustomOrderHistoryUsuario")
   orders                      Order[]                       @relation("AsesorOrders")
   comprobantesCargados        Order[]                       @relation("OrderComprobanteCargadoPor")
   ordersValidados             Order[]                       @relation("OrderValidadoPor")
@@ -403,18 +405,21 @@ model ProductionOrder {
 }
 
 model Notification {
-  id        String           @id @default(cuid())
-  tipo      NotificationType
-  titulo    String
-  mensaje   String
-  leida     Boolean          @default(false)
-  usuarioId String?          @map("usuario_id")
-  createdAt DateTime         @default(now())
-  deletedAt DateTime?        @map("deleted_at")
-  usuario   User?            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  tipo         NotificationType
+  titulo       String
+  mensaje      String
+  leida        Boolean          @default(false)
+  usuarioId    String?          @map("usuario_id")
+  modulo       String?
+  referenciaId String?          @map("referencia_id")
+  createdAt    DateTime         @default(now())
+  deletedAt    DateTime?        @map("deleted_at")
+  usuario      User?            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([usuarioId, leida])
   @@index([deletedAt])
+  @@index([modulo, referenciaId])
   @@map("notifications")
 }
 
@@ -916,8 +921,10 @@ model custom_orders {
   id                       String                     @id @default(cuid())
   numero                   String                     @unique
   cliente_id               String
+  cliente_nombre           String?
+  cliente_telefono         String?
   asesor_id                String?
-  estado                   CustomOrderStatus          @default(SOLICITUD_RECIBIDA)
+  estado                   CustomOrderStatus          @default(PENDIENTE)
   tipo_prenda              String
   tecnica_personalizacion  String
   descripcion_diseno       String?
@@ -959,11 +966,33 @@ model custom_orders {
   surveys                  surveys?
   technical_sheets         technical_sheets[]
   video_calls              video_calls?
+  custom_order_history     custom_order_history[]
 
   @@index([asesor_id])
   @@index([cliente_id, deleted_at])
   @@index([deleted_at])
   @@index([estado])
+}
+
+model custom_order_history {
+  id             String    @id @default(cuid())
+  customOrderId  String    @map("custom_order_id")
+  usuarioId      String?   @map("usuario_id")
+  accion         String
+  estadoAnterior String    @map("estado_anterior")
+  estadoNuevo    String    @map("estado_nuevo")
+  razon          String?
+  informacion    Json?
+  createdAt      DateTime  @default(now())
+  deletedAt      DateTime? @map("deleted_at")
+  customOrder    custom_orders @relation(fields: [customOrderId], references: [id], onDelete: Cascade)
+  usuario        User?     @relation("CustomOrderHistoryUsuario", fields: [usuarioId], references: [id])
+
+  @@index([customOrderId])
+  @@index([usuarioId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("custom_order_history")
 }
 
 model digital_approvals {
@@ -1357,6 +1386,9 @@ enum ControlPrendaEstado {
 }
 
 enum CustomOrderStatus {
+  PENDIENTE
+  ACEPTADO
+  CANCELADO
   SOLICITUD_RECIBIDA
   EN_REVISION
   COTIZADO
@@ -1364,7 +1396,6 @@ enum CustomOrderStatus {
   COTIZACION_RECHAZADA
   EN_PRODUCCION
   COMPLETADO
-  CANCELADO
   CONVERTIDO_A_PEDIDO
   PAGO_PENDIENTE
   PAGO_EN_VERIFICACION

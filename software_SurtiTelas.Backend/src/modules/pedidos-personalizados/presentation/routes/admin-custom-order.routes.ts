@@ -10,6 +10,13 @@ export const adminCustomOrderRouter = Router();
 adminCustomOrderRouter.use(authenticate);
 
 adminCustomOrderRouter.get(
+  '/metrics',
+  requirePermission('customOrders:read'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.getCustomOrderMetrics)
+);
+
+adminCustomOrderRouter.get(
   '/',
   requirePermission('customOrders:read'),
   sensitiveUserRateLimiter,
@@ -23,11 +30,11 @@ adminCustomOrderRouter.get(
   asyncHandler(controller.getCustomOrder)
 );
 
-adminCustomOrderRouter.patch(
-  '/:id',
-  requirePermission('customOrders:update'),
+adminCustomOrderRouter.get(
+  '/:id/history',
+  requirePermission('customOrders:read'),
   sensitiveUserRateLimiter,
-  asyncHandler(controller.updateCustomOrder)
+  asyncHandler(controller.getCustomOrderHistory)
 );
 
 adminCustomOrderRouter.patch(
@@ -35,6 +42,13 @@ adminCustomOrderRouter.patch(
   requirePermission('customOrders:update'),
   sensitiveUserRateLimiter,
   asyncHandler(controller.updateCustomOrderStatus)
+);
+
+adminCustomOrderRouter.patch(
+  '/:id',
+  requirePermission('customOrders:update'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.updateCustomOrder)
 );
 
 adminCustomOrderRouter.post(

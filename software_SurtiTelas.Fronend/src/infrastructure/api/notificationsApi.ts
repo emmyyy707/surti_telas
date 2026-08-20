@@ -7,6 +7,8 @@ export interface NotificationDTO {
   mensaje: string;
   leida: boolean;
   usuarioId?: string;
+  modulo?: string;
+  referenciaId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -18,6 +20,8 @@ export interface Notification {
   mensaje: string;
   leida: boolean;
   usuarioId?: string;
+  modulo?: string;
+  referenciaId?: string;
   createdAt: number;
 }
 
@@ -29,6 +33,8 @@ export function toNotification(dto: NotificationDTO): Notification {
     mensaje: dto.mensaje,
     leida: dto.leida,
     usuarioId: dto.usuarioId,
+    modulo: dto.modulo,
+    referenciaId: dto.referenciaId,
     createdAt: new Date(dto.createdAt).getTime(),
   };
 }

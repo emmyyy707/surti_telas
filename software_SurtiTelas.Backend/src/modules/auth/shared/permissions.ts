@@ -10,6 +10,19 @@ export const PERMISSIONS = {
   financial: ['financial:read', 'financial:export'],
   config: ['config:read', 'config:update'],
   alerts: ['alerts:read', 'alerts:manage'],
+  customOrders: [
+    'customOrders:read',
+    'customOrders:create',
+    'customOrders:update',
+    'customOrders:delete',
+    'customOrders:transition',
+    'customOrders:transition:pendiente_to_aceptado',
+    'customOrders:transition:pendiente_to_cancelado',
+    'customOrders:transition:en_revision_to_cotizado',
+    'customOrders:transition:cotizado_to_cotizacion_aceptada',
+    'customOrders:transition:cotizado_to_cotizacion_rechazada',
+    'customOrders:transition:pago_aprobado_to_en_produccion',
+  ],
 } as const;
 
 export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS][number];

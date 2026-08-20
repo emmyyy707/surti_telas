@@ -112,11 +112,11 @@ export const InicioCliente: React.FC = () => {
             Consulta nuestro catálogo de productos, haz seguimiento a tus pedidos y gestiona tu perfil desde un solo lugar.
           </div>
           <div className={s.welcomeActions}>
-            <Link to="/cliente/catalogo" className="inline-flex">
-              <button className="btn btn--primary btn--sm">Ver catálogo</button>
-            </Link>
             <Link to="/cliente/pedidos" className="inline-flex">
-              <button className="btn btn--secondary btn--sm">Mis pedidos</button>
+              <button className="btn btn--primary btn--sm">Mis pedidos</button>
+            </Link>
+            <Link to="/catalogo" className="inline-flex">
+              <button className="btn btn--secondary btn--sm">Ver catálogo</button>
             </Link>
           </div>
         </div>
@@ -203,15 +203,6 @@ export const InicioCliente: React.FC = () => {
 
       <div className={s.bottomGrid}>
         <div className={s.quickAccessGrid}>
-          <Link to="/cliente/catalogo" className={s.quickAccessCard} style={{ textDecoration: 'none' }} onClick={() => toast.info('Navegando al catálogo')}>
-            <div className={`${s.quickAccessIcon} ${s.quickAccessIconAccent}`}>
-              <Package size={22} />
-            </div>
-            <div className={s.quickAccessLabel}>Ver Catálogo</div>
-            <div className={s.quickAccessDesc}>Explora nuestras referencias disponibles</div>
-            <ArrowRight size={16} className={s.quickAccessArrow} />
-          </Link>
-
           <Link to="/cliente/pedidos" className={s.quickAccessCard} style={{ textDecoration: 'none' }} onClick={() => toast.info('Navegando a mis pedidos')}>
             <div className={`${s.quickAccessIcon} ${s.quickAccessIconSuccess}`}>
               <ShoppingBag size={22} />

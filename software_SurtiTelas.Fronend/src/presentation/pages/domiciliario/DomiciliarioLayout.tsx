@@ -31,7 +31,7 @@ export const DomiciliarioLayout: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const storeUser = useAuthStore((s) => s.user);
-  const [sidebarUser, setSidebarUser] = useState({ name: 'Cargando...', role: 'domiciliario', initials: '' });
+  const [sidebarUser, setSidebarUser] = useState({ name: 'Cargando...', role: 'domiciliario', initials: '', avatar: '' });
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
@@ -41,11 +41,11 @@ export const DomiciliarioLayout: React.FC = () => {
         const profile = await authApi.me();
         if (!active) return;
         const initials = profile.nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-        setSidebarUser({ name: profile.nombre, role: 'domiciliario', initials });
+        setSidebarUser({ name: profile.nombre, role: 'domiciliario', initials, avatar: (profile as any).avatar });
       } catch {
         if (storeUser) {
           const initials = storeUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? '';
-          setSidebarUser({ name: storeUser.name ?? 'Domiciliario', role: 'domiciliario', initials });
+          setSidebarUser({ name: storeUser.name ?? 'Domiciliario', role: 'domiciliario', initials, avatar: (storeUser as any).avatar });
         }
       }
     };
@@ -116,6 +116,7 @@ export const DomiciliarioLayout: React.FC = () => {
             email: storeUser?.email ?? '',
             role: 'domiciliario',
             initial: sidebarUser.initials,
+            avatar: sidebarUser.avatar,
           }}
           notificationCount={notificationCount}
           onSearch={() => {}}

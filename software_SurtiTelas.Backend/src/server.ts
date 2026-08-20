@@ -20,12 +20,14 @@ import { receiptSender } from './modules/sales-orders/infrastructure/container/s
 import { ReceiptPaymentSubscriber } from './modules/receipts/application/use-cases/ReceiptPaymentSubscriber';
 import { OrderDeliverySubscriber } from './modules/orders/application/use-cases/OrderDeliverySubscriber';
 import { WebhookSubscriber } from './modules/webhooks/infrastructure/subscribers/WebhookSubscriber';
+import { registerCustomOrderNotificationSubscriber } from './modules/pedidos-personalizados/application/subscribers/CustomOrderNotificationSubscriber';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
 new SalesOrderNotificationSubscriber(eventBus);
 new ReceiptPaymentSubscriber(eventBus);
 new OrderDeliverySubscriber(eventBus);
+registerCustomOrderNotificationSubscriber();
 
 const orderRepository = new PrismaOrderRepository(prisma);
 const saleRepository = new PrismaSaleRepository(prisma);

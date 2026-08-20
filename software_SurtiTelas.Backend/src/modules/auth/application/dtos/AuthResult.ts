@@ -11,4 +11,5 @@ export interface PublicUser {
   estado: 'ACTIVO' | 'INACTIVO';
   createdAt: Date;
   permissions?: string[];
+  avatar?: string | null;
 }

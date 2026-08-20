@@ -1,5 +1,5 @@
 import { NotFoundError, ConflictError, BadRequestError } from '../../../../shared/domain/errors';
-import type { CustomOrderFilters, CustomOrderRepository, QuotationRepository } from '../../domain/repositories/CustomOrderRepository';
+import type { CustomOrderFilters, CustomOrderRepository, QuotationRepository, CustomOrderHistoryRepository } from '../../domain/repositories/CustomOrderRepository';
 import { PedidoPersonalizado } from '../../domain/entities/PedidoPersonalizado';
 import { CustomOrderStatus, QuotationStatus } from '../../domain/value-objects/CustomOrderStatus';
 import { PrismaClient } from '@prisma/client';
@@ -59,7 +59,7 @@ export class CreateCustomOrder {
     const pedido = new PedidoPersonalizado({
       ...input,
       numeroSolicitud: numero,
-      estado: CustomOrderStatus.SOLICITUD_RECIBIDA,
+      estado: CustomOrderStatus.PENDIENTE,
       items: [],
       personalizaciones: [],
     });
@@ -242,7 +242,7 @@ export class SubmitForReview {
   async execute(id: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
-    if (existing.estado !== CustomOrderStatus.SOLICITUD_RECIBIDA) {
+    if (existing.estado !== CustomOrderStatus.PENDIENTE && existing.estado !== CustomOrderStatus.SOLICITUD_RECIBIDA) {
       throw new ConflictError('La solicitud ya fue enviada a revisión');
     }
 
@@ -253,7 +253,7 @@ export class SubmitForReview {
       throw new ConflictError('Debe incluir al menos un item en la solicitud');
     }
 
-    const updated = await this.repo.update(id, { estado: CustomOrderStatus.EN_REVISION });
+    const updated = await this.repo.update(id, { estado: CustomOrderStatus.ACEPTADO });
 
     if (this.eventBus) {
       this.eventBus.publish(new CustomOrderSubmittedEvent({
@@ -298,7 +298,7 @@ export class GenerateQuotation {
       : await this.quotationRepo.nextNumero();
 
     const negotiationCount = existing?.negotiationCount ?? 0;
-    const estado = existing ? existing.estado : QuotationStatus.PENDIENTE;
+    const estado = QuotationStatus.ENVIADA;
 
     const cotizacionData = {
       id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -349,29 +349,30 @@ export class GenerateQuotation {
         })) as any,
       });
 
-      const updatedPedido = await this.repo.update(pedidoPersonalizadoId, {
+      await this.repo.update(pedidoPersonalizadoId, {
         estado: CustomOrderStatus.COTIZADO,
       }, tx);
 
-      return { pedido: updatedPedido, cotizacion };
+      return { pedido, cotizacion };
     });
 
+    const pedidoActualizado = await this.repo.getById(pedidoPersonalizadoId);
     const cotizacionCompleta = await this.quotationRepo.getByPedidoId(pedidoPersonalizadoId);
 
-    if (this.eventBus && cotizacionCompleta) {
+    if (this.eventBus && cotizacionCompleta && pedidoActualizado) {
       this.eventBus.publish(new QuotationGeneratedEvent({
-        customOrderId: result.pedido.id,
-        numeroSolicitud: result.pedido.numeroSolicitud,
+        customOrderId: pedidoActualizado.id,
+        numeroSolicitud: pedidoActualizado.numeroSolicitud,
         numeroCotizacion: cotizacionCompleta.numeroCotizacion,
-        clienteId: result.pedido.clienteId,
-        clienteNombre: result.pedido.clienteNombre,
+        clienteId: pedidoActualizado.clienteId,
+        clienteNombre: pedidoActualizado.clienteNombre,
         total,
         valorAnticipo,
         saldo,
       }));
     }
 
-    return { pedido: result.pedido, cotizacion: cotizacionCompleta ?? result.cotizacion };
+    return { pedido: pedidoActualizado ?? result.pedido, cotizacion: cotizacionCompleta ?? result.cotizacion };
   }
 }
 
@@ -715,6 +716,49 @@ export class DeleteCustomOrder {
       throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
     }
     await this.repo.remove(id);
+  }
+}
+
+export class ChangeCustomOrderStatus {
+  constructor(
+    private readonly repo: CustomOrderRepository,
+    private readonly historyRepo: CustomOrderHistoryRepository,
+    private readonly eventBus?: EventBus
+  ) {}
+
+  async execute(id: string, newStatus: string, usuarioId?: string) {
+    const existing = await this.repo.getById(id);
+    if (!existing) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+
+    const previousStatus = existing.estado;
+    const updated = await this.repo.update(id, { estado: newStatus });
+
+    await this.historyRepo.create({
+      customOrderId: id,
+      usuarioId,
+      accion: 'CAMBIAR_ESTADO',
+      estadoAnterior: previousStatus,
+      estadoNuevo: updated.estado,
+    });
+
+    if (this.eventBus) {
+      this.eventBus.publish({
+        type: 'customOrder.status.updated',
+        occurredAt: new Date(),
+        payload: {
+          customOrderId: updated.id,
+          numeroSolicitud: updated.numeroSolicitud,
+          previousStatus,
+          newStatus: updated.estado,
+          clienteId: updated.clienteId,
+          clienteNombre: updated.clienteNombre,
+          asesorId: updated.asesorId ?? null,
+          asesorNombre: updated.asesorNombre ?? null,
+        },
+      } as any);
+    }
+
+    return updated;
   }
 }
 

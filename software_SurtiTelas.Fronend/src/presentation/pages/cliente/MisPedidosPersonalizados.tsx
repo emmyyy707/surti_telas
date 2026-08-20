@@ -16,8 +16,10 @@ import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { CUSTOM_ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import { useAuthStore } from '@/core/stores/authStore';
 import { CustomOrderFormModal } from '@/presentation/components/CustomOrderFormModal';
+import { BankingQrCode } from '@/presentation/components/BankingQrCode';
 import { ClientStep, DeliveryStep, ProductStep, SummaryStep } from './quotation-steps';
-import { useLocation } from 'react-router-dom';
+import { CustomOrderSummary, type CustomOrderSummaryData } from './quotation-steps/CustomOrderSummary';
+import { useLocation, useNavigate } from 'react-router-dom';
 import s from './MisPedidosPersonalizados.module.css';
 
 const customOrderItemSchema = z.object({
@@ -62,6 +64,24 @@ const formSchema = z.object({
   notasReferencia: z.string().optional(),
   direccionEntrega: z.string().optional(),
   items: z.array(customOrderItemSchema).min(1, 'Agrega al menos un item'),
+}).superRefine((data, ctx) => {
+  if (data.fechaEntregaDeseada && new Date(data.fechaEntregaDeseada) <= new Date()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La fecha de entrega debe ser futura',
+      path: ['fechaEntregaDeseada'],
+    });
+  }
+  for (const [idx, item] of data.items.entries()) {
+    const distribucionTotal = Object.values(item.distribucionTallas || {}).reduce((acc: number, val: any) => acc + (Number(val) || 0), 0);
+    if (distribucionTotal <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `La distribuci髇 de prendas del producto "${item.productoNombre || `#${idx + 1}`}" debe sumar m醩 de 0.`,
+        path: ['items', idx, 'distribucionTallas'],
+      });
+    }
+  }
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -83,7 +103,7 @@ const emptyForm: FormValues = {
       descripcion: '',
       tipoPersonalizacion: 'BORDADO_ESTAMPADO',
       especificaciones: '',
-      cantidad: 1,
+      cantidad: 0,
       talla: '',
       color: '',
       material: '',
@@ -103,6 +123,9 @@ const toUbicacionArray = (value: unknown): string[] => {
 
 const getStatusLabel = (estado: string) => {
   const labels: Record<string, string> = {
+    PENDIENTE: 'Pendiente',
+    ACEPTADO: 'Aceptado',
+    CANCELADO: 'Cancelado',
     SOLICITUD_RECIBIDA: 'Solicitud recibida',
     EN_REVISION: 'En revisi贸n',
     COTIZADO: 'Cotizado',
@@ -114,7 +137,6 @@ const getStatusLabel = (estado: string) => {
     CONVERTIDO_A_PEDIDO: 'Convertido a pedido',
     EN_PRODUCCION: 'En producci贸n',
     COMPLETADO: 'Completado',
-    CANCELADO: 'Cancelado',
     VENCIDO: 'Vencido',
   };
   return labels[estado] ?? estado;
@@ -152,9 +174,10 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const [uploadPaymentOrderId, setUploadPaymentOrderId] = useState<string | null>(null);
 
   const [productos, setProductos] = useState<{ id: string; nombre: string; tela?: string; colores?: string[]; tallas?: string[] }[]>([]);
-  const [, setLoadingCatalog] = useState(false);
+  const [loadingCatalog, setLoadingCatalogState] = useState(false);
 
   const [itemReferenceImages, setItemReferenceImages] = useState<Record<number, { files: File[]; urls: string[] }>>({});
+  const [personalizacionFiles, setPersonalizacionFiles] = useState<Record<string, { file: File; blobUrl: string }[]>>({});
   const [stepperStep, setStepperStep] = useState(1);
   const [colorRows, setColorRows] = useState<{ id: number; color: string; cantidad: string }[]>([{ id: Date.now(), color: '', cantidad: '' }]);
   const [activeItemIndex, setActiveItemIndex] = useState(0);
@@ -169,7 +192,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
   }, [location.pathname]);
 
   const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.estado === 'SOLICITUD_RECIBIDA' || o.estado === 'EN_REVISION').length;
+  const pendingOrders = orders.filter(o => o.estado === 'PENDIENTE' || o.estado === 'SOLICITUD_RECIBIDA' || o.estado === 'EN_REVISION').length;
   const quotedOrders = orders.filter(o => o.estado === 'COTIZADO' || o.estado === 'COTIZACION_ACEPTADA').length;
   const productionOrders = orders.filter(o => o.estado === 'EN_PRODUCCION').length;
 
@@ -225,7 +248,15 @@ export const MisPedidosPersonalizados: React.FC = () => {
 
         return {
           ...item,
-          cantidad: typeof item.cantidad === 'number' ? item.cantidad : Number(item.cantidad ?? 0),
+          descripcion: typeof item.descripcion === 'string' ? item.descripcion : '',
+          tipoPersonalizacion: typeof item.tipoPersonalizacion === 'string' ? item.tipoPersonalizacion : '',
+          especificaciones: typeof item.especificaciones === 'string' ? item.especificaciones : '',
+          cantidad: Object.values(normalizedDistribucionTallas).length > 0
+            ? Object.values(normalizedDistribucionTallas).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
+            : (typeof item.cantidad === 'number' ? item.cantidad : Number(item.cantidad ?? 0)),
+          talla: typeof item.talla === 'string' ? item.talla : '',
+          color: typeof item.color === 'string' ? item.color : '',
+          material: typeof item.material === 'string' ? item.material : '',
           ubicacion: Array.isArray(item.ubicacion) ? item.ubicacion : [],
           distribucionTallas: normalizedDistribucionTallas,
           imagenesReferencia: Array.isArray(item.imagenesReferencia) ? item.imagenesReferencia : [],
@@ -254,19 +285,20 @@ export const MisPedidosPersonalizados: React.FC = () => {
       descripcion: current.descripcion || current.productoNombre || '',
       tipoPersonalizacion: current.tipoPersonalizacion || 'BORDADO_ESTAMPADO',
       especificaciones: current.especificaciones || '',
-      cantidad: current.cantidad || 1,
+      cantidad: 0,
       talla: current.talla || '',
       color: current.color || '',
       material: current.material || '',
       ubicacion: current.ubicacion || [],
-      distribucionTallas: current.distribucionTallas || {},
+      distribucionTallas: {},
       imagenesReferencia: current.imagenesReferencia || [],
       personalizaciones: current.personalizaciones || [],
     });
     setValue(`items.${activeItemIndex}.productoNombre`, '');
     setValue(`items.${activeItemIndex}.productoId`, '');
     setValue(`items.${activeItemIndex}.descripcion`, '');
-    setValue(`items.${activeItemIndex}.cantidad`, 1);
+    setValue(`items.${activeItemIndex}.cantidad`, 0);
+    setValue(`items.${activeItemIndex}.distribucionTallas`, {});
     setValue(`items.${activeItemIndex}.talla`, '');
     setValue(`items.${activeItemIndex}.color`, '');
     setValue(`items.${activeItemIndex}.material`, '');
@@ -301,7 +333,14 @@ export const MisPedidosPersonalizados: React.FC = () => {
 
   const agregarVariante = (persIndex: number) => {
     const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as any[] || [];
-    setValue(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`, [...current, { talla: '', color: '', cantidad: 1 }]);
+    const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
+    const tallasDisponibles = Object.entries(distribucion)
+      .filter(([, cantidad]) => Number(cantidad) > 0)
+      .map(([talla]) => talla);
+
+    const primeraTallaDisponible = tallasDisponibles[0] || '';
+
+    setValue(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`, [...current, { talla: primeraTallaDisponible, color: '', cantidad: 1 }]);
   };
 
   const eliminarVariante = (persIndex: number, varIndex: number) => {
@@ -315,11 +354,17 @@ export const MisPedidosPersonalizados: React.FC = () => {
     setValue(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`, updated);
 
     if (field === 'cantidad') {
-      const cantidadTotal = Number(watch(`items.${activeItemIndex}.cantidad`) || 0);
-      const nuevaCantidad = Number(value) || 0;
-      if (cantidadTotal > 0 && nuevaCantidad > cantidadTotal) {
-        toast.error(`Solo hay ${cantidadTotal} unidades disponibles para esta variante.`);
-        setValue(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes.${varIndex}.cantidad`, cantidadTotal as any);
+      const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
+      const variantes = updated;
+      const talla = current[varIndex]?.talla;
+      if (talla && distribucion[talla] !== undefined) {
+        const sumaVariantesTalla = variantes
+          .filter((v) => v.talla === talla)
+          .reduce((sum, v) => sum + (Number(v.cantidad) || 0), 0);
+        const maximo = Number(distribucion[talla]) || 0;
+        if (sumaVariantesTalla > maximo) {
+          toast.error(`La suma de variantes para ${talla} (${sumaVariantesTalla}) supera la distribuci髇 (${maximo}).`);
+        }
       }
     }
   };
@@ -331,9 +376,10 @@ export const MisPedidosPersonalizados: React.FC = () => {
       setOrders(result.items ?? []);
       setTotalPages(result.totalPages ?? 1);
       setTotalItems(result.totalRecords ?? 0);
-    } catch {
+    } catch (err) {
       toast.error('Error al cargar tus pedidos personalizados');
     } finally {
+      console.log('[CUSTOM-ORDER-LOAD] finally setLoading(false)');
       setLoading(false);
     }
   }, [page, pageSize, search]);
@@ -351,10 +397,12 @@ export const MisPedidosPersonalizados: React.FC = () => {
       id: item.id || `edit-item-${fullOrder.id}-${index}`,
       productoId: item.productoId ?? '',
       productoNombre: item.productoNombre || item.descripcion || '',
-      descripcion: item.descripcion,
+      descripcion: item.descripcion || '',
       tipoPersonalizacion: item.tipoPersonalizacion,
       especificaciones: item.especificaciones ?? '',
-      cantidad: item.cantidad,
+      cantidad: item.distribucionTallas
+        ? Object.values(item.distribucionTallas).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
+        : item.cantidad ?? 0,
       talla: item.talla ?? '',
       color: item.color ?? '',
       material: item.material ?? '',
@@ -362,15 +410,15 @@ export const MisPedidosPersonalizados: React.FC = () => {
       distribucionTallas: item.distribucionTallas ?? {},
       imagenesReferencia: item.imagenesReferencia || [],
       personalizaciones: (item.personalizaciones || []).map((pers: any) => ({
-        tipo: pers.tipo,
+        tipo: pers.tipo || '',
         tecnica: pers.tecnica ?? '',
         ubicacion: toUbicacionArray(pers.ubicacion),
-        descripcion: pers.descripcion,
+        descripcion: pers.descripcion || '',
         archivos: pers.archivos || [],
         variantes: (pers.variantes || []).map((v: any) => ({
-          talla: v.talla,
-          color: v.color,
-          cantidad: v.cantidad,
+          talla: v.talla || '',
+          color: v.color || '',
+          cantidad: typeof v.cantidad === 'number' ? v.cantidad : Number(v.cantidad ?? 0),
         })),
       })),
     }));
@@ -439,7 +487,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
     if (!formOpen) return;
     let cancelled = false;
     (async () => {
-      setLoadingCatalog(true);
+      setLoadingCatalogState(true);
       try {
         const productosRes = await catalogApi.list({ limit: 100 });
         if (!cancelled) {
@@ -450,7 +498,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
           setProductos([]);
         }
       } finally {
-        if (!cancelled) setLoadingCatalog(false);
+        if (!cancelled) setLoadingCatalogState(false);
       }
     })();
     return () => { cancelled = true };
@@ -481,7 +529,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
     setFormOpen(true);
   };
 
-  const editableStates = ['SOLICITUD_RECIBIDA', 'EN_REVISION', 'COTIZADO', 'COTIZACION_ACEPTADA'];
+  const editableStates = ['PENDIENTE', 'SOLICITUD_RECIBIDA', 'EN_REVISION', 'COTIZADO', 'COTIZACION_ACEPTADA'];
 
   const openEdit = async (order: CustomOrder) => {
     if (!editableStates.includes(order.estado)) {
@@ -593,7 +641,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
       const validationDetails: string[] = [];
 
       for (const item of onSubmitPayload.items) {
-        const cantidadTotal = Number(item.cantidad) || 0;
         const distribucionTotal = Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
 
         if (!item.descripcion || !item.descripcion.trim()) {
@@ -604,19 +651,15 @@ export const MisPedidosPersonalizados: React.FC = () => {
           validationErrors.push(`El producto #${onSubmitPayload.items.indexOf(item) + 1}: el nombre del producto es obligatorio.`);
           validationDetails.push(`productoNombre vac铆o en 铆ndice ${onSubmitPayload.items.indexOf(item)}`);
         }
-        if (cantidadTotal <= 0) {
-          validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la cantidad debe ser mayor a 0.`);
-          validationDetails.push(`cantidadTotal=${cantidadTotal}`);
-        }
-        if (distribucionTotal !== cantidadTotal && cantidadTotal > 0) {
-          validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la distribuci贸n de prendas (${distribucionTotal}) no coincide con la cantidad total (${cantidadTotal}).`);
-          validationDetails.push(`distribucionTotal=${distribucionTotal}, cantidadTotal=${cantidadTotal}`);
+        if (distribucionTotal <= 0) {
+          validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la distribuci贸n de prendas debe sumar m谩s de 0.`);
+          validationDetails.push(`distribucionTotal=${distribucionTotal}`);
         }
 
         const totalPersonalizado = (item.personalizaciones || []).reduce((sum: number, pers: any) => sum + (pers.variantes || []).reduce((s: number, v: any) => s + (Number(v.cantidad) || 0), 0), 0);
-        if (totalPersonalizado > cantidadTotal && cantidadTotal > 0) {
-          validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la cantidad personalizada (${totalPersonalizado}) supera la cantidad total (${cantidadTotal}).`);
-          validationDetails.push(`totalPersonalizado=${totalPersonalizado}, cantidadTotal=${cantidadTotal}`);
+        if (totalPersonalizado > distribucionTotal && distribucionTotal > 0) {
+          validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la cantidad personalizada (${totalPersonalizado}) supera la cantidad total (${distribucionTotal}).`);
+          validationDetails.push(`totalPersonalizado=${totalPersonalizado}, distribucionTotal=${distribucionTotal}`);
         }
 
         for (const pers of item.personalizaciones || []) {
@@ -629,9 +672,23 @@ export const MisPedidosPersonalizados: React.FC = () => {
               validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la variante "${variante.talla || 'sin talla'} / ${variante.color || 'sin color'}" es inv谩lida.`);
               validationDetails.push(`variante inv谩lida: talla=${variante.talla}, color=${variante.color}, cantidad=${variante.cantidad}`);
             }
-            if (Number(variante.cantidad) > cantidadTotal) {
-              validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la variante ${variante.talla} ${variante.color} tiene ${variante.cantidad} unidades, pero el producto solo tiene ${cantidadTotal}.`);
-              validationDetails.push(`variante cantidad excede total`);
+          }
+
+          const sumaPorTalla: Record<string, number> = {};
+          for (const variante of pers.variantes || []) {
+            const talla = variante.talla;
+            if (!talla) continue;
+            sumaPorTalla[talla] = (sumaPorTalla[talla] || 0) + (Number(variante.cantidad) || 0);
+          }
+
+          for (const [talla, suma] of Object.entries(sumaPorTalla)) {
+            const distribucionTalla = Number(item.distribucionTallas?.[talla]) || 0;
+            if (distribucionTalla <= 0) {
+              validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la talla ${talla} tiene variantes pero su distribuci贸n es 0. Elimina o reduce las variantes de ${talla}.`);
+              validationDetails.push(`talla=${talla}, distribucion=0, sumaVariantes=${suma}`);
+            } else if (suma > distribucionTalla) {
+              validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": ${talla} tiene ${suma} prendas asignadas en variantes, pero la distribuci贸n es de ${distribucionTalla}. Reduce ${suma - distribucionTalla} prendas.`);
+              validationDetails.push(`talla=${talla}, sumaVariantes=${suma}, distribucion=${distribucionTalla}`);
             }
           }
         }
@@ -642,6 +699,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
         return;
       }
 
+      const isBlobUrl = (url: string | undefined) => typeof url === 'string' && url.startsWith('blob:');
+
       const basePayload = {
         clienteId: currentUser?.uid,
         clienteNombre: cleaned.clienteNombre,
@@ -651,13 +710,13 @@ export const MisPedidosPersonalizados: React.FC = () => {
         notasReferencia: cleaned.notasReferencia || undefined,
         descripcionGeneral: cleaned.items[0]?.descripcion || undefined,
         usoFinal: cleaned.usoFinal || undefined,
-        fechaEntregaDeseada: cleaned.fechaEntregaDeseada || undefined,
+        fechaEntregaDeseada: cleaned.fechaEntregaDeseada ? new Date(cleaned.fechaEntregaDeseada).toISOString() : undefined,
         notasCliente: cleaned.notasCliente || undefined,
         items: cleaned.items.map((item: FormValues['items'][number], index: number) => ({
-          descripcion: item.descripcion,
-          tipoPersonalizacion: item.tipoPersonalizacion,
-          especificaciones: item.especificaciones || undefined,
-          cantidad: Number(item.cantidad),
+          descripcion: item.descripcion || '',
+           tipoPersonalizacion: item.tipoPersonalizacion || '',
+           especificaciones: item.especificaciones || undefined,
+           cantidad: Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0),
           talla: item.talla || undefined,
           color: item.color || undefined,
           material: item.material || undefined,
@@ -665,18 +724,18 @@ export const MisPedidosPersonalizados: React.FC = () => {
           distribucionTallas: Object.fromEntries(
             Object.entries(item.distribucionTallas || {}).filter(([, v]) => v !== undefined && v !== null)
           ) as Record<string, number> | undefined,
-          imagenesReferencia: item.imagenesReferencia || undefined,
+          imagenesReferencia: (item.imagenesReferencia || []).filter((url) => !isBlobUrl(url)),
           orden: index,
           personalizaciones: (item.personalizaciones || []).map((pers: any, pIndex: number) => ({
-            tipo: pers.tipo,
+            tipo: pers.tipo || '',
             tecnica: pers.tecnica || undefined,
             ubicacion: pers.ubicacion || undefined,
-            descripcion: pers.descripcion,
-            archivos: pers.archivos || undefined,
+            descripcion: pers.descripcion || '',
+            archivos: (pers.archivos || []).filter((url: string) => !isBlobUrl(url)),
             orden: pIndex,
             variantes: (pers.variantes || []).map((variante: any) => ({
-              talla: variante.talla,
-              color: variante.color,
+              talla: variante.talla || '',
+              color: variante.color || '',
               cantidad: Number(variante.cantidad),
             })),
           })),
@@ -695,6 +754,99 @@ export const MisPedidosPersonalizados: React.FC = () => {
           toast.success('Solicitud creada');
         }
 
+        const allBlobFiles: File[] = [];
+        const blobUrlToFile = new Map<string, File>();
+        cleaned.items.forEach((item, itemIdx) => {
+          (item.imagenesReferencia || []).forEach((url, urlIdx) => {
+            if (isBlobUrl(url)) {
+              const file = itemReferenceImages[itemIdx]?.files[urlIdx];
+              if (file) {
+                allBlobFiles.push(file);
+                blobUrlToFile.set(url, file);
+              }
+            }
+          });
+          (item.personalizaciones || []).forEach((pers, persIdx) => {
+            const key = `${itemIdx}-${persIdx}`;
+            (pers.archivos || []).forEach((url) => {
+              if (isBlobUrl(url)) {
+                const entry = personalizacionFiles[key]?.find((e) => e.blobUrl === url);
+                if (entry) {
+                  allBlobFiles.push(entry.file);
+                  blobUrlToFile.set(url, entry.file);
+                }
+              }
+            });
+          });
+        });
+
+        if (orderId && allBlobFiles.length > 0) {
+          const uploadedUrls = await Promise.all(allBlobFiles.map((file) => customOrdersApi.uploadReferenceImage(orderId, file)));
+          const uploaded = uploadedUrls.map((r) => r.url);
+
+          const blobUrlToUploaded = new Map<string, string>();
+          let uploadIdx = 0;
+          blobUrlToFile.forEach((file, url) => {
+            if (uploadIdx < uploaded.length) {
+              blobUrlToUploaded.set(url, uploaded[uploadIdx++]);
+            }
+          });
+
+          const updatedItems = cleaned.items.map((item, itemIdx) => {
+            const itemPublicRefs: string[] = [];
+            (item.imagenesReferencia || []).forEach((url) => {
+              if (isBlobUrl(url) && blobUrlToUploaded.has(url)) {
+                itemPublicRefs.push(blobUrlToUploaded.get(url)!);
+              } else {
+                itemPublicRefs.push(url);
+              }
+            });
+
+            const publicPers = (item.personalizaciones || []).map((pers, persIdx) => {
+              const publicArchivos: string[] = [];
+              (pers.archivos || []).forEach((url) => {
+                if (isBlobUrl(url) && blobUrlToUploaded.has(url)) {
+                  publicArchivos.push(blobUrlToUploaded.get(url)!);
+                } else {
+                  publicArchivos.push(url);
+                }
+              });
+              return {
+                ...pers,
+                tipo: pers.tipo || '',
+                descripcion: pers.descripcion || '',
+                archivos: publicArchivos,
+                variantes: (pers.variantes || []).map((variante: any) => ({
+                  talla: variante.talla || '',
+                  color: variante.color || '',
+                  cantidad: Number(variante.cantidad),
+                })),
+              };
+            });
+
+            return {
+              productoId: item.productoId,
+              productoNombre: item.productoNombre,
+              descripcion: item.descripcion || '',
+              tipoPersonalizacion: item.tipoPersonalizacion || '',
+              especificaciones: item.especificaciones || undefined,
+              cantidad: Number(item.cantidad),
+              talla: item.talla || undefined,
+              color: item.color || undefined,
+              material: item.material || undefined,
+              ubicacion: item.ubicacion || undefined,
+              distribucionTallas: Object.fromEntries(
+                Object.entries(item.distribucionTallas || {}).filter(([, v]) => v !== undefined && v !== null)
+              ) as Record<string, number> | undefined,
+              imagenesReferencia: itemPublicRefs,
+              orden: itemIdx,
+              personalizaciones: publicPers,
+            };
+          });
+
+          await customOrdersApi.clientUpdate(orderId, { items: updatedItems });
+        }
+
         if (orderId && paymentProofFile) {
           try {
             const result = await customOrdersApi.uploadPaymentProof(orderId, paymentProofFile);
@@ -704,6 +856,10 @@ export const MisPedidosPersonalizados: React.FC = () => {
           }
         }
 
+        if (!editingId) {
+          window.location.replace('/cliente/pedidos-personalizados');
+          return;
+        }
         setFormOpen(false);
         void loadOrders();
       } catch (err: unknown) {
@@ -754,10 +910,10 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const acceptQuotation = async (order: CustomOrder) => {
     try {
       await customOrdersApi.acceptQuotation(order.id);
-      toast.success('Cotizaci贸n aceptada. Ahora puedes realizar el pago del anticipo.');
+      toast.success('Cotizaci髇 aceptada. Ahora puedes realizar el pago del anticipo.');
       void loadOrders();
     } catch {
-      toast.error('Error al aceptar cotizaci贸n');
+      toast.error('Error al aceptar cotizaci髇');
     }
   };
 
@@ -773,12 +929,12 @@ export const MisPedidosPersonalizados: React.FC = () => {
     }
     try {
       await customOrdersApi.rejectQuotation(rejectConfirm.id, rejectReason.trim());
-      toast.success('Cotizaci贸n rechazada');
+      toast.success('Cotizaci髇 rechazada');
       setRejectConfirm(null);
       setRejectReason('');
       void loadOrders();
     } catch {
-      toast.error('Error al rechazar cotizaci贸n');
+      toast.error('Error al rechazar cotizaci髇');
     }
   };
 
@@ -819,7 +975,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
            <h1 className={s.pageTitle}>Mis Cotizaciones</h1>
           <p className={s.pageSubtitle}>Gestiona tus solicitudes, cotizaciones y env铆os</p>
         </div>
-        <Button onClick={openCreate} className="inline-flex items-center gap-2">
+        <Button onClick={openCreate} className="inline-flex items-center gap-2" data-testid="new-custom-order">
           <Plus size={18} />
           <span>Nueva solicitud</span>
         </Button>
@@ -899,219 +1055,149 @@ export const MisPedidosPersonalizados: React.FC = () => {
           onPageChange={setPage}
           detailPanel={{
             title: (row) => `Solicitud ${row.numeroSolicitud}`,
-            render: (row, onClose) => (
-              <div className={s.form}>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <span className={s.label}>Cliente</span>
-                    <span className={s.infoValue}>{row.clienteNombre}</span>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Estado</span>
-                    <Badge variant={CUSTOM_ORDER_STATUS_COLORS[row.estado] ?? 'default'}>{getStatusLabel(row.estado)}</Badge>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Email</span>
-                    <span className={s.infoValue}>{row.clienteEmail ?? '-'}</span>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Tel茅fono</span>
-                    <span className={s.infoValue}>{row.clienteTelefono ?? '-'}</span>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Uso final</span>
-                    <span className={s.infoValue}>{row.usoFinal ?? '-'}</span>
-                  </div>
-                  <div className={s.field}>
-                    <span className={s.label}>Fecha l铆mite</span>
-                    <span className={s.infoValue}>{row.fechaEntregaDeseada ? new Date(row.fechaEntregaDeseada).toLocaleDateString('es-CO') : '-'}</span>
-                  </div>
-                </div>
+            render: (row, onClose) => {
+              const summaryData: CustomOrderSummaryData = {
+                clienteNombre: row.clienteNombre,
+                clienteEmail: row.clienteEmail ?? undefined,
+                clienteTelefono: row.clienteTelefono ?? undefined,
+                descripcionGeneral: row.descripcionGeneral ?? undefined,
+                notasReferencia: row.notasReferencia ?? undefined,
+                estado: getStatusLabel(row.estado),
+                items: (row.items || []).map((item) => ({
+                  id: item.id,
+                  productoNombre: item.productoNombre,
+                  descripcion: item.descripcion,
+                  tipoPersonalizacion: item.tipoPersonalizacion,
+      cantidad: item.distribucionTallas
+        ? Object.values(item.distribucionTallas).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
+        : item.cantidad ?? 0,
+                  material: item.material,
+                  talla: item.talla,
+                  color: item.color,
+                  especificaciones: item.especificaciones,
+                  distribucionTallas: item.distribucionTallas ?? undefined,
+                  imagenesReferencia: item.imagenesReferencia ?? undefined,
+                  personalizaciones: (item.personalizaciones || []).map((pers) => ({
+                    tipo: pers.tipo,
+                    tecnica: pers.tecnica,
+                    descripcion: pers.descripcion,
+                    ubicacion: pers.ubicacion,
+                    archivos: pers.archivos,
+                    variantes: pers.variantes,
+                  })),
+                })),
+                fechaEntregaDeseada: row.fechaEntregaDeseada ?? undefined,
+                usoFinal: row.usoFinal ?? undefined,
+                direccionEntrega: row.direccionEntrega ?? undefined,
+                notasCliente: row.notasCliente ?? undefined,
+              };
 
-                 {row.descripcionGeneral && (
-                   <div className={s.registroInfo}>
-                     <span className={s.label}>Descripci贸n</span>
-                     <span className={s.infoValue}>{row.descripcionGeneral}</span>
-                   </div>
-                 )}
-
-                 {row.items?.length > 0 && (
-                   <div>
-                     <span className={s.label} style={{ marginBottom: '10px', display: 'block' }}>Productos</span>
-                     <div style={{ display: 'grid', gap: '12px' }}>
-                       {row.items.map((item, idx) => (
-                         <div key={item.id} className={s.registroInfo} style={{ padding: '16px' }}>
-                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                             <div style={{ flex: 1 }}>
-                               <span className={s.infoValue} style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>Producto #{idx + 1}: {item.descripcion || 'Sin nombre'}</span>
-                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                                 <span className={s.infoLabel}>Tipo: {(item.tipoPersonalizacion || '').replace(/_/g, ' ')}</span>
-                                 <span className={s.infoLabel}>Cantidad: {item.cantidad}</span>
-                                 {item.talla && <span className={s.infoLabel}>Talla: {item.talla}</span>}
-                                 {item.color && <span className={s.infoLabel}>Color: {item.color}</span>}
-                                 {item.material && <span className={s.infoLabel}>Material: {item.material}</span>}
-                                 {item.especificaciones && <span className={s.infoLabel}>Especificaciones: {item.especificaciones}</span>}
-                               </div>
-                             </div>
-                           </div>
-                          </div>
-                        ))}
+              return (
+                <div className={s.form}>
+                  <CustomOrderSummary data={summaryData} styles={s} />
+                  {row.cotizacion && (
+                    <div className={s.registroInfo} style={{ marginTop: '16px' }}>
+                      <span className={s.label} style={{ marginBottom: '12px', display: 'block' }}>Cotizaci髇 {row.cotizacion.numeroCotizacion ? `#${row.cotizacion.numeroCotizacion}` : ''}</span>
+                      <div className={s.formRow}>
+                        <div className={s.field}>
+                          <span className={s.label}>Estado</span>
+                          <Badge variant={row.cotizacion.estado === 'ACEPTADA' ? 'success' : row.cotizacion.estado === 'RECHAZADA' ? 'danger' : row.cotizacion.estado === 'ENVIADA' ? 'info' : 'default'}>
+                            {row.cotizacion.estado}
+                          </Badge>
+                        </div>
+                        <div className={s.field}>
+                          <span className={s.label}>V醠ida hasta</span>
+                          <span className={s.infoValue}>{row.cotizacion.validaHasta ? new Date(row.cotizacion.validaHasta).toLocaleDateString('es-CO') : '-'}</span>
+                        </div>
+                        <div className={s.field}>
+                          <span className={s.label}>Condiciones</span>
+                          <span className={s.infoValue}>{row.cotizacion.condicionesPago ?? '-'}</span>
+                        </div>
                       </div>
+
+                      {row.cotizacion.detalles?.length > 0 && (
+                        <div style={{ marginTop: '12px' }}>
+                          <span className={s.label} style={{ marginBottom: '8px', display: 'block' }}>Desglose</span>
+                          <div className={s.quotationTable}>
+                            <div className={s.quotationHeader}>
+                              <span className={s.quotationColDesc}>Concepto</span>
+                              <span className={s.quotationColCant}>Cant.</span>
+                              <span className={s.quotationColUnit}>P. unitario</span>
+                              <span className={s.quotationColSub}>Subtotal</span>
+                            </div>
+                            {row.cotizacion.detalles.map((detalle) => (
+                              <div key={detalle.id} className={s.quotationRow}>
+                                <div className={`${s.quotationColDesc} ${s.colSpan2}`}>
+                                  <span className={s.infoValue}>{detalle.descripcion}</span>
+                                  <span className={s.infoLabel} style={{ marginLeft: '8px' }}>{detalle.tipo.replace(/_/g, ' ')}</span>
+                                </div>
+                                <div className={s.quotationColCant}>
+                                  <span className={s.infoValue}>{detalle.cantidad}</span>
+                                </div>
+                                <div className={s.quotationColUnit}>
+                                  <span className={s.infoValue}>{formatCurrency(Number(detalle.precioUnitario))}</span>
+                                </div>
+                                <div className={s.quotationColSub}>
+                                  <span className={s.infoValue}>{formatCurrency(Number(detalle.subtotal))}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className={s.quotationSummary} style={{ marginTop: '12px' }}>
+                            <div className={s.quotationSummaryRow}>
+                              <span>Subtotal</span>
+                              <span>{formatCurrency(Number(row.cotizacion.subtotal))}</span>
+                            </div>
+                            <div className={s.quotationSummaryRow}>
+                              <span>Descuento</span>
+                              <span>{formatCurrency(Number(row.cotizacion.descuento))}</span>
+                            </div>
+                            <div className={s.quotationSummaryRow}>
+                              <span>Impuestos</span>
+                              <span>{formatCurrency(Number(row.cotizacion.impuestos))}</span>
+                            </div>
+                            <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
+                              <span>Total</span>
+                              <span>{formatCurrency(Number(row.cotizacion.total))}</span>
+                            </div>
+                            {row.cotizacion.estado === 'ENVIADA' && (
+                              <>
+                                <div className={s.quotationSummaryRow}>
+                                  <span>Anticipo (50%)</span>
+                                  <span>{formatCurrency(Number(row.cotizacion.total) * 0.5)}</span>
+                                </div>
+                                <div className={s.quotationSummaryRow}>
+                                  <span>Saldo</span>
+                                  <span>{formatCurrency(Number(row.cotizacion.total) * 0.5)}</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                   {row.cotizacion && (
-                     <div className={s.registroInfo}>
-                       <span className={s.label} style={{ marginBottom: '12px', display: 'block' }}>Cotizaci贸n {row.cotizacion.numeroCotizacion ? `#${row.cotizacion.numeroCotizacion}` : ''}</span>
-                       <div className={s.formRow}>
-                      <div className={s.field}>
-                        <span className={s.label}>Estado</span>
-                        <Badge variant={row.cotizacion.estado === 'ACEPTADA' ? 'success' : row.cotizacion.estado === 'RECHAZADA' ? 'danger' : row.cotizacion.estado === 'ENVIADA' ? 'info' : 'default'}>
-                          {row.cotizacion.estado}
-                        </Badge>
-                      </div>
-                      <div className={s.field}>
-                        <span className={s.label}>V谩lida hasta</span>
-                        <span className={s.infoValue}>{row.cotizacion.validaHasta ? new Date(row.cotizacion.validaHasta).toLocaleDateString('es-CO') : '-'}</span>
-                      </div>
-                      <div className={s.field}>
-                        <span className={s.label}>Condiciones</span>
-                        <span className={s.infoValue}>{row.cotizacion.condicionesPago ?? '-'}</span>
-                      </div>
-                    </div>
-
-                    {row.cotizacion.detalles?.length > 0 && (
-                      <div style={{ marginTop: '12px' }}>
-                        <span className={s.label} style={{ marginBottom: '8px', display: 'block' }}>Desglose</span>
-                        <div className={s.quotationTable}>
-                          <div className={s.quotationHeader}>
-                            <span className={s.quotationColDesc}>Concepto</span>
-                            <span className={s.quotationColCant}>Cant.</span>
-                            <span className={s.quotationColUnit}>P. unitario</span>
-                            <span className={s.quotationColSub}>Subtotal</span>
-                          </div>
-                          {row.cotizacion.detalles.map((detalle) => (
-                            <div key={detalle.id} className={s.quotationRow}>
-                              <div className={`${s.quotationColDesc} ${s.colSpan2}`}>
-                                <span className={s.infoValue}>{detalle.descripcion}</span>
-                                <span className={s.infoLabel} style={{ marginLeft: '8px' }}>{detalle.tipo.replace(/_/g, ' ')}</span>
-                              </div>
-                              <div className={s.quotationColCant}>
-                                <span className={s.infoValue}>{detalle.cantidad}</span>
-                              </div>
-                              <div className={s.quotationColUnit}>
-                                <span className={s.infoValue}>{formatCurrency(Number(detalle.precioUnitario))}</span>
-                              </div>
-                              <div className={s.quotationColSub}>
-                                <span className={s.infoValue}>{formatCurrency(Number(detalle.subtotal))}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className={s.quotationSummary} style={{ marginTop: '12px' }}>
-                          <div className={s.quotationSummaryRow}>
-                            <span>Subtotal</span>
-                            <span>{formatCurrency(Number(row.cotizacion.subtotal))}</span>
-                          </div>
-                          <div className={s.quotationSummaryRow}>
-                            <span>Descuento</span>
-                            <span>{formatCurrency(Number(row.cotizacion.descuento))}</span>
-                          </div>
-                          <div className={s.quotationSummaryRow}>
-                            <span>Impuestos</span>
-                            <span>{formatCurrency(Number(row.cotizacion.impuestos))}</span>
-                          </div>
-                          <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                            <span>Total</span>
-                            <span>{formatCurrency(Number(row.cotizacion.total))}</span>
-                          </div>
-                          {row.cotizacion.estado === 'ENVIADA' && (
-                            <>
-                              <div className={s.quotationSummaryRow}>
-                                <span>Anticipo (50%)</span>
-                                <span>{formatCurrency(Number(row.cotizacion.total) * 0.5)}</span>
-                              </div>
-                              <div className={s.quotationSummaryRow}>
-                                <span>Saldo</span>
-                                <span>{formatCurrency(Number(row.cotizacion.total) * 0.5)}</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {row.items.length > 0 && (
-                  <div>
-                    <span className={s.label} style={{ marginBottom: '10px', display: 'block' }}>Items</span>
-                    <div className="space-y-2">
-                      {row.items.map((item) => (
-                        <div key={item.id} className={s.registroInfo}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                            <div style={{ flex: 1 }}>
-                              <span className={s.infoValue} style={{ display: 'block', marginBottom: '6px' }}>{item.descripcion}</span>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                                 <span className={s.infoLabel}>Tipo: {(item.tipoPersonalizacion || '').replace(/_/g, ' ')}</span>
-                                <span className={s.infoLabel}>Cantidad: {item.cantidad}</span>
-                                {item.especificaciones && <span className={s.infoLabel}>Especificaciones: {item.especificaciones}</span>}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(row.paymentKey || row.paymentProofUrl) && (
-                  <div className={s.registroInfo}>
-                    <span className={s.label} style={{ marginBottom: '10px', display: 'block' }}>Pago</span>
-                    <div className={s.formRow}>
-                      {row.paymentKey && (
-                        <div className={s.field}>
-                          <span className={s.label}>Llave de pago</span>
-                          <span className={s.infoValue}>{row.paymentKey}</span>
-                        </div>
-                      )}
-                      {row.paymentProofUrl && (
-                        <div className={s.field}>
-                          <span className={s.label}>Comprobante</span>
-                          <a href={row.paymentProofUrl} target="_blank" rel="noreferrer" className={s.fileLink}>
-                            Ver comprobante
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                    <div className={s.field}>
-                      <span className={s.label}>Estado del pago</span>
-                      <Badge variant={row.anticipoPagado ? 'success' : 'warning'}>
-                        {row.anticipoPagado ? 'Anticipo confirmado' : row.paymentStatus === 'PENDING' ? 'Pendiente de revisi贸n' : 'Sin comprobante'}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                <ModalFooter
-                  actions={[
-                    { label: 'Cerrar', variant: 'secondary', onClick: onClose },
-                    ...(row.estado === 'SOLICITUD_RECIBIDA'
-                      ? [{ label: 'Enviar a revisi贸n', onClick: () => submitOrder(row) } as ModalFooterAction]
-                      : []),
-                    ...(row.estado === 'COTIZADO'
-                      ? [
-                          { label: 'Aceptar cotizaci贸n', onClick: () => acceptQuotation(row) } as ModalFooterAction,
-                          { label: 'Rechazar cotizaci贸n', variant: 'danger', onClick: () => rejectQuotation(row) } as ModalFooterAction,
-                        ]
-                      : []),
-                    ...(row.estado === 'PAGO_PENDIENTE' && !row.anticipoPagado
-                      ? [{ label: 'Subir comprobante', onClick: () => { setUploadPaymentOrderId(row.id); setPaymentProofFile(null); setPaymentProofUrl(row.paymentProofUrl ?? ''); setUploadPaymentOpen(true); } } as ModalFooterAction]
-                      : []),
-                  ]}
-                />
-              </div>
-            ),
+                  <ModalFooter
+                    actions={[
+                      { label: 'Cerrar', variant: 'secondary', onClick: onClose },
+                      ...(row.estado === 'PENDIENTE' || row.estado === 'SOLICITUD_RECIBIDA'
+                        ? [{ label: 'Enviar a revisi髇', onClick: () => submitOrder(row) } as ModalFooterAction]
+                        : []),
+                      ...(row.estado === 'COTIZADO'
+                        ? [
+                            { label: 'Aceptar cotizaci髇', onClick: () => acceptQuotation(row) } as ModalFooterAction,
+                            { label: 'Rechazar cotizaci髇', variant: 'danger', onClick: () => rejectQuotation(row) } as ModalFooterAction,
+                          ]
+                        : []),
+                      ...(row.estado === 'PAGO_PENDIENTE' && !row.anticipoPagado
+                        ? [{ label: 'Subir comprobante', onClick: () => { setUploadPaymentOrderId(row.id); setPaymentProofFile(null); setPaymentProofUrl(row.paymentProofUrl ?? ''); setUploadPaymentOpen(true); } } as ModalFooterAction]
+                        : []),
+                    ]}
+                  />
+                </div>
+              );
+            },
           }}
           actions={(row) => [
             ...(editableStates.includes(row.estado)
@@ -1169,8 +1255,9 @@ export const MisPedidosPersonalizados: React.FC = () => {
                 errors={formErrorsHook}
                 watch={watch}
                 setValue={setValue}
-                _control={control}
                 styles={s}
+                control={control}
+                loadingCatalog={loadingCatalog}
                 itemFields={itemFields}
                 activeItemIndex={activeItemIndex}
                 setActiveItemIndex={setActiveItemIndex}
@@ -1182,15 +1269,17 @@ export const MisPedidosPersonalizados: React.FC = () => {
                 agregarProducto={agregarProducto}
                 agregarPersonalizacion={agregarPersonalizacion}
                 actualizarPersonalizacion={actualizarPersonalizacion}
-                agregarVariante={agregarVariante}
-                eliminarVariante={eliminarVariante}
-                actualizarVariante={actualizarVariante}
-                eliminarPersonalizacion={eliminarPersonalizacion}
+                 agregarVariante={agregarVariante}
+                 eliminarVariante={eliminarVariante}
+                 actualizarVariante={actualizarVariante}
+                 eliminarPersonalizacion={eliminarPersonalizacion}
                 eliminarProducto={eliminarProducto}
-                imagenesReferencia={itemReferenceImages[activeItemIndex]?.urls || []}
-                handleReferenceImageChange={handleReferenceImageChange}
-                removeReferenceImage={removeReferenceImage}
-              />
+                 imagenesReferencia={itemReferenceImages[activeItemIndex]?.urls || []}
+                 handleReferenceImageChange={handleReferenceImageChange}
+                 removeReferenceImage={removeReferenceImage}
+                 personalizacionFiles={personalizacionFiles}
+                 setPersonalizacionFiles={setPersonalizacionFiles}
+               />
             )}
 
             {stepperStep === 3 && (
@@ -1259,58 +1348,69 @@ export const MisPedidosPersonalizados: React.FC = () => {
         )}
       </Modal>
 
-      <Modal open={uploadPaymentOpen} onClose={() => setUploadPaymentOpen(false)} title="Subir comprobante de pago" description="Adjunta el comprobante del anticipo para que el equipo lo verifique." size="md" variant="form">
-        {uploadPaymentOrderId && (
-          <div className={s.form}>
-            <div className={s.field}>
-              <label htmlFor="payment-proof-upload" className={s.label}>Comprobante (JPG, PNG, PDF)</label>
-              <input id="payment-proof-upload" type="file" accept="image/*,.pdf" className={s.hiddenInput} onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setPaymentProofFile(file);
-                setPaymentProofUrl(URL.createObjectURL(file));
-              }} />
-              <label htmlFor="payment-proof-upload" className={s.uploadLabel}>
-                <FileText size={18} />
-                <span>{paymentProofUrl ? 'Cambiar comprobante' : 'Seleccionar comprobante'}</span>
-              </label>
-              {paymentProofUrl && (
-                <div className={s.filePreview}>
-                  <div className={s.fileChip}>
-                    {paymentProofFile?.type.startsWith('image/') && paymentProofUrl ? (
-                      <img src={paymentProofUrl} alt={paymentProofFile?.name ?? 'comprobante'} className={s.fileChipImage} />
-                    ) : (
-                      <FileText size={16} />
-                    )}
-                    <span className={s.fileChipName}>{paymentProofFile?.name ?? 'comprobante'}</span>
-                    <button type="button" className={s.removeFileBtn} onClick={() => { setPaymentProofFile(null); setPaymentProofUrl(''); }}>Eliminar</button>
+      <Modal open={uploadPaymentOpen} onClose={() => setUploadPaymentOpen(false)} title="Realizar pago" description="Completa el pago y adjunta tu comprobante." size="md" variant="form">
+        {uploadPaymentOrderId && (() => {
+          const order = orders.find(o => o.id === uploadPaymentOrderId);
+          const totalPagar = order?.cotizacion?.valorAnticipo ? Number(order.cotizacion.valorAnticipo) : (order?.cotizacion?.total ? Number(order.cotizacion.total) : 0);
+          return (
+            <div className={s.form}>
+              <div className={s.paymentTotalBlock}>
+                <div className={s.paymentTotalLabel}>TOTAL A PAGAR</div>
+                <div className={s.paymentTotalValue}>{totalPagar.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</div>
+              </div>
+              <div className={s.paymentQrBlock}>
+                <BankingQrCode amount={totalPagar} />
+              </div>
+              <div className={s.paymentField}>
+                <label htmlFor="payment-proof-upload" className={s.paymentLabel}>Comprobante (JPG, PNG, PDF)</label>
+                <input id="payment-proof-upload" type="file" accept="image/*,.pdf" className={s.paymentFileInput} onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setPaymentProofFile(file);
+                  setPaymentProofUrl(URL.createObjectURL(file));
+                }} />
+                <label htmlFor="payment-proof-upload" className={s.paymentUploadLabel}>
+                  <FileText size={18} />
+                  <span>{paymentProofUrl ? 'Cambiar comprobante' : 'Seleccionar comprobante'}</span>
+                </label>
+                {paymentProofUrl && (
+                  <div className={s.paymentFilePreview}>
+                    <div className={s.paymentFileChip}>
+                      {paymentProofFile?.type.startsWith('image/') && paymentProofUrl ? (
+                        <img src={paymentProofUrl} alt={paymentProofFile?.name ?? 'comprobante'} className={s.paymentFileChipImage} />
+                      ) : (
+                        <FileText size={16} />
+                      )}
+                      <span className={s.paymentFileName}>{paymentProofFile?.name ?? 'comprobante'}</span>
+                      <button type="button" className={s.paymentRemoveBtn} onClick={() => { setPaymentProofFile(null); setPaymentProofUrl(''); }}>Eliminar</button>
+                    </div>
                   </div>
-                </div>
-              )}
-              <span className={s.hintText}>Adjunta el comprobante del anticipo (imagen o PDF).</span>
+                )}
+                <span className={s.paymentHint}>Adjunta el comprobante del anticipo (imagen o PDF).</span>
+              </div>
+              <ModalFooter
+                actions={[
+                  { label: 'Cancelar', variant: 'secondary', onClick: () => setUploadPaymentOpen(false) },
+                  { label: 'Subir comprobante', onClick: async () => {
+                    if (!uploadPaymentOrderId || !paymentProofFile) {
+                      toast.error('Selecciona un comprobante');
+                      return;
+                    }
+                    try {
+                      const result = await customOrdersApi.uploadPaymentProof(uploadPaymentOrderId, paymentProofFile);
+                      await customOrdersApi.updatePayment(uploadPaymentOrderId, { paymentProofUrl: result.paymentProofUrl, paymentStatus: 'PENDING' });
+                      toast.success('Comprobante subido correctamente');
+                      setUploadPaymentOpen(false);
+                      void loadOrders();
+                    } catch {
+                      toast.error('Error al subir comprobante');
+                    }
+                  } },
+                ]}
+              />
             </div>
-            <ModalFooter
-              actions={[
-                { label: 'Cancelar', variant: 'secondary', onClick: () => setUploadPaymentOpen(false) },
-                { label: 'Subir comprobante', onClick: async () => {
-                  if (!uploadPaymentOrderId || !paymentProofFile) {
-                    toast.error('Selecciona un comprobante');
-                    return;
-                  }
-                  try {
-                    const result = await customOrdersApi.uploadPaymentProof(uploadPaymentOrderId, paymentProofFile);
-                    await customOrdersApi.clientUpdate(uploadPaymentOrderId, { paymentProofUrl: result.paymentProofUrl, paymentStatus: 'PENDING' });
-                    toast.success('Comprobante subido correctamente');
-                    setUploadPaymentOpen(false);
-                    void loadOrders();
-                  } catch {
-                    toast.error('Error al subir comprobante');
-                  }
-                } },
-              ]}
-            />
-          </div>
-        )}
+          );
+        })()}
       </Modal>
     </div>
   );

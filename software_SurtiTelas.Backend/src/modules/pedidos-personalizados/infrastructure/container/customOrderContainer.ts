@@ -1,17 +1,25 @@
 import { prisma } from '../../../../config/database';
 import { PrismaCustomOrderRepository } from '../repositories/PrismaCustomOrderRepository';
 import { PrismaQuotationRepository } from '../repositories/PrismaQuotationRepository';
-import { ListCustomOrders, GetCustomOrder, CreateCustomOrder, UpdateCustomOrder, SubmitForReview, GenerateQuotation, AcceptQuotation, RejectQuotation, SendQuotation, ConvertToOrder, DeleteCustomOrder } from '../../application/use-cases/CustomOrderUseCases';
+import { PrismaCustomOrderHistoryRepository } from '../repositories/PrismaCustomOrderHistoryRepository';
+import { ListCustomOrders, GetCustomOrder, CreateCustomOrder, UpdateCustomOrder, SubmitForReview, GenerateQuotation, AcceptQuotation, RejectQuotation, SendQuotation, ConvertToOrder, DeleteCustomOrder, ChangeCustomOrderStatus } from '../../application/use-cases/CustomOrderUseCases';
+import { RecordCustomOrderStatusChange, GetCustomOrderHistory } from '../../application/use-cases/CustomOrderHistoryUseCases';
+import { GetCustomOrderMetrics } from '../../application/use-cases/GetCustomOrderMetrics';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
 
 const customOrderRepository = new PrismaCustomOrderRepository(prisma);
 const quotationRepository = new PrismaQuotationRepository(prisma);
+const customOrderHistoryRepository = new PrismaCustomOrderHistoryRepository(prisma);
 
 export const customOrderUseCases = {
   listCustomOrders: new ListCustomOrders(customOrderRepository),
   getCustomOrder: new GetCustomOrder(customOrderRepository),
   createCustomOrder: new CreateCustomOrder(customOrderRepository, prisma, eventBus),
   updateCustomOrder: new UpdateCustomOrder(customOrderRepository, prisma),
+  changeCustomOrderStatus: new ChangeCustomOrderStatus(customOrderRepository, customOrderHistoryRepository, eventBus),
+  recordCustomOrderStatusChange: new RecordCustomOrderStatusChange(customOrderHistoryRepository),
+  getCustomOrderHistory: new GetCustomOrderHistory(customOrderHistoryRepository),
+  getCustomOrderMetrics: new GetCustomOrderMetrics(customOrderRepository),
   submitForReview: new SubmitForReview(customOrderRepository, prisma, eventBus),
   generateQuotation: new GenerateQuotation(customOrderRepository, quotationRepository, prisma, eventBus),
   acceptQuotation: new AcceptQuotation(customOrderRepository, quotationRepository, prisma, eventBus),

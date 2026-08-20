@@ -48,3 +48,16 @@ export interface CustomOrderVariantRepository {
   createManyByPersonalizationId(personalizationId: string, variants: any[], tx?: any): Promise<void>;
   findByPersonalizationId(personalizationId: string, tx?: any): Promise<any[]>;
 }
+
+export interface CustomOrderHistoryRepository {
+  create(data: {
+    customOrderId: string;
+    usuarioId?: string;
+    accion: string;
+    estadoAnterior: string;
+    estadoNuevo: string;
+    razon?: string;
+    informacion?: any;
+  }): Promise<any>;
+  findByCustomOrderId(customOrderId: string): Promise<any[]>;
+}

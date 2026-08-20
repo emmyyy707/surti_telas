@@ -16,6 +16,7 @@ export interface BackendAuthUser {
   numeroDocumento?: string | null;
   apellidos?: string | null;
   estado?: 'ACTIVO' | 'INACTIVO';
+  avatar?: string | null;
 }
 
 export interface LoginResponse {
@@ -37,6 +38,7 @@ export interface ProfileResponse {
   estado: 'ACTIVO' | 'INACTIVO';
   createdAt: string;
   permissions?: string[];
+  avatar?: string | null;
 }
 
 export interface UpdateProfileResponse {
@@ -47,6 +49,7 @@ export interface UpdateProfileResponse {
   direccion?: string | null;
   tipoDocumento?: string | null;
   numeroDocumento?: string | null;
+  avatar?: string | null;
   role: BackendRole;
   estado: 'ACTIVO' | 'INACTIVO';
   createdAt: string;
@@ -112,8 +115,14 @@ export const authApi = {
 
   me: () => api.get<ProfileResponse>('/auth/me'),
 
-  updateProfile: (data: { nombre?: string; telefono?: string; email?: string; direccion?: string; tipoDocumento?: string; numeroDocumento?: string; password?: string }) =>
+  updateProfile: (data: { nombre?: string; telefono?: string; email?: string; direccion?: string; tipoDocumento?: string; numeroDocumento?: string; password?: string; avatar?: string }) =>
     api.patch<UpdateProfileResponse>('/auth/me', data),
+
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.postForm<UpdateProfileResponse>('/auth/me/avatar', form);
+  },
 
   listUsers: (query?: Record<string, string | number | boolean | undefined | null>): Promise<UsersListResult> =>
     api.get<{ items: BackendAuthUser[]; meta: PaginatedResponse<BackendAuthUser>['data']['meta'] } | undefined>('/auth/users', { query }).then((response) => {

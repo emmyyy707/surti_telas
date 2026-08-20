@@ -1,8 +1,10 @@
 import { z } from 'zod';
 
 export const CustomOrderStatusEnum = z.enum([
+  'PENDIENTE',
+  'ACEPTADO',
+  'CANCELADO',
   'SOLICITUD_RECIBIDA',
-  'EN_REVISION',
   'COTIZADO',
   'COTIZACION_ACEPTADA',
   'COTIZACION_RECHAZADA',
@@ -12,7 +14,6 @@ export const CustomOrderStatusEnum = z.enum([
   'CONVERTIDO_A_PEDIDO',
   'EN_PRODUCCION',
   'COMPLETADO',
-  'CANCELADO',
   'VENCIDO',
 ]);
 
@@ -71,8 +72,9 @@ export const CreateCustomOrderItemSchema = z.object({
   color: z.string().optional(),
   material: z.string().optional(),
   ubicacion: z.array(z.string()).optional(),
-  distribucionTallas: z.record(z.number().int().positive()).optional(),
-  distribucionColores: z.record(z.string().min(1), z.number().int().positive()).optional(),
+  distribucionTallas: z.record(z.number().int().nonnegative()).optional(),
+  distribucionColores: z.record(z.string().min(1), z.number().int().nonnegative()).optional(),
+  imagenesReferencia: z.array(z.string()).optional(),
   referenciaImagen: z.string().url().optional(),
   archivosReferencia: z.array(z.string().url()).optional(),
   imagenesAdjuntas: z.array(z.string().url()).optional(),
@@ -95,7 +97,28 @@ export const CreateCustomOrderItemSchema = z.object({
       ).optional(),
     })
   ).optional(),
-}).passthrough();
+}).superRefine((data, ctx) => {
+  if (data.distribucionTallas && Object.keys(data.distribucionTallas).length > 0) {
+    const suma = Object.values(data.distribucionTallas).reduce((acc, val) => acc + (Number(val) || 0), 0);
+    if (suma !== data.cantidad) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La distribución de tallas no coincide con la cantidad total',
+        path: ['distribucionTallas'],
+      });
+    }
+  }
+  if (data.distribucionColores && Object.keys(data.distribucionColores).length > 0) {
+    const suma = Object.values(data.distribucionColores).reduce((acc, val) => acc + (Number(val) || 0), 0);
+    if (suma !== data.cantidad) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La distribución de colores no coincide con la cantidad total',
+        path: ['distribucionColores'],
+      });
+    }
+  }
+});
 
 export const CreatePersonalizacionSchema = z.object({
   tipo: PersonalizationTypeEnum,
@@ -106,27 +129,37 @@ export const CreatePersonalizacionSchema = z.object({
   requiereAprobacion: z.boolean().optional(),
 });
 
-export const CreateCustomOrderSchema = z.object({
+const CreateCustomOrderSchemaBase = z.object({
   clienteId: z.string().optional(),
   asesorId: z.string().optional(),
   clienteNombre: z.string().min(1, 'El nombre del cliente es obligatorio'),
-  clienteEmail: z.string().email().optional(),
+  clienteEmail: z.string().email().optional().or(z.literal('')),
   clienteTelefono: z.string().optional(),
   descripcionGeneral: z.string().optional(),
   usoFinal: z.string().optional(),
   direccionEntrega: z.string().optional(),
-  fechaEntregaDeseada: z.string().optional(),
+  fechaEntregaDeseada: z.string().datetime().optional(),
   notasCliente: z.string().optional(),
   notasReferencia: z.string().optional(),
   paymentKey: z.string().optional(),
-  paymentProofUrl: z.string().url().optional(),
+  paymentProofUrl: z.string().optional().or(z.literal('')),
   tecnica: z.string().optional(),
   tamano: z.string().optional(),
   cantidadDisenos: z.number().int().positive().optional(),
   numeroColores: z.string().optional(),
   items: z.array(CreateCustomOrderItemSchema).min(1, 'Debe incluir al menos un item'),
   personalizaciones: z.array(CreatePersonalizacionSchema).optional(),
-}).passthrough();
+});
+
+export const CreateCustomOrderSchema = CreateCustomOrderSchemaBase.superRefine((data, ctx) => {
+  if (data.fechaEntregaDeseada && new Date(data.fechaEntregaDeseada) <= new Date()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La fecha de entrega debe ser futura',
+      path: ['fechaEntregaDeseada'],
+    });
+  }
+});
 
 export const QuotationDetalleSchema = z.object({
   tipo: QuotationItemTypeEnum,
@@ -144,7 +177,7 @@ export const QuotationSchema = z.object({
   impuestos: z.number().nonnegative().optional(),
   descuento: z.number().nonnegative().optional(),
   tiempoEstimadoDias: z.number().int().positive().optional(),
-  validaHasta: z.string().datetime(),
+  validaHasta: z.string().datetime().refine((val) => new Date(val) > new Date(), 'La fecha de validez debe ser futura'),
   condicionesPago: z.string().optional(),
   observaciones: z.string().optional(),
   generadoPorId: z.string().optional(),
@@ -157,6 +190,15 @@ export const QuotationSchema = z.object({
     date: z.string().datetime(),
     user: z.string().min(1),
   })).optional(),
+}).superRefine((data, ctx) => {
+  const sumaDetalles = data.detalles.reduce((acc, detalle) => acc + (Number(detalle.subtotal) || 0), 0);
+  if (Math.abs(sumaDetalles - data.subtotal) >= 0.01) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'El subtotal no coincide con la suma de los detalles',
+      path: ['subtotal'],
+    });
+  }
 });
 
 export const AcceptQuotationSchema = z.object({
@@ -167,9 +209,15 @@ export const RejectQuotationSchema = z.object({
   motivoRechazo: z.string().min(1, 'El motivo de rechazo es obligatorio'),
 });
 
-export const UpdateCustomOrderSchema = CreateCustomOrderSchema.partial().extend({
+const UpdateCustomOrderSchemaBase = CreateCustomOrderSchemaBase.partial().extend({
   items: z.array(CreateCustomOrderItemSchema).optional(),
 });
+
+export const UpdateCustomOrderSchema = UpdateCustomOrderSchemaBase.superRefine((_data, _ctx) => {
+  // Future cross-field validations can be added here
+});
+
+export { UpdateCustomOrderSchemaBase };
 
 export const CustomOrderFiltersSchema = z.object({
   estado: CustomOrderStatusEnum.optional(),

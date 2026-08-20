@@ -22,6 +22,7 @@ interface TopHeaderProps {
     email: string;
     role: 'admin' | 'almacen' | 'asesor' | 'domiciliario' | 'cliente' | 'produccion' | 'reportes';
     initial: string;
+    avatar?: string | null;
   };
   notificationCount: number;
   onSearch: (value: string) => void;
@@ -198,7 +199,11 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         )}
 
         <div className={s.userProfile}>
-          <div className={s.avatar}>{user.initial}</div>
+          {user.avatar ? (
+            <img src={user.avatar} alt={user.name} className={s.avatarImage} />
+          ) : (
+            <div className={s.avatar}>{user.initial}</div>
+          )}
           <div className={s.userInfo}>
             <span className={s.userName}>{user.name}</span>
             <span className={s.userEmail}>{user.email}</span>

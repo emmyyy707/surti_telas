@@ -129,7 +129,8 @@ export const AdminLayout: React.FC = () => {
       }
     };
     void loadNotifications();
-    return () => { active = false; };
+    const interval = setInterval(loadNotifications, 30000);
+    return () => { active = false; clearInterval(interval); };
   }, []);
 
   useEffect(() => {
@@ -232,6 +233,7 @@ export const AdminLayout: React.FC = () => {
     email: authUser?.email ?? '',
     role: authUser?.role ?? 'admin',
     initial: (authUser?.name ?? authUser?.email ?? '?').charAt(0).toUpperCase(),
+    avatar: authUser?.avatar ?? null,
   };
   const roleLabel = userDisplay.role === 'admin' ? adminContent.layout.userRoleLabels.admin : adminContent.layout.userRoleLabels.default;
 
@@ -258,6 +260,7 @@ export const AdminLayout: React.FC = () => {
             email: userDisplay.email,
             role: userDisplay.role,
             initial: userDisplay.initial,
+            avatar: userDisplay.avatar,
           }}
           notificationCount={notificationCount}
           onSearch={handleSearch}

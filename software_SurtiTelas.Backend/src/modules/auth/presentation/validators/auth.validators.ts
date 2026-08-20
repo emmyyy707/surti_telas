@@ -46,6 +46,7 @@ export const UpdateProfileSchema = z.object({
   direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
   tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
   numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
+  avatar: z.string().min(1, 'Avatar inválido').max(500000, 'Avatar demasiado grande').optional().or(z.literal('')),
 });
 
 export const CreateUserSchema = z.object({

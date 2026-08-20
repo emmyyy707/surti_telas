@@ -1,4 +1,7 @@
 export type CustomOrderEstado =
+  | 'PENDIENTE'
+  | 'ACEPTADO'
+  | 'CANCELADO'
   | 'SOLICITUD_RECIBIDA'
   | 'EN_REVISION'
   | 'COTIZADO'
@@ -10,7 +13,6 @@ export type CustomOrderEstado =
   | 'CONVERTIDO_A_PEDIDO'
   | 'EN_PRODUCCION'
   | 'COMPLETADO'
-  | 'CANCELADO'
   | 'VENCIDO';
 
 export interface CustomOrderItem {
@@ -75,6 +77,9 @@ export interface Cotizacion {
   tiempoEstimadoDias?: number | null;
   validaHasta?: string | null;
   condicionesPago?: string | null;
+  porcentajeAnticipo?: number | null;
+  valorAnticipo?: string | null;
+  saldo?: string | null;
   observaciones?: string | null;
   enviadaEn?: string | null;
   respondidaEn?: string | null;
@@ -228,6 +233,29 @@ export interface ConvertToOrderResponse {
   estado: CustomOrderEstado;
 }
 
+export interface CustomOrderHistoryItem {
+  id: string;
+  customOrderId: string;
+  usuarioId?: string;
+  accion: string;
+  estadoAnterior: string;
+  estadoNuevo: string;
+  razon?: string;
+  informacion?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomOrderMetrics {
+  total: number;
+  pendientes: number;
+  aceptados: number;
+  cancelados: number;
+  tasaAceptacion: number;
+  tasaCancelacion: number;
+  promedioHorasPorEstado: Record<string, number>;
+}
+
 export const customOrdersApi = {
   async list(filters: CustomOrderFilters = {}): Promise<CustomOrderListResponse> {
     const params = new URLSearchParams();
@@ -297,12 +325,26 @@ export const customOrdersApi = {
     return api.postForm<{ paymentProofUrl: string }>(`/custom-orders/${encodeURIComponent(id)}/payment-proof`, form);
   },
 
+  async uploadReferenceImage(id: string, file: File): Promise<{ url: string }> {
+    const form = new FormData();
+    form.append('referenceImage', file);
+    return api.postForm<{ url: string }>(`/custom-orders/${encodeURIComponent(id)}/upload-reference`, form);
+  },
+
   async updatePayment(id: string, changes: { paymentKey?: string; paymentProofUrl?: string; paymentStatus?: string; anticipoPagado?: boolean }): Promise<CustomOrder> {
     return api.patch<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/payment`, changes);
   },
 
   async adminUpdatePayment(id: string, changes: { paymentKey?: string; paymentProofUrl?: string; paymentStatus?: string; anticipoPagado?: boolean }): Promise<CustomOrder> {
     return api.patch<CustomOrder>(`/admin/custom-orders/${encodeURIComponent(id)}/payment`, changes);
+  },
+
+  async history(id: string): Promise<CustomOrderHistoryItem[]> {
+    return api.get<CustomOrderHistoryItem[]>(`/custom-orders/${encodeURIComponent(id)}/history`);
+  },
+
+  async metrics(): Promise<CustomOrderMetrics> {
+    return api.get<CustomOrderMetrics>(`/admin/custom-orders/metrics`);
   },
 };
 

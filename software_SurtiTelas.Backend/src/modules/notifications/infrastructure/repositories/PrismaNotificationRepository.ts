@@ -65,13 +65,15 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return row ? new Notification(toNotificationData(row)) : null;
   }
 
-  async create(input: { tipo: NotificationType; titulo: string; mensaje: string; usuarioId?: string }): Promise<Notification> {
+  async create(input: { tipo: NotificationType; titulo: string; mensaje: string; usuarioId?: string; modulo?: string; referenciaId?: string }): Promise<Notification> {
     const row = await this.prisma.notification.create({
       data: {
         tipo: input.tipo,
         titulo: input.titulo,
         mensaje: input.mensaje,
         usuarioId: input.usuarioId,
+        modulo: input.modulo,
+        referenciaId: input.referenciaId,
       },
     });
     return new Notification(toNotificationData(row));

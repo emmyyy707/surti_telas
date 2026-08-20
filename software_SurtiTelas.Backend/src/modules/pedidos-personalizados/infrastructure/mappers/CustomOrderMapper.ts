@@ -6,13 +6,15 @@ import { Cotizacion } from '../../domain/entities/Cotizacion';
 
 export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
   const customer = row.customers ?? {};
+  const clienteNombre = (row.cliente_nombre || '').trim() || [customer.nombre, customer.apellidos].filter(Boolean).join(' ').trim() || '';
+  const clienteTelefono = row.cliente_telefono ?? customer.telefono ?? null;
   return new PedidoPersonalizado({
     id: row.id,
     numeroSolicitud: row.numero,
     clienteId: row.cliente_id,
-    clienteNombre: [customer.nombre, customer.apellidos].filter(Boolean).join(' ').trim() || '',
+    clienteNombre,
     clienteEmail: customer.email ?? null,
-    clienteTelefono: customer.telefono ?? null,
+    clienteTelefono,
     asesorId: row.asesor_id,
     asesorNombre: row.users?.nombre ?? null,
     estado: row.estado,
@@ -102,6 +104,8 @@ export function toCreatePedidoInput(d: any) {
   return {
     numero: d.numeroSolicitud,
     cliente_id: d.clienteId,
+    cliente_nombre: d.clienteNombre || null,
+    cliente_telefono: d.clienteTelefono || null,
     asesor_id: d.asesorId ?? null,
     estado: d.estado,
     tipo_prenda: d.tipoPrenda ?? '',
@@ -137,6 +141,8 @@ export function toUpdatePedidoInput(changes: any) {
   const data: Record<string, unknown> = {};
   if (changes.estado !== undefined) data.estado = changes.estado;
   if (changes.asesorId !== undefined) data.asesor_id = changes.asesorId;
+  if (changes.clienteNombre !== undefined) data.cliente_nombre = changes.clienteNombre || null;
+  if (changes.clienteTelefono !== undefined) data.cliente_telefono = changes.clienteTelefono || null;
   if (changes.descripcionGeneral !== undefined) data.descripcion_diseno = changes.descripcionGeneral;
   if (changes.fechaEntregaDeseada !== undefined) data.fecha_deseada = changes.fechaEntregaDeseada ? new Date(changes.fechaEntregaDeseada) : null;
   if (changes.orderId !== undefined) data.orden_id = changes.orderId;
@@ -226,6 +232,9 @@ export function toCreateCotizacionInput(d: any) {
     generado_por_nombre: d.generadoPorNombre,
     negotiation_count: d.negotiationCount ?? 0,
     negotiation_history: d.negotiationHistory ?? [],
+    porcentaje_anticipo: d.porcentajeAnticipo ?? 50,
+    valor_anticipo: d.valorAnticipo,
+    saldo: d.saldo,
     updatedAt: new Date(),
   };
 }
