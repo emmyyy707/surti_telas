@@ -535,7 +535,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
           productLines.push({
             id: `line-${Date.now()}-${idx}-producto`,
             tipo: 'PRODUCTO_BASE',
-            descripcion: item.descripcion || `Producto ${idx + 1}`,
+            descripcion: item.productoNombre || item.descripcion || `Producto ${idx + 1}`,
             cantidad: Number(item.cantidad) || 1,
             unidadMedida: 'unidad',
             precioUnitario: 0,
@@ -554,7 +554,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
         products.push({
           id: `product-${idx}`,
-          nombre: item.descripcion || `Producto ${idx + 1}`,
+          nombre: item.productoNombre || item.descripcion || `Producto ${idx + 1}`,
           cantidad: Number(item.cantidad) || 1,
           talla: item.talla ?? undefined,
           color: item.color ?? undefined,

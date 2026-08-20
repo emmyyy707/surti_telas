@@ -26,7 +26,6 @@ const adminMenu: SidebarItem[] = [
     subItems: [
       { icon: Shield, label: adminContent.layout.menu.configuracion.roles.label, key: 'roles' },
       { icon: UserCog, label: adminContent.layout.menu.configuracion.permisos.label, key: 'permisos' },
-      { icon: Webhook, label: adminContent.layout.menu.webhooks.label, key: 'webhooks' },
     ],
   },
   {

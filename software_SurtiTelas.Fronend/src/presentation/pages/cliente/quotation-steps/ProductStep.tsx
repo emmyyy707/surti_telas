@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlusCircle, Check, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control, useWatch } from 'react-hook-form';
 import { type FormValues } from '../MisPedidosPersonalizados';
 import { CollapsibleSection } from './CollapsibleSection';
@@ -53,7 +54,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
               </div>
             ))
           : itemFields.map((item, idx) => {
-              const persCount = (activeItem?.personalizaciones || []).length;
+              const persCount = (item.personalizaciones || []).length;
               return (
                 <div
                   key={item.id}
@@ -62,7 +63,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                   style={{ flex: '1 1 220px' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <div className={styles.productCardName}>{activeItem?.productoNombre || item.productoNombre || `Producto ${idx + 1}`}</div>
+                    <div className={styles.productCardName}>{item.productoNombre || `Producto ${idx + 1}`}</div>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); eliminarProducto(idx); }}
@@ -73,7 +74,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                     </button>
                   </div>
                   <div className={styles.productCardMeta}>
-                    <span>{Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)} unidades</span>
+                    <span>{Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)} unidades</span>
                   <span>·</span>
                   <span>{persCount} personalización{persCount !== 1 ? 'es' : ''}</span>
                 </div>
@@ -329,14 +330,39 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                        })()}
                      </div>
                     </div>
-                   <div className={styles.personalizationFormActions}>
-                     <button type="button" className={styles.quotationAddLine} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
-                       Cancelar
-                     </button>
-                     <button type="button" className={styles.btnPrimary} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
-                       Guardar personalización
-                     </button>
-                   </div>
+                    <div className={styles.personalizationFormActions}>
+                      <button type="button" className={styles.quotationAddLine} onClick={() => { setShowPersonalizacionForm(false); setEditingPersonalizacionIndex(null); }}>
+                        Cancelar
+                      </button>
+                      <button type="button" className={styles.btnPrimary} onClick={() => {
+                        const persIndex = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0);
+                        const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
+                        const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as any[] || []);
+                        const sumaPorTalla: Record<string, number> = {};
+                        for (const variante of variantes) {
+                          const talla = variante.talla;
+                          if (!talla) continue;
+                          sumaPorTalla[talla] = (sumaPorTalla[talla] || 0) + (Number(variante.cantidad) || 0);
+                        }
+                        const errores: string[] = [];
+                        for (const [talla, suma] of Object.entries(sumaPorTalla)) {
+                          const distribucionTalla = Number(distribucion[talla]) || 0;
+                          if (distribucionTalla <= 0) {
+                            errores.push(`La talla ${talla} tiene variantes pero su distribución es 0. Elimina o reduce las variantes de ${talla}.`);
+                          } else if (suma !== distribucionTalla) {
+                            errores.push(`Debes distribuir las ${distribucionTalla} unidades de talla ${talla}. Actualmente has asignado ${suma}.`);
+                          }
+                        }
+                        if (errores.length > 0) {
+                          toast.error('No se puede guardar la personalización', { description: errores.join('\n') });
+                          return;
+                        }
+                        setShowPersonalizacionForm(false);
+                        setEditingPersonalizacionIndex(null);
+                      }}>
+                        Guardar personalización
+                      </button>
+                    </div>
                  </div>
                )}
 

@@ -1,12 +1,21 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 
+const mockLogs: Array<{ search: string; count: number; titles: string[] }> = [];
+
 vi.mock('@/infrastructure/api/catalogApi', () => ({
   catalogApi: {
-    list: vi.fn(),
+    list: vi.fn().mockImplementation(async (query?: Record<string, unknown>) => {
+      const search = (query?.search as string | undefined)?.toLowerCase() || '';
+      const filtered = search
+        ? mockProducts.filter(p => (p.nombre ?? '').toLowerCase().includes(search))
+        : mockProducts;
+      mockLogs.push({ search, count: filtered.length, titles: filtered.map(p => p.nombre) });
+      return { data: filtered, meta: { totalRecords: filtered.length, page: 1, limit: 50, totalPages: 1 } };
+    }),
   },
 }));
 
@@ -76,7 +85,7 @@ const mockProducts = [
 describe('CatalogPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCatalogList.mockResolvedValue(mockProducts);
+    mockCatalogList.mockResolvedValue({ data: mockProducts, meta: { totalRecords: mockProducts.length, page: 1, limit: 50, totalPages: 1 } });
     window.localStorage.clear();
   });
 
@@ -94,7 +103,6 @@ describe('CatalogPage', () => {
   });
 
   it('filters products by search term', async () => {
-    const user = userEvent.setup();
     render(
       <MemoryRouter>
         <CatalogPage />
@@ -106,12 +114,24 @@ describe('CatalogPage', () => {
     });
 
     const searchInput = screen.getByPlaceholderText('Buscar productos, marcas, categorías...');
-    await user.type(searchInput, 'Pantaloneta');
+    fireEvent.change(searchInput, { target: { value: 'Pantaloneta' } });
+
+    await waitFor(() => expect(mockCatalogList.mock.calls.length).toBe(2));
+    const lastCall = mockCatalogList.mock.calls[mockCatalogList.mock.calls.length - 1][0] as Record<string, unknown>;
+    expect(lastCall.search).toBe('Pantaloneta');
+    expect(mockLogs).toEqual([
+      { search: '', count: 2, titles: ['Camiseta Premium', 'Pantaloneta Deportiva'] },
+      { search: 'pantaloneta', count: 1, titles: ['Pantaloneta Deportiva'] },
+    ]);
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     await waitFor(() => {
-      expect(screen.queryByText('Camiseta Premium')).not.toBeInTheDocument();
-      expect(screen.getByText('Pantaloneta Deportiva')).toBeInTheDocument();
-    });
+      const products = screen.getAllByRole('heading', { name: /Camiseta Premium|Pantaloneta Deportiva/ });
+      expect(products).toHaveLength(1);
+      expect(products[0]).toHaveTextContent('Pantaloneta Deportiva');
+    }, { timeout: 3000 });
   });
 
   it('opens product detail modal on click', async () => {
@@ -153,7 +173,7 @@ describe('CatalogPage', () => {
   });
 
   it('shows empty state when no products match', async () => {
-    mockCatalogList.mockResolvedValue([]);
+    mockCatalogList.mockResolvedValue({ data: [], meta: { totalRecords: 0, page: 1, limit: 50, totalPages: 1 } });
     render(
       <MemoryRouter>
         <CatalogPage />

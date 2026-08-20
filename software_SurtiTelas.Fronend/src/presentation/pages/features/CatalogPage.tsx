@@ -178,11 +178,12 @@ const CatalogPage: React.FC = () => {
     });
     try {
       await favoritesApi.toggle(productId);
-      toast.success(productId);
+      const added = !favoriteIds.includes(productId);
+      toast.success(added ? 'Producto agregado a favoritos.' : 'Producto eliminado de favoritos.');
     } catch {
       toast.error('No se pudo sincronizar el favorito con el servidor');
     }
-  }, []);
+  }, [favoriteIds]);
 
   const countFiltrosActivos = useCallback(() => {
     let count = 0;

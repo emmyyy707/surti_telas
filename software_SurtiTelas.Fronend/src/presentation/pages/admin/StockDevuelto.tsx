@@ -14,6 +14,7 @@ import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import type { Pedido } from '@/core/types';
 import { workshopsApi } from '@/infrastructure/api/workshopsApi';
+import { ApiError } from '@/infrastructure/api/httpClient';
 
 interface Devolucion {
   id: string;
@@ -152,7 +153,9 @@ export const AdminStockDevuelto: React.FC = () => {
       const devs = data.map(toDevolucion);
       setDevoluciones(devs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar las devoluciones');
+      const msg = getFriendlyReturnError(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -348,8 +351,8 @@ export const AdminStockDevuelto: React.FC = () => {
       setDevoluciones(prev => [{ ...toDevolucion(creada) }, ...prev]);
       toast.success(`Devolución ${creada.numeroDevolucion} registrada`);
       closeModal();
-    } catch {
-      toast.error('No fue posible registrar la devolución');
+    } catch (err) {
+      toast.error(getFriendlyReturnError(err));
       setSaving(false);
     }
   };
@@ -379,8 +382,8 @@ export const AdminStockDevuelto: React.FC = () => {
       setDevoluciones(prev => prev.map(dev => dev.id === editingDevolucion.id ? { ...dev, ...changes, estado: ESTADO_TO_UI[actualizada.estado] ?? dev.estado, destino: DESTINO_TO_UI[actualizada.destino] ?? dev.destino } : dev));
       toast.success(`Devolución ${editingDevolucion.numeroDevolucion} actualizada`);
       closeEditModal();
-    } catch {
-      toast.error('No fue posible actualizar la devolución');
+    } catch (err) {
+      toast.error(getFriendlyReturnError(err));
       setSaving(false);
     }
   };
@@ -397,8 +400,8 @@ export const AdminStockDevuelto: React.FC = () => {
       }]);
       setDevoluciones(prev => prev.map(dev => dev.id === d.id ? { ...dev, estado: ESTADO_TO_UI[actualizada.estado] ?? estadoUI, destino: DESTINO_TO_UI[actualizada.destino] ?? dev.destino } : dev));
       toast.success(`Devolución ${d.numeroDevolucion} → ${estadoUI}`);
-    } catch {
-      toast.error(`No se pudo actualizar la devolución ${d.numeroDevolucion}`);
+    } catch (err) {
+      toast.error(getFriendlyReturnError(err));
     }
   };
 
@@ -409,8 +412,8 @@ export const AdminStockDevuelto: React.FC = () => {
       setDevoluciones(prev => prev.filter(dev => dev.id !== deleteConfirm.id));
       setDeleteConfirm(null);
       toast.success(`Devolución ${deleteConfirm.numeroDevolucion} eliminada`);
-    } catch {
-      toast.error('No fue posible eliminar la devolución');
+    } catch (err) {
+      toast.error(getFriendlyReturnError(err));
     }
   };
 
@@ -433,8 +436,8 @@ export const AdminStockDevuelto: React.FC = () => {
       setBatchEstado('');
       setBatchDestino('');
       toast.success(`${selectedDevoluciones.length} devoluciones actualizadas`);
-    } catch {
-      toast.error('No se pudieron actualizar las devoluciones');
+    } catch (err) {
+      toast.error(getFriendlyReturnError(err));
     }
   };
 
@@ -762,3 +765,14 @@ export const AdminStockDevuelto: React.FC = () => {
     </div>
   );
 };
+
+function getFriendlyReturnError(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 401) return 'Tu sesión ha expirado. Inicia sesión nuevamente.';
+    if (err.status === 403) return 'No tienes permisos para realizar esta acción.';
+    if (err.status === 404) return 'No fue posible cargar las devoluciones. Inténtalo nuevamente.';
+    if (err.message) return err.message;
+  }
+  if (err instanceof Error) return err.message;
+  return 'No fue posible realizar la acción. Inténtalo nuevamente.';
+}

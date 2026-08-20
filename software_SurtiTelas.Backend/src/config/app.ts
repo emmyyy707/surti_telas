@@ -222,7 +222,6 @@ export function createApp(): Express {
 app.use('/api/v1/reports', reportRouter);
 app.use('/api/v1/returns', returnRouter);
 app.use('/api/v1/client/returns', clientReturnRouter);
-app.use('/api/v1/client/returns', clientReturnRouter);
 app.use('/api/v1/favorites', favoriteRouter);
 app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/sales-orders', salesReportRouter);

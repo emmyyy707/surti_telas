@@ -50,7 +50,7 @@ const AdminReportesVentas = React.lazy(() => import('@/presentation/pages/admin/
 const AdminReportesUsuarios = React.lazy(() => import('@/presentation/pages/admin/ReportesUsuarios').then(m => ({ default: m.AdminReportesUsuarios })));
 const AdminReportesProduccion = React.lazy(() => import('@/presentation/pages/admin/ReportesProduccion').then(m => ({ default: m.AdminReportesProduccion })));
 const AdminReportesInventario = React.lazy(() => import('@/presentation/pages/admin/ReportesInventario').then(m => ({ default: m.AdminReportesInventario })));
-const AdminWebhooks = React.lazy(() => import('@/presentation/pages/admin/Webhooks').then(m => ({ default: m.AdminWebhooks })));
+
 const AdminNotificaciones = React.lazy(() => import('@/presentation/pages/admin/AdminNotificaciones').then(m => ({ default: m.AdminNotificaciones })));
 const AdminComisiones = React.lazy(() => import('@/presentation/pages/admin/AdminComisiones').then(m => ({ default: m.AdminComisiones })));
 const AdminFinanzas = React.lazy(() => import('@/presentation/pages/admin/AdminFinanzas').then(m => ({ default: m.AdminFinanzas })));
@@ -58,7 +58,6 @@ const AdminPedidosPersonalizados = React.lazy(() => import('@/presentation/pages
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
 const AsesorDashboard = React.lazy(() => import('@/presentation/pages/asesor/Dashboard').then(m => ({ default: m.AsesorDashboard })));
 const AsesorClientes = React.lazy(() => import('@/presentation/pages/asesor/MisClientes').then(m => ({ default: m.AsesorClientes })));
-const AtencionCliente = React.lazy(() => import('@/presentation/pages/asesor/Atencion-cliente').then(m => ({ default: m.AtencionCliente })));
 const AsesorPedidos = React.lazy(() => import('@/presentation/pages/asesor/Pedidos').then(m => ({ default: m.AsesorPedidos })));
 const AsesorCatalogo = React.lazy(() => import('@/presentation/pages/asesor/Catalogo').then(m => ({ default: m.AsesorCatalogo })));
 const AsesorComisiones = React.lazy(() => import('@/presentation/pages/asesor/Comisiones').then(m => ({ default: m.AsesorComisiones })));
@@ -90,7 +89,7 @@ const LoginPage = React.lazy(() => import('@/presentation/pages/auth/LoginPage')
 const RegisterPage = React.lazy(() => import('@/presentation/pages/auth/RegisterPage'));
 const ForgotPasswordPage = React.lazy(() => import('@/presentation/pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = React.lazy(() => import('@/presentation/pages/auth/ResetPasswordPage'));
- 
+
 const App: React.FC = () => {
   return (
   <BrowserRouter>
@@ -134,7 +133,7 @@ const App: React.FC = () => {
             <Route path="ruta-del-dia" element={<AdminDomiciliosLayout />}>
               <Route index element={<AdminRutaDelDia />} />
             </Route>
-            <Route path="webhooks" element={<AdminWebhooks />} />
+
             <Route path="asesores" element={<GestionUsuariosAsesores />} />
             <Route path="reportes" element={<AdminReportes />}>
               <Route index element={<Navigate to="ventas" replace />} />
@@ -170,7 +169,7 @@ const App: React.FC = () => {
             <Route path="reportes-inventario" element={<Navigate to="/admin/reportes/inventario" replace />} />
             <Route path="finanzas" element={<Navigate to="/admin/reportes/finanzas" replace />} />
             <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
-          </Route>
+          </Route>x
 
           {/* ASESOR - Protected routes for asesor role */}
           <Route path="/asesor" element={
@@ -182,7 +181,6 @@ const App: React.FC = () => {
             <Route path="dashboard" element={<AsesorDashboard />} />
             <Route path="clientes" element={<AsesorClientes />} />
             <Route path="pedidos" element={<AsesorPedidos />} />
-            <Route path="AtencionCliente" element={<AtencionCliente />} />
             <Route path="catalogo" element={<AsesorCatalogo />} />
             <Route path="comisiones" element={<AsesorComisiones />} />
             <Route path="perfil" element={<AsesorPerfil />} />

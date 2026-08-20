@@ -686,9 +686,14 @@ export const MisPedidosPersonalizados: React.FC = () => {
             if (distribucionTalla <= 0) {
               validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la talla ${talla} tiene variantes pero su distribución es 0. Elimina o reduce las variantes de ${talla}.`);
               validationDetails.push(`talla=${talla}, distribucion=0, sumaVariantes=${suma}`);
-            } else if (suma > distribucionTalla) {
-              validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": ${talla} tiene ${suma} prendas asignadas en variantes, pero la distribución es de ${distribucionTalla}. Reduce ${suma - distribucionTalla} prendas.`);
-              validationDetails.push(`talla=${talla}, sumaVariantes=${suma}, distribucion=${distribucionTalla}`);
+            } else if (suma !== distribucionTalla) {
+              if (suma > distribucionTalla) {
+                validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": ${talla} tiene ${suma} prendas asignadas en variantes, pero la distribución es de ${distribucionTalla}. Reduce ${suma - distribucionTalla} prendas.`);
+                validationDetails.push(`talla=${talla}, sumaVariantes=${suma}, distribucion=${distribucionTalla}`);
+              } else {
+                validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": debes distribuir las ${distribucionTalla} unidades de talla ${talla}. Actualmente has asignado ${suma}.`);
+                validationDetails.push(`talla=${talla}, sumaVariantes=${suma}, distribucion=${distribucionTalla}`);
+              }
             }
           }
         }
@@ -713,6 +718,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
         fechaEntregaDeseada: cleaned.fechaEntregaDeseada ? new Date(cleaned.fechaEntregaDeseada).toISOString() : undefined,
         notasCliente: cleaned.notasCliente || undefined,
         items: cleaned.items.map((item: FormValues['items'][number], index: number) => ({
+          productoId: item.productoId || undefined,
+          productoNombre: item.productoNombre || undefined,
           descripcion: item.descripcion || '',
            tipoPersonalizacion: item.tipoPersonalizacion || '',
            especificaciones: item.especificaciones || undefined,

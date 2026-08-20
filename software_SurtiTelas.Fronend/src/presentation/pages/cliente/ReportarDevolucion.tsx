@@ -7,6 +7,7 @@ import { returnsApi, type Return } from '@/infrastructure/api/returnsApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { authApi } from '@/infrastructure/api/authApi';
+import { ApiError } from '@/infrastructure/api/httpClient';
 
 interface OrderOption {
   id: string;
@@ -83,7 +84,7 @@ export const ReportarDevolucion: React.FC = () => {
       const data = await returnsApi.listClient();
       setMyReturns(data);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'No se pudieron cargar las devoluciones';
+      const msg = getFriendlyReturnError(err);
       setHistoryError(msg);
       setMyReturns([]);
     } finally {
@@ -186,8 +187,8 @@ export const ReportarDevolucion: React.FC = () => {
       });
       setImagenes([]);
       setImageError(null);
-    } catch {
-      toast.error('No fue posible reportar la devolución');
+    } catch (err) {
+      toast.error(getFriendlyReturnError(err));
     } finally {
       setSaving(false);
     }
@@ -396,3 +397,14 @@ const DESTINO_TO_UI: Record<string, string> = {
   DESCARTE: 'Descarte',
   DEVOLUCION_PROVEEDOR: 'Devolución a proveedor',
 };
+
+function getFriendlyReturnError(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 401) return 'Tu sesión ha expirado. Inicia sesión nuevamente.';
+    if (err.status === 403) return 'No tienes permisos para realizar esta acción.';
+    if (err.status === 404) return 'No fue posible cargar tus devoluciones. Inténtalo nuevamente.';
+    if (err.message) return err.message;
+  }
+  if (err instanceof Error) return err.message;
+  return 'No fue posible realizar la acción. Inténtalo nuevamente.';
+}
