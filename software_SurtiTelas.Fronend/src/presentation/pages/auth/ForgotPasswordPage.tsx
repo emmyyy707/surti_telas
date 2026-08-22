@@ -4,7 +4,10 @@ import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import partnerLogo from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 import { authApi } from '@/infrastructure/api/authApi';
+import { Turnstile } from '@marsidev/react-turnstile';
 import './AuthPage.css';
+
+const isDevelopment = import.meta.env.DEV;
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +15,7 @@ const ForgotPasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,19 +30,27 @@ const ForgotPasswordPage: React.FC = () => {
       return;
     }
 
+    if (!isDevelopment && !turnstileToken) {
+      setError('Verificación de seguridad pendiente. Recarga la página.');
+      return;
+    }
+
     setLoading(true);
     setError('');
-    setDevResetUrl(null);
 
     try {
-      const result = await authApi.forgotPassword({ email });
-      const resetUrl = result.resetUrl || null;
-      setDevResetUrl(resetUrl);
+      await authApi.forgotPassword({ email, ...(isDevelopment || !turnstileToken ? {} : { turnstileToken }) });
       setSuccess(true);
-      toast.success('Correo de recuperación enviado');
-    } catch {
-      setError('No se pudo enviar el correo. Intenta nuevamente.');
-      toast.error('Error al enviar correo');
+      toast.success('Si el correo existe, recibirás un enlace de recuperación.');
+    } catch (error) {
+      const apiError = error as { status?: number } | undefined;
+      if (apiError?.status === 429) {
+        setError('Demasiados intentos. Esperá 1 hora antes de reintentar.');
+        toast.error('Demasiados intentos');
+      } else {
+        setError('No se pudo procesar la solicitud. Intenta nuevamente.');
+        toast.error('Error al enviar solicitud');
+      }
     } finally {
       setLoading(false);
     }
@@ -121,6 +132,18 @@ const ForgotPasswordPage: React.FC = () => {
                 {error && <span className="fieldError">{error}</span>}
               </div>
 
+              {!isDevelopment && (
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                  <Turnstile
+                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                    onSuccess={(token: string) => setTurnstileToken(token)}
+                    onError={() => setError('Error de verificación. Intenta nuevamente.')}
+                    onExpire={() => setTurnstileToken(null)}
+                    options={{ theme: 'light', language: 'es' }}
+                  />
+                </div>
+              )}
+
               <button className={`submitBtn ${loading ? 'submitBtn--loading' : ''}`} onClick={handleSubmit} disabled={loading}>
                 <span className="btnInner">
                   {loading ? <span className="spinner" /> : <Mail size={18} />}
@@ -138,21 +161,11 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="successState" style={{ textAlign: 'center', padding: '20px 0' }}>
                 <CheckCircle2 size={48} color="#22c55e" style={{ margin: '0 auto 16px' }} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111111', marginBottom: '8px' }}>
-                  ¡Email enviado!
+                  ¡Solicitud procesada!
                 </h3>
                 <p style={{ fontSize: '0.875rem', color: '#555555', lineHeight: 1.6 }}>
-                  Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
+                  Si el correo existe, recibirás instrucciones para restablecer tu contraseña.
                 </p>
-                {devResetUrl && (
-                  <div style={{ marginTop: 16, padding: 12, background: '#f1f5f9', borderRadius: 8, textAlign: 'left' }}>
-                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 8 }}>
-                      Estás en modo desarrollo. Usá este enlace para restablecer tu contraseña:
-                    </p>
-                    <a href={devResetUrl} style={{ fontSize: '0.875rem', color: '#2563eb', wordBreak: 'break-all' }}>
-                      {devResetUrl}
-                    </a>
-                  </div>
-                )}
               </div>
 
               <button className="submitBtn" onClick={() => navigate('/login')}>

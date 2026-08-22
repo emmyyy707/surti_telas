@@ -37,9 +37,9 @@ import { UpdateUserStatus, DeleteUser } from '../../application/use-cases/UserMa
 import { GetUserById } from '../../application/use-cases/GetUserById';
 import { env } from '../../../../config/env';
 
-const authRepository = new PrismaAuthRepository(prisma);
-const tokenService = new JwtTokenService();
 const passwordHasher = new BcryptPasswordHasher();
+const authRepository = new PrismaAuthRepository(prisma, passwordHasher);
+const tokenService = new JwtTokenService();
 
 const hasSmtpConfig = Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.SMTP_FROM_EMAIL);
 const emailService = hasSmtpConfig

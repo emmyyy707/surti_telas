@@ -3,6 +3,7 @@ import { NotFoundError, ConflictError } from '../../../../shared/domain/errors';
 import type { AuthRepository, CreateUserInput, PermissionData, RolePermissionData, RoleData } from '../../domain/repositories/AuthRepository';
 import type { UserRecord } from '../../domain/entities/User';
 import type { Role } from '@/shared/types/role';
+import type { PasswordHasher } from '../../domain/services/PasswordHasher';
 
 const toRecord = (u: {
   id: string;
@@ -53,7 +54,7 @@ const toRecord = (u: {
 import { BadRequestError } from '../../../../shared/domain/errors';
 
 export class PrismaAuthRepository implements AuthRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient, private readonly hasher: PasswordHasher) {}
 
   async findByEmail(email: string): Promise<UserRecord | null> {
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -568,17 +569,25 @@ export class PrismaAuthRepository implements AuthRepository {
   }
 
   async setResetPasswordToken(id: string, token: string, expires: Date): Promise<void> {
+    const hashedToken = await this.hasher.hash(token);
     await this.prisma.user.update({
       where: { id },
-      data: { resetPasswordToken: token, resetPasswordExpires: expires },
+      data: { resetPasswordToken: hashedToken, resetPasswordExpires: expires },
     });
   }
 
   async findByResetPasswordToken(token: string): Promise<UserRecord | null> {
-    const user = await this.prisma.user.findFirst({
-      where: { resetPasswordToken: token, deletedAt: null },
+    const users = await this.prisma.user.findMany({
+      where: { deletedAt: null, resetPasswordExpires: { gte: new Date() } },
     });
-    return user ? toRecord(user) : null;
+
+    for (const user of users) {
+      if (user.resetPasswordToken && (await this.hasher.compare(token, user.resetPasswordToken))) {
+        return toRecord(user);
+      }
+    }
+
+    return null;
   }
 
   async clearResetPasswordToken(id: string): Promise<void> {

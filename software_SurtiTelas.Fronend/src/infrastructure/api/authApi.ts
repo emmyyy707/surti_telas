@@ -89,11 +89,11 @@ export interface GoogleLoginResponse {
 
 export interface ForgotPasswordRequest {
   email: string;
+  turnstileToken?: string;
 }
 
 export interface ForgotPasswordResponse {
   message: string;
-  resetUrl?: string;
 }
 
 export interface ResetPasswordRequest {

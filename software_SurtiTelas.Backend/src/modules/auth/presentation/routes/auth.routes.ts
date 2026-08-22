@@ -3,6 +3,8 @@ import { asyncHandler } from '../../../../shared/presentation/http/asyncHandler'
 import { authenticate } from '../middlewares/authenticate';
 import { requireRole } from '../middlewares/authorize';
 import { sensitiveUserRateLimiter } from '../../../../modules/shared/presentation/middlewares/sensitiveUserRateLimiter';
+import { forgotPasswordRateLimiter } from '../../../../modules/shared/presentation/middlewares/forgotPasswordRateLimiter';
+import { turnstileMiddleware } from '../../../../modules/shared/presentation/middlewares/turnstile';
 import { avatarUpload } from '../middlewares/avatarUpload';
 import * as controller from '../controllers/auth.controller';
 
@@ -467,7 +469,7 @@ authRouter.post('/2fa/disable', authenticate, asyncHandler(controller.disableTwo
  *                 success: { type: boolean, example: true }
  *                 message: { type: string, example: Si el correo existe, recibirás instrucciones para restablecer tu contraseña }
  */
-authRouter.post('/forgot-password', sensitiveUserRateLimiter, asyncHandler(controller.forgotPassword));
+authRouter.post('/forgot-password', turnstileMiddleware, forgotPasswordRateLimiter, asyncHandler(controller.forgotPassword));
 
 /**
  * @swagger

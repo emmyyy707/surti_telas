@@ -15,6 +15,7 @@ import {
   UserCreatedEvent,
   UserUpdatedEvent,
   UserDeletedEvent,
+  PasswordResetAttemptedEvent,
 } from '../../../../shared/application/events';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
@@ -307,14 +308,33 @@ export const disableTwoFactor = async (req: Request, res: Response) => {
 
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = parseDto(ForgotPasswordSchema, req.body);
-  const result = await authUseCases.forgotPassword.execute(email);
+  const result = await authUseCases.forgotPassword.execute(email, req.requestId);
   return ok(res, result, result.message);
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
   const { token, newPassword } = parseDto(ResetPasswordSchema, req.body);
-  await authUseCases.resetPassword.execute(token, newPassword);
-  return ok(res, null, 'Contraseña restablecida correctamente');
+
+  let userForAudit: { id: string; email: string } | null = null;
+  try {
+    const result = await authUseCases.resetPassword.execute(token, newPassword, req.requestId);
+    userForAudit = result.user;
+    return ok(res, null, 'Contraseña restablecida correctamente');
+  } catch (error) {
+    const fallbackEmail = (req.body?.email as string | undefined) || '';
+    eventBus.publish(
+      new PasswordResetAttemptedEvent({
+        userId: userForAudit?.id ?? 'unknown',
+        email: userForAudit?.email ?? fallbackEmail,
+        success: false,
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+        reason: error instanceof Error ? error.message : 'unknown_error',
+      }),
+      req.requestId
+    );
+    throw error;
+  }
 };
 
 export const changePassword = async (req: Request, res: Response) => {

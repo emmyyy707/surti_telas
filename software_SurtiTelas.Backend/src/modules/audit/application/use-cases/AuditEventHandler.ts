@@ -17,6 +17,8 @@ export function registerAuditEventHandlers(): void {
     'delivery.updated',
     'commission.calculated',
     'alert.triggered',
+    'auth.password_reset.attempted',
+    'auth.password_reset.requested',
   ];
 
   for (const eventType of events) {
@@ -31,13 +33,19 @@ export function registerAuditEventHandlers(): void {
           metadata.newStatus = payload.newStatus ?? null;
         }
 
+        if (eventType === 'auth.password_reset.attempted' || eventType === 'auth.password_reset.requested') {
+          metadata.success = payload.success ?? null;
+          metadata.reason = payload.reason ?? null;
+          metadata.email = payload.email ?? null;
+        }
+
         await prisma.auditLog.create({
           data: {
             usuarioId: (payload.userId as string | undefined) ?? 'system',
             accion: (payload.action as string | undefined) ?? eventType,
-            modulo: 'general',
-            referenciaId: (payload.resourceId as string | undefined) ?? '',
-            ip: payload.ipAddress as string | undefined,
+            modulo: 'auth',
+            referenciaId: (payload.resourceId as string | undefined) ?? (payload.email as string | undefined) ?? '',
+            ip: payload.ipAddress as string | undefined ?? (payload.ip as string | undefined),
             userAgent: payload.userAgent as string | undefined,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             metadata: metadata as any,

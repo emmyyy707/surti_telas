@@ -49,7 +49,10 @@ export class SmtpEmailService {
   }
 
   async sendPasswordReset(email: string, token: string): Promise<{ previewUrl?: string }> {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const isLocalhost = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+    const secureUrl = isLocalhost ? frontendUrl : frontendUrl.replace(/^http:\/\//i, 'https://');
+    const resetUrl = `${secureUrl}/reset-password?token=${token}`;
 
     const mailOptions: SendMailOptions = {
       from: {
@@ -60,26 +63,26 @@ export class SmtpEmailService {
       subject: 'Recupera tu contraseña - SurtiTelas',
       text: `Hola,
 
-Has solicitado recuperar tu contraseĆ±a en SurtiTelas.
+Has solicitado recuperar tu contraseña en SurtiTelas.
 Haz clic en el siguiente enlace para restablecerla:
 
 ${resetUrl}
 
-Este enlace expirarĆ¡ en 1 hora.
+Este enlace expira en 1 hora.
 
 Si no solicitaste este cambio, ignora este correo.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">Recupera tu contraseĆ±a</h2>
+          <h2 style="color: #2563eb;">Recupera tu contraseña</h2>
           <p>Hola,</p>
-          <p>Has solicitado recuperar tu contraseĆ±a en <strong>SurtiTelas</strong>.</p>
+          <p>Has solicitado recuperar tu contraseña en <strong>SurtiTelas</strong>.</p>
           <p style="margin: 24px 0;">
             <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-              Restablecer contraseĆ±a
+              Restablecer contraseña
             </a>
           </p>
           <p style="color: #6b7280; font-size: 14px;">
-            Este enlace expirarĆ¡ en 1 hora. Si no solicitaste este cambio, ignora este correo.
+            Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este correo.
           </p>
         </div>
       `,
@@ -88,7 +91,7 @@ Si no solicitaste este cambio, ignora este correo.`,
     try {
       const transporter = await this.getTransporter();
       const result = await transporter.sendMail(mailOptions);
-      const rawPreviewUrl = getTestMessageUrl(result as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      const rawPreviewUrl = getTestMessageUrl(result as any);
       const previewUrl = typeof rawPreviewUrl === 'string' ? rawPreviewUrl : undefined;
       if (previewUrl) {
         console.log(`[EMAIL] Password reset email sent to ${email}`);

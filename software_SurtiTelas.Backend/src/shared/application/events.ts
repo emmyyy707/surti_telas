@@ -219,6 +219,21 @@ export class AuthLogoutEvent implements DomainEvent {
   ) {}
 }
 
+export class PasswordResetRequestedEvent implements DomainEvent {
+  readonly type = 'auth.password_reset.requested';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      userId: string;
+      email: string;
+      ip?: string;
+      userAgent?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
 export class UserCreatedEvent implements DomainEvent {
   readonly type = 'user.created';
   readonly occurredAt = new Date();
@@ -508,6 +523,23 @@ export class CustomOrderConvertedEvent implements DomainEvent {
       clienteId: string;
       clienteNombre: string;
       total: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class PasswordResetAttemptedEvent implements DomainEvent {
+  readonly type = 'auth.password_reset.attempted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      userId: string;
+      email: string;
+      success: boolean;
+      ip?: string;
+      userAgent?: string;
+      reason?: string;
     },
     public readonly requestId?: string
   ) {}
