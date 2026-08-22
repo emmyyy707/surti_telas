@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import s from "../admin/Pedidos.module.css";
+import f from "@/styles/Form.module.css";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { DetailModal } from "@/shared/ui/DetailModal";
@@ -20,7 +21,7 @@ import { ordersApi } from "@/infrastructure/api/ordersApi";
 import { ESTADOS_PEDIDO_PERMITIDOS } from "@/shared/constants/options";
 import { useAuthStore } from "@/core/stores/authStore";
 import { useClientes } from "@/core/stores";
-import type { Pedido } from "@/core/types";
+import type { Pedido, PedidoItem } from "@/core/types";
 
 const orderStatuses: Record<string, "success" | "warning" | "danger" | "info" | "default" | null> = {
   Pendiente: "warning",
@@ -71,27 +72,39 @@ export const AsesorPedidos: React.FC = () => {
   const asesorInicialRef = useRef(false);
 
   useEffect(() => {
-    const load = async () => {
+    let cancelled = false;
+    async function load() {
       setLoading(true);
       try {
         const ordersResult = await ordersApi.list({ asesorId: user?.uid });
-        console.log("ORDERS_RESULT_ASESOR", ordersResult);
-        console.log("ORDERS_RESULT_ASESOR_JSON", JSON.stringify(ordersResult));
-        setPedidos(ordersResult.pedidos ?? []);
-        if (!asesorInicialRef.current) {
-          setAsesorId(user?.uid || "");
-          asesorInicialRef.current = true;
+
+        if (!cancelled) {
+          setPedidos(ordersResult.pedidos ?? []);
+
+          if (!asesorInicialRef.current) {
+            setAsesorId(user?.uid || "");
+            asesorInicialRef.current = true;
+          }
         }
       } catch (error) {
         console.error("ERROR_LOADING_ASESOR_PEDIDOS", error);
-        toast.error("No se pudieron cargar los pedidos");
+        const apiError = error as { status?: number; code?: string } | undefined;
+        if (apiError?.status === 401 || apiError?.status === 403) {
+          toast.error('Tu sesión expiró o no es válida. Inicia sesión nuevamente.');
+          useAuthStore.getState().logout();
+        } else if (apiError?.code === 'network_error' || apiError?.status === 0) {
+          toast.error('No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.');
+        } else {
+          toast.error('No se pudieron cargar los pedidos');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
+    }
     if (user?.uid) {
       void load();
     }
+    return () => { cancelled = true; };
   }, [user?.uid, user?.name]);
 
   const filteredPedidos = useMemo(() => {
@@ -260,6 +273,9 @@ export const AsesorPedidos: React.FC = () => {
 
   const subtotal = items.reduce((sum, it) => sum + it.precio * it.cantidad, 0);
   const totalItems = items.reduce((sum, it) => sum + it.cantidad, 0);
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
 
   const confirmDelete = async () => {
     if (!selectedPedido) return;
@@ -540,27 +556,19 @@ export const AsesorPedidos: React.FC = () => {
         subtitle={
           editingId
             ? "Actualiza los datos del pedido"
-            : "Registra un pedido para tus clientes"
+            : "Completa la información del pedido"
         }
         size="xl"
         sections={[
           {
             title: "Información general",
             children: (
-              <div className="grid gap-4">
-                {formError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-                    {formError}
-                  </div>
-                )}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Cliente *
-                    <select
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={clienteId}
-                      onChange={(e) => setClienteId(e.target.value)}
-                    >
+              <div className={f.form}>
+                {formError && <div className={f.formError}>{formError}</div>}
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label}>Cliente *</label>
+                    <select className={f.select} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
                       <option value="">Selecciona un cliente</option>
                       {clientes.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -568,52 +576,29 @@ export const AsesorPedidos: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Asesor *
-                    <select
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={asesorId}
-                      onChange={(e) => setAsesorId(e.target.value)}
-                    >
-                      <option value="">Selecciona un asesor</option>
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label}>Asesor *</label>
+                    <select className={f.select} value={asesorId} onChange={(e) => setAsesorId(e.target.value)}>
                       <option value={user?.uid || ""}>{user?.name || "Yo"}</option>
                     </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Fecha *
-                    <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      type="date"
-                      value={fecha}
-                      onChange={(e) => setFecha(e.target.value)}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Estado *
-                    <select
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={estado}
-                      onChange={(e) =>
-                        setEstado(e.target.value as Pedido["estado"])
-                      }
-                    >
-                      {(
-                        [
-                          "Pendiente",
-                          "Aceptado",
-                          "En proceso",
-                          "Enviado",
-                          "Entregado",
-                          "Rechazado",
-                        ] as Pedido["estado"][]
-                      ).map((es) => (
+                  </div>
+                </div>
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label}>Fecha *</label>
+                    <input className={f.input} type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label}>Estado *</label>
+                    <select className={f.select} value={estado} onChange={(e) => setEstado(e.target.value as Pedido["estado"])}>
+                      {(["Pendiente", "Aceptado", "En proceso", "Enviado", "Entregado", "Rechazado"] as Pedido["estado"][]).map((es) => (
                         <option key={es} value={es}>
                           {es}
                         </option>
                       ))}
                     </select>
-                  </label>
+                  </div>
                 </div>
               </div>
             ),
@@ -621,18 +606,16 @@ export const AsesorPedidos: React.FC = () => {
           {
             title: "Productos del pedido",
             children: (
-              <div className="grid gap-4">
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Productos del pedido
-                </label>
-                <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)]">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-[var(--color-bg-elevated)] text-left text-[var(--color-text-secondary)]">
+              <div className={f.form}>
+                <div className={f.field}>
+                  <label className={f.label}>Productos del pedido</label>
+                  <table className={f.itemsTable}>
+                    <thead>
                       <tr>
-                        <th className="px-4 py-3 font-medium">Descripción</th>
-                        <th className="px-4 py-3 font-medium text-right">Cant.</th>
-                        <th className="px-4 py-3 font-medium text-right">Precio unit.</th>
-                        <th className="px-4 py-3 font-medium text-right">Subtotal</th>
+                        <th>Descripción</th>
+                        <th className={f.centerCol}>Cant.</th>
+                        <th className={f.rightCol}>Precio unit.</th>
+                        <th className={f.rightCol}>Subtotal</th>
                         <th style={{ width: 40 }}></th>
                       </tr>
                     </thead>
@@ -640,46 +623,40 @@ export const AsesorPedidos: React.FC = () => {
                       {items.map((it) => {
                         const sub = it.precio * it.cantidad;
                         return (
-                          <tr key={it.id} className="border-t border-[var(--color-border)]">
+                          <tr key={it.id}>
                             <td>
                               <input
-                                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                                className={f.input}
                                 value={it.nombre}
-                                onChange={(e) =>
-                                  updateItem(it.id, "nombre", e.target.value)
-                                }
+                                onChange={(e) => updateItem(it.id, "nombre", e.target.value)}
                                 placeholder="Producto"
                               />
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className={f.centerCol}>
                               <input
-                                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                                className={f.input}
                                 type="number"
                                 min="1"
                                 value={it.cantidad}
-                                onChange={(e) =>
-                                  updateItem(it.id, "cantidad", Number(e.target.value))
-                                }
+                                onChange={(e) => updateItem(it.id, "cantidad", Number(e.target.value))}
                               />
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className={f.rightCol}>
                               <input
-                                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                                className={f.input}
                                 type="number"
                                 min="0"
                                 value={it.precio}
-                                onChange={(e) =>
-                                  updateItem(it.id, "precio", Number(e.target.value))
-                                }
+                                onChange={(e) => updateItem(it.id, "precio", Number(e.target.value))}
                               />
                             </td>
-                            <td className="px-4 py-3 text-right font-semibold text-[var(--color-text-primary)]">
-                              ${sub.toLocaleString()}
+                            <td className={f.rightCol} style={{ fontWeight: 600 }}>
+                              {formatCurrency(sub)}
                             </td>
                             <td>
                               <button
                                 type="button"
-                                className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                                className={f.removeRowBtn}
                                 onClick={() => removeItem(it.id)}
                                 aria-label="Eliminar producto"
                                 disabled={items.length === 1}
@@ -692,18 +669,13 @@ export const AsesorPedidos: React.FC = () => {
                       })}
                     </tbody>
                   </table>
+                  <button type="button" className={f.addRowBtn} onClick={addItem}>
+                    <Plus size={14} /> Agregar producto
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                  onClick={addItem}
-                >
-                  <Plus size={14} />
-                  Agregar producto
-                </button>
-                <div className="flex justify-end gap-4 text-sm">
-                  <span className="text-[var(--color-text-secondary)]">Total de items: <strong>{totalItems}</strong></span>
-                  <span className="font-semibold text-[var(--color-text-primary)]">Total pedido: <strong>${subtotal.toLocaleString()}</strong></span>
+                <div className={f.totalsBox}>
+                  <div className={f.totalRow}><span>Total de items:</span><span>{totalItems}</span></div>
+                  <div className={`${f.totalRow} ${f.totalRowFinal}`}><span>Total pedido:</span><span>{formatCurrency(subtotal)}</span></div>
                 </div>
               </div>
             ),
@@ -711,21 +683,23 @@ export const AsesorPedidos: React.FC = () => {
           {
             title: "Observaciones",
             children: (
-              <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                Observaciones
-                <textarea
-                  className="min-h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                  placeholder="Notas del pedido..."
-                  rows={2}
-                />
-              </label>
+              <div className={f.form}>
+                <div className={f.field}>
+                  <label className={f.label}>Observaciones</label>
+                  <textarea
+                    className={f.textarea}
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    placeholder="Notas del pedido..."
+                    rows={2}
+                  />
+                </div>
+              </div>
             ),
           },
         ]}
         footer={
-          <div className="flex justify-end gap-3">
+          <div className={f.formActions}>
             <Button
               type="button"
               variant="secondary"
@@ -733,10 +707,11 @@ export const AsesorPedidos: React.FC = () => {
                 setIsFormOpen(false);
                 resetForm();
               }}
+              disabled={saving}
             >
               Cancelar
             </Button>
-            <Button type="button" onClick={savePedido}>
+            <Button type="button" onClick={savePedido} loading={saving}>
               {editingId ? "Guardar cambios" : "Crear pedido"}
             </Button>
           </div>

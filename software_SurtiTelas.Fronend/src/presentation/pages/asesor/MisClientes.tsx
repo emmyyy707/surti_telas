@@ -2,6 +2,7 @@
 import { Search, Plus, Eye, Edit, Trash2, User, MapPin, Phone, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import s from '../admin/Clientes.module.css';
+import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DetailModal } from '@/shared/ui/DetailModal';
@@ -9,6 +10,8 @@ import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { Tooltip } from '@/shared/components/Tooltip';
 import { useClientes, usePedidos } from '@/core/stores';
 import { useAuthStore } from '@/core/stores/authStore';
+import { authApi, type BackendAuthUser, type CreateUserRequest } from '@/infrastructure/api/authApi';
+import { customersApi } from '@/infrastructure/api/customersApi';
 import type { Cliente } from '@/core/types';
 
 const emptyClienteForm: Omit<Cliente, 'id' | 'pedidos'> = {
@@ -99,7 +102,8 @@ export const AsesorClientes: React.FC = () => {
     setIsDeleteOpen(true);
   };
 
-  const saveCliente = async () => {
+  const saveCliente = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setFormError('');
     if (!form.nombre.trim()) {
       setFormError('El nombre es obligatorio.');
@@ -125,19 +129,68 @@ export const AsesorClientes: React.FC = () => {
       setFormError('El número de documento es obligatorio.');
       return;
     }
+    if (!editingId && !form.password) {
+      setFormError('La contraseña es obligatoria.');
+      return;
+    }
+    if (!editingId && form.password !== form.confirmPassword) {
+      setFormError('Las contraseñas no coinciden.');
+      return;
+    }
 
     try {
       if (editingId) {
-        const actualizado = await updateCliente(editingId, form);
-        toast.success(`${actualizado.nombre} actualizado correctamente`);
+        const cliente = clientes.find(c => c.id === editingId);
+        const customerId = (cliente as unknown as { customerId?: string })?.customerId || editingId;
+        await customersApi.update(customerId, {
+          nombre: form.nombre,
+          apellidos: form.apellidos,
+          email: form.email,
+          tel: form.tel,
+          nit: form.numeroDocumento,
+          direccion: form.direccion,
+          tipoDocumento: form.tipoDocumento as Cliente['tipoDocumento'],
+          isTrustedCustomer: form.isTrustedCustomer,
+          estado: form.estado,
+        });
+        toast.success('Cliente actualizado correctamente');
       } else {
-        const nuevo = await createCliente(form);
-        toast.success(`${nuevo.nombre} registrado correctamente`);
+        const userPayload: CreateUserRequest = {
+          nombre: form.nombre,
+          apellidos: form.apellidos,
+          email: form.email || '',
+          password: form.password || '',
+          role: 'CLIENTE',
+          telefono: form.tel,
+          direccion: form.direccion,
+          tipoDocumento: form.tipoDocumento,
+          numeroDocumento: form.numeroDocumento,
+        };
+        await authApi.createUser(userPayload);
+        await customersApi.create({
+          nombre: form.nombre,
+          apellidos: form.apellidos,
+          email: form.email,
+          tel: form.tel,
+          nit: form.numeroDocumento,
+          direccion: form.direccion,
+          tipoDocumento: form.tipoDocumento as Cliente['tipoDocumento'],
+          isTrustedCustomer: form.isTrustedCustomer,
+          estado: form.estado,
+        });
+        toast.success('Cliente creado con usuario de acceso');
       }
       setIsFormOpen(false);
       resetForm();
-    } catch {
-      toast.error('No fue posible guardar el cliente.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo guardar el cliente';
+      if (message.toLowerCase().includes('ya está registrado') || message.toLowerCase().includes('ya existe') || message.toLowerCase().includes('duplicado')) {
+        setFormError(`No se puede crear la cuenta: ${message}`);
+      } else if (message.includes('422')) {
+        setFormError(`No se puede crear la cuenta: datos inválidos - ${message}`);
+      } else {
+        setFormError(`No se puede crear la cuenta: ${message}`);
+      }
     }
   };
 
@@ -308,42 +361,46 @@ export const AsesorClientes: React.FC = () => {
         children={null}
         open={isFormOpen}
         onClose={() => { setIsFormOpen(false); resetForm(); }}
-        title={editingId ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}
+        title={editingId ? 'Editar Cliente' : 'Nuevo Cliente'}
         subtitle={editingId ? 'Actualiza la información de la cuenta' : 'Crea un cliente para tu cartera'}
         size="lg"
         sections={[
           {
             title: 'Datos personales',
             children: (
-              <div className="grid gap-4 md:grid-cols-2">
-                {formError && <div className="md:col-span-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{formError}</div>}
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Nombre *
-                  <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} required maxLength={100} />
-                </label>
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Apellidos *
-                  <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.apellidos} onChange={e => setForm({ ...form, apellidos: e.target.value })} required maxLength={100} />
-                </label>
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Email {editingId ? '' : '*'}
-                  <input type="email" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required={!editingId} maxLength={100} />
-                </label>
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Teléfono
-                  <input type="tel" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.tel} onChange={e => setForm({ ...form, tel: e.target.value })} maxLength={11} inputMode="numeric" />
-                </label>
+              <div className={f.form}>
+                {formError && <div className={f.formError}>{formError}</div>}
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="nombre">Nombre *</label>
+                    <input id="nombre" type="text" className={f.input} name="nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required maxLength={100} autoComplete="given-name" />
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="apellidos">Apellidos *</label>
+                    <input id="apellidos" type="text" className={f.input} name="apellidos" value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} required maxLength={100} autoComplete="family-name" />
+                  </div>
+                </div>
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="email">Email {editingId ? '' : '*'}</label>
+                    <input id="email" type="email" className={f.input} name="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required={!editingId} maxLength={100} autoComplete="email" />
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="telefono">Teléfono</label>
+                    <input id="telefono" type="tel" className={f.input} name="telefono" value={form.tel} onChange={(e) => setForm({ ...form, tel: e.target.value })} maxLength={11} pattern="[0-9]*" inputMode="numeric" autoComplete="tel" />
+                  </div>
+                </div>
               </div>
             ),
           },
           {
             title: 'Documento y dirección',
             children: (
-              <div className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Tipo de documento *
-                    <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.tipoDocumento} onChange={e => setForm({ ...form, tipoDocumento: e.target.value as Cliente['tipoDocumento'] })} required>
+              <div className={f.form}>
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="tipoDocumento">Tipo de documento *</label>
+                    <select id="tipoDocumento" className={f.select} name="tipoDocumento" value={form.tipoDocumento} onChange={(e) => setForm({ ...form, tipoDocumento: e.target.value as Cliente['tipoDocumento'] })} required>
                       <option value="">Selecciona...</option>
                       <option value="CC">Cédula de ciudadanía</option>
                       <option value="NIE">NIE</option>
@@ -351,55 +408,59 @@ export const AsesorClientes: React.FC = () => {
                       <option value="CE">Cédula de extranjería</option>
                       <option value="OTHER">Otro</option>
                     </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Número de documento *
-                    <input type="text" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.numeroDocumento} onChange={e => setForm({ ...form, numeroDocumento: e.target.value })} required maxLength={20} inputMode="numeric" />
-                  </label>
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="numeroDocumento">Número de documento *</label>
+                    <input id="numeroDocumento" type="text" className={f.input} name="numeroDocumento" value={form.numeroDocumento} onChange={(e) => setForm({ ...form, numeroDocumento: e.target.value })} required maxLength={20} inputMode="numeric" />
+                  </div>
                 </div>
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Dirección
-                  <input type="text" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} maxLength={200} />
-                </label>
+                <div className={f.field}>
+                  <label className={f.label} htmlFor="direccion">Dirección</label>
+                  <input id="direccion" type="text" className={f.input} name="direccion" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} maxLength={200} autoComplete="street-address" />
+                </div>
               </div>
             ),
           },
           !editingId && {
             title: 'Seguridad',
             children: (
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Contraseña *
-                  <input type="password" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required minLength={8} placeholder="Mínimo 8 caracteres" />
-                </label>
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Confirmar contraseña *
-                  <input type="password" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} required minLength={8} placeholder="Repite la contraseña" />
-                </label>
+              <div className={f.form}>
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="password">Contraseña *</label>
+                    <input id="password" type="password" className={f.input} name="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} placeholder="Mínimo 8 caracteres" autoComplete="new-password" />
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="confirmPassword">Confirmar contraseña *</label>
+                    <input id="confirmPassword" type="password" className={f.input} name="confirmPassword" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required minLength={8} placeholder="Repite la contraseña" autoComplete="new-password" />
+                  </div>
+                </div>
               </div>
             ),
           },
           {
             title: 'Estado',
             children: (
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Estado
-                  <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value as Cliente['estado'] })}>
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3 text-sm font-medium text-[var(--color-text-primary)]" style={{ alignSelf: 'end' }}>
-                  <input type="checkbox" checked={form.isTrustedCustomer} onChange={e => setForm({ ...form, isTrustedCustomer: e.target.checked })} />
-                  Marcar como cliente de confianza
-                </label>
+              <div className={f.form}>
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label} htmlFor="estado">Estado</label>
+                    <select id="estado" className={f.select} name="estado" value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value as Cliente['estado'] })}>
+                      <option value="Activo">Activo</option>
+                      <option value="Inactivo">Inactivo</option>
+                    </select>
+                  </div>
+                  <div className={f.field} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 24 }}>
+                    <input type="checkbox" id="isTrustedCustomer" name="isTrustedCustomer" checked={form.isTrustedCustomer} onChange={(e) => setForm({ ...form, isTrustedCustomer: e.target.checked })} />
+                    <label htmlFor="isTrustedCustomer" className={f.label} style={{ margin: 0 }}>Cliente de confianza</label>
+                  </div>
+                </div>
               </div>
             ),
           },
         ].filter(Boolean) as any[]}
         footer={
-          <div className="flex justify-end gap-3">
+          <div className={f.formActions}>
             <Button type="button" variant="secondary" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancelar</Button>
             <Button type="button" onClick={saveCliente}>{editingId ? 'Guardar cambios' : 'Crear cliente'}</Button>
           </div>
