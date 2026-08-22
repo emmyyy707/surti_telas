@@ -252,6 +252,7 @@ app.use('/api/v1/sales-orders', orderApprovalRouter);
   }
 
   app.use((_req, res) => {
+    logger.warn('Ruta no encontrada', { url: _req.originalUrl || _req.url, method: _req.method, requestId: _req.requestId });
     res.status(404).json({ success: false, error: 'not_found', message: 'Ruta no encontrada' });
   });
 

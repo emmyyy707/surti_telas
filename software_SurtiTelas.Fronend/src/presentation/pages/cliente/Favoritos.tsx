@@ -53,7 +53,7 @@ export const Favoritos: React.FC = () => {
     try {
       await favoritesApi.toggle(productToRemove.id);
       setFavorites(current => current.filter(p => (p.id || p.ref) !== productToRemove.id));
-      toast.success(`${productToRemove.nombre} eliminado de favoritos`);
+      toast.success(`"${productToRemove.nombre}" se eliminó de favoritos`);
     } catch {
       toast.error('No se pudo eliminar el favorito');
     } finally {
@@ -79,7 +79,7 @@ export const Favoritos: React.FC = () => {
       quantity: 1,
     });
 
-    toast.success(`${product.nombre} agregado al carrito`);
+    toast.success(`"${product.nombre}" se agregó al carrito`);
   };
 
   if (loading) {

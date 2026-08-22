@@ -1,5 +1,5 @@
 
-corregir mensajes de favoritos por que cuando agregego un producto del catalo a favoritos me sale este mensage "cmsxehdvb0004igc4yuzevuob"
+corregir mensajes de favoritos por que cuando agregego un producto del catalo a favoritos me sale este
 
 hacesr los mensages mas especificos para el usuario y organizar caracteres especial
 

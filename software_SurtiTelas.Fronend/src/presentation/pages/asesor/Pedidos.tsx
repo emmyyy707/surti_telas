@@ -7,6 +7,7 @@ import {
   Package,
   AlertTriangle,
   Eye,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import s from "../admin/Pedidos.module.css";
@@ -33,11 +34,7 @@ const orderStatuses: Record<string, "success" | "warning" | "danger" | "info" | 
 const emptyPedidoForm: Omit<Pedido, "id"> = {
   cliente: "",
   asesor: "",
-  fecha: new Date().toLocaleDateString("es-CO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }),
+  fecha: new Date().toISOString().slice(0, 10),
   items: 1,
   total: "0",
   estado: "Pendiente",
@@ -61,8 +58,16 @@ export const AsesorPedidos: React.FC = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
-  const [form, setForm] = useState<Omit<Pedido, "id">>(emptyPedidoForm);
+  const [clienteId, setClienteId] = useState("");
+  const [asesorId, setAsesorId] = useState(user?.uid || "");
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [estado, setEstado] = useState<Pedido["estado"]>("Pendiente");
+  const [observaciones, setObservaciones] = useState("");
+  const [items, setItems] = useState<Array<{ id: string; nombre: string; precio: number; cantidad: number }>>([
+    { id: "I1", nombre: "", precio: 0, cantidad: 1 },
+  ]);
   const [statusValue, setStatusValue] = useState<Pedido["estado"]>("Pendiente");
+  const [saving, setSaving] = useState(false);
   const asesorInicialRef = useRef(false);
 
   useEffect(() => {
@@ -74,7 +79,7 @@ export const AsesorPedidos: React.FC = () => {
         console.log("ORDERS_RESULT_ASESOR_JSON", JSON.stringify(ordersResult));
         setPedidos(ordersResult.pedidos ?? []);
         if (!asesorInicialRef.current) {
-          setForm((prev) => ({ ...prev, asesor: user?.name || "" }));
+          setAsesorId(user?.uid || "");
           asesorInicialRef.current = true;
         }
       } catch (error) {
@@ -99,7 +104,12 @@ export const AsesorPedidos: React.FC = () => {
   }, [pedidos, search]);
 
   const resetForm = () => {
-    setForm({ ...emptyPedidoForm, asesor: user?.name || "" });
+    setClienteId("");
+    setAsesorId(user?.uid || "");
+    setFecha(new Date().toISOString().slice(0, 10));
+    setEstado("Pendiente");
+    setObservaciones("");
+    setItems([{ id: "I1", nombre: "", precio: 0, cantidad: 1 }]);
     setEditingId(null);
     setFormError("");
   };
@@ -111,17 +121,19 @@ export const AsesorPedidos: React.FC = () => {
 
   const openEdit = (pedido: Pedido) => {
     setEditingId(pedido.id);
-    setForm({
-      cliente: pedido.cliente,
-      asesor: pedido.asesor,
-      fecha: pedido.fecha,
-      items: pedido.items,
-      total: pedido.total,
-      estado: pedido.estado,
-      prioridad: pedido.prioridad || "Estándar",
-      observaciones: pedido.observaciones || "",
-      itemsList: pedido.itemsList || [],
-    });
+    setClienteId(pedido.clienteId || "");
+    setAsesorId(pedido.asesorId || user?.uid || "");
+    setFecha(pedido.fecha);
+    setEstado(pedido.estado);
+    setObservaciones(pedido.observaciones || "");
+    setItems(
+      (pedido.itemsList ?? []).map((it, idx) => ({
+        id: `I${idx + 1}-${Date.now()}`,
+        nombre: it.nombre,
+        precio: it.precio,
+        cantidad: it.cantidad,
+      }))
+    );
     setFormError("");
     setIsFormOpen(true);
   };
@@ -144,42 +156,30 @@ export const AsesorPedidos: React.FC = () => {
 
   const savePedido = async () => {
     setFormError("");
-    const items = Number(form.items) || 0;
-    const total = parseCurrency(form.total);
-
-    if (!form.cliente.trim()) {
-      setFormError("El cliente es obligatorio.");
+    const itemsValidos = items.filter((it) => it.nombre.trim() && it.cantidad > 0);
+    if (itemsValidos.length === 0) {
+      setFormError("Debes agregar al menos un producto al pedido");
       return;
     }
-    if (items <= 0) {
-      setFormError("La cantidad de artículos debe ser mayor a 0.");
-      return;
-    }
-    if (total <= 0) {
-      setFormError("El total del pedido debe ser mayor a 0.");
+    if (!clienteId) {
+      setFormError("Selecciona un cliente");
       return;
     }
 
+    setSaving(true);
     try {
+      const itemsList = itemsValidos.map((it) => ({
+        nombre: it.nombre,
+        precio: it.precio,
+        cantidad: it.cantidad,
+      }));
+
       if (editingId) {
-        const cliente = clientes.find(
-          (c) => c.nombre.toLowerCase() === form.cliente.toLowerCase(),
-        );
-        const itemsList =
-          form.itemsList && form.itemsList.length > 0
-            ? form.itemsList
-            : [
-                {
-                  nombre: "Solicitud personalizada",
-                  precio: Math.round(Number(form.total) / items),
-                  cantidad: items,
-                },
-              ];
         const actualizado = await ordersApi.updateOrderFull(editingId, {
-          clienteId: cliente?.id || form.cliente,
-          asesorId: user?.uid,
-          prioridad: form.prioridad,
-          observaciones: form.observaciones,
+          clienteId,
+          asesorId: asesorId || undefined,
+          prioridad: undefined,
+          observaciones: observaciones || undefined,
           itemsList,
         });
         setPedidos((prev) =>
@@ -187,53 +187,33 @@ export const AsesorPedidos: React.FC = () => {
             p.id === editingId
               ? {
                   ...actualizado,
-                  cliente: form.cliente,
-                  asesor: form.asesor,
-                  items,
-                  total: form.total,
-                  fecha: form.fecha,
+                  cliente: clientes.find((c) => c.id === clienteId)?.nombre || actualizado.cliente,
+                  asesor: user?.name || actualizado.asesor,
+                  items: itemsValidos.length,
+                  total: actualizado.total,
+                  fecha,
                 }
-              : p,
-          ),
+              : p
+          )
         );
         toast.success(`Pedido ${actualizado.id} actualizado`);
       } else {
-        const cliente = clientes.find(
-          (c) => c.nombre.toLowerCase() === form.cliente.toLowerCase(),
-        );
-        if (!cliente) {
-          setFormError("Cliente no encontrado. Registra el cliente primero.");
-          return;
-        }
-        const data: Omit<Pedido, "id"> = {
-          ...form,
-          items,
-          total: `$${total.toLocaleString()}`,
-          itemsList:
-            form.itemsList && form.itemsList.length > 0
-              ? form.itemsList
-              : [
-                  {
-                    nombre: "Solicitud personalizada",
-                    precio: Math.round(total / items),
-                    cantidad: items,
-                  },
-                ],
-        };
         const resultado = await ordersApi.create({
-          clienteId: cliente.id,
-          asesorId: user?.uid,
-          itemsList: data.itemsList || [],
-          prioridad: data.prioridad,
-          observaciones: data.observaciones,
+          clienteId,
+          asesorId: asesorId || undefined,
+          itemsList,
+          prioridad: undefined,
+          observaciones: observaciones || undefined,
         });
         setPedidos((prev) => [resultado.pedido, ...prev]);
         toast.success(`Pedido ${resultado.pedido.id} creado correctamente`);
       }
       setIsFormOpen(false);
       resetForm();
-    } catch {
+    } catch (error) {
       toast.error("No fue posible guardar el pedido.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -260,6 +240,26 @@ export const AsesorPedidos: React.FC = () => {
       }
     }
   };
+
+  const updateItem = (id: string, field: "nombre" | "precio" | "cantidad", value: string | number) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, [field]: value } : it))
+    );
+  };
+
+  const addItem = () => {
+    setItems((prev) => [
+      ...prev,
+      { id: `I${prev.length + 1}-${Date.now()}`, nombre: "", precio: 0, cantidad: 1 },
+    ]);
+  };
+
+  const removeItem = (id: string) => {
+    setItems((prev) => (prev.length > 1 ? prev.filter((it) => it.id !== id) : prev));
+  };
+
+  const subtotal = items.reduce((sum, it) => sum + it.precio * it.cantidad, 0);
+  const totalItems = items.reduce((sum, it) => sum + it.cantidad, 0);
 
   const confirmDelete = async () => {
     if (!selectedPedido) return;
@@ -542,10 +542,10 @@ export const AsesorPedidos: React.FC = () => {
             ? "Actualiza los datos del pedido"
             : "Registra un pedido para tus clientes"
         }
-        size="lg"
+        size="xl"
         sections={[
           {
-            title: "Datos del pedido",
+            title: "Información general",
             children: (
               <div className="grid gap-4">
                 {formError && (
@@ -555,46 +555,47 @@ export const AsesorPedidos: React.FC = () => {
                 )}
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Cliente
-                    <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={form.cliente}
-                      onChange={(e) =>
-                        setForm({ ...form, cliente: e.target.value })
-                      }
-                      placeholder="Nombre del cliente"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Fecha
-                    <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={form.fecha}
-                      onChange={(e) =>
-                        setForm({ ...form, fecha: e.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Asesor
-                    <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={form.asesor}
-                      onChange={(e) =>
-                        setForm({ ...form, asesor: e.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Estado
+                    Cliente *
                     <select
                       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={form.estado}
+                      value={clienteId}
+                      onChange={(e) => setClienteId(e.target.value)}
+                    >
+                      <option value="">Selecciona un cliente</option>
+                      {clientes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                    Asesor *
+                    <select
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={asesorId}
+                      onChange={(e) => setAsesorId(e.target.value)}
+                    >
+                      <option value="">Selecciona un asesor</option>
+                      <option value={user?.uid || ""}>{user?.name || "Yo"}</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                    Fecha *
+                    <input
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                    Estado *
+                    <select
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                      value={estado}
                       onChange={(e) =>
-                        setForm({
-                          ...form,
-                          estado: e.target.value as Pedido["estado"],
-                        })
+                        setEstado(e.target.value as Pedido["estado"])
                       }
                     >
                       {(
@@ -613,61 +614,113 @@ export const AsesorPedidos: React.FC = () => {
                       ))}
                     </select>
                   </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Cantidad de artículos
-                    <input
-                      type="number"
-                      min="1"
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={form.items}
-                      onChange={(e) =>
-                        setForm({ ...form, items: Number(e.target.value) })
-                      }
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Total
-                    <input
-                      type="number"
-                      min="1"
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={parseCurrency(form.total)}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          total: `$${Number(e.target.value || 0).toLocaleString()}`,
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Prioridad
-                    <select
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                      value={form.prioridad}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          prioridad: e.target.value as Pedido["prioridad"],
-                        })
-                      }
-                    >
-                      <option value="Estándar">Estándar</option>
-                      <option value="Prioritario">Prioritario</option>
-                    </select>
-                  </label>
                 </div>
-                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                  Observaciones
-                  <textarea
-                    className="min-h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
-                    value={form.observaciones}
-                    onChange={(e) =>
-                      setForm({ ...form, observaciones: e.target.value })
-                    }
-                  />
-                </label>
               </div>
+            ),
+          },
+          {
+            title: "Productos del pedido",
+            children: (
+              <div className="grid gap-4">
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Productos del pedido
+                </label>
+                <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)]">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-[var(--color-bg-elevated)] text-left text-[var(--color-text-secondary)]">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Descripción</th>
+                        <th className="px-4 py-3 font-medium text-right">Cant.</th>
+                        <th className="px-4 py-3 font-medium text-right">Precio unit.</th>
+                        <th className="px-4 py-3 font-medium text-right">Subtotal</th>
+                        <th style={{ width: 40 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((it) => {
+                        const sub = it.precio * it.cantidad;
+                        return (
+                          <tr key={it.id} className="border-t border-[var(--color-border)]">
+                            <td>
+                              <input
+                                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                                value={it.nombre}
+                                onChange={(e) =>
+                                  updateItem(it.id, "nombre", e.target.value)
+                                }
+                                placeholder="Producto"
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <input
+                                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                                type="number"
+                                min="1"
+                                value={it.cantidad}
+                                onChange={(e) =>
+                                  updateItem(it.id, "cantidad", Number(e.target.value))
+                                }
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <input
+                                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                                type="number"
+                                min="0"
+                                value={it.precio}
+                                onChange={(e) =>
+                                  updateItem(it.id, "precio", Number(e.target.value))
+                                }
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-right font-semibold text-[var(--color-text-primary)]">
+                              ${sub.toLocaleString()}
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                                onClick={() => removeItem(it.id)}
+                                aria-label="Eliminar producto"
+                                disabled={items.length === 1}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  onClick={addItem}
+                >
+                  <Plus size={14} />
+                  Agregar producto
+                </button>
+                <div className="flex justify-end gap-4 text-sm">
+                  <span className="text-[var(--color-text-secondary)]">Total de items: <strong>{totalItems}</strong></span>
+                  <span className="font-semibold text-[var(--color-text-primary)]">Total pedido: <strong>${subtotal.toLocaleString()}</strong></span>
+                </div>
+              </div>
+            ),
+          },
+          {
+            title: "Observaciones",
+            children: (
+              <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                Observaciones
+                <textarea
+                  className="min-h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]"
+                  value={observaciones}
+                  onChange={(e) => setObservaciones(e.target.value)}
+                  placeholder="Notas del pedido..."
+                  rows={2}
+                />
+              </label>
             ),
           },
         ]}

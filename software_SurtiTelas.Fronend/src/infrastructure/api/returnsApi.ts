@@ -1,4 +1,4 @@
-import { api } from './httpClient';
+import { api, ApiError, API_BASE_URL } from './httpClient';
 
 export type DevolucionEstado =
   | 'RECIBIDO'
@@ -31,6 +31,9 @@ export interface ReturnDTO {
   responsable?: string;
   observaciones?: string;
   imagenes?: string[];
+  orderId?: string;
+  fechaOrden?: string;
+  estadoOrden?: string;
 }
 
 export interface Return {
@@ -49,6 +52,9 @@ export interface Return {
   responsable?: string;
   observaciones: string;
   imagenes: string[];
+  orderId?: string;
+  fechaOrden?: string;
+  estadoOrden?: string;
 }
 
 export function toReturn(dto: ReturnDTO): Return {
@@ -68,6 +74,9 @@ export function toReturn(dto: ReturnDTO): Return {
     responsable: dto.responsable,
     observaciones: dto.observaciones ?? '',
     imagenes: dto.imagenes ?? [],
+    orderId: dto.orderId,
+    fechaOrden: dto.fechaOrden,
+    estadoOrden: dto.estadoOrden,
   };
 }
 
@@ -88,15 +97,28 @@ export interface CreateReturnInput {
 
 export const returnsApi = {
   async list(): Promise<Return[]> {
-    const response = await api.get<{ items: ReturnDTO[]; meta: Record<string, unknown> }>('/returns');
+    const response = await api.get<{ items: ReturnDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/returns');
     const data = response?.items ?? [];
+    if (import.meta.env.DEV) {
+      console.debug('[returnsApi.list] response', response);
+    }
     return data.map(toReturn);
   },
 
   async listClient(): Promise<Return[]> {
-    const response = await api.get<{ items: ReturnDTO[]; meta: Record<string, unknown> }>('/client/returns');
-    const data = response?.items ?? [];
-    return data.map(toReturn);
+    try {
+      const response = await api.get<{ items: ReturnDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/client/returns');
+      const data = response?.items ?? [];
+      if (import.meta.env.DEV) {
+        console.debug('[returnsApi.listClient] response', response);
+      }
+      return data.map(toReturn);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.debug('[returnsApi.listClient] error', err);
+      }
+      throw err;
+    }
   },
 
   async getById(id: string): Promise<Return | null> {

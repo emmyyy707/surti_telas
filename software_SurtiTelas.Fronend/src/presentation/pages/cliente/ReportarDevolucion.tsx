@@ -152,8 +152,7 @@ export const ReportarDevolucion: React.FC = () => {
     setImagenes(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setSaving(true);
     try {
       const response = await returnsApi.createClient({
@@ -216,7 +215,7 @@ export const ReportarDevolucion: React.FC = () => {
 
       {activeTab === 'new' && (
         <div className={s.card}>
-          <form onSubmit={handleSubmit} className={s.form}>
+          <div className={s.form}>
             <div className={s.section}>
               <h3 className={s.sectionTitle}>Datos de la devolución</h3>
             <div className={s.grid}>
@@ -323,10 +322,10 @@ export const ReportarDevolucion: React.FC = () => {
           </div>
 
           <div className={s.actions}>
-            <Button type="submit" loading={saving} leftIcon={<CheckCircle size={16} />}>Reportar devolución</Button>
+            <Button type="button" onClick={handleSubmit} loading={saving} leftIcon={<CheckCircle size={16} />}>Reportar devolución</Button>
           </div>
-        </form>
-      </div>
+        </div>
+        </div>
       )}
 
       {activeTab === 'history' && (

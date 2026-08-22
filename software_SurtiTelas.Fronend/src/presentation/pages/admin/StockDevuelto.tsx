@@ -32,6 +32,8 @@ interface Devolucion {
   responsable?: string;
   observaciones: string;
   evidencias?: string[];
+  fechaOrden?: string;
+  estadoOrden?: string;
 }
 
 interface HistorialCambio {
@@ -93,6 +95,8 @@ function toDevolucion(r: Return): Devolucion {
     responsable: r.responsable,
     observaciones: r.observaciones,
     evidencias: r.imagenes ?? [],
+    fechaOrden: r.fechaOrden,
+    estadoOrden: r.estadoOrden,
   };
 }
 
@@ -541,13 +545,17 @@ export const AdminStockDevuelto: React.FC = () => {
                       <div className={s.detailItem}><span className={s.detailLabel}>Cantidad inspeccionada</span><span>{d.cantidadInspeccionada}</span></div>
                       <div className={s.detailItem}><span className={s.detailLabel}>Cliente</span><span>{d.cliente}</span></div>
                       <div className={s.detailItem}><span className={s.detailLabel}>Fecha devolución</span><span>{d.fechaDevolucion}</span></div>
+                      <div className={s.detailItem}><span className={s.detailLabel}>Destino previsto</span><span>{d.destino}</span></div>
                       {d.responsable && <div className={s.detailItem}><span className={s.detailLabel}>Responsable</span><span>{d.responsable}</span></div>}
+                      {d.observaciones && <div className={s.detailItem}><span className={s.detailLabel}>Observaciones</span><span>{d.observaciones}</span></div>}
                     </div>
                   </div>
                   <div className={s.detailSection}>
-                    <h4 className={s.detailSectionTitle}>Orden relacionada</h4>
+                    <h4 className={s.detailSectionTitle}>Pedido relacionado</h4>
                     <div className={s.detailGrid}>
                       <div className={s.detailItem}><span className={s.detailLabel}>N° Orden</span><span>{d.numeroOrden}</span></div>
+                      <div className={s.detailItem}><span className={s.detailLabel}>Fecha orden</span><span>{d.fechaOrden}</span></div>
+                      <div className={s.detailItem}><span className={s.detailLabel}>Estado orden</span><span>{d.estadoOrden}</span></div>
                       <div className={s.detailItem}><span className={s.detailLabel}>Prenda</span><span>{d.prenda}</span></div>
                       <div className={s.detailItem}><span className={s.detailLabel}>Estado actual</span><span>{d.estado}</span></div>
                     </div>

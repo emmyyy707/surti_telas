@@ -110,6 +110,7 @@ const App: React.FC = () => {
           <Route path="/registro" element={<RegisterPage />} />
           <Route path="/olvide-contrasena" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/unauthorized" element={<Layout><div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">No autorizado</h1><p className="text-[var(--color-text-secondary)]">No tienes permisos para acceder a esta página.</p></div></div></Layout>} />
 
           {/* ADMIN - Protected routes for admin role */}
           <Route path="/admin" element={

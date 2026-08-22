@@ -10,7 +10,7 @@ import { tokenStorage } from './tokenStorage';
 
 export const API_BASE_URL: string =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ??
-    'http://localhost:3000/api/v1';
+    '/api/v1';
 
 export interface ApiEnvelope<T> {
   success: boolean;
@@ -47,23 +47,47 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
 }
 
 function buildUrl(path: string, query?: RequestOptions['query']): string {
-  const url = new URL(`${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`);
+  const base = API_BASE_URL.replace(/\/$/, '');
+  const fullPath = `${base}${path.startsWith('/') ? path : `/${path}`}`;
+
+  if (base.startsWith('http')) {
+    const url = new URL(fullPath);
+    if (query) {
+      for (const [key, value] of Object.entries(query)) {
+        if (value === undefined || value === null || value === '') continue;
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            if (item !== undefined && item !== null && item !== '') {
+              url.searchParams.append(key, String(item));
+            }
+          }
+          continue;
+        }
+        url.searchParams.set(key, String(value));
+      }
+    }
+    url.searchParams.set('_t', Date.now().toString());
+    return url.toString();
+  }
+
+  const params = new URLSearchParams();
+  params.set('_t', Date.now().toString());
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null || value === '') continue;
       if (Array.isArray(value)) {
         for (const item of value) {
           if (item !== undefined && item !== null && item !== '') {
-            url.searchParams.append(key, String(item));
+            params.append(key, String(item));
           }
         }
         continue;
       }
-      url.searchParams.set(key, String(value));
+      params.set(key, String(value));
     }
   }
-  url.searchParams.set('_t', Date.now().toString());
-  return url.toString();
+  const separator = params.toString() ? '?' : '';
+  return `${fullPath}${separator}${params.toString()}`;
 }
 
 /** Renueva el accessToken usando el refreshToken en cookie httpOnly. Devuelve true si tuvo éxito. */
@@ -101,7 +125,11 @@ async function refreshAccessToken(): Promise<boolean> {
 async function doFetch<T>(path: string, options: RequestOptions, retrying = false): Promise<T> {
   const { method = 'GET', body, auth = true, query } = options;
 
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    Pragma: 'no-cache',
+  };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   if (auth) {
@@ -111,14 +139,25 @@ async function doFetch<T>(path: string, options: RequestOptions, retrying = fals
 
   let res: Response;
   try {
-    res = await fetch(buildUrl(path, query), {
+    const finalUrl = buildUrl(path, query);
+    if (import.meta.env.DEV) {
+      console.debug('[httpClient]', method, finalUrl);
+    }
+    res = await fetch(finalUrl, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       credentials: 'include',
+      cache: 'no-store',
     });
-  } catch {
+    if (import.meta.env.DEV) {
+      console.debug('[httpClient] response', method, finalUrl, res.status, res.statusText);
+    }
+  } catch (e) {
     const url = buildUrl(path, query);
+    if (import.meta.env.DEV) {
+      console.debug('[httpClient] network error', method, url, e);
+    }
     throw new ApiError(
       `No se pudo conectar con el servidor (${url}). Verifica que el backend esté en ejecución y que accedas desde http://localhost:5173`,
       0,
@@ -146,7 +185,8 @@ async function doFetch<T>(path: string, options: RequestOptions, retrying = fals
     throw new ApiError(message, res.status, json?.error);
   }
 
-  return (json?.data as T) ?? (undefined as T);
+  const payload = json?.data ?? json;
+  return (payload as T) ?? (undefined as T);
 }
 
 /** Igual que doFetch pero envía un FormData (multipart) sin sobrescribir el Content-Type. */
@@ -195,7 +235,8 @@ async function doFetchForm<T>(path: string, options: RequestOptions, retrying = 
     throw new ApiError(message, res.status, json?.error);
   }
 
-  return (json?.data as T) ?? (undefined as T);
+  const payload = json?.data ?? json;
+  return (payload as T) ?? (undefined as T);
 }
 
 export const api = {

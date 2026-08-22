@@ -102,11 +102,27 @@ export const AsesorClientes: React.FC = () => {
   const saveCliente = async () => {
     setFormError('');
     if (!form.nombre.trim()) {
-      setFormError('El nombre del cliente es obligatorio.');
+      setFormError('El nombre es obligatorio.');
       return;
     }
-    if (!form.ciudad.trim() || !form.tel.trim()) {
-      setFormError('La ciudad y el teléfono son obligatorios.');
+    if (!form.apellidos?.trim()) {
+      setFormError('El apellido es obligatorio.');
+      return;
+    }
+    if (!editingId && !form.email?.trim()) {
+      setFormError('El email es obligatorio.');
+      return;
+    }
+    if (!form.tel.trim()) {
+      setFormError('El teléfono es obligatorio.');
+      return;
+    }
+    if (!form.tipoDocumento) {
+      setFormError('El tipo de documento es obligatorio.');
+      return;
+    }
+    if (!form.numeroDocumento?.trim()) {
+      setFormError('El número de documento es obligatorio.');
       return;
     }
 
@@ -297,61 +313,91 @@ export const AsesorClientes: React.FC = () => {
         size="lg"
         sections={[
           {
-            title: 'Datos del cliente',
+            title: 'Datos personales',
+            children: (
+              <div className="grid gap-4 md:grid-cols-2">
+                {formError && <div className="md:col-span-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{formError}</div>}
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Nombre *
+                  <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} required maxLength={100} />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Apellidos *
+                  <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.apellidos} onChange={e => setForm({ ...form, apellidos: e.target.value })} required maxLength={100} />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Email {editingId ? '' : '*'}
+                  <input type="email" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required={!editingId} maxLength={100} />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Teléfono
+                  <input type="tel" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.tel} onChange={e => setForm({ ...form, tel: e.target.value })} maxLength={11} inputMode="numeric" />
+                </label>
+              </div>
+            ),
+          },
+          {
+            title: 'Documento y dirección',
             children: (
               <div className="grid gap-4">
-                {formError && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{formError}</div>}
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Nombre comercial
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Ciudad
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.ciudad} onChange={e => setForm({ ...form, ciudad: e.target.value })} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Teléfono
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.tel} onChange={e => setForm({ ...form, tel: e.target.value })} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    NIT / CC
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.nit} onChange={e => setForm({ ...form, nit: e.target.value })} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Estado
-                    <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value as Cliente['estado'] })}>
-                      <option value="Activo">Activo</option>
-                      <option value="Inactivo">Inactivo</option>
+                    Tipo de documento *
+                    <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.tipoDocumento} onChange={e => setForm({ ...form, tipoDocumento: e.target.value as Cliente['tipoDocumento'] })} required>
+                      <option value="">Selecciona...</option>
+                      <option value="CC">Cédula de ciudadanía</option>
+                      <option value="NIE">NIE</option>
+                      <option value="PASSPORT">Pasaporte</option>
+                      <option value="CE">Cédula de extranjería</option>
+                      <option value="OTHER">Otro</option>
                     </select>
                   </label>
                   <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Asesor
-                    <input className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.asesor} onChange={e => setForm({ ...form, asesor: e.target.value })} />
+                    Número de documento *
+                    <input type="text" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.numeroDocumento} onChange={e => setForm({ ...form, numeroDocumento: e.target.value })} required maxLength={20} inputMode="numeric" />
                   </label>
                 </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Cupo total
-                    <input type="number" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.cupoTotal} onChange={e => setForm({ ...form, cupoTotal: Number(e.target.value) })} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Cupo usado
-                    <input type="number" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.cupoUsado} onChange={e => setForm({ ...form, cupoUsado: Number(e.target.value) })} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                    Deuda vencida
-                    <input type="number" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.deudaVencida} onChange={e => setForm({ ...form, deudaVencida: Number(e.target.value) })} />
-                  </label>
-                </div>
-                <label className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3 text-sm font-medium text-[var(--color-text-primary)]">
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Dirección
+                  <input type="text" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} maxLength={200} />
+                </label>
+              </div>
+            ),
+          },
+          !editingId && {
+            title: 'Seguridad',
+            children: (
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Contraseña *
+                  <input type="password" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required minLength={8} placeholder="Mínimo 8 caracteres" />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Confirmar contraseña *
+                  <input type="password" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} required minLength={8} placeholder="Repite la contraseña" />
+                </label>
+              </div>
+            ),
+          },
+          {
+            title: 'Estado',
+            children: (
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Estado
+                  <select className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2 text-[var(--color-text-primary)] outline-none focus:border-[var(--border-focus)]" value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value as Cliente['estado'] })}>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3 text-sm font-medium text-[var(--color-text-primary)]" style={{ alignSelf: 'end' }}>
                   <input type="checkbox" checked={form.isTrustedCustomer} onChange={e => setForm({ ...form, isTrustedCustomer: e.target.checked })} />
                   Marcar como cliente de confianza
                 </label>
               </div>
             ),
           },
-        ]}
+        ].filter(Boolean) as any[]}
         footer={
           <div className="flex justify-end gap-3">
             <Button type="button" variant="secondary" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancelar</Button>

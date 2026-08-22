@@ -2,6 +2,7 @@
 import { Return, type ReturnData } from '../../domain/entities/Return';
 
 export function toReturnData(row: any): ReturnData {
+  const order = row.order ?? null;
   return {
     id: row.id,
     numeroDevolucion: row.numeroDevolucion,
@@ -19,6 +20,9 @@ export function toReturnData(row: any): ReturnData {
     responsable: row.responsable,
     observaciones: row.observaciones,
     imagenes: row.imagenes ?? [],
+    numeroOrden: order?.numero ?? null,
+    fechaOrden: order?.fecha ?? null,
+    estadoOrden: order?.estado ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

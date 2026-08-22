@@ -16,7 +16,7 @@ import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 const domiciliarioMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard General', key: 'dashboard' },
   { icon: PackageCheck, label: 'Entregas de Hoy', key: 'entregas' },
-  { icon: MapPin, label: 'Ruta del DÃ­a', key: 'ruta' },
+  { icon: MapPin, label: 'Ruta del Dí­a', key: 'ruta' },
   { icon: ClipboardList, label: 'Historial', key: 'historial' },
   { icon: UserCircle, label: 'Mi Perfil', key: 'perfil' },
 ];

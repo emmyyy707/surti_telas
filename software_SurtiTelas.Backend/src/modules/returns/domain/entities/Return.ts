@@ -18,6 +18,9 @@ export interface ReturnData {
   responsable?: string | null;
   observaciones?: string | null;
   imagenes?: string[];
+  numeroOrden?: string | null;
+  fechaOrden?: string | null;
+  estadoOrden?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -57,6 +60,9 @@ export class Return {
   responsable?: string | null;
   observaciones?: string | null;
   imagenes: string[];
+  numeroOrden?: string | null;
+  fechaOrden?: string | null;
+  estadoOrden?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 
@@ -77,6 +83,9 @@ export class Return {
     this.responsable = data.responsable ?? null;
     this.observaciones = data.observaciones ?? null;
     this.imagenes = data.imagenes ?? [];
+    this.numeroOrden = data.numeroOrden ?? null;
+    this.fechaOrden = data.fechaOrden ?? null;
+    this.estadoOrden = data.estadoOrden ?? null;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }
@@ -108,6 +117,9 @@ export class Return {
       responsable: this.responsable,
       observaciones: this.observaciones,
       imagenes: this.imagenes,
+      numeroOrden: this.numeroOrden,
+      fechaOrden: this.fechaOrden,
+      estadoOrden: this.estadoOrden,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

@@ -26,6 +26,7 @@ export class PrismaReturnRepository implements ReturnRepository {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
+        include: { order: true },
       }),
       this.prisma.return.count({ where }),
     ]);
@@ -37,7 +38,7 @@ export class PrismaReturnRepository implements ReturnRepository {
   }
 
   async getById(id: string): Promise<Return | null> {
-    const row = await this.prisma.return.findFirst({ where: { id, deletedAt: null } });
+    const row = await this.prisma.return.findFirst({ where: { id, deletedAt: null }, include: { order: true } });
     return row ? toReturn(row) : null;
   }
 

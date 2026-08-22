@@ -179,7 +179,7 @@ const CatalogPage: React.FC = () => {
     try {
       await favoritesApi.toggle(productId);
       const added = !favoriteIds.includes(productId);
-      toast.success(added ? 'Producto agregado a favoritos.' : 'Producto eliminado de favoritos.');
+      toast.success(added ? `"${producto.nombre}" se agregó a favoritos.` : `"${producto.nombre}" se eliminó de favoritos.`);
     } catch {
       toast.error('No se pudo sincronizar el favorito con el servidor');
     }

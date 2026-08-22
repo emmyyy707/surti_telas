@@ -1,4 +1,4 @@
-import { api } from './httpClient';
+import { api, ApiError, API_BASE_URL } from './httpClient';
 import type { PaginatedResponse } from './pagination';
 
 /** Roles tal como los devuelve el backend (enum Prisma). */
@@ -107,8 +107,13 @@ export interface UsersListResult {
 }
 
 export const authApi = {
-  login: (email: string, password: string) =>
-    api.post<LoginResponse>('/auth/login', { email, password }, { auth: false }),
+  login: (email: string, password: string) => {
+    return api.post<LoginResponse>('/auth/login', { email, password }, { auth: false }).then(r => {
+      return r;
+    }).catch(err => {
+      throw err;
+    });
+  },
 
   googleLogin: (idToken: string) =>
     api.post<GoogleLoginResponse>('/auth/google', { idToken }, { auth: false }),
