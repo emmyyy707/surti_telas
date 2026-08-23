@@ -264,7 +264,7 @@ export const customOrdersApi = {
     if (filters.search) params.append('search', filters.search);
     if (filters.estado) params.append('estado', filters.estado);
     const query = params.toString();
-    return api.get<CustomOrderListResponse>(`/custom-orders${query ? `?${query}` : ''}`);
+    return api.get<CustomOrderListResponse>('/custom-orders', { query: filters as Record<string, string | number | boolean | undefined | null> });
   },
 
   async getById(id: string): Promise<CustomOrder | null> {

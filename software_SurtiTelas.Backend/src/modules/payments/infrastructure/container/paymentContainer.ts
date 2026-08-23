@@ -47,6 +47,40 @@ export class DeletePayment {
   }
 }
 
+export class GetCustomerBalance {
+  constructor(private repo: PaymentRepository) {}
+  async execute(customerId: string) {
+    return this.repo.getCustomerBalance(customerId);
+  }
+}
+
+export class GetQuoteBalance {
+  constructor(private prisma: any) {}
+  async execute(quoteId: string) {
+    const quote = await this.prisma.quotes.findFirst({ where: { id: quoteId, deleted_at: null } });
+    if (!quote) {
+      throw new Error('Cotización no encontrada');
+    }
+
+    const payments = await this.prisma.payment.findMany({
+      where: { orderId: quote.custom_order_id ?? undefined, deletedAt: null, status: 'APPROVED' },
+    });
+
+    const totalPaid = payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+    const total = Number(quote.total);
+    const saldo = total - totalPaid;
+
+    return {
+      quoteId,
+      total,
+      totalPaid,
+      saldo,
+      porcentajeAnticipo: quote.porcentaje_anticipo ?? 50,
+      valorAnticipo: Number(quote.valor_anticipo) || 0,
+    };
+  }
+}
+
 export const paymentUseCases = {
   listPayments: new ListPayments(repository),
   getPaymentById: new GetPaymentById(repository),
@@ -54,4 +88,6 @@ export const paymentUseCases = {
   updatePaymentStatus: new UpdatePaymentStatus(repository),
   updatePayment: new UpdatePayment(repository),
   deletePayment: new DeletePayment(repository),
+  getCustomerBalance: new GetCustomerBalance(repository),
+  getQuoteBalance: new GetQuoteBalance(prisma),
 };

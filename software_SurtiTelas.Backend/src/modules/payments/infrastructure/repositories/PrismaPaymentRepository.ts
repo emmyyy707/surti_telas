@@ -62,6 +62,25 @@ export class PrismaPaymentRepository implements PaymentRepository {
   async delete(id: string): Promise<void> {
     await this.prisma.payment.update({ where: { id }, data: { deletedAt: new Date() } });
   }
+
+  async getCustomerBalance(customerId: string): Promise<{ totalPaid: number; pending: number; customerId: string }> {
+    const [approvedResult, pendingResult] = await this.prisma.$transaction([
+      this.prisma.payment.aggregate({
+        where: { customerId, status: 'APPROVED', deletedAt: null },
+        _sum: { amount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { customerId, status: 'PENDING', deletedAt: null },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    return {
+      customerId,
+      totalPaid: Number(approvedResult._sum.amount) || 0,
+      pending: Number(pendingResult._sum.amount) || 0,
+    };
+  }
 }
 
 export const PaymentMapper = {

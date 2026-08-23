@@ -5,6 +5,7 @@ import { parseDto } from '../../../../shared/presentation/http/validate';
 import { PaymentFiltersSchema, CreatePaymentSchema, UpdatePaymentStatusSchema, UpdatePaymentSchema } from '../validators/payment.validators';
 import { paymentUseCases } from '../../infrastructure/container/paymentContainer';
 import type { PaymentStatus } from '../../domain/entities/Payment';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 export const listPayments = async (req: Request, res: Response) => {
   const filters = parseDto(PaymentFiltersSchema, req.query);
@@ -33,9 +34,7 @@ export const getPayment = async (req: Request, res: Response) => {
 };
 
 export const createPayment = async (req: Request, res: Response) => {
-  console.log('E2E DEBUG createPayment body=', JSON.stringify(req.body), 'user=', req.user?.id, req.user?.role);
   const input = parseDto(CreatePaymentSchema, req.body);
-  console.log('E2E DEBUG createPayment input=', JSON.stringify(input));
   const payment = await paymentUseCases.createPayment.execute({
     ...input,
     asesorId: req.user?.role === 'ASESOR' ? req.user.id : input.asesorId,
@@ -58,4 +57,45 @@ export const updatePayment = async (req: Request, res: Response) => {
 export const deletePayment = async (req: Request, res: Response) => {
   await paymentUseCases.deletePayment.execute(req.params.id);
   return noContent(res);
+};
+
+export const getCustomerBalance = async (req: Request, res: Response) => {
+  const customerId = req.params.customerId;
+  const balance = await paymentUseCases.getCustomerBalance.execute(customerId);
+  return ok(res, balance, 'Saldo calculado');
+};
+
+export const getQuoteBalance = async (req: Request, res: Response) => {
+  const quoteId = req.params.quoteId;
+  const balance = await paymentUseCases.getQuoteBalance.execute(quoteId);
+  return ok(res, balance, 'Saldo de cotización calculado');
+};
+
+export const exportPaymentPdf = async (req: Request, res: Response) => {
+  const payment = await paymentUseCases.getPaymentById.execute(req.params.id);
+  if (!payment) {
+    return res.status(404).json({ success: false, error: 'not_found', message: 'Pago no encontrado' });
+  }
+
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595, 842]);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  page.drawText('Comprobante de Pago', { x: 50, y: 800, size: 20, font: boldFont });
+  page.drawText(`ID: ${payment.id}`, { x: 50, y: 770, size: 12, font });
+  page.drawText(`Orden: ${payment.orderId}`, { x: 50, y: 750, size: 12, font });
+  page.drawText(`Cliente: ${payment.customerId}`, { x: 50, y: 730, size: 12, font });
+  page.drawText(`Monto: $${payment.amount.toFixed(2)}`, { x: 50, y: 710, size: 12, font });
+  page.drawText(`Método: ${payment.method}`, { x: 50, y: 690, size: 12, font });
+  page.drawText(`Estado: ${payment.status}`, { x: 50, y: 670, size: 12, font });
+  page.drawText(`Referencia: ${payment.reference ?? 'N/A'}`, { x: 50, y: 650, size: 12, font });
+  page.drawText(`Notas: ${payment.notes ?? 'N/A'}`, { x: 50, y: 630, size: 12, font });
+  page.drawText(`Fecha: ${new Date(payment.createdAt).toLocaleString()}`, { x: 50, y: 610, size: 12, font });
+
+  const pdfBytes = await pdfDoc.save();
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="pago-${payment.id}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
+  return;
 };

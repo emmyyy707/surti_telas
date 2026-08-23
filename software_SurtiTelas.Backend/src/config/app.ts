@@ -51,6 +51,8 @@ import { financialRouter } from '../modules/financial/presentation/routes/financ
 import { domiciliarioRouter } from '../modules/domiciliarios/presentation/routes/domiciliario.routes';
 import { customOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/custom-order.routes';
 import { adminCustomOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/admin-custom-order.routes';
+import { purchasesRouter } from '../modules/purchases/presentation/routes/purchases.routes';
+import { rawMaterialCategoriesRouter } from '../modules/raw-material-categories/presentation/routes/raw-material-categories.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -237,6 +239,8 @@ app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/admin/financial', financialRouter);
   app.use('/api/v1/custom-orders', customOrderRouter);
   app.use('/api/v1/admin/custom-orders', adminCustomOrderRouter);
+  app.use('/api/v1/purchases', purchasesRouter);
+  app.use('/api/v1/raw-material-categories', rawMaterialCategoriesRouter);
   app.use('/api/v1/domiciliarios', domiciliarioRouter);
   app.use('/api/v1/catalog', catalogRouter);
   app.use('/api/v1/customers', customerRouter);

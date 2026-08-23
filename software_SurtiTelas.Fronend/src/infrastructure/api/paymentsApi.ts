@@ -47,6 +47,21 @@ export function toPayment(dto: PaymentDTO): Payment {
   };
 }
 
+export interface CustomerBalance {
+  customerId: string;
+  totalPaid: number;
+  pending: number;
+}
+
+export interface QuoteBalance {
+  quoteId: string;
+  total: number;
+  totalPaid: number;
+  saldo: number;
+  porcentajeAnticipo: number;
+  valorAnticipo: number;
+}
+
 export const paymentsApi = {
   async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<Payment[]> {
     const response = await api.get<{ items: PaymentDTO[]; meta: Record<string, unknown> }>('/payments', { query });
@@ -96,5 +111,27 @@ export const paymentsApi = {
 
   async remove(id: string): Promise<void> {
     await api.delete(`/payments/${encodeURIComponent(id)}`);
+  },
+
+  async getCustomerBalance(customerId: string): Promise<CustomerBalance> {
+    const data = await api.get<CustomerBalance>(`/payments/customers/${encodeURIComponent(customerId)}/balance`, { auth: true });
+    return data;
+  },
+
+  async getQuoteBalance(quoteId: string): Promise<QuoteBalance> {
+    const data = await api.get<QuoteBalance>(`/payments/quotes/${encodeURIComponent(quoteId)}/balance`, { auth: true });
+    return data;
+  },
+
+  async exportPdf(id: string): Promise<Blob> {
+    const base = (import.meta.env.VITE_API_URL || '/api/v1').replace(/\/$/, '');
+    const response = await fetch(`${base}/payments/${encodeURIComponent(id)}/pdf`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}`,
+      },
+    });
+    if (!response.ok) throw new Error('No se pudo generar el PDF');
+    return response.blob();
   },
 };

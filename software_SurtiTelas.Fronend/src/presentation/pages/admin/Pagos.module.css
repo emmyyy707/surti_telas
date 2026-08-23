@@ -508,3 +508,11 @@
 .adminModalMd { max-width: 560px; }
 .adminModalLg { max-width: 720px; }
 .adminModalXl { max-width: 960px; }
+
+.saldoSection {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}

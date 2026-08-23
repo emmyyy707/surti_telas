@@ -15,9 +15,10 @@ export const getFinancialReport = async (req: Request, res: Response) => {
   if ((filters as { desde?: string }).desde) whereFecha.gte = new Date((filters as { desde?: string }).desde!);
   if ((filters as { hasta?: string }).hasta) whereFecha.lte = new Date((filters as { hasta?: string }).hasta!);
 
-  const [salesResult, paymentsResult] = await Promise.all([
+  const [salesResult, paymentsResult, pendingPaymentsResult] = await Promise.all([
     prisma.sale.aggregate({ where: { fechaVenta: whereFecha }, _sum: { total: true } }),
-    prisma.payment.aggregate({ where: { createdAt: whereFecha }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { createdAt: whereFecha, status: 'APPROVED' }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { createdAt: whereFecha, status: 'PENDING' }, _sum: { amount: true } }),
   ]);
 
   const ingresos = Number(salesResult._sum.total) || 0;
@@ -30,7 +31,7 @@ export const getFinancialReport = async (req: Request, res: Response) => {
     gastosTotales: gastos,
     utilidadNeta,
     margenUtilidad: Math.round(margen * 100) / 100,
-    cuentasPorCobrar: 0,
+    cuentasPorCobrar: Number(pendingPaymentsResult._sum.amount) || 0,
     cuentasPorPagar: 0,
     flujoCaja: ingresos - gastos,
     ventasPorProducto: [],

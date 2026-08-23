@@ -45,7 +45,10 @@ const AdminControlPrendas = React.lazy(() => import('@/presentation/pages/admin/
 const AdminAsignacionProduccion = React.lazy(() => import('@/presentation/pages/admin/AsignacionProduccion').then(m => ({ default: m.AdminAsignacionProduccion })));
 const AdminSeguimientoProduccion = React.lazy(() => import('@/presentation/pages/admin/SeguimientoProduccion').then(m => ({ default: m.AdminSeguimientoProduccion })));
 const AdminRecibos = React.lazy(() => import('@/presentation/pages/admin/Recibos').then(m => ({ default: m.AdminRecibos })));
+const AdminCompras = React.lazy(() => import('@/presentation/pages/admin/AdminCompras').then(m => ({ default: m.AdminCompras })));
+const AdminCategoriasInsumos = React.lazy(() => import('@/presentation/pages/admin/AdminCategoriasInsumos').then(m => ({ default: m.AdminCategoriasInsumos })));
 const AdminPagos = React.lazy(() => import('@/presentation/pages/admin/Pagos').then(m => ({ default: m.AdminPagos })));
+const AdminAbonos = React.lazy(() => import('@/presentation/pages/admin/Abonos').then(m => ({ default: m.AdminAbonos })));
 const AdminReportesVentas = React.lazy(() => import('@/presentation/pages/admin/ReportesVentas').then(m => ({ default: m.AdminReportesVentas })));
 const AdminReportesUsuarios = React.lazy(() => import('@/presentation/pages/admin/ReportesUsuarios').then(m => ({ default: m.AdminReportesUsuarios })));
 const AdminReportesProduccion = React.lazy(() => import('@/presentation/pages/admin/ReportesProduccion').then(m => ({ default: m.AdminReportesProduccion })));
@@ -152,6 +155,8 @@ const App: React.FC = () => {
             <Route path="productos" element={<AdminProductosTerminados />} />
             <Route path="insumos" element={<AdminInsumos />} />
             <Route path="proveedores" element={<AdminProveedores />} />
+            <Route path="compras" element={<AdminCompras />} />
+            <Route path="categorias-insumos" element={<AdminCategoriasInsumos />} />
             <Route path="gestion-acceso" element={<AdminGestionAcceso />} />
             <Route path="alertas-stock" element={<AdminAlertasStock />} />
             <Route path="stock-devuelto" element={<AdminStockDevuelto />} />
@@ -161,6 +166,7 @@ const App: React.FC = () => {
             <Route path="seguimiento" element={<AdminSeguimientoProduccion />} />
             <Route path="facturacion" element={<AdminRecibos />} />
             <Route path="pagos" element={<AdminPagos />} />
+            <Route path="abonos" element={<AdminAbonos />} />
             <Route path="ventas-pedidos" element={<AdminPedidos />} />
             <Route path="reportes-ventas" element={<Navigate to="/admin/reportes/ventas" replace />} />
             <Route path="dashboard-analitico" element={<AdminDashboardAnalitico />} />

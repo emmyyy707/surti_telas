@@ -136,6 +136,12 @@ export const AdminPagos: React.FC = () => {
     notes: '',
   });
 
+  const [saldoClienteId, setSaldoClienteId] = useState('');
+  const [saldoQuoteId, setSaldoQuoteId] = useState('');
+  const [saldoCliente, setSaldoCliente] = useState<{ customerId: string; totalPaid: number; pending: number } | null>(null);
+  const [saldoQuote, setSaldoQuote] = useState<{ quoteId: string; total: number; totalPaid: number; saldo: number; porcentajeAnticipo: number; valorAnticipo: number } | null>(null);
+  const [loadingSaldo, setLoadingSaldo] = useState(false);
+
   const loadPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -348,6 +354,49 @@ export const AdminPagos: React.FC = () => {
     }
   };
 
+  const handleCalcularSaldoCliente = async () => {
+    if (!saldoClienteId.trim()) return;
+    setLoadingSaldo(true);
+    try {
+      const data = await paymentsApi.getCustomerBalance(saldoClienteId.trim());
+      setSaldoCliente(data);
+      toast.success('Saldo calculado');
+    } catch {
+      toast.error('No se pudo calcular el saldo');
+    } finally {
+      setLoadingSaldo(false);
+    }
+  };
+
+  const handleCalcularSaldoQuote = async () => {
+    if (!saldoQuoteId.trim()) return;
+    setLoadingSaldo(true);
+    try {
+      const data = await paymentsApi.getQuoteBalance(saldoQuoteId.trim());
+      setSaldoQuote(data);
+      toast.success('Saldo de cotización calculado');
+    } catch {
+      toast.error('No se pudo calcular el saldo de la cotización');
+    } finally {
+      setLoadingSaldo(false);
+    }
+  };
+
+  const handleExportPdf = async (payment: Payment) => {
+    try {
+      const blob = await paymentsApi.exportPdf(payment.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pago-${payment.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('PDF descargado');
+    } catch {
+      toast.error('No se pudo generar el PDF');
+    }
+  };
+
   const abonosDeFactura = (facturaId: string) => abonos.filter(a => a.facturaId === facturaId);
 
   return (
@@ -476,6 +525,40 @@ export const AdminPagos: React.FC = () => {
             </div>
           )}
 
+          <div className={s.saldoSection}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>Lógica financiera</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className={f.field}>
+                <label className={f.label}>Saldo restante por cliente (ID)</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input className={f.input} value={saldoClienteId} onChange={(e) => setSaldoClienteId(e.target.value)} placeholder="ID del cliente" />
+                  <Button type="button" onClick={handleCalcularSaldoCliente} disabled={loadingSaldo}>Calcular</Button>
+                </div>
+                {saldoCliente && (
+                  <div style={{ marginTop: 8, fontSize: '0.85rem' }}>
+                    <div>Total abonado: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoCliente.totalPaid)}</div>
+                    <div>Pendiente: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoCliente.pending)}</div>
+                  </div>
+                )}
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Saldo restante de cotización (ID)</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input className={f.input} value={saldoQuoteId} onChange={(e) => setSaldoQuoteId(e.target.value)} placeholder="ID de la cotización" />
+                  <Button type="button" onClick={handleCalcularSaldoQuote} disabled={loadingSaldo}>Calcular</Button>
+                </div>
+                {saldoQuote && (
+                  <div style={{ marginTop: 8, fontSize: '0.85rem' }}>
+                    <div>Total cotización: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.total)}</div>
+                    <div>Total pagado: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.totalPaid)}</div>
+                    <div>Saldo: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.saldo)}</div>
+                    <div>Anticipo {saldoQuote.porcentajeAnticipo}%: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.valorAnticipo)}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           <DataTable<Factura>
             data={filteredFacturas}
             pageSize={10}
@@ -536,6 +619,7 @@ export const AdminPagos: React.FC = () => {
               ...(f.estado === 'Pagado' ? [{ label: 'Reembolsar', icon: <Download size={14} />, onClick: async () => { await paymentsApi.updateStatus(f.id, 'Reembolsado'); await loadPayments(); toast.success(`Pago ${f.numeroFactura} reembolsado`); } }] : []),
               { label: 'Editar', icon: <Edit size={14} />, onClick: () => handleEditPayment(payments.find(p => p.id === f.id)!) },
               { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(payments.find(p => p.id === f.id)!), danger: true },
+              { label: 'PDF', icon: <FileText size={14} />, onClick: () => handleExportPdf(payments.find(p => p.id === f.id)!) },
             ]}
             columns={[
               { key: 'numeroFactura', header: 'N° Factura', width: '120px', sortable: true, filterable: true, filterPlaceholder: 'Filtrar factura...', render: (f) => <span className={s.tdPrimary}>{f.numeroFactura}</span> },

@@ -24,10 +24,12 @@ export const adminContent = {
         label: import.meta.env.VITE_ADMIN_MENU_INVENTARIO?.trim() || 'Existencias',
         productos: { label: import.meta.env.VITE_ADMIN_MENU_PRODUCTOS?.trim() || 'Productos Terminados' },
         categorias: { label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS?.trim() || 'Categorías' },
+        categoriasInsumos: { label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS_INSUMOS?.trim() || 'Categorías de Insumos' },
         insumos: { label: import.meta.env.VITE_ADMIN_MENU_INSUMOS?.trim() || 'Insumos' },
         proveedores: { label: import.meta.env.VITE_ADMIN_MENU_PROVEEDORES?.trim() || 'Proveedores' },
         alertasStock: { label: import.meta.env.VITE_ADMIN_MENU_ALERTAS_STOCK?.trim() || 'Alertas de Stock' },
         stockDevuelto: { label: import.meta.env.VITE_ADMIN_MENU_STOCK_DEVUELTO?.trim() || 'Stock Devuelto' },
+        compras: { label: import.meta.env.VITE_ADMIN_MENU_COMPRAS?.trim() || 'Compras' },
       },
       produccion: {
         label: import.meta.env.VITE_ADMIN_MENU_PRODUCCION?.trim() || 'Producción en Talleres Externos',

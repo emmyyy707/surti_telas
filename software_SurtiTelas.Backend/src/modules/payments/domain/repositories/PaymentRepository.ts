@@ -10,4 +10,5 @@ export interface PaymentRepository {
   updateStatus(id: string, status: PaymentStatus, paidAt?: string): Promise<Payment>;
   update(id: string, changes: { amount?: number; method?: PaymentMethod; reference?: string; notes?: string }): Promise<Payment>;
   delete(id: string): Promise<void>;
+  getCustomerBalance(customerId: string): Promise<{ totalPaid: number; pending: number; customerId: string }>;
 }

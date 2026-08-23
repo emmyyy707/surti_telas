@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, FolderTree, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin, FileText } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, FolderTree, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin, FileText, ShoppingBag, Tags } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
@@ -46,11 +46,20 @@ const adminMenu: SidebarItem[] = [
     subItems: [
       { icon: PackageOpen, label: adminContent.layout.menu.inventario.productos.label, key: 'productos' },
       { icon: FolderTree, label: adminContent.layout.menu.inventario.categorias.label, key: 'categorias' },
-      { icon: Boxes, label: adminContent.layout.menu.inventario.insumos.label, key: 'insumos' },
-      { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
       { icon: AlertTriangle, label: adminContent.layout.menu.inventario.alertasStock.label, key: 'alertas-stock' },
       { icon: Archive, label: adminContent.layout.menu.inventario.stockDevuelto.label, key: 'stock-devuelto' },
       { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
+    ],
+  },
+  {
+    icon: ShoppingBag,
+    label: adminContent.layout.menu.inventario.compras.label,
+    key: 'compras',
+    subItems: [
+      { icon: ShoppingBag, label: adminContent.layout.menu.inventario.compras.label, key: 'compras' },
+      { icon: Boxes, label: adminContent.layout.menu.inventario.insumos.label, key: 'insumos' },
+      { icon: Tags, label: adminContent.layout.menu.inventario.categoriasInsumos.label, key: 'categorias-insumos' },
+      { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
     ],
   },
   {
@@ -64,6 +73,7 @@ const adminMenu: SidebarItem[] = [
       { icon: LineChart, label: adminContent.layout.menu.produccion.seguimiento.label, key: 'seguimiento' },
     ],
   },
+  
   {
     icon: Truck,
     label: adminContent.layout.menu.domicilios.label,
