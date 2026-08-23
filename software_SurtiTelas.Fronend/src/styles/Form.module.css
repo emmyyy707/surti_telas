@@ -210,7 +210,8 @@
   gap: 24px;
   font-size: 0.86rem;
   color: var(--color-text-secondary);
-  width: 220px;
+  width: 100%;
+  max-width: 220px;
 }
 
 .totalRowFinal {

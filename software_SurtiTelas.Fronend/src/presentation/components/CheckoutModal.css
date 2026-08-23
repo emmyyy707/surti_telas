@@ -114,8 +114,8 @@
   position: relative;
 
   width: 100%;
-  max-width: 980px;
-  max-height: 92vh;
+  max-width: min(980px, calc(100vw - 32px));
+  max-height: min(92vh, 980px);
 
   overflow: hidden;
 

@@ -128,6 +128,16 @@ export interface Notificacion {
   titulo: string;
   mensaje: string;
   leida: boolean;
+  usuarioId?: string;
+  modulo?: string;
+  referenciaId?: string;
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  actorId?: string;
+  targetUserId?: string;
+  readAt?: number;
+  metadata?: Record<string, unknown>;
   createdAt: number;
 }
 

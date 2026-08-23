@@ -16,16 +16,16 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 560px;
-  max-height: 90vh;
+  max-width: min(560px, calc(100vw - 32px));
+  max-height: min(90vh, 980px);
   display: flex;
   flex-direction: column;
 }
 
-.adminModalSm { max-width: 384px; }
-.adminModalMd { max-width: 560px; }
-.adminModalLg { max-width: 720px; }
-.adminModalXl { max-width: 960px; }
+.adminModalSm { max-width: min(384px, calc(100vw - 32px)); }
+.adminModalMd { max-width: min(560px, calc(100vw - 32px)); }
+.adminModalLg { max-width: min(720px, calc(100vw - 32px)); }
+.adminModalXl { max-width: min(960px, calc(100vw - 32px)); }
 
 .modalHeader {
   padding: var(--modal-header-padding, 24px 24px 20px);

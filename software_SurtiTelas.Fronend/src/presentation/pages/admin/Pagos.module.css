@@ -1,4 +1,4 @@
-﻿.loadingSpinner {
+.loadingSpinner {
   animation: pagosSpin 0.9s linear infinite;
   color: var(--color-accent, #000000);
 }
@@ -504,10 +504,10 @@
   font-weight: 600;
   color: var(--color-text-primary);
 }
-.adminModalSm { max-width: 384px; }
-.adminModalMd { max-width: 560px; }
-.adminModalLg { max-width: 720px; }
-.adminModalXl { max-width: 960px; }
+.adminModalSm { max-width: min(384px, calc(100vw - 32px)); }
+.adminModalMd { max-width: min(560px, calc(100vw - 32px)); }
+.adminModalLg { max-width: min(720px, calc(100vw - 32px)); }
+.adminModalXl { max-width: min(960px, calc(100vw - 32px)); }
 
 .saldoSection {
   margin-bottom: 24px;

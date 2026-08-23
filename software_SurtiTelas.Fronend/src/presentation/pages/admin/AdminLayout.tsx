@@ -13,7 +13,6 @@ import { cn } from '@/shared/utils';
 import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 import { useAppStore } from '@/core/stores';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
-import { notificationsApi } from '@/infrastructure/api/notificationsApi';
 import { reportsApi } from '@/infrastructure/api/reportsApi';
 import { adminContent } from '@/shared/config/adminContent';
 
@@ -119,28 +118,11 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const authUser = useAuthStore(state => state.user);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [debugOpen, setDebugOpen] = useState(false);
 
   useEffect(() => {
     window.localStorage.setItem('surtitelas.sidebarCollapsed', String(isCollapsed));
   }, [isCollapsed]);
-
-  useEffect(() => {
-    let active = true;
-    const loadNotifications = async () => {
-      try {
-        const data = await notificationsApi.list();
-        if (!active) return;
-        setNotificationCount(data.filter(n => !n.leida).length);
-      } catch {
-        // silent
-      }
-    };
-    void loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
-    return () => { active = false; clearInterval(interval); };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -271,11 +253,9 @@ export const AdminLayout: React.FC = () => {
             initial: userDisplay.initial,
             avatar: userDisplay.avatar,
           }}
-          notificationCount={notificationCount}
           onSearch={handleSearch}
           onToggleTheme={toggleTheme}
           onExport={handleExport}
-          onNotificationClick={handleNotificationClick}
           darkMode={darkMode}
         />
 
@@ -311,7 +291,21 @@ export const AdminLayout: React.FC = () => {
           </button>
 
           {debugOpen && (
-            <div style={{ position: 'fixed', right: '16px', bottom: '56px', zIndex: 9999, width: '420px', maxHeight: '70vh', overflow: 'auto', padding: '14px 16px', background: 'rgba(15,15,20,0.92)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '14px', color: 'var(--color-text-secondary)', fontSize: '0.82rem' }}>
+            <div style={{
+              position: 'fixed',
+              right: '16px',
+              bottom: '16px',
+              zIndex: 9999,
+              width: 'min(420px, calc(100vw - 32px))',
+              maxHeight: 'min(70vh, 400px)',
+              overflow: 'auto',
+              padding: '14px 16px',
+              background: 'rgba(15,15,20,0.92)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: '14px',
+              color: 'var(--color-text-secondary)',
+              fontSize: '0.82rem'
+            }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <strong style={{ color: 'var(--color-text-primary)' }}>Debug permisos</strong>
                 <button type="button" onClick={async () => { await useAuthStore.getState().checkSession(); window.location.reload(); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', color: 'inherit', borderRadius: '8px', padding: '4px 8px', cursor: 'pointer' }}>Refrescar</button>

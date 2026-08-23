@@ -10,6 +10,13 @@ export interface NotificationData {
   usuarioId?: string;
   modulo?: string;
   referenciaId?: string;
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  actorId?: string;
+  targetUserId?: string;
+  readAt?: Date;
+  metadata?: Record<string, unknown>;
   createdAt?: Date;
 }
 
@@ -22,6 +29,13 @@ export class Notification {
   readonly usuarioId?: string;
   readonly modulo?: string;
   readonly referenciaId?: string;
+  readonly entityType?: string;
+  readonly entityId?: string;
+  readonly action?: string;
+  readonly actorId?: string;
+  readonly targetUserId?: string;
+  readonly readAt?: Date;
+  readonly metadata?: Record<string, unknown>;
   readonly createdAt?: Date;
 
   constructor(data: NotificationData) {
@@ -34,6 +48,13 @@ export class Notification {
     this.usuarioId = data.usuarioId;
     this.modulo = data.modulo;
     this.referenciaId = data.referenciaId;
+    this.entityType = data.entityType;
+    this.entityId = data.entityId;
+    this.action = data.action;
+    this.actorId = data.actorId;
+    this.targetUserId = data.targetUserId;
+    this.readAt = data.readAt;
+    this.metadata = data.metadata;
     this.createdAt = data.createdAt;
   }
 
@@ -44,7 +65,7 @@ export class Notification {
 
   markAsRead(): Notification {
     if (this.leida) return this;
-    return new Notification({ ...this, leida: true });
+    return new Notification({ ...this, leida: true, readAt: new Date() });
   }
 }
 

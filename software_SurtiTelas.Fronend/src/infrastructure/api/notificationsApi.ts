@@ -9,6 +9,13 @@ export interface NotificationDTO {
   usuarioId?: string;
   modulo?: string;
   referenciaId?: string;
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  actorId?: string;
+  targetUserId?: string;
+  readAt?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +29,13 @@ export interface Notification {
   usuarioId?: string;
   modulo?: string;
   referenciaId?: string;
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  actorId?: string;
+  targetUserId?: string;
+  readAt?: number;
+  metadata?: Record<string, unknown>;
   createdAt: number;
 }
 
@@ -35,6 +49,13 @@ export function toNotification(dto: NotificationDTO): Notification {
     usuarioId: dto.usuarioId,
     modulo: dto.modulo,
     referenciaId: dto.referenciaId,
+    entityType: dto.entityType,
+    entityId: dto.entityId,
+    action: dto.action,
+    actorId: dto.actorId,
+    targetUserId: dto.targetUserId,
+    readAt: dto.readAt ? new Date(dto.readAt).getTime() : undefined,
+    metadata: dto.metadata,
     createdAt: new Date(dto.createdAt).getTime(),
   };
 }
@@ -48,6 +69,18 @@ export const notificationsApi = {
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) {
         return [];
+      }
+      throw error;
+    }
+  },
+
+  async getUnreadCount(): Promise<number> {
+    try {
+      const response = await api.get<{ count: number }>('/notifications/unread-count');
+      return response?.count ?? 0;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 403) {
+        return 0;
       }
       throw error;
     }
@@ -70,6 +103,24 @@ export const notificationsApi = {
   async delete(id: string): Promise<boolean> {
     try {
       await api.delete<void>(`/notifications/${encodeURIComponent(id)}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  async markAsRead(id: string): Promise<Notification | null> {
+    try {
+      const dto = await api.patch<NotificationDTO>(`/notifications/${encodeURIComponent(id)}/read`, {});
+      return dto ? toNotification(dto) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  async markAllAsRead(): Promise<boolean> {
+    try {
+      await api.patch<void>('/notifications/read-all', {});
       return true;
     } catch {
       return false;

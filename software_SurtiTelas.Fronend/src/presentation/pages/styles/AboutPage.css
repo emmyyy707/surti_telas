@@ -681,6 +681,10 @@
     height: 64px;
     border-radius: 18px;
   }
+
+  .cta-section::before {
+    width: 200px; height: 200px; top: -80px; right: -40px;
+  }
 }
 
 

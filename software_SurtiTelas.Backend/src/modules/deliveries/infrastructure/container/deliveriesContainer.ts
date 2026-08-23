@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaDeliveryRepository } from '../repositories/PrismaDeliveryRepository';
 import { PrismaOrderRepository } from '../../../orders/infrastructure/repositories/PrismaOrderRepository';
+import { eventBus } from '../../../../shared/infrastructure/eventBus';
 import {
   ChangeDeliveryStatus,
   CreateDelivery,
@@ -19,9 +20,9 @@ const orderRepository = new PrismaOrderRepository(prisma);
 export const deliveriesUseCases = {
   listDeliveries: new ListDeliveries(deliveryRepository),
   getDelivery: new GetDelivery(deliveryRepository),
-  createDelivery: new CreateDelivery(deliveryRepository),
-  updateDelivery: new UpdateDelivery(deliveryRepository),
-  changeDeliveryStatus: new ChangeDeliveryStatus(deliveryRepository, orderRepository),
-  deleteDelivery: new DeleteDelivery(deliveryRepository),
+  createDelivery: new CreateDelivery(deliveryRepository, eventBus),
+  updateDelivery: new UpdateDelivery(deliveryRepository, eventBus),
+  changeDeliveryStatus: new ChangeDeliveryStatus(deliveryRepository, orderRepository, eventBus),
+  deleteDelivery: new DeleteDelivery(deliveryRepository, eventBus),
   listRutaDelDia: new ListRutaDelDia(prisma),
 };

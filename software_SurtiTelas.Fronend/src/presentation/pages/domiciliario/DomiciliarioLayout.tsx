@@ -10,7 +10,6 @@ import { TopHeader } from '@/presentation/components/TopHeader';
 import { cn } from '@/shared/utils';
 import { useAuthStore } from '@/core/stores/authStore';
 import { authApi } from '@/infrastructure/api/authApi';
-import { notificationsApi } from '@/infrastructure/api/notificationsApi';
 import logoImg from '@/assets/images/logos/partner-logo-2-Photoroom.png';
 
 const domiciliarioMenu: SidebarItem[] = [
@@ -32,7 +31,6 @@ export const DomiciliarioLayout: React.FC = () => {
   const { logout } = useAuth();
   const storeUser = useAuthStore((s) => s.user);
   const [sidebarUser, setSidebarUser] = useState({ name: 'Cargando...', role: 'domiciliario', initials: '', avatar: '' });
-  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -52,21 +50,6 @@ export const DomiciliarioLayout: React.FC = () => {
     void load();
     return () => { active = false; };
   }, [storeUser]);
-
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        const notifs = await notificationsApi.list();
-        if (!active) return;
-        setNotificationCount(notifs.filter(n => !n.leida).length);
-      } catch {
-        setNotificationCount(0);
-      }
-    };
-    void load();
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     window.localStorage.setItem('surtitelas.sidebarCollapsed', String(isCollapsed));
@@ -91,10 +74,6 @@ export const DomiciliarioLayout: React.FC = () => {
     setIsCollapsed(collapsed);
   };
 
-  const handleNotificationClick = (path: string) => {
-    navigate(path);
-  };
-
   return (
     <div data-dashboard-theme className={cn(s.appLayout, isCollapsed && s.collapsed)}>
       <Sidebar
@@ -102,7 +81,7 @@ export const DomiciliarioLayout: React.FC = () => {
         basePath="/domiciliario"
         logo={logoImg}
         brandName="SURTI CAMISETAS"
-        panelLabel="Panel de Domiciliario"
+        panelLabel="Portal Domiciliario"
         user={sidebarUser}
         onLogout={handleLogout}
         showCollapse={true}
@@ -118,10 +97,8 @@ export const DomiciliarioLayout: React.FC = () => {
             initial: sidebarUser.initials,
             avatar: sidebarUser.avatar,
           }}
-          notificationCount={notificationCount}
           onSearch={() => {}}
           onToggleTheme={toggleTheme}
-          onNotificationClick={handleNotificationClick}
           darkMode={darkMode}
         />
         <main className={s.pageContent}><Outlet /></main>
@@ -129,4 +106,3 @@ export const DomiciliarioLayout: React.FC = () => {
     </div>
   );
 };
-

@@ -1,4 +1,4 @@
-﻿.pageTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 8px 0; }
+.pageTitle { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 8px 0; }
 .pageSubtitle { font-size: 0.9rem; color: var(--color-text-muted); margin: 0; }
 
 .header {
@@ -522,7 +522,7 @@
 }
 
 
-.adminModalSm { max-width: 384px; }
-.adminModalMd { max-width: 560px; }
-.adminModalLg { max-width: 720px; }
-.adminModalXl { max-width: 960px; }
+.adminModalSm { max-width: min(384px, calc(100vw - 32px)); }
+.adminModalMd { max-width: min(560px, calc(100vw - 32px)); }
+.adminModalLg { max-width: min(720px, calc(100vw - 32px)); }
+.adminModalXl { max-width: min(960px, calc(100vw - 32px)); }

@@ -1,20 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Bell, Moon, Download, Sun, Package, ShoppingCart, AlertTriangle, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import s from './TopHeader.module.css';
 import { cn } from '@/shared/utils';
 import { Tooltip } from '@/shared/components/Tooltip';
-import { notificationsApi } from '@/infrastructure/api/notificationsApi';
+import { useRealtimeNotifications } from '@/shared/hooks/useRealtimeNotifications';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  type: 'order' | 'stock' | 'message' | 'info';
-  read: boolean;
-  path: string;
-}
+import { useNavigate } from 'react-router-dom';
 
 interface TopHeaderProps {
   user: {
@@ -24,40 +15,46 @@ interface TopHeaderProps {
     initial: string;
     avatar?: string | null;
   };
-  notificationCount: number;
   onSearch: (value: string) => void;
   onToggleTheme: () => void;
   onExport?: () => void;
-  onNotificationClick?: (path: string) => void;
-  notifications?: Notification[];
   darkMode?: boolean;
+  notificationsPath?: string;
 }
 
-const getNotificationIcon = (type: Notification['type']) => {
-  switch (type) {
-    case 'order': return <ShoppingCart size={16} />;
-    case 'stock': return <AlertTriangle size={16} />;
-    case 'message': return <MessageSquare size={16} />;
+const getNotificationIcon = (tipo: string) => {
+  switch (tipo) {
+    case 'success': return <ShoppingCart size={16} />;
+    case 'danger': return <AlertTriangle size={16} />;
+    case 'warning': return <MessageSquare size={16} />;
     default: return <Package size={16} />;
   }
 };
 
+const timeAgo = (timestamp: number) => {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'Hace un momento';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `Hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Hace ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `Hace ${days} d`;
+};
+
 export const TopHeader: React.FC<TopHeaderProps> = ({
   user,
-  notificationCount,
   onSearch,
   onToggleTheme,
   onExport,
-  onNotificationClick,
-  notifications,
   darkMode = false,
+  notificationsPath = '/admin/notificaciones',
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [fetchedNotifications, setFetchedNotifications] = useState<Notification[]>([]);
-  const [loadingNotifications, setLoadingNotifications] = useState<boolean>(false);
-  const [notificationsError, setNotificationsError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const showExport = user.role === 'admin' || typeof onExport === 'function';
+  const navigate = useNavigate();
+  const hasAccess = !!tokenStorage.getAccessToken();
+  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead } = useRealtimeNotifications(hasAccess);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -69,38 +66,36 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      if (!tokenStorage.getAccessToken()) return;
-      setLoadingNotifications(true);
-      setNotificationsError(null);
-      try {
-        const data = await notificationsApi.list();
-        if (!active) return;
-        const mapped: Notification[] = data.map(n => ({
-          id: n.id,
-          title: n.titulo,
-          message: n.mensaje,
-          time: new Date(n.createdAt).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }),
-          type: n.tipo === 'success' ? 'order' : n.tipo === 'danger' ? 'stock' : n.tipo === 'warning' ? 'message' : 'info',
-          read: n.leida,
-          path: '/admin/notificaciones',
-        }));
-        setFetchedNotifications(mapped);
-      } catch (err) {
-        if (!active) return;
-        setNotificationsError(err instanceof Error ? err.message : 'No se pudieron cargar las notificaciones');
-      } finally {
-        if (active) setLoadingNotifications(false);
-      }
-    };
-    load();
-    return () => { active = false; };
-  }, []);
+  const handleNotificationClick = useCallback(async (notif: typeof notifications[number]) => {
+    if (!notif.leida) {
+      await markAsRead(notif.id);
+    }
+    setShowNotifications(false);
+    if (notif.entityType && notif.entityId) {
+      const pathMap: Record<string, string> = {
+        ORDER: '/admin/pedidos',
+        RETURN: '/admin/devoluciones',
+        DELIVERY: '/admin/domicilios',
+        PRODUCT: '/admin/catalogo',
+        USER: '/admin/gestion-usuarios',
+        RECEIPT: '/admin/facturacion',
+        PAYMENT: '/admin/pagos',
+        CUSTOMER: '/admin/clientes',
+        PRODUCTION_ORDER: '/admin/produccion',
+        RAW_MATERIAL: '/admin/inventario',
+      };
+      const target = pathMap[notif.entityType] || notificationsPath;
+      navigate(target);
+    } else {
+      navigate(notificationsPath);
+    }
+  }, [markAsRead, navigate, notificationsPath]);
 
-  const notificationsList = notifications ?? fetchedNotifications;
-  const effectiveCount = notificationCount > 0 ? notificationCount : notificationsList.filter(n => !n.read).length;
+  const handleMarkAllRead = useCallback(async () => {
+    await markAllAsRead();
+  }, [markAllAsRead]);
+
+  const showExport = user.role === 'admin' || typeof onExport === 'function';
 
   return (
     <header className={s.header}>
@@ -123,57 +118,66 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               className={s.iconBtn}
               onClick={() => setShowNotifications(!showNotifications)}
               aria-label="Notificaciones"
+              aria-expanded={showNotifications}
             >
               <Bell size={20} />
             </button>
           </Tooltip>
-          {effectiveCount > 0 && (
-            <span className={s.badge}>{effectiveCount}</span>
+          {unreadCount > 0 && (
+            <span className={s.badge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
           )}
           {showNotifications && (
-            <div className={s.notificationsDropdown}>
+            <div className={s.notificationsDropdown} role="menu" aria-label="Notificaciones">
               <div className={s.notificationsHeader}>
                 <h3>Notificaciones</h3>
-                <span className={s.notificationsCount}>{effectiveCount} nuevas</span>
+                <div className={s.notificationsHeaderActions}>
+                  {unreadCount > 0 && (
+                    <button type="button" className={s.markAllReadBtn} onClick={handleMarkAllRead}>
+                      Marcar todas como leídas
+                    </button>
+                  )}
+                  <button type="button" className={s.viewAllBtn} onClick={() => { setShowNotifications(false); navigate(notificationsPath); }}>
+                    Ver todas
+                  </button>
+                </div>
               </div>
               <div className={s.notificationsList}>
-                {loadingNotifications && (
+                {loading && (
                   <div className={cn(s.emptyNotifications, s.loadingState)}>
                     <Loader2 size={32} className={cn(s.emptyIcon, s.spin)} />
                     <p>Cargando notificaciones...</p>
                   </div>
                 )}
-                {notificationsError && (
+                {error && (
                   <div className={cn(s.emptyNotifications, s.errorState)}>
                     <AlertCircle size={32} className={s.emptyIcon} />
-                    <p>{notificationsError}</p>
+                    <p>{error}</p>
                   </div>
                 )}
-                {!loadingNotifications && !notificationsError && notificationsList.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={cn(s.notificationItem, !notification.read && s.unread)}
-                    onClick={() => {
-                      setShowNotifications(false);
-                      onNotificationClick?.(notification.path);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className={s.notificationIcon}>{getNotificationIcon(notification.type)}</div>
-                    <div className={s.notificationContent}>
-                      <h4 className={s.notificationTitle}>{notification.title}</h4>
-                      <p className={s.notificationMessage}>{notification.message}</p>
-                      <span className={s.notificationTime}>{notification.time}</span>
-                    </div>
-                    {!notification.read && <div className={s.unreadDot} />}
-                  </div>
-                ))}
-                {!loadingNotifications && !notificationsError && notificationsList.length === 0 && (
+                {!loading && !error && notifications.length === 0 && (
                   <div className={s.emptyNotifications}>
                     <Bell size={32} className={s.emptyIcon} />
                     <p>No hay notificaciones nuevas</p>
                   </div>
                 )}
+                {!loading && !error && notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={cn(s.notificationItem, !notification.leida && s.unread)}
+                    onClick={() => handleNotificationClick(notification)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotificationClick(notification); } }}
+                    role="menuitem"
+                    tabIndex={0}
+                  >
+                    <div className={s.notificationIcon}>{getNotificationIcon(notification.tipo)}</div>
+                    <div className={s.notificationContent}>
+                      <h4 className={s.notificationTitle}>{notification.titulo}</h4>
+                      <p className={s.notificationMessage}>{notification.mensaje}</p>
+                      <span className={s.notificationTime}>{timeAgo(notification.createdAt)}</span>
+                    </div>
+                    {!notification.leida && <div className={s.unreadDot} />}
+                  </div>
+                ))}
               </div>
             </div>
           )}

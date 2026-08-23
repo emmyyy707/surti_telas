@@ -9,6 +9,7 @@ import {
   LogOut,
   LucideIcon,
   Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/shared/utils';
 import s from './Sidebar.module.css';
@@ -328,6 +329,16 @@ export const Sidebar = ({
               aria-label={effectiveCollapsed ? 'Expandir menú' : 'Colapsar menú'}
             >
               {effectiveCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          )}
+          {isMobile && mobileOpen && (
+            <button
+              type="button"
+              className={s.mobileCloseBtn}
+              onClick={() => setMobileOpen(false)}
+              aria-label="Cerrar menú"
+            >
+              <X size={20} />
             </button>
           )}
         </div>

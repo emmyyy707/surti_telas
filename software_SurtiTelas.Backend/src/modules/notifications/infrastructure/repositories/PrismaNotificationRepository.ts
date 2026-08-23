@@ -65,7 +65,20 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return row ? new Notification(toNotificationData(row)) : null;
   }
 
-  async create(input: { tipo: NotificationType; titulo: string; mensaje: string; usuarioId?: string; modulo?: string; referenciaId?: string }): Promise<Notification> {
+  async create(input: {
+    tipo: NotificationType;
+    titulo: string;
+    mensaje: string;
+    usuarioId?: string;
+    modulo?: string;
+    referenciaId?: string;
+    entityType?: string;
+    entityId?: string;
+    action?: string;
+    actorId?: string;
+    targetUserId?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<Notification> {
     const row = await this.prisma.notification.create({
       data: {
         tipo: input.tipo,
@@ -74,6 +87,12 @@ export class PrismaNotificationRepository implements NotificationRepository {
         usuarioId: input.usuarioId,
         modulo: input.modulo,
         referenciaId: input.referenciaId,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        action: input.action,
+        actorId: input.actorId,
+        targetUserId: input.targetUserId,
+        metadata: input.metadata ? JSON.parse(JSON.stringify(input.metadata)) : undefined,
       },
     });
     return new Notification(toNotificationData(row));
@@ -85,12 +104,20 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
     const row = await this.prisma.notification.update({
       where: { id },
-      data: { leida: true },
+      data: { leida: true, readAt: new Date() },
     });
     return new Notification(toNotificationData(row));
   }
 
-  async update(id: string, changes: { titulo?: string; mensaje?: string; leida?: boolean }): Promise<Notification> {
+  async markAllAsRead(usuarioId: string): Promise<number> {
+    const result = await this.prisma.notification.updateMany({
+      where: { usuarioId, leida: false, deletedAt: null },
+      data: { leida: true, readAt: new Date() },
+    });
+    return result.count;
+  }
+
+  async update(id: string, changes: { titulo?: string; mensaje?: string; leida?: boolean; readAt?: Date }): Promise<Notification> {
     const existing = await this.getById(id);
     if (!existing) throw new NotFoundError('Notificación no encontrada');
 

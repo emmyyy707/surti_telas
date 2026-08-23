@@ -3,6 +3,13 @@ import { BadRequestError, NotFoundError } from '../../../../shared/domain/errors
 import type { CreateDeliveryInput, DeliveryRepository, UpdateDeliveryInput } from '../../domain/repositories/DeliveryRepository';
 import { Delivery } from '../../domain/entities/Delivery';
 import { PrismaClient } from '@prisma/client';
+import type { EventBus } from '../../../../shared/application/events';
+import {
+  DeliveryCreatedEvent,
+  DeliveryUpdatedEvent,
+  DeliveryStatusUpdatedEvent,
+  DeliveryCompletedEvent,
+} from '../../../../shared/application/events';
 
 export class ListDeliveries {
   constructor(private readonly repo: DeliveryRepository) {}
@@ -141,8 +148,8 @@ export class GetDelivery {
 }
 
 export class CreateDelivery {
-  constructor(private readonly repo: DeliveryRepository) {}
-  async execute(input: CreateDeliveryInput) {
+  constructor(private readonly repo: DeliveryRepository, private readonly eventBus?: EventBus) {}
+  async execute(input: CreateDeliveryInput, requestId?: string) {
     const delivery = new Delivery({
       orderId: input.orderId,
       domiciliarioId: input.domiciliarioId ?? null,
@@ -153,16 +160,47 @@ export class CreateDelivery {
       notas: input.notas ?? null,
       asignadoEn: new Date(),
     });
-    return this.repo.create(delivery as any);
+    const created = await this.repo.create(delivery as any);
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new DeliveryCreatedEvent({
+          deliveryId: created.id!,
+          orderId: created.orderId!,
+          orderNumero: created.orderId!,
+          domiciliarioId: created.domiciliarioId ?? undefined,
+          domiciliarioNombre: undefined,
+          direccion: created.direccion ?? '',
+          ciudad: created.ciudad ?? undefined,
+          telefono: created.telefono ?? undefined,
+          total: 0,
+        }, requestId)
+      );
+    }
+
+    return created;
   }
 }
 
 export class UpdateDelivery {
-  constructor(private readonly repo: DeliveryRepository) {}
-  async execute(id: string, changes: UpdateDeliveryInput) {
+  constructor(private readonly repo: DeliveryRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, changes: UpdateDeliveryInput, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Entrega no encontrada');
-    return this.repo.update(id, changes);
+    const updated = await this.repo.update(id, changes);
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new DeliveryUpdatedEvent({
+          deliveryId: updated.id!,
+          orderId: updated.orderId!,
+          orderNumero: updated.orderId!,
+          cambios: changes as Record<string, unknown>,
+        }, requestId)
+      );
+    }
+
+    return updated;
   }
 }
 
@@ -170,8 +208,9 @@ export class ChangeDeliveryStatus {
   constructor(
     private readonly repo: DeliveryRepository,
     private readonly orderRepo?: { updateStatus(id: string, estado: string): Promise<any> },
+    private readonly eventBus?: EventBus,
   ) {}
-  async execute(id: string, estado: Delivery['estado'], role?: string) {
+  async execute(id: string, estado: Delivery['estado'], role?: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Entrega no encontrada');
 
@@ -179,11 +218,26 @@ export class ChangeDeliveryStatus {
       throw new BadRequestError('Solo el domiciliario puede marcar ENTREGADO o FALLIDO');
     }
 
+    const previousStatus = existing.estado;
     const updated = new Delivery({ ...existing.toDTO(), estado });
     if (estado === 'ENTREGADO') updated.marcarEntregado();
     if (estado === 'EN_RUTA') updated.marcarEnRuta();
     if (estado === 'FALLIDO') updated.marcarFallido();
     const result = await this.repo.update(id, { estado: updated.estado, entregadoEn: updated.entregadoEn });
+
+    if (this.eventBus && previousStatus !== estado) {
+      this.eventBus.publish(
+        new DeliveryStatusUpdatedEvent({
+          deliveryId: result.id!,
+          orderId: result.orderId!,
+          orderNumero: result.orderId!,
+          previousStatus,
+          newStatus: estado,
+          domiciliarioId: result.domiciliarioId ?? undefined,
+          domiciliarioNombre: undefined,
+        }, requestId)
+      );
+    }
 
     if (estado === 'ENTREGADO' && this.orderRepo) {
       try {
@@ -204,11 +258,23 @@ export class ChangeDeliveryStatus {
 }
 
 export class DeleteDelivery {
-  constructor(private readonly repo: DeliveryRepository) {}
-  async execute(id: string) {
+  constructor(private readonly repo: DeliveryRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Entrega no encontrada');
-    return this.repo.delete(id);
+    await this.repo.delete(id);
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new DeliveryCompletedEvent({
+          deliveryId: existing.id!,
+          orderId: existing.orderId!,
+          orderNumero: existing.orderId!,
+          domiciliarioId: existing.domiciliarioId ?? undefined,
+          domiciliarioNombre: undefined,
+        }, requestId)
+      );
+    }
   }
 }
 

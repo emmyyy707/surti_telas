@@ -1,4 +1,4 @@
-﻿.pageTitle {
+.pageTitle {
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -1167,7 +1167,7 @@
   text-decoration: underline;
 }
 
-/* Mejoras del modal de cotizaciÃ³n */
+/* Mejoras del modal de cotización */
 .modalHeader {
   display: flex;
   flex-direction: column;
@@ -1302,7 +1302,7 @@
   gap: 6px;
 }
 
-/* DistribuciÃ³n de prendas */
+/* Distribución de prendas */
 .distributionSection {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
@@ -1479,7 +1479,7 @@
   gap: 8px;
 }
 
-/* Formulario de personalizaciÃ³n */
+/* Formulario de personalización */
 .personalizationForm {
   background: var(--color-bg-card);
   border: 1px solid var(--color-accent);
@@ -1582,7 +1582,7 @@
   flex: 1;
 }
 
-/* ValidaciÃ³n messages */
+/* Validación messages */
 .validationError {
   display: flex;
   align-items: center;
@@ -1667,7 +1667,7 @@
   border-color: var(--color-text-muted);
 }
 
-/* Botones de acciÃ³n en cards */
+/* Botones de acción en cards */
 .cardActions {
   display: flex;
   gap: 6px;

@@ -261,7 +261,7 @@
 }
 
 .tableWrapper {
-  overflow-x: clip;
+  overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }

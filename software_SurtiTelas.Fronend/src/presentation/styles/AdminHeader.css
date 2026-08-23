@@ -54,8 +54,8 @@
 }
 
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -136,7 +136,7 @@
 }
 
 .header-btn {
-  height: 34px;
+  height: 36px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;

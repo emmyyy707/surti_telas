@@ -14,6 +14,14 @@ export const CreateNotificationSchema = z.object({
   titulo: z.string().min(1, 'El título es obligatorio'),
   mensaje: z.string().min(1, 'El mensaje es obligatorio'),
   usuarioId: z.string().optional(),
+  modulo: z.string().optional(),
+  referenciaId: z.string().optional(),
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+  action: z.string().optional(),
+  actorId: z.string().optional(),
+  targetUserId: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const UpdateNotificationSchema = z.object({

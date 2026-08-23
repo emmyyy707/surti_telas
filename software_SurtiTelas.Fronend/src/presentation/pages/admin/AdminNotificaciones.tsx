@@ -52,6 +52,16 @@ export const AdminNotificaciones: React.FC = () => {
     void fetchItems();
   }, [fetchItems]);
 
+  const handleMarkAllRead = useCallback(async () => {
+    const ok = await notificationsApi.markAllAsRead();
+    if (ok) {
+      toast.success('Todas las notificaciones marcadas como leídas');
+      void fetchItems();
+    } else {
+      toast.error('No se pudieron marcar las notificaciones');
+    }
+  }, [fetchItems]);
+
   const openCreateModal = () => {
     setEditingItem(null);
     setFormTitulo('');
@@ -136,6 +146,11 @@ export const AdminNotificaciones: React.FC = () => {
     return <Badge variant={variants[tipo]}>{tipo.toUpperCase()}</Badge>;
   };
 
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+  };
+
   const columns: DataTableColumn<Notification>[] = [
     { key: 'tipo', header: 'Tipo', width: '100px', render: (item: Notification) => getTipoBadge(item.tipo) },
     { key: 'titulo', header: 'Título', sortable: true, render: (item: Notification) => (
@@ -144,14 +159,17 @@ export const AdminNotificaciones: React.FC = () => {
         <div style={{ fontSize: '0.85em', opacity: 0.7 }}>{item.mensaje.slice(0, 60)}...</div>
       </div>
     )},
+    { key: 'entityType', header: 'Entidad', width: '120px', render: (item: Notification) => (
+      <span>{item.entityType ?? '—'}</span>
+    )},
     { key: 'leida', header: 'Estado', width: '120px', sortable: true, filterable: true, filterType: 'select', filterOptions: [
       { value: 'true', label: 'Leída' },
       { value: 'false', label: 'No leída' },
     ], render: (item: Notification) => (
       <Badge variant={item.leida ? 'default' : 'warning'}>{item.leida ? 'Leída' : 'No leída'}</Badge>
     )},
-    { key: 'createdAt', header: 'Fecha', width: '130px', sortable: true, render: (item: Notification) => (
-      <span>{new Date(item.createdAt).toLocaleDateString('es-CO')}</span>
+    { key: 'createdAt', header: 'Fecha', width: '150px', sortable: true, render: (item: Notification) => (
+      <span>{formatDate(item.createdAt)}</span>
     )},
   ];
 
@@ -168,7 +186,10 @@ export const AdminNotificaciones: React.FC = () => {
           <h1 className={s.pageTitle}>Notificaciones</h1>
           <p className={s.pageSubtitle}>Gestiona las notificaciones del sistema</p>
         </div>
-        <Button onClick={openCreateModal} leftIcon={<Plus size={16} />}>Nueva notificación</Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="secondary" onClick={handleMarkAllRead}>Marcar todas como leídas</Button>
+          <Button onClick={openCreateModal} leftIcon={<Plus size={16} />}>Nueva notificación</Button>
+        </div>
       </div>
 
       <div className={s.toolbar}>

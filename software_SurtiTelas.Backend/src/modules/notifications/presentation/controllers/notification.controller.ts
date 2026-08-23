@@ -19,9 +19,19 @@ export const getNotifications = async (req: Request, res: Response) => {
   return ok(res, response);
 };
 
+export const getUnreadCount = async (req: Request, res: Response) => {
+  const result = await notificationUseCases.getNotifications.execute({ usuarioId: req.user!.id, leida: false, limit: 1 });
+  return ok(res, { count: result.meta.total });
+};
+
 export const markAsRead = async (req: Request, res: Response) => {
   const notification = await notificationUseCases.markAsRead.execute(req.params.id);
   return ok(res, notification, 'Notificación marcada como leída');
+};
+
+export const markAllAsRead = async (req: Request, res: Response) => {
+  const count = await notificationUseCases.markAllAsRead.execute(req.user!.id);
+  return ok(res, { count }, `${count} notificaciones marcadas como leídas`);
 };
 
 export const getNotificationById = async (req: Request, res: Response) => {

@@ -438,6 +438,13 @@ model Notification {
   usuarioId    String?          @map("usuario_id")
   modulo       String?
   referenciaId String?          @map("referencia_id")
+  entityType   String?          @map("entity_type")
+  entityId     String?          @map("entity_id")
+  action       String?
+  actorId      String?          @map("actor_id")
+  targetUserId String?          @map("target_user_id")
+  readAt       DateTime?        @map("read_at")
+  metadata     Json?
   createdAt    DateTime         @default(now())
   deletedAt    DateTime?        @map("deleted_at")
   usuario      User?            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
@@ -445,6 +452,10 @@ model Notification {
   @@index([usuarioId, leida])
   @@index([deletedAt])
   @@index([modulo, referenciaId])
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([targetUserId])
+  @@index([createdAt])
   @@map("notifications")
 }
 

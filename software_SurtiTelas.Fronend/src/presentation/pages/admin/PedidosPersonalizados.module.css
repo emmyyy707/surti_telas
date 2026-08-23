@@ -219,7 +219,7 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow-x: clip;
+  overflow-x: auto;
   overflow-y: hidden;
 }
 
@@ -576,10 +576,10 @@ textarea.input {
   font-size: 0.85rem;
 }
 
-.adminModalSm { max-width: 384px; }
-.adminModalMd { max-width: 560px; }
-.adminModalLg { max-width: 720px; }
-.adminModalXl { max-width: 960px; }
+.adminModalSm { max-width: min(384px, calc(100vw - 32px)); }
+.adminModalMd { max-width: min(560px, calc(100vw - 32px)); }
+.adminModalLg { max-width: min(720px, calc(100vw - 32px)); }
+.adminModalXl { max-width: min(960px, calc(100vw - 32px)); }
 
 .colSpan2 {
   grid-column: 1 / -1;

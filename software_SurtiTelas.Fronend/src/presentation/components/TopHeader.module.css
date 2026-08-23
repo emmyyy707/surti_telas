@@ -382,8 +382,8 @@
   top: 100%;
   right: 0;
   margin-top: 8px;
-  width: 360px;
-  max-height: 420px;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(420px, calc(100dvh - 120px));
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -406,6 +406,7 @@
   justify-content: space-between;
   padding: 14px 16px;
   border-bottom: 1px solid #e5e7eb;
+  gap: 10px;
 }
 
 [data-theme='dark'] .notificationsHeader {
@@ -420,6 +421,55 @@
 }
 
 [data-theme='dark'] .notificationsHeader h3 {
+  color: #f1f5f9;
+}
+
+.notificationsHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.markAllReadBtn {
+  background: transparent;
+  border: none;
+  color: #c9a96e;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 150ms ease;
+  white-space: nowrap;
+}
+
+.markAllReadBtn:hover {
+  background: rgba(201, 169, 110, 0.1);
+}
+
+.viewAllBtn {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 150ms ease;
+  white-space: nowrap;
+}
+
+.viewAllBtn:hover {
+  background: rgba(107, 114, 128, 0.1);
+  color: #374151;
+}
+
+[data-theme='dark'] .viewAllBtn {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .viewAllBtn:hover {
   color: #f1f5f9;
 }
 

@@ -423,7 +423,7 @@
 }
 
 .tableWrapper {
-  overflow-x: clip;
+  overflow-x: auto;
 }
 
 .table {

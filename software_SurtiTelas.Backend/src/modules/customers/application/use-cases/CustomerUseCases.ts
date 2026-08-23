@@ -5,11 +5,28 @@ import type {
   CustomerRepository,
   UpdateCustomerInput,
 } from '../../domain/repositories/CustomerRepository';
+import type { EventBus } from '../../../../shared/application/events';
+import { CustomerCreatedEvent, CustomerUpdatedEvent } from '../../../../shared/application/events';
 
 export class CreateCustomer {
-  constructor(private readonly repo: CustomerRepository) {}
-  execute(input: CreateCustomerInput) {
-    return this.repo.create(input);
+  constructor(private readonly repo: CustomerRepository, private readonly eventBus?: EventBus) {}
+  async execute(input: CreateCustomerInput, requestId?: string) {
+    const customer = await this.repo.create(input);
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new CustomerCreatedEvent({
+          customerId: customer.id!,
+          nombre: customer.nombre,
+          email: customer.email,
+          ciudad: customer.ciudad,
+          asesorId: customer.asesorId ?? undefined,
+          asesorNombre: undefined,
+        }, requestId)
+      );
+    }
+
+    return customer;
   }
 }
 
@@ -30,16 +47,46 @@ export class GetCustomerById {
 }
 
 export class UpdateCustomer {
-  constructor(private readonly repo: CustomerRepository) {}
-  execute(id: string, changes: UpdateCustomerInput) {
-    return this.repo.update(id, changes);
+  constructor(private readonly repo: CustomerRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, changes: UpdateCustomerInput, requestId?: string) {
+    const existing = await this.repo.getById(id);
+    if (!existing) throw new NotFoundError('Cliente no encontrado');
+    const updated = await this.repo.update(id, changes);
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new CustomerUpdatedEvent({
+          customerId: updated.id!,
+          nombre: updated.nombre,
+          cambios: changes as Record<string, unknown>,
+          asesorId: updated.asesorId ?? undefined,
+          asesorNombre: undefined,
+        }, requestId)
+      );
+    }
+
+    return updated;
   }
 }
 
 export class AssignAsesor {
-  constructor(private readonly repo: CustomerRepository) {}
-  execute(id: string, asesorId: string) {
-    return this.repo.assignAsesor(id, asesorId);
+  constructor(private readonly repo: CustomerRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, asesorId: string, requestId?: string) {
+    const updated = await this.repo.assignAsesor(id, asesorId);
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new CustomerUpdatedEvent({
+          customerId: updated.id!,
+          nombre: updated.nombre,
+          cambios: { asesorId, action: 'assign_asesor' },
+          asesorId: updated.asesorId ?? undefined,
+          asesorNombre: undefined,
+        }, requestId)
+      );
+    }
+
+    return updated;
   }
 }
 

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaReturnRepository } from '../repositories/PrismaReturnRepository';
+import { eventBus } from '../../../../shared/infrastructure/eventBus';
 import {
   ChangeReturnStatus,
   CreateReturn,
@@ -16,8 +17,8 @@ const returnRepository = new PrismaReturnRepository(prisma);
 export const returnsUseCases = {
   listReturns: new ListReturns(returnRepository),
   getReturn: new GetReturn(returnRepository),
-  createReturn: new CreateReturn(returnRepository, prisma),
-  updateReturn: new UpdateReturn(returnRepository),
-  changeReturnStatus: new ChangeReturnStatus(returnRepository),
-  deleteReturn: new DeleteReturn(returnRepository),
+  createReturn: new CreateReturn(returnRepository, prisma, eventBus),
+  updateReturn: new UpdateReturn(returnRepository, eventBus),
+  changeReturnStatus: new ChangeReturnStatus(returnRepository, eventBus),
+  deleteReturn: new DeleteReturn(returnRepository, eventBus),
 };

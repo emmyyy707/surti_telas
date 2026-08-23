@@ -40,19 +40,19 @@ export const getCustomerTrustedStatus = async (req: Request, res: Response) => {
 
 export const createCustomer = async (req: Request, res: Response) => {
   const input = parseDto(CreateCustomerSchema, req.body);
-  const customer = await customerUseCases.createCustomer.execute(input);
+  const customer = await customerUseCases.createCustomer.execute(input, req.requestId);
   return created(res, customer, 'Cliente creado');
 };
 
 export const updateCustomer = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateCustomerSchema, req.body);
-  const customer = await customerUseCases.updateCustomer.execute(req.params.id, changes);
+  const customer = await customerUseCases.updateCustomer.execute(req.params.id, changes, req.requestId);
   return ok(res, customer, 'Cliente actualizado');
 };
 
 export const assignAsesor = async (req: Request, res: Response) => {
   const { asesorId } = parseDto(AssignAsesorSchema, req.body);
-  const customer = await customerUseCases.assignAsesor.execute(req.params.id, asesorId);
+  const customer = await customerUseCases.assignAsesor.execute(req.params.id, asesorId, req.requestId);
   return ok(res, customer, 'Asesor asignado');
 };
 

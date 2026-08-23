@@ -45,7 +45,6 @@ function saveToStorage<T>(key: string, data: T[]) {
 let _proveedores = loadFromStorage<Proveedor>(STORAGE_KEYS.proveedores, seedProveedores);
 let _produccion = loadFromStorage<OrdenProduccion>(STORAGE_KEYS.produccion, seedProduccion);
 let _inventario = loadFromStorage<MovimientoInventario>(STORAGE_KEYS.inventario, []);
-let _notificaciones = loadFromStorage<Notificacion>(STORAGE_KEYS.notificaciones, seedNotificaciones);
 
 /* √çndice numero(pedido visible) ‚Üí id(cuid) para mutaciones contra el backend. */
 let _orderIdByNumero: Record<string, string> = {};
@@ -140,11 +139,6 @@ export interface AppState {
   addMovimiento: (mov: Omit<MovimientoInventario, 'id' | 'fecha'>) => MovimientoInventario;
   getMovimientosPorProducto: (ref: string) => MovimientoInventario[];
 
-  // notificaciones
-  addNotificacion: (n: Omit<Notificacion, 'id' | 'createdAt' | 'leida'>) => Notificacion;
-  marcarNotificacionLeida: (id: string) => void;
-  marcarTodasLeidas: () => void;
-
   // m√©tricas dashboard
   getMetricas: () => {
     totalVentas: number;
@@ -164,7 +158,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
   pedidos: [],
   produccion: _produccion,
   inventario: _inventario,
-  notificaciones: _notificaciones,
+  notificaciones: [],
   pendingOperations: new Set<string>(),
 
   /* ‚îÄ‚îÄ Helpers de concurrencia ‚îÄ‚îÄ */
@@ -261,7 +255,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .catch((err) => {
         _get()._removePending(pendingKey);
         _set({ productos: _get().productos.filter((p) => p.ref !== ref) });
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo crear el producto en el servidor' });
+        // Notificaci√≥n manejada por backend
         throw err;
       });
   },
@@ -287,7 +281,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .catch((err) => {
         _get()._removePending(pendingKey);
         _set({ productos: _get().productos.map((p) => (p.ref === ref ? productos[idx] : p)) });
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo actualizar el producto' });
+        // NotificaciÛn manejada por backend
         throw err;
       });
   },
@@ -304,7 +298,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .catch(() => {
         _get()._removePending(pendingKey);
         _get().hydrateProductos();
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo eliminar el producto' });
+        // NotificaciÛn manejada por backend
         throw new Error('No se pudo eliminar el producto');
       });
   },
@@ -330,13 +324,13 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .then((prodSrv) => {
         _get()._removePending(pendingKey);
         _set({ productos: _get().productos.map((p) => (p.ref === ref ? prodSrv : p)) });
-        _get().addNotificacion({ tipo: 'success', titulo: 'Producto publicado', mensaje: `${product.nombre} ahora est√° visible en el Cat√°logo Digital` });
+        // NotificaciÛn manejada por backend
         return true;
       })
       .catch((err) => {
         _get()._removePending(pendingKey);
         _set({ productos: _get().productos.map((p) => (p.ref === ref ? productos[idx] : p)) });
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo publicar el producto' });
+        // NotificaciÛn manejada por backend
         throw err;
       });
   },
@@ -361,7 +355,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .catch((err) => {
         _get()._removePending(pendingKey);
         _set({ productos: _get().productos.map((p) => (p.ref === ref ? productos[idx] : p)) });
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo despublicar el producto' });
+        // NotificaciÛn manejada por backend
         throw err;
       });
   },
@@ -386,7 +380,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .catch((err) => {
         _get()._removePending(pendingKey);
         _set({ clientes: _get().clientes.filter((c) => c.id !== optimista.id) });
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo registrar el cliente en el servidor' });
+        // NotificaciÛn manejada por backend
         throw err;
       });
   },
@@ -412,7 +406,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
       .catch((err) => {
         _get()._removePending(pendingKey);
         _set({ clientes: _get().clientes.map((c) => (c.id === id ? clientes[idx] : c)) });
-        _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo actualizar el cliente' });
+        // NotificaciÛn manejada por backend
         throw err;
       });
   },
@@ -484,14 +478,14 @@ export const useAppStore = create<AppState>((_set, _get) => ({
         .catch((err) => {
           _get()._removePending(pendingKey);
           _set({ pedidos: _get().pedidos.filter((p) => p.id !== numero) });
-          _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo crear el pedido en el servidor' });
+          // NotificaciÛn manejada por backend
           throw err;
         });
     } else {
       _get()._removePending(pendingKey);
       _set({ pedidos: _get().pedidos.filter((p) => p.id !== numero) });
       const noCreado = new Error('El cliente no est√° sincronizado con el servidor; el pedido no se cre√≥');
-      _get().addNotificacion({ tipo: 'warning', titulo: 'Pedido no guardado', mensaje: noCreado.message });
+      // NotificaciÛn manejada por backend
       return Promise.reject(noCreado);
     }
   },
@@ -519,7 +513,7 @@ export const useAppStore = create<AppState>((_set, _get) => ({
         .catch((err) => {
           _get()._removePending(pendingKey);
           _set({ pedidos: _get().pedidos.map((p) => (p.id === id ? pedidos[idx] : p)) });
-          _get().addNotificacion({ tipo: 'danger', titulo: 'Error', mensaje: 'No se pudo actualizar el estado del pedido' });
+          // NotificaciÛn manejada por backend
           throw err;
         });
     }
@@ -578,36 +572,6 @@ export const useAppStore = create<AppState>((_set, _get) => ({
   },
 
   getMovimientosPorProducto: (ref) => _get().inventario.filter((m) => m.productoRef === ref),
-
-  /* ‚îÄ‚îÄ Notificaciones (pendiente backend: Fase 4) ‚îÄ‚îÄ */
-  addNotificacion: (n) => {
-    const notifs = _get().notificaciones;
-    const nueva: Notificacion = {
-      ...n,
-      id: `N-${String(notifs.length + 1).padStart(3, '0')}`,
-      createdAt: Date.now(),
-      leida: false,
-    };
-    const nuevas = [nueva, ...notifs];
-    _notificaciones = nuevas;
-    saveToStorage(STORAGE_KEYS.notificaciones, nuevas);
-    _set({ notificaciones: nuevas });
-    return nueva;
-  },
-
-  marcarNotificacionLeida: (id) => {
-    const notifs = _get().notificaciones.map((n) => (n.id === id ? { ...n, leida: true } : n));
-    _notificaciones = notifs;
-    saveToStorage(STORAGE_KEYS.notificaciones, notifs);
-    _set({ notificaciones: notifs });
-  },
-
-  marcarTodasLeidas: () => {
-    const notifs = _get().notificaciones.map((n) => ({ ...n, leida: true }));
-    _notificaciones = notifs;
-    saveToStorage(STORAGE_KEYS.notificaciones, notifs);
-    _set({ notificaciones: notifs });
-  },
 
   getMetricas: () => {
     const { productos, pedidos, clientes } = _get();
@@ -676,18 +640,6 @@ export function useProduccion() {
   };
 }
 
-export function useNotificaciones() {
-  const notificaciones = useAppStore((s) => s.notificaciones);
-  const noLeidas = notificaciones.filter((n) => !n.leida).length;
-  return {
-    notificaciones,
-    noLeidas,
-    addNotificacion: useAppStore((s) => s.addNotificacion),
-    marcarLeida: useAppStore((s) => s.marcarNotificacionLeida),
-    marcarTodasLeidas: useAppStore((s) => s.marcarTodasLeidas),
-  };
-}
-
 export function useMetricas() {
   return useAppStore((s) => s.getMetricas());
 }
@@ -700,3 +652,4 @@ export function useInventario() {
     getMovimientosPorProducto: useAppStore((s) => s.getMovimientosPorProducto),
   };
 }
+

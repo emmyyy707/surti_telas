@@ -24,9 +24,9 @@
 }
 
 .btn {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 8px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: transparent;
@@ -59,8 +59,8 @@
 }
 
 .ellipsis {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -257,13 +257,22 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  opacity: 0;
+  opacity: 1;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bodyRow:hover .actionButton,
 .actionButton:focus-visible {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .actionButton {
+    opacity: 0;
+  }
+  .bodyRow:hover .actionButton {
+    opacity: 1;
+  }
 }
 
 .actionButton:hover {

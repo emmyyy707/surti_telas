@@ -33,27 +33,27 @@ export const getReturn = async (req: Request, res: Response) => {
 
 export const createReturn = async (req: Request, res: Response) => {
   const input = parseDto(CreateReturnSchema, req.body);
-  const ret = await returnsUseCases.createReturn.execute(input);
+  const ret = await returnsUseCases.createReturn.execute(input, req.requestId);
   clearCache('/api/v1/returns');
   return created(res, ret.toDTO(), 'Devolución creada');
 };
 
 export const updateReturn = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateReturnSchema, req.body);
-  const ret = await returnsUseCases.updateReturn.execute(req.params.id, changes);
+  const ret = await returnsUseCases.updateReturn.execute(req.params.id, changes, req.requestId);
   clearCache('/api/v1/returns');
   return ok(res, ret.toDTO(), 'Devolución actualizada');
 };
 
 export const changeReturnStatus = async (req: Request, res: Response) => {
   const { estado } = parseDto(z.object({ estado: ReturnStatusEnum }), req.body);
-  const ret = await returnsUseCases.changeReturnStatus.execute(req.params.id, estado);
+  const ret = await returnsUseCases.changeReturnStatus.execute(req.params.id, estado, req.requestId);
   clearCache('/api/v1/returns');
   return ok(res, ret.toDTO(), 'Estado de devolución actualizado');
 };
 
 export const deleteReturn = async (req: Request, res: Response) => {
-  await returnsUseCases.deleteReturn.execute(req.params.id);
+  await returnsUseCases.deleteReturn.execute(req.params.id, req.requestId);
   clearCache('/api/v1/returns');
   return noContent(res);
 };

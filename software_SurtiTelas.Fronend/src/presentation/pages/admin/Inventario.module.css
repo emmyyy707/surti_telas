@@ -90,7 +90,7 @@
   text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px;
 }
 
-.tableWrapper { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-card); }
+.tableWrapper { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow-x: auto; box-shadow: var(--shadow-card); }
 .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--color-border); gap: 12px; flex-wrap: wrap; }
 .toolbarLeft  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .toolbarRight { display: flex; align-items: center; gap: 8px; }
