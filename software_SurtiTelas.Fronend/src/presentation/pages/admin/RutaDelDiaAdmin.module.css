@@ -51,7 +51,7 @@
 
 .tableWrapper {
   margin-top: 1rem;
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .table {

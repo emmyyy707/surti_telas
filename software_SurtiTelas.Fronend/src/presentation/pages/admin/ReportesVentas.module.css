@@ -376,14 +376,12 @@
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;
-}
+  border-collapse: collapse;}
 
 .table thead tr {
   background: var(--color-bg-elevated);
@@ -659,4 +657,11 @@
   padding: 40px 16px;
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 900px;
+  }
 }

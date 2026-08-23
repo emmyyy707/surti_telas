@@ -184,9 +184,7 @@
 }
 
 .table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: collapse;
+  width: 100%;border-collapse: collapse;
 }
 
 .table thead th {
@@ -370,3 +368,9 @@
   }
 }
 
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 900px;
+  }
+}

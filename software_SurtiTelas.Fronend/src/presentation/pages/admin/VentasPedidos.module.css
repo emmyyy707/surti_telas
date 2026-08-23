@@ -28,14 +28,12 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
-  min-width: 1100px;
-}
+  border-collapse: collapse;}
 
 .table thead tr {
   background: var(--color-bg-elevated);
@@ -273,7 +271,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 560px;
+  max-width: min(560px, calc(100vw - 32px));
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -317,4 +315,11 @@
   padding: 24px;
   overflow-y: auto;
   flex: 1;
+}
+
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 1100px;
+  }
 }

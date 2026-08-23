@@ -219,7 +219,7 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow-x: auto;
+  overflow-x: clip;
   overflow-y: hidden;
 }
 
@@ -344,7 +344,7 @@
   border: 1px solid var(--color-border);
   border-radius: 24px;
   width: 100%;
-  max-width: 760px;
+  max-width: min(760px, calc(100vw - 32px));
   max-height: min(92vh, 860px);
   display: flex;
   flex-direction: column;

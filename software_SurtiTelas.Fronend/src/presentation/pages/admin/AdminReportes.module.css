@@ -138,7 +138,7 @@
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  overflow-x: clip;
   border-radius: var(--radius-md);
 }
 
@@ -362,7 +362,7 @@
    TABLE
 ============================================ */
 
-.table {
+.table { border-collapse: collapse;
   width: 100%;
 
   border-collapse: separate;

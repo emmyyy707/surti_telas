@@ -423,14 +423,12 @@
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;
-}
+  border-collapse: collapse;}
 
 .table thead tr {
   background: var(--color-bg-elevated);
@@ -618,5 +616,12 @@
   .searchBox {
     max-width: none;
     width: 100%;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 900px;
   }
 }

@@ -27,8 +27,8 @@
 .filterBtn:hover { background: var(--color-bg-surface); color: var(--color-text-primary); }
 .filterBtnActive { background: var(--btn-primary-bg); color: var(--btn-primary-text); border-color: var(--btn-primary-border); font-weight: 500; }
 .filterBtnText { white-space: nowrap; }
-.tableWrapper { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow-x: auto; overflow-y: hidden; }
-.table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+.tableWrapper { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow-x: clip; overflow-y: hidden; }
+.table { width: 100%; border-collapse: collapse;}
 .table thead tr { background: var(--color-bg-elevated); }
 .table th { padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
 .table td { padding: 14px 16px; font-size: 0.88rem; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-subtle); white-space: nowrap; }
@@ -53,7 +53,7 @@
 .actionBtn:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); border-color: var(--color-accent); }
 .emptyRow { text-align: center; padding: 40px 16px; color: var(--color-text-muted); font-size: 0.9rem; }
 .modalOverlay { position: fixed; inset: 0; background: var(--modal-overlay); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-.modal { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; }
+.modal { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); width: 100%; max-width: min(520px, calc(100vw - 32px)); max-height: 90vh; display: flex; flex-direction: column; }
 .modalHeader { padding: 24px 24px 20px; border-bottom: 1px solid var(--color-border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .modalHeaderInfo { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
 .modalBadges { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -168,3 +168,10 @@
 }
 .customSelectOption:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
 .customSelectOptionPlaceholder { color: var(--color-text-muted); }
+
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 1100px;
+  }
+}

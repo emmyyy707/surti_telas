@@ -37,7 +37,7 @@
 .modal {
   background: var(--modal-bg); border: 1px solid var(--color-border);
   border-radius: var(--radius-xl); box-shadow: var(--shadow-modal, var(--shadow-xl));
-  width: 100%; max-width: 560px; max-height: 90vh;
+  width: 100%; max-width: min(560px, calc(100vw - 32px)); max-height: 90vh;
   display: flex; flex-direction: column;
 }
 .modalHeader { padding: 22px 24px 18px; border-bottom: 1px solid var(--color-border); display: flex; align-items: flex-start; justify-content: space-between; }
@@ -95,7 +95,7 @@
 .toolbarLeft  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .toolbarRight { display: flex; align-items: center; gap: 8px; }
 .scroll { overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; min-width: 600px; }
+.table { width: 100%; border-collapse: collapse;}
 .table thead tr { background: var(--color-bg-elevated); }
 .table th { padding: 11px 16px; text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--color-border); white-space: nowrap; user-select: none; cursor: pointer; }
 .table th:hover { color: var(--color-text-secondary); }
@@ -122,3 +122,10 @@
 }
 
 @media (max-width: 900px) { .stockResumen { grid-template-columns: repeat(2, 1fr); } }
+
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 600px;
+  }
+}
