@@ -75,20 +75,20 @@ describe('PrismaNotificationRepository', () => {
   it('marks a notification as read', async () => {
     mockPrisma.notification.findFirst.mockResolvedValue(row());
     mockPrisma.notification.update.mockResolvedValue(row({ leida: true }));
-    const result = await repo.markAsRead('n-1');
+    const result = await repo.markAsRead('n-1', 'u-1');
     expect(result.leida).toBe(true);
-    expect(mockPrisma.notification.update).toHaveBeenCalledWith({ where: { id: 'n-1' }, data: { leida: true } });
+    expect(mockPrisma.notification.update).toHaveBeenCalledWith({ where: { id: 'n-1' }, data: { leida: true, readAt: expect.any(Date) } });
   });
 
   it('throws NotFound when marking missing notification', async () => {
     mockPrisma.notification.findFirst.mockResolvedValue(null);
-    await expect(repo.markAsRead('n-1')).rejects.toThrow(NotFoundError);
+    await expect(repo.markAsRead('n-1', 'u-1')).rejects.toThrow(NotFoundError);
   });
 
   it('soft deletes a notification', async () => {
     mockPrisma.notification.findFirst.mockResolvedValue(row());
     mockPrisma.notification.update.mockResolvedValue({});
-    await repo.delete('n-1');
+    await repo.delete('n-1', 'u-1');
     expect(mockPrisma.notification.update).toHaveBeenCalledWith({
       where: { id: 'n-1' },
       data: { deletedAt: expect.any(Date) },
@@ -97,6 +97,6 @@ describe('PrismaNotificationRepository', () => {
 
   it('throws NotFound when deleting missing notification', async () => {
     mockPrisma.notification.findFirst.mockResolvedValue(null);
-    await expect(repo.delete('n-1')).rejects.toThrow(NotFoundError);
+    await expect(repo.delete('n-1', 'u-1')).rejects.toThrow(NotFoundError);
   });
 });

@@ -91,6 +91,19 @@ export interface Cotizacion {
   negotiationHistory?: any[];
 }
 
+export interface NegotiationMessage {
+  id: string;
+  quoteId: string;
+  authorId: string;
+  authorRole: string;
+  message: string;
+  round: number;
+  proposalData?: any;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CustomOrder {
   id: string;
   numeroSolicitud: string;
@@ -325,6 +338,10 @@ export const customOrdersApi = {
     return api.postForm<{ paymentProofUrl: string }>(`/custom-orders/${encodeURIComponent(id)}/payment-proof`, form);
   },
 
+  getPaymentProofUrl(id: string): string {
+    return `/api/v1/custom-orders/${encodeURIComponent(id)}/payment-proof`;
+  },
+
   async uploadReferenceImage(id: string, file: File): Promise<{ url: string }> {
     const form = new FormData();
     form.append('referenceImage', file);
@@ -345,6 +362,26 @@ export const customOrdersApi = {
 
   async metrics(): Promise<CustomOrderMetrics> {
     return api.get<CustomOrderMetrics>(`/admin/custom-orders/metrics`);
+  },
+
+  async startNegotiation(id: string, message: string, proposalData?: any): Promise<CustomOrder> {
+    return api.post<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/negotiation/start`, { message, proposalData });
+  },
+
+  async respondToNegotiation(id: string, message: string, proposalData?: any, parentId?: string): Promise<CustomOrder> {
+    return api.post<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/negotiation/respond`, { message, proposalData, parentId });
+  },
+
+  async acceptNegotiationProposal(id: string, negotiationId: string): Promise<CustomOrder> {
+    return api.post<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/negotiation/accept`, { negotiationId });
+  },
+
+  async rejectNegotiationProposal(id: string, negotiationId: string, reason?: string): Promise<CustomOrder> {
+    return api.post<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/negotiation/reject`, { negotiationId, reason });
+  },
+
+  async getNegotiationHistory(id: string): Promise<NegotiationMessage[]> {
+    return api.get<NegotiationMessage[]>(`/custom-orders/${encodeURIComponent(id)}/negotiation`);
   },
 };
 

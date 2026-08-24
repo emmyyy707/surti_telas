@@ -204,14 +204,14 @@ describe('UpdateOrderStatus', () => {
 describe('AssignDomiciliario', () => {
   it('should assign domiciliario', async () => {
     mockRepo.assignDomiciliario.mockResolvedValue(mockOrder());
-    const useCase = new AssignDomiciliario(mockRepo);
-    const result = await useCase.execute('1', 'dom1');
+    const useCase = new AssignDomiciliario(mockRepo, mockEventBus);
+    const result = await useCase.execute('1', 'dom1', 'Domiciliario Test');
     expect(result.id).toBe('1');
   });
 
   it('should throw if order not found', async () => {
     mockRepo.assignDomiciliario.mockResolvedValue(null as any);
-    const useCase = new AssignDomiciliario(mockRepo);
-    await expect(useCase.execute('1', 'dom1')).rejects.toThrow('Pedido no encontrado');
+    const useCase = new AssignDomiciliario(mockRepo, mockEventBus);
+    await expect(useCase.execute('1', 'dom1', 'Domiciliario Test')).rejects.toThrow('Pedido no encontrado');
   });
 });

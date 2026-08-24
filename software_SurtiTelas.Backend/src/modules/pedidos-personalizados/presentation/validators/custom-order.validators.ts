@@ -48,6 +48,7 @@ export const CustomOrderItemLocationEnum = z.enum([
   'MANGA_IZQUIERDA',
   'MANGA_DERECHA',
   'PECHO',
+  'PUNTO_CORAZON',
   'OTRA',
 ]);
 
@@ -207,6 +208,22 @@ export const AcceptQuotationSchema = z.object({
 
 export const RejectQuotationSchema = z.object({
   motivoRechazo: z.string().min(1, 'El motivo de rechazo es obligatorio'),
+});
+
+export const StartNegotiationSchema = z.object({
+  message: z.string().min(1, 'El mensaje es obligatorio'),
+  proposalData: z.any().optional(),
+});
+
+export const RespondToNegotiationSchema = z.object({
+  message: z.string().min(1, 'El mensaje es obligatorio'),
+  proposalData: z.any().optional(),
+  parentId: z.string().optional(),
+});
+
+export const RejectNegotiationSchema = z.object({
+  negotiationId: z.string().min(1, 'El ID de la negociación es requerido'),
+  reason: z.string().optional(),
 });
 
 const UpdateCustomOrderSchemaBase = CreateCustomOrderSchemaBase.partial().extend({

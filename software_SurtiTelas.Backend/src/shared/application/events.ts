@@ -493,6 +493,68 @@ export class QuotationAcceptedEvent implements DomainEvent {
   ) {}
 }
 
+export class QuotationNegotiationStartedEvent implements DomainEvent {
+  readonly type = 'quotation.negotiation.started';
+  readonly occurredAt = new Date();
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      quoteId: string;
+      authorId: string;
+      authorRole: string;
+      message: string;
+      round: number;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class QuotationNegotiationRespondedEvent implements DomainEvent {
+  readonly type = 'quotation.negotiation.responded';
+  readonly occurredAt = new Date();
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      quoteId: string;
+      authorId: string;
+      authorRole: string;
+      message: string;
+      round: number;
+      proposalData?: any;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class QuotationNegotiationAcceptedEvent implements DomainEvent {
+  readonly type = 'quotation.negotiation.accepted';
+  readonly occurredAt = new Date();
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      quoteId: string;
+      negotiationId: string;
+      acceptedBy: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class QuotationNegotiationRejectedEvent implements DomainEvent {
+  readonly type = 'quotation.negotiation.rejected';
+  readonly occurredAt = new Date();
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      quoteId: string;
+      negotiationId: string;
+      rejectedBy: string;
+      reason?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
 export class QuotationRejectedEvent implements DomainEvent {
   readonly type = 'quotation.rejected';
   readonly occurredAt = new Date();
@@ -749,6 +811,488 @@ export class PaymentStatusUpdatedEvent implements DomainEvent {
       newStatus: string;
       amount: number;
       asesorId?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class PaymentUpdatedEvent implements DomainEvent {
+  readonly type = 'payment.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      paymentId: string;
+      orderId?: string;
+      customerId: string;
+      cambios: Record<string, unknown>;
+      asesorId?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class PaymentDeletedEvent implements DomainEvent {
+  readonly type = 'payment.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      paymentId: string;
+      orderId?: string;
+      customerId: string;
+      asesorId?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ReceiptCreatedEvent implements DomainEvent {
+  readonly type = 'receipt.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      receiptId: string;
+      orderId?: string;
+      customerId: string;
+      numero: string;
+      total: number;
+      estado: string;
+      emitidoPor?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ReceiptUpdatedEvent implements DomainEvent {
+  readonly type = 'receipt.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      receiptId: string;
+      orderId?: string;
+      customerId: string;
+      cambios: Record<string, unknown>;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ReceiptStatusUpdatedEvent implements DomainEvent {
+  readonly type = 'receipt.status.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      receiptId: string;
+      orderId?: string;
+      customerId: string;
+      previousStatus: string;
+      newStatus: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ReceiptDeletedEvent implements DomainEvent {
+  readonly type = 'receipt.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      receiptId: string;
+      orderId?: string;
+      customerId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderAssignedEvent implements DomainEvent {
+  readonly type = 'order.assigned';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      domiciliarioId: string;
+      domiciliarioNombre: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderUpdatedEvent implements DomainEvent {
+  readonly type = 'order.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      cambios: Record<string, unknown>;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class OrderDeletedEvent implements DomainEvent {
+  readonly type = 'order.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: string;
+      orderNumero: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId: string;
+      asesorNombre: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ProductionOrderCreatedEvent implements DomainEvent {
+  readonly type = 'production_order.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      productionOrderId: string;
+      referencia: string;
+      cantidad: number;
+      estado: string;
+      tallerId?: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ProductionOrderUpdatedEvent implements DomainEvent {
+  readonly type = 'production_order.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      productionOrderId: string;
+      referencia: string;
+      cambios: Record<string, unknown>;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ProductionOrderDeletedEvent implements DomainEvent {
+  readonly type = 'production_order.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      productionOrderId: string;
+      referencia: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ProductionOrderAssignedEvent implements DomainEvent {
+  readonly type = 'production_order.assigned';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      productionOrderId: string;
+      referencia: string;
+      tallerId: string;
+      tallerNombre: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ProductionProgressUpdatedEvent implements DomainEvent {
+  readonly type = 'production_progress.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      productionOrderId: string;
+      referencia: string;
+      avance: number;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class WorkshopCreatedEvent implements DomainEvent {
+  readonly type = 'workshop.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      workshopId: string;
+      nombre: string;
+      ciudad?: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class WorkshopUpdatedEvent implements DomainEvent {
+  readonly type = 'workshop.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      workshopId: string;
+      nombre: string;
+      cambios: Record<string, unknown>;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class WorkshopDeletedEvent implements DomainEvent {
+  readonly type = 'workshop.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      workshopId: string;
+      nombre: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class ControlDeletedEvent implements DomainEvent {
+  readonly type = 'control.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      controlId: string;
+      produccionId: string;
+      etapa: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class SupplierCreatedEvent implements DomainEvent {
+  readonly type = 'supplier.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      supplierId: string;
+      nombre: string;
+      email?: string;
+      telefono?: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class SupplierUpdatedEvent implements DomainEvent {
+  readonly type = 'supplier.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      supplierId: string;
+      nombre: string;
+      cambios: Record<string, unknown>;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class SupplierDeletedEvent implements DomainEvent {
+  readonly type = 'supplier.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      supplierId: string;
+      nombre: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class RawMaterialCreatedEvent implements DomainEvent {
+  readonly type = 'raw_material.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      rawMaterialId: string;
+      nombre: string;
+      stockActual: number;
+      stockMinimo: number;
+      unidadMedida?: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class RawMaterialUpdatedEvent implements DomainEvent {
+  readonly type = 'raw_material.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      rawMaterialId: string;
+      nombre: string;
+      cambios: Record<string, unknown>;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class RawMaterialDeletedEvent implements DomainEvent {
+  readonly type = 'raw_material.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      rawMaterialId: string;
+      nombre: string;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class StockMovementCreatedEvent implements DomainEvent {
+  readonly type = 'stock.movement.created';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      movementId: string;
+      rawMaterialId: string;
+      rawMaterialNombre: string;
+      tipo: 'ENTRADA' | 'SALIDA' | 'AJUSTE';
+      cantidad: number;
+      nuevoStock: number;
+      usuarioId: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderStatusUpdatedEvent implements DomainEvent {
+  readonly type = 'customOrder.status.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      previousStatus: string;
+      newStatus: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId?: string;
+      asesorNombre?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderUpdatedEvent implements DomainEvent {
+  readonly type = 'custom_order.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      cambios: Record<string, unknown>;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId?: string;
+      asesorNombre?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderDeletedEvent implements DomainEvent {
+  readonly type = 'custom_order.deleted';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId?: string;
+      asesorNombre?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderPaymentUpdatedEvent implements DomainEvent {
+  readonly type = 'custom_order.payment.updated';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      cambios: Record<string, unknown>;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId?: string;
+      asesorNombre?: string;
+    },
+    public readonly requestId?: string
+  ) {}
+}
+
+export class CustomOrderReferenceUploadedEvent implements DomainEvent {
+  readonly type = 'custom_order.reference.uploaded';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      customOrderId: string;
+      numeroSolicitud: string;
+      clienteId: string;
+      clienteNombre: string;
+      asesorId?: string;
+      asesorNombre?: string;
     },
     public readonly requestId?: string
   ) {}

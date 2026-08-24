@@ -6,6 +6,8 @@ import { PaymentFiltersSchema, CreatePaymentSchema, UpdatePaymentStatusSchema, U
 import { paymentUseCases } from '../../infrastructure/container/paymentContainer';
 import type { PaymentStatus } from '../../domain/entities/Payment';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { eventBus } from '../../../../shared/infrastructure/eventBus';
+import { PaymentCreatedEvent, PaymentStatusUpdatedEvent, PaymentUpdatedEvent, PaymentDeletedEvent } from '../../../../shared/application/events';
 
 export const listPayments = async (req: Request, res: Response) => {
   const filters = parseDto(PaymentFiltersSchema, req.query);
@@ -39,23 +41,68 @@ export const createPayment = async (req: Request, res: Response) => {
     ...input,
     asesorId: req.user?.role === 'ASESOR' ? req.user.id : input.asesorId,
   });
+  eventBus.publish(
+    new PaymentCreatedEvent({
+      paymentId: payment.id,
+      orderId: payment.orderId,
+      customerId: payment.customerId,
+      amount: payment.amount,
+      method: payment.method,
+      status: payment.status,
+      asesorId: payment.asesorId,
+    }),
+    req.requestId
+  );
   return created(res, payment, 'Pago creado');
 };
 
 export const updatePaymentStatus = async (req: Request, res: Response) => {
   const { status } = parseDto(UpdatePaymentStatusSchema, req.body);
+  const previous = await paymentUseCases.getPaymentById.execute(req.params.id);
   const payment = await paymentUseCases.updatePaymentStatus.execute(req.params.id, status);
+  eventBus.publish(
+    new PaymentStatusUpdatedEvent({
+      paymentId: payment.id,
+      orderId: payment.orderId,
+      customerId: payment.customerId,
+      previousStatus: previous?.status ?? status,
+      newStatus: status,
+      amount: payment.amount,
+      asesorId: payment.asesorId,
+    }),
+    req.requestId
+  );
   return ok(res, payment, 'Estado del pago actualizado');
 };
 
 export const updatePayment = async (req: Request, res: Response) => {
   const changes = parseDto(UpdatePaymentSchema, req.body);
   const payment = await paymentUseCases.updatePayment.execute(req.params.id, changes);
+  eventBus.publish(
+    new PaymentUpdatedEvent({
+      paymentId: payment.id,
+      orderId: payment.orderId,
+      customerId: payment.customerId,
+      cambios: changes,
+      asesorId: payment.asesorId,
+    }),
+    req.requestId
+  );
   return ok(res, payment, 'Pago actualizado');
 };
 
 export const deletePayment = async (req: Request, res: Response) => {
+  const payment = await paymentUseCases.getPaymentById.execute(req.params.id);
   await paymentUseCases.deletePayment.execute(req.params.id);
+  eventBus.publish(
+    new PaymentDeletedEvent({
+      paymentId: req.params.id,
+      orderId: payment?.orderId,
+      customerId: payment?.customerId ?? '',
+      asesorId: payment?.asesorId,
+    }),
+    req.requestId
+  );
   return noContent(res);
 };
 

@@ -60,8 +60,10 @@ export class PrismaNotificationRepository implements NotificationRepository {
     };
   }
 
-  async getById(id: string): Promise<Notification | null> {
-    const row = await this.prisma.notification.findFirst({ where: { id, deletedAt: null } });
+  async getById(id: string, usuarioId?: string): Promise<Notification | null> {
+    const where: Prisma.NotificationWhereInput = { id, deletedAt: null };
+    if (usuarioId) where.usuarioId = usuarioId;
+    const row = await this.prisma.notification.findFirst({ where });
     return row ? new Notification(toNotificationData(row)) : null;
   }
 
@@ -98,8 +100,8 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return new Notification(toNotificationData(row));
   }
 
-  async markAsRead(id: string): Promise<Notification> {
-    const existing = await this.getById(id);
+  async markAsRead(id: string, usuarioId: string): Promise<Notification> {
+    const existing = await this.getById(id, usuarioId);
     if (!existing) throw new NotFoundError('Notificación no encontrada');
 
     const row = await this.prisma.notification.update({
@@ -117,8 +119,8 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return result.count;
   }
 
-  async update(id: string, changes: { titulo?: string; mensaje?: string; leida?: boolean; readAt?: Date }): Promise<Notification> {
-    const existing = await this.getById(id);
+  async update(id: string, usuarioId: string, changes: { titulo?: string; mensaje?: string; leida?: boolean; readAt?: Date }): Promise<Notification> {
+    const existing = await this.getById(id, usuarioId);
     if (!existing) throw new NotFoundError('Notificación no encontrada');
 
     const row = await this.prisma.notification.update({
@@ -128,8 +130,8 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return new Notification(toNotificationData(row));
   }
 
-  async delete(id: string): Promise<void> {
-    const existing = await this.getById(id);
+  async delete(id: string, usuarioId: string): Promise<void> {
+    const existing = await this.getById(id, usuarioId);
     if (!existing) throw new NotFoundError('Notificación no encontrada');
     await this.prisma.notification.update({ where: { id }, data: { deletedAt: new Date() } });
   }

@@ -72,24 +72,25 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
     }
     setShowNotifications(false);
     if (notif.entityType && notif.entityId) {
+      const role = user.role;
+      const base = role === 'admin' ? '/admin' : role === 'asesor' ? '/asesor' : role === 'cliente' ? '/cliente' : role === 'domiciliario' ? '/domiciliario' : '/admin';
       const pathMap: Record<string, string> = {
-        ORDER: '/admin/pedidos',
-        RETURN: '/admin/devoluciones',
-        DELIVERY: '/admin/domicilios',
-        PRODUCT: '/admin/catalogo',
-        USER: '/admin/gestion-usuarios',
-        RECEIPT: '/admin/facturacion',
-        PAYMENT: '/admin/pagos',
-        CUSTOMER: '/admin/clientes',
-        PRODUCTION_ORDER: '/admin/produccion',
-        RAW_MATERIAL: '/admin/inventario',
+        ORDER: role === 'domiciliario' ? `${base}/entregas` : `${base}/pedidos`,
+        DELIVERY: role === 'domiciliario' ? `${base}/entregas` : `${base}/domicilios`,
+        PRODUCT: role === 'cliente' ? '/catalogo' : `${base}/catalogo`,
+        USER: role === 'admin' ? `${base}/gestion-usuarios` : notificationsPath,
+        RECEIPT: role === 'cliente' ? `${base}/recibos` : `${base}/facturacion`,
+        PAYMENT: role === 'admin' ? `${base}/pagos` : notificationsPath,
+        CUSTOMER: role === 'admin' ? `${base}/clientes` : role === 'asesor' ? `${base}/clientes` : notificationsPath,
+        PRODUCTION_ORDER: role === 'admin' ? `${base}/produccion` : notificationsPath,
+        RAW_MATERIAL: role === 'admin' ? `${base}/inventario` : notificationsPath,
       };
       const target = pathMap[notif.entityType] || notificationsPath;
       navigate(target);
     } else {
       navigate(notificationsPath);
     }
-  }, [markAsRead, navigate, notificationsPath]);
+  }, [markAsRead, navigate, notificationsPath, user.role]);
 
   const handleMarkAllRead = useCallback(async () => {
     await markAllAsRead();

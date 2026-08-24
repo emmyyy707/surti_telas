@@ -12,9 +12,6 @@ import {
   AuthLoginEvent,
   AuthLoginFailedEvent,
   AuthLogoutEvent,
-  UserCreatedEvent,
-  UserUpdatedEvent,
-  UserDeletedEvent,
   PasswordResetAttemptedEvent,
 } from '../../../../shared/application/events';
 
@@ -78,15 +75,6 @@ export const register = async (req: Request, res: Response) => {
   const input = parseDto(RegisterSchema, req.body);
   const result = await authUseCases.register.execute(input);
   setRefreshTokenCookie(res, result.refreshToken);
-  eventBus.publish(
-    new UserCreatedEvent({
-      userId: result.user.id,
-      nombre: result.user.nombre,
-      email: result.user.email,
-      role: result.user.role,
-    }),
-    req.requestId
-  );
   return created(res, { accessToken: result.accessToken, user: result.user }, 'Usuario registrado');
 };
 
@@ -131,17 +119,7 @@ export const me = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: Request, res: Response) => {
   const { nombre, telefono, direccion, tipoDocumento, numeroDocumento, avatar } = parseDto(UpdateProfileSchema, req.body);
-  console.log('[backend][updateProfile] avatar length', avatar?.length, 'avatar preview', avatar?.slice(0, 50));
   const user = await authUseCases.updateProfile.execute(req.user!.id, { nombre, telefono, direccion, tipoDocumento, numeroDocumento, avatar: avatar || undefined });
-  console.log('[backend][updateProfile] saved avatar length', (user as any).avatar?.length, 'saved avatar preview', (user as any).avatar?.slice(0, 50));
-  eventBus.publish(
-    new UserUpdatedEvent({
-      userId: user.id,
-      nombre: user.nombre,
-      cambios: { nombre, telefono, direccion, tipoDocumento, numeroDocumento, avatar },
-    }),
-    req.requestId
-  );
   return ok(res, user, 'Perfil actualizado');
 };
 
@@ -352,14 +330,6 @@ export const createUser = async (req: Request, res: Response) => {
 export const updateUserStatus = async (req: Request, res: Response) => {
   const { estado } = parseDto(UpdateUserStatusSchema, req.body);
   const user = await authUseCases.updateUserStatus.execute(req.params.id, estado);
-  eventBus.publish(
-    new UserUpdatedEvent({
-      userId: user.id,
-      nombre: user.nombre,
-      cambios: { estado },
-    }),
-    req.requestId
-  );
   return ok(res, user, estado === 'ACTIVO' ? 'Usuario activado' : 'Usuario desactivado');
 };
 
@@ -372,15 +342,7 @@ export const updateUser = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
-    const user = await authUseCases.getProfile.execute(id);
     await authUseCases.deleteUser.execute(id);
-    eventBus.publish(
-      new UserDeletedEvent({
-        userId: id,
-        nombre: user.nombre,
-      }),
-      req.requestId
-    );
     return noContent(res);
   } catch (error) {
     if (error instanceof ConflictError) {

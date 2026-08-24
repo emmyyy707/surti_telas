@@ -36,6 +36,11 @@ export interface CustomOrderSummaryData {
   direccionEntrega?: string | null;
   notasCliente?: string | null;
   estado?: string;
+  paymentStatus?: string | null;
+  paymentProofUrl?: string | null;
+  paymentProofOrderId?: string | null;
+  paymentKey?: string | null;
+  anticipoPagado?: boolean | null;
 }
 
 export interface CotizacionResumen {
@@ -54,6 +59,8 @@ export interface CotizacionResumen {
     subtotal?: number | string | null;
   }>;
   negotiationCount?: number | null;
+  motivoRechazo?: string | null;
+  negotiationHistory?: any[];
 }
 
 export interface CustomOrderSummaryProps {
@@ -193,9 +200,9 @@ export const CustomOrderSummary = ({ data, styles, title, extraHeader, cotizacio
                              {pers.tecnica && (
                                <div className={styles.summaryPersonalizationMeta}>Técnica: {pers.tecnica}</div>
                              )}
-                             <div className={styles.summaryPersonalizationMeta}>
-                               {(pers.ubicacion || []).map((u) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')).join(', ') || '-'}
-                             </div>
+                              <div className={styles.summaryPersonalizationMeta}>
+                                {(pers.ubicacion || []).map((u) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.').replace('PUNTO_CORAZON', 'Punto corazón')).join(', ') || '-'}
+                              </div>
                              <div className={styles.summaryPersonalizationDescription}>{pers.descripcion || '-'}</div>
                              {renderThumbnails(pers.archivos, styles)}
                              {(pers.variantes || []).length > 0 && (
@@ -236,6 +243,12 @@ export const CustomOrderSummary = ({ data, styles, title, extraHeader, cotizacio
             <span>Estado</span>
             <span>{cotizacion.estado || '-'}</span>
           </div>
+          {cotizacion.estado === 'RECHAZADA' && cotizacion.motivoRechazo && (
+            <div className={styles.summaryRow}>
+              <span>Motivo del rechazo</span>
+              <span>{cotizacion.motivoRechazo}</span>
+            </div>
+          )}
           {cotizacion.negotiationCount !== undefined && cotizacion.negotiationCount !== null && (
             <div className={styles.summaryRow}>
               <span>Negociaciones</span>
@@ -304,6 +317,60 @@ export const CustomOrderSummary = ({ data, styles, title, extraHeader, cotizacio
                 </div>
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {cotizacion?.negotiationHistory && cotizacion.negotiationHistory.length > 0 && (
+        <div className={styles.summarySection}>
+          <div className={styles.summaryTitle}>Historial de negociaciones</div>
+          {cotizacion.negotiationHistory.map((entry: any, idx: number) => (
+            <div key={entry.id || idx} className={styles.quotationRow} style={{ borderBottom: '1px solid var(--color-border-subtle)', padding: '10px 0' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Negociación {entry.round ?? idx + 1} - {entry.authorRole === 'cliente' ? 'Cliente' : entry.authorRole === 'asesor' ? 'Asesor' : entry.authorRole === 'admin' ? 'Administrador' : entry.authorRole}</div>
+                {entry.message && <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>{entry.message}</div>}
+                {entry.proposalData && (
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                    Propuesta: Total ${entry.proposalData.total ?? '-'} | Anticipo {entry.proposalData.porcentajeAnticipo ?? '-'}%
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>
+                {new Date(entry.created_at).toLocaleDateString('es-CO')}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(data.paymentProofUrl || data.paymentStatus) && (
+        <div className={styles.summarySection}>
+          <div className={styles.summaryTitle}>Comprobante de pago</div>
+          {data.paymentStatus && (
+            <div className={styles.summaryRow}>
+              <span>Estado</span>
+              <span>{data.paymentStatus}</span>
+            </div>
+          )}
+          {data.paymentKey && (
+            <div className={styles.summaryRow}>
+              <span>Referencia</span>
+              <span>{data.paymentKey}</span>
+            </div>
+          )}
+          {data.paymentProofUrl && (
+            <div className={styles.summaryRow}>
+              <span>Archivo</span>
+              <a href={data.paymentProofOrderId ? `/api/v1/custom-orders/${data.paymentProofOrderId}/payment-proof` : data.paymentProofUrl} target="_blank" rel="noreferrer" className={styles.fileLink}>
+                Ver comprobante adjunto
+              </a>
+            </div>
+          )}
+          {data.anticipoPagado && (
+            <div className={styles.summaryRow}>
+              <span>Anticipo pagado</span>
+              <span>Sí</span>
+            </div>
           )}
         </div>
       )}

@@ -3,7 +3,6 @@ import { PlusCircle, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control, useWatch } from 'react-hook-form';
 import { type FormValues } from '../MisPedidosPersonalizados';
-import { CollapsibleSection } from './CollapsibleSection';
 import { Skeleton } from './Skeleton';
 
 export interface ProductStepProps {
@@ -127,7 +126,10 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
             </div>
           </div>
 
-          <CollapsibleSection title="Distribución de prendas" defaultOpen={false} styles={styles}>
+          <div className={styles.distributionSection}>
+            <div className={styles.distributionHeader}>
+              <h3 className={styles.distributionTitle}>Distribución de prendas</h3>
+            </div>
             <div className={styles.distributionGrid}>
               {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((talla) => (
                 <div key={talla} className={styles.distributionItem}>
@@ -152,9 +154,12 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                 {Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)}
               </span>
             </div>
-          </CollapsibleSection>
+          </div>
 
-           <CollapsibleSection title="Personalizaciones" defaultOpen={false} styles={styles}>
+           <div className={styles.distributionSection}>
+            <div className={styles.distributionHeader}>
+              <h3 className={styles.distributionTitle}>Personalizaciones</h3>
+            </div>
              {/* Formulario de personalización */}
              {showPersonalizacionForm && (
                <div className={styles.personalizationForm}>
@@ -197,24 +202,24 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                    <label className={styles.label}>Ubicación</label>
                    <div className={styles.multiSelectContainer}>
                      <div className={styles.multiSelectOptions}>
-                        {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'OTRA'].map((option) => {
-                          const idx = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0);
-                          const current = (editingPersonalizacion.ubicacion || watch(`items.${activeItemIndex}.personalizaciones.${idx}.ubicacion`) as string[] || []);
-                          const isSelected = current.includes(option);
-                         return (
-                           <button
-                             key={option}
-                             type="button"
-                             className={`${styles.multiSelectOption} ${isSelected ? styles.multiSelectOptionSelected : ''}`}
-                              onClick={() => {
-                                const next = isSelected ? current.filter((u: string) => u !== option) : [...current, option];
-                                actualizarPersonalizacion(idx, 'ubicacion', next);
-                              }}
-                            >
-                              {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
-                            </button>
-                          );
-                        })}
+                         {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'PUNTO_CORAZON', 'OTRA'].map((option) => {
+                           const idx = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0);
+                           const current = (editingPersonalizacion.ubicacion || watch(`items.${activeItemIndex}.personalizaciones.${idx}.ubicacion`) as string[] || []);
+                           const isSelected = current.includes(option);
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              className={`${styles.multiSelectOption} ${isSelected ? styles.multiSelectOptionSelected : ''}`}
+                               onClick={() => {
+                                 const next = isSelected ? current.filter((u: string) => u !== option) : [...current, option];
+                                 actualizarPersonalizacion(idx, 'ubicacion', next);
+                               }}
+                             >
+                               {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.').replace('PUNTO_CORAZON', 'Punto corazón')}
+                             </button>
+                           );
+                         })}
                       </div>
                     </div>
                   </div>
@@ -281,7 +286,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                      <span className={styles.hintText}>Aquí también puedes adjuntar la imagen del diseño que quieres.</span>
                    </div>
                     <div className={styles.field}>
-                      <label className={styles.label}>Variantes a personalizar</label>
+                      <label className={styles.label}>Cantidades por Talla y Color</label>
                       {(editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).map((variante: any, varIndex: number) => (
                         <div key={varIndex} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '8px' }}>
                           <div className={styles.field} style={{ flex: '1 1 0' }}>
@@ -311,7 +316,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                       ))}
                      <button type="button" className={styles.quotationAddLine} onClick={() => agregarVariante(editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length || 0))}>
                        <PlusCircle size={16} />
-                       <span>Agregar variante</span>
+                       <span>Agregar talla, color y cantidad</span>
                      </button>
                      <div className={styles.personalizationTotal}>
                        {(() => {
@@ -395,9 +400,9 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                        <div className={styles.personalizationCardHeader}>
                          <div>
                            <div className={styles.personalizationCardTitle}>{pers.tipo}</div>
-                           <div className={styles.personalizationCardMeta}>
-                             {(pers.ubicacion || []).map((u: string) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')).join(', ')}
-                           </div>
+                            <div className={styles.personalizationCardMeta}>
+                              {(pers.ubicacion || []).map((u: string) => u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.').replace('PUNTO_CORAZON', 'Punto corazón')).join(', ')}
+                            </div>
                            <div className={styles.personalizationCardDescription}>{pers.descripcion}</div>
                             <div className={styles.personalizationCardMeta}>
                               {(() => {
@@ -415,11 +420,11 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                        </div>
                      </div>
                    ))
-                 )}
+                   )}
+                   </div>
+                 </div>
                </div>
-             </CollapsibleSection>
+             )}
            </div>
-         )}
-       </div>
-     );
-   };
+         );
+       };

@@ -35,7 +35,7 @@ export class PrismaQuotationRepository implements QuotationRepository {
     if (changes.validaHasta !== undefined) data.valida_hasta = changes.validaHasta;
     if (changes.condicionesPago !== undefined) data.condiciones_pago = changes.condicionesPago;
     if (changes.observaciones !== undefined) data.observaciones = changes.observaciones;
-    if (changes.motivoRechazo !== undefined) data.motivo_rechazo = changes.motivoRechazo;
+    if (changes.motivo_rechazo !== undefined) data.motivo_rechazo = changes.motivo_rechazo;
     if (changes.generadoPorId !== undefined) data.generado_por_id = changes.generadoPorId;
     if (changes.generadoPorNombre !== undefined) data.generado_por_nombre = changes.generadoPorNombre;
     if (changes.respondidaEn !== undefined) data.respondida_en = changes.respondidaEn;

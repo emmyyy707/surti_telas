@@ -11,7 +11,7 @@ import { Modal } from '@/shared/ui/Modal';
 import { ModalFooter, type ModalFooterAction } from '@/shared/ui/ModalFooter';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { SearchInput } from '@/shared/ui/SearchInput';
-import { customOrdersApi, type CustomOrder } from '@/infrastructure/api/customOrdersApi';
+import { customOrdersApi, type CustomOrder, type NegotiationMessage } from '@/infrastructure/api/customOrdersApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { CUSTOM_ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import { useAuthStore } from '@/core/stores/authStore';
@@ -77,7 +77,7 @@ const formSchema = z.object({
     if (distribucionTotal <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `La distribuci髇 de prendas del producto "${item.productoNombre || `#${idx + 1}`}" debe sumar m醩 de 0.`,
+        message: `La distribuci贸n de prendas del producto "${item.productoNombre || `#${idx + 1}`}" debe sumar m谩s de 0.`,
         path: ['items', idx, 'distribucionTallas'],
       });
     }
@@ -161,6 +161,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const pendingEditOrder = useRef<CustomOrder | null>(null);
+  const loadedNegotiationRef = useRef<Set<string>>(new Set());
 
   const [deleteConfirm, setDeleteConfirm] = useState<CustomOrder | null>(null);
 
@@ -175,6 +176,16 @@ export const MisPedidosPersonalizados: React.FC = () => {
 
   const [productos, setProductos] = useState<{ id: string; nombre: string; tela?: string; colores?: string[]; tallas?: string[] }[]>([]);
   const [loadingCatalog, setLoadingCatalogState] = useState(false);
+
+  const [negotiationHistory, setNegotiationHistory] = useState<NegotiationMessage[]>([]);
+  const [clientResponseMessage, setClientResponseMessage] = useState('');
+  const [respondingToId, setRespondingToId] = useState<string | null>(null);
+  const [clientNegotiationLoading, setClientNegotiationLoading] = useState(false);
+  const [clientNegotiationSending, setClientNegotiationSending] = useState(false);
+
+  const [clientNegotiationOpen, setClientNegotiationOpen] = useState(false);
+  const [clientNegotiationMessage, setClientNegotiationMessage] = useState('');
+  const [clientNegotiationOrderId, setClientNegotiationOrderId] = useState<string | null>(null);
 
   const [itemReferenceImages, setItemReferenceImages] = useState<Record<number, { files: File[]; urls: string[] }>>({});
   const [personalizacionFiles, setPersonalizacionFiles] = useState<Record<string, { file: File; blobUrl: string }[]>>({});
@@ -363,7 +374,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
           .reduce((sum, v) => sum + (Number(v.cantidad) || 0), 0);
         const maximo = Number(distribucion[talla]) || 0;
         if (sumaVariantesTalla > maximo) {
-          toast.error(`La suma de variantes para ${talla} (${sumaVariantesTalla}) supera la distribuci髇 (${maximo}).`);
+           toast.error(`La suma de variantes para ${talla} (${sumaVariantesTalla}) supera la distribuci贸n (${maximo}).`);
         }
       }
     }
@@ -379,7 +390,6 @@ export const MisPedidosPersonalizados: React.FC = () => {
     } catch (err) {
       toast.error('Error al cargar tus pedidos personalizados');
     } finally {
-      console.log('[CUSTOM-ORDER-LOAD] finally setLoading(false)');
       setLoading(false);
     }
   }, [page, pageSize, search]);
@@ -917,10 +927,10 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const acceptQuotation = async (order: CustomOrder) => {
     try {
       await customOrdersApi.acceptQuotation(order.id);
-      toast.success('Cotizaci髇 aceptada. Ahora puedes realizar el pago del anticipo.');
+      toast.success('Cotizaci贸n aceptada. Ahora puedes realizar el pago del anticipo.');
       void loadOrders();
     } catch {
-      toast.error('Error al aceptar cotizaci髇');
+      toast.error('Error al aceptar cotizaci贸n');
     }
   };
 
@@ -936,12 +946,107 @@ export const MisPedidosPersonalizados: React.FC = () => {
     }
     try {
       await customOrdersApi.rejectQuotation(rejectConfirm.id, rejectReason.trim());
-      toast.success('Cotizaci髇 rechazada');
+      toast.success('Cotizaci贸n rechazada');
       setRejectConfirm(null);
       setRejectReason('');
       void loadOrders();
     } catch {
-      toast.error('Error al rechazar cotizaci髇');
+      toast.error('Error al rechazar cotizaci贸n');
+    }
+  };
+
+  const loadClientNegotiationHistory = async (orderId: string) => {
+    setClientNegotiationLoading(true);
+    try {
+      const history = await customOrdersApi.getNegotiationHistory(orderId);
+      setNegotiationHistory(history);
+    } catch {
+      setNegotiationHistory([]);
+    } finally {
+      setClientNegotiationLoading(false);
+    }
+  };
+
+  const handleClientAcceptProposal = async (orderId: string, negotiationId: string) => {
+    try {
+      await customOrdersApi.acceptNegotiationProposal(orderId, negotiationId);
+      toast.success('Propuesta aceptada');
+      setRespondingToId(null);
+      setClientResponseMessage('');
+      await loadClientNegotiationHistory(orderId);
+      void loadOrders();
+    } catch {
+      toast.error('Error al aceptar propuesta');
+    }
+  };
+
+  const handleClientRejectProposal = async (orderId: string, negotiationId: string) => {
+    try {
+      await customOrdersApi.rejectNegotiationProposal(orderId, negotiationId);
+      toast.success('Propuesta rechazada');
+      setRespondingToId(null);
+      setClientResponseMessage('');
+      await loadClientNegotiationHistory(orderId);
+      void loadOrders();
+    } catch {
+      toast.error('Error al rechazar propuesta');
+    }
+  };
+
+  const handleClientRespond = async (orderId: string, parentId: string, message: string) => {
+    if (!message.trim()) {
+      toast.error('Ingresa un mensaje de respuesta');
+      return;
+    }
+    setClientNegotiationSending(true);
+    try {
+      await customOrdersApi.respondToNegotiation(orderId, message, undefined, parentId);
+      toast.success('Respuesta enviada');
+      setRespondingToId(null);
+      setClientResponseMessage('');
+      await loadClientNegotiationHistory(orderId);
+      void loadOrders();
+    } catch {
+      toast.error('Error al responder');
+    } finally {
+      setClientNegotiationSending(false);
+    }
+  };
+
+  const getClientNegotiationCounts = () => {
+    const clientRounds = negotiationHistory.filter(m => m.authorRole === 'cliente').length;
+    const adminRounds = negotiationHistory.filter(m => m.authorRole === 'admin' || m.authorRole === 'asesor').length;
+    return { clientRounds, adminRounds, clientRemaining: 3 - clientRounds, adminRemaining: 3 - adminRounds };
+  };
+
+  const openClientNegotiation = (orderId: string) => {
+    setClientNegotiationOrderId(orderId);
+    setClientNegotiationMessage('');
+    setClientNegotiationOpen(true);
+  };
+
+  const startClientNegotiation = async () => {
+    if (!clientNegotiationOrderId || !clientNegotiationMessage.trim()) {
+      toast.error('Ingresa un mensaje para la negociaci贸n');
+      return;
+    }
+    const counts = getClientNegotiationCounts();
+    if (counts.clientRemaining <= 0) {
+      toast.error('Has alcanzado el l铆mite de negociaciones');
+      return;
+    }
+    setClientNegotiationSending(true);
+    try {
+      await customOrdersApi.startNegotiation(clientNegotiationOrderId, clientNegotiationMessage.trim());
+      toast.success('Negociaci贸n iniciada');
+      setClientNegotiationOpen(false);
+      setClientNegotiationMessage('');
+      await loadClientNegotiationHistory(clientNegotiationOrderId);
+      void loadOrders();
+    } catch {
+      toast.error('Error al iniciar negociaci贸n');
+    } finally {
+      setClientNegotiationSending(false);
     }
   };
 
@@ -1097,90 +1202,248 @@ export const MisPedidosPersonalizados: React.FC = () => {
                 usoFinal: row.usoFinal ?? undefined,
                 direccionEntrega: row.direccionEntrega ?? undefined,
                 notasCliente: row.notasCliente ?? undefined,
+                paymentStatus: row.paymentStatus ?? undefined,
+                paymentProofUrl: row.paymentProofUrl ?? undefined,
+                paymentProofOrderId: row.id,
+                paymentKey: row.paymentKey ?? undefined,
+                anticipoPagado: row.anticipoPagado ?? undefined,
               };
 
               return (
                 <div className={s.form}>
-                  <CustomOrderSummary data={summaryData} styles={s} />
-                  {row.cotizacion && (
-                    <div className={s.registroInfo} style={{ marginTop: '16px' }}>
-                      <span className={s.label} style={{ marginBottom: '12px', display: 'block' }}>Cotizaci髇 {row.cotizacion.numeroCotizacion ? `#${row.cotizacion.numeroCotizacion}` : ''}</span>
-                      <div className={s.formRow}>
-                        <div className={s.field}>
-                          <span className={s.label}>Estado</span>
-                          <Badge variant={row.cotizacion.estado === 'ACEPTADA' ? 'success' : row.cotizacion.estado === 'RECHAZADA' ? 'danger' : row.cotizacion.estado === 'ENVIADA' ? 'info' : 'default'}>
-                            {row.cotizacion.estado}
-                          </Badge>
+                  {row.cotizacion && (() => {
+                    if (row.cotizacion.estado === 'RECHAZADA' || row.cotizacion.estado === 'COTIZADO') {
+                      if (!loadedNegotiationRef.current.has(row.id)) {
+                        loadedNegotiationRef.current.add(row.id);
+                        loadClientNegotiationHistory(row.id);
+                      }
+                    }
+                    return (
+                      <div className={s.registroInfo} style={{ marginBottom: '16px' }}>
+                        <span className={s.label} style={{ marginBottom: '12px', display: 'block' }}>Cotizaci贸n {row.cotizacion.numeroCotizacion ? `#${row.cotizacion.numeroCotizacion}` : ''}</span>
+                        <div className={s.formRow}>
+                          <div className={s.field}>
+                            <span className={s.label}>N煤mero de solicitud</span>
+                            <span className={s.infoValue}>{row.numeroSolicitud}</span>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>N煤mero de cotizaci贸n</span>
+                            <span className={s.infoValue}>{row.cotizacion.numeroCotizacion || '-'}</span>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>Estado</span>
+                            <Badge variant={row.cotizacion.estado === 'ACEPTADA' ? 'success' : row.cotizacion.estado === 'RECHAZADA' ? 'danger' : row.cotizacion.estado === 'ENVIADA' ? 'info' : 'default'}>
+                              {row.cotizacion.estado}
+                            </Badge>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>Fecha de emisi贸n</span>
+                            <span className={s.infoValue}>{row.createdAt ? new Date(row.createdAt).toLocaleDateString('es-CO') : '-'}</span>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>Fecha de vigencia</span>
+                            <span className={s.infoValue}>{row.cotizacion.validaHasta ? new Date(row.cotizacion.validaHasta).toLocaleDateString('es-CO') : '-'}</span>
+                          </div>
                         </div>
-                        <div className={s.field}>
-                          <span className={s.label}>V醠ida hasta</span>
-                          <span className={s.infoValue}>{row.cotizacion.validaHasta ? new Date(row.cotizacion.validaHasta).toLocaleDateString('es-CO') : '-'}</span>
-                        </div>
-                        <div className={s.field}>
-                          <span className={s.label}>Condiciones</span>
-                          <span className={s.infoValue}>{row.cotizacion.condicionesPago ?? '-'}</span>
-                        </div>
-                      </div>
 
-                      {row.cotizacion.detalles?.length > 0 && (
-                        <div style={{ marginTop: '12px' }}>
-                          <span className={s.label} style={{ marginBottom: '8px', display: 'block' }}>Desglose</span>
-                          <div className={s.quotationTable}>
-                            <div className={s.quotationHeader}>
-                              <span className={s.quotationColDesc}>Concepto</span>
-                              <span className={s.quotationColCant}>Cant.</span>
-                              <span className={s.quotationColUnit}>P. unitario</span>
-                              <span className={s.quotationColSub}>Subtotal</span>
+                        {row.cotizacion.estado === 'RECHAZADA' && row.cotizacion.motivoRechazo && (
+                          <div className={s.formRow} style={{ marginTop: '12px' }}>
+                            <div className={s.field} style={{ flex: 1 }}>
+                              <span className={s.label}>Motivo del rechazo</span>
+                              <span className={s.infoValue} style={{ color: 'var(--color-danger)' }}>{row.cotizacion.motivoRechazo}</span>
                             </div>
-                            {row.cotizacion.detalles.map((detalle) => (
-                              <div key={detalle.id} className={s.quotationRow}>
-                                <div className={`${s.quotationColDesc} ${s.colSpan2}`}>
-                                  <span className={s.infoValue}>{detalle.descripcion}</span>
-                                  <span className={s.infoLabel} style={{ marginLeft: '8px' }}>{detalle.tipo.replace(/_/g, ' ')}</span>
-                                </div>
-                                <div className={s.quotationColCant}>
-                                  <span className={s.infoValue}>{detalle.cantidad}</span>
-                                </div>
-                                <div className={s.quotationColUnit}>
-                                  <span className={s.infoValue}>{formatCurrency(Number(detalle.precioUnitario))}</span>
-                                </div>
-                                <div className={s.quotationColSub}>
-                                  <span className={s.infoValue}>{formatCurrency(Number(detalle.subtotal))}</span>
-                                </div>
-                              </div>
-                            ))}
                           </div>
-                          <div className={s.quotationSummary} style={{ marginTop: '12px' }}>
-                            <div className={s.quotationSummaryRow}>
-                              <span>Subtotal</span>
-                              <span>{formatCurrency(Number(row.cotizacion.subtotal))}</span>
-                            </div>
-                            <div className={s.quotationSummaryRow}>
-                              <span>Descuento</span>
-                              <span>{formatCurrency(Number(row.cotizacion.descuento))}</span>
-                            </div>
-                            <div className={s.quotationSummaryRow}>
-                              <span>Impuestos</span>
-                              <span>{formatCurrency(Number(row.cotizacion.impuestos))}</span>
-                            </div>
-                            <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                              <span>Total</span>
-                              <span>{formatCurrency(Number(row.cotizacion.total))}</span>
-                            </div>
-                            {row.cotizacion.estado === 'ENVIADA' && (
-                              <>
-                                <div className={s.quotationSummaryRow}>
-                                  <span>Anticipo (50%)</span>
-                                  <span>{formatCurrency(Number(row.cotizacion.total) * 0.5)}</span>
-                                </div>
-                                <div className={s.quotationSummaryRow}>
-                                  <span>Saldo</span>
-                                  <span>{formatCurrency(Number(row.cotizacion.total) * 0.5)}</span>
-                                </div>
-                              </>
-                            )}
+                        )}
+
+                        <div className={s.formRow} style={{ marginTop: '12px' }}>
+                          <div className={s.field}>
+                            <span className={s.label}>Subtotal</span>
+                            <span className={s.infoValue}>{formatCurrency(Number(row.cotizacion.subtotal))}</span>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>Descuento</span>
+                            <span className={s.infoValue}>{formatCurrency(Number(row.cotizacion.descuento))}</span>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>Impuestos</span>
+                            <span className={s.infoValue}>{formatCurrency(Number(row.cotizacion.impuestos))}</span>
+                          </div>
+                          <div className={s.field}>
+                            <span className={s.label}>Total</span>
+                            <span className={s.infoValue} style={{ fontWeight: 700 }}>{formatCurrency(Number(row.cotizacion.total))}</span>
                           </div>
                         </div>
+
+                        {row.cotizacion.condicionesPago && (
+                          <div className={s.formRow} style={{ marginTop: '12px' }}>
+                            <div className={s.field} style={{ flex: 1 }}>
+                              <span className={s.label}>Condiciones de pago</span>
+                              <span className={s.infoValue}>{row.cotizacion.condicionesPago}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {row.cotizacion.observaciones && (
+                          <div className={s.formRow} style={{ marginTop: '12px' }}>
+                            <div className={s.field} style={{ flex: 1 }}>
+                              <span className={s.label}>Observaciones</span>
+                              <span className={s.infoValue}>{row.cotizacion.observaciones}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {row.cotizacion.detalles?.length > 0 && (
+                          <div style={{ marginTop: '16px' }}>
+                            <span className={s.label} style={{ marginBottom: '8px', display: 'block' }}>Desglose</span>
+                            <div className={s.quotationTable}>
+                              <div className={s.quotationHeader}>
+                                <span className={s.quotationColDesc}>Concepto</span>
+                                <span className={s.quotationColCant}>Cant.</span>
+                                <span className={s.quotationColUnit}>P. unitario</span>
+                                <span className={s.quotationColSub}>Subtotal</span>
+                              </div>
+                              {row.cotizacion.detalles.map((detalle) => (
+                                <div key={detalle.id} className={s.quotationRow}>
+                                  <div className={`${s.quotationColDesc} ${s.colSpan2}`}>
+                                    <span className={s.infoValue}>{detalle.descripcion}</span>
+                                    <span className={s.infoLabel} style={{ marginLeft: '8px' }}>{detalle.tipo.replace(/_/g, ' ')}</span>
+                                  </div>
+                                  <div className={s.quotationColCant}>
+                                    <span className={s.infoValue}>{detalle.cantidad}</span>
+                                  </div>
+                                  <div className={s.quotationColUnit}>
+                                    <span className={s.infoValue}>{formatCurrency(Number(detalle.precioUnitario))}</span>
+                                  </div>
+                                  <div className={s.quotationColSub}>
+                                    <span className={s.infoValue}>{formatCurrency(Number(detalle.subtotal))}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <CustomOrderSummary data={summaryData} styles={s} />
+
+                  {row.cotizacion && row.cotizacion.estado === 'RECHAZADA' && (
+                    <div style={{ marginTop: '16px' }}>
+                      {clientNegotiationLoading ? (
+                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                          Cargando negociaciones...
+                        </div>
+                      ) : (
+                        <>
+                          {negotiationHistory.length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                              <div className={s.negotiationSectionTitle}>Historial de negociaciones</div>
+                              {negotiationHistory.map((entry) => {
+                                const isAdmin = entry.authorRole === 'admin' || entry.authorRole === 'asesor';
+                                const isPending = entry.status === 'PENDING' || entry.status === 'pending';
+                                const counts = getClientNegotiationCounts();
+                                const cot = row.cotizacion!;
+                                return (
+                                  <div key={entry.id} className={s.negotiationMessage}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                      <strong style={{ fontSize: '0.85rem' }}>
+                                        {isAdmin ? 'Asesor/Admin' : 'T煤'} - Ronda {entry.round}
+                                      </strong>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                        {new Date(entry.created_at).toLocaleDateString('es-CO')}
+                                      </span>
+                                    </div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: entry.proposalData ? '8px' : '0' }}>
+                                      {entry.message}
+                                    </div>
+                                    {entry.proposalData && (
+                                      <div className={s.negotiationProposal}>
+                                        <div className={s.negotiationProposalOld}>
+                                          <div className={s.negotiationSectionTitle}>Valores actuales</div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Subtotal</span>
+                                            <span className={s.negotiationDiffValue}>{formatCurrency(Number(cot.subtotal))}</span>
+                                          </div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Total</span>
+                                            <span className={s.negotiationDiffValue}>{formatCurrency(Number(cot.total))}</span>
+                                          </div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Condiciones</span>
+                                            <span className={s.negotiationDiffValue}>{cot.condicionesPago ?? '-'}</span>
+                                          </div>
+                                        </div>
+                                        <div className={s.negotiationProposalNew}>
+                                          <div className={s.negotiationSectionTitle}>Propuesta</div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Subtotal</span>
+                                            <span className={`${s.negotiationDiffValue} ${s.negotiationDiffNew}`}>{formatCurrency(Number(entry.proposalData.subtotal))}</span>
+                                          </div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Total</span>
+                                            <span className={`${s.negotiationDiffValue} ${s.negotiationDiffNew}`}>{formatCurrency(Number(entry.proposalData.total))}</span>
+                                          </div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Condiciones</span>
+                                            <span className={`${s.negotiationDiffValue} ${s.negotiationDiffNew}`}>{entry.proposalData.condicionesPago ?? '-'}</span>
+                                          </div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>% Anticipo</span>
+                                            <span className={`${s.negotiationDiffValue} ${s.negotiationDiffNew}`}>{entry.proposalData.porcentajeAnticipo ?? '-'}%</span>
+                                          </div>
+                                          <div className={s.negotiationDiffRow}>
+                                            <span className={s.negotiationDiffLabel}>Tiempo estimado</span>
+                                             <span className={`${s.negotiationDiffValue} ${s.negotiationDiffNew}`}>{entry.proposalData.tiempoEstimadoDias ?? '-'} d铆as</span>
+                                          </div>
+                                        </div>
+                                        {isAdmin && isPending && (
+                                          <div className={s.negotiationActions}>
+                                            <Button size="sm" onClick={() => handleClientAcceptProposal(row.id, entry.id)}>
+                                              Aceptar propuesta
+                                            </Button>
+                                            <Button size="sm" variant="danger" onClick={() => handleClientRejectProposal(row.id, entry.id)}>
+                                              Rechazar propuesta
+                                            </Button>
+                                            {counts.clientRemaining > 0 && respondingToId !== entry.id && (
+                                              <Button size="sm" variant="outline" onClick={() => setRespondingToId(entry.id)}>
+                                                Responder
+                                              </Button>
+                                            )}
+                                          </div>
+                                        )}
+                                        {respondingToId === entry.id && counts.clientRemaining > 0 && (
+                                          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <textarea
+                                              className={s.negotiationTextarea}
+                                              rows={2}
+                                              placeholder="Escribe tu respuesta..."
+                                              value={clientResponseMessage}
+                                              onChange={(e) => setClientResponseMessage(e.target.value)}
+                                            />
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                              <Button size="sm" variant="secondary" onClick={() => { setRespondingToId(null); setClientResponseMessage(''); }}>
+                                                Cancelar
+                                              </Button>
+                                              <Button size="sm" onClick={() => handleClientRespond(row.id, entry.id, clientResponseMessage)} disabled={clientNegotiationSending || !clientResponseMessage.trim()}>
+                                                {clientNegotiationSending ? 'Enviando...' : 'Enviar respuesta'}
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {negotiationHistory.length === 0 && (
+                                <div style={{ padding: '12px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                                   No hay negociaciones a煤n
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
@@ -1189,13 +1452,16 @@ export const MisPedidosPersonalizados: React.FC = () => {
                     actions={[
                       { label: 'Cerrar', variant: 'secondary', onClick: onClose },
                       ...(row.estado === 'PENDIENTE' || row.estado === 'SOLICITUD_RECIBIDA'
-                        ? [{ label: 'Enviar a revisi髇', onClick: () => submitOrder(row) } as ModalFooterAction]
+                        ? [{ label: 'Enviar a revisi贸n', onClick: () => submitOrder(row) } as ModalFooterAction]
                         : []),
                       ...(row.estado === 'COTIZADO'
                         ? [
-                            { label: 'Aceptar cotizaci髇', onClick: () => acceptQuotation(row) } as ModalFooterAction,
-                            { label: 'Rechazar cotizaci髇', variant: 'danger', onClick: () => rejectQuotation(row) } as ModalFooterAction,
+                            { label: 'Aceptar cotizaci贸n', onClick: () => acceptQuotation(row) } as ModalFooterAction,
+                            { label: 'Rechazar cotizaci贸n', variant: 'danger', onClick: () => rejectQuotation(row) } as ModalFooterAction,
                           ]
+                        : []),
+                      ...(row.cotizacion?.estado === 'RECHAZADA' && getClientNegotiationCounts().clientRemaining > 0
+                        ? [{ label: 'Negociar', onClick: () => openClientNegotiation(row.id) } as ModalFooterAction]
                         : []),
                       ...(row.estado === 'PAGO_PENDIENTE' && !row.anticipoPagado
                         ? [{ label: 'Subir comprobante', onClick: () => { setUploadPaymentOrderId(row.id); setPaymentProofFile(null); setPaymentProofUrl(row.paymentProofUrl ?? ''); setUploadPaymentOpen(true); } } as ModalFooterAction]
@@ -1413,6 +1679,52 @@ export const MisPedidosPersonalizados: React.FC = () => {
                       toast.error('Error al subir comprobante');
                     }
                   } },
+                ]}
+              />
+            </div>
+          );
+        })()}
+      </Modal>
+
+      <Modal open={clientNegotiationOpen} onClose={() => setClientNegotiationOpen(false)} title="Negociar cotizaci贸n" description="Env铆a una propuesta de negociaci贸n al asesor." size="md" variant="form">
+        {clientNegotiationOrderId && (() => {
+          const order = orders.find(o => o.id === clientNegotiationOrderId);
+          const cot = order?.cotizacion;
+          return (
+            <div className={s.form}>
+              {cot && (
+                <div className={s.negotiationProposal}>
+                  <div className={s.negotiationProposalOld}>
+                    <div className={s.negotiationSectionTitle}>Cotizaci贸n actual (referencia)</div>
+                    <div className={s.negotiationDiffRow}>
+                      <span className={s.negotiationDiffLabel}>Subtotal</span>
+                      <span className={s.negotiationDiffValue}>{formatCurrency(Number(cot.subtotal))}</span>
+                    </div>
+                    <div className={s.negotiationDiffRow}>
+                      <span className={s.negotiationDiffLabel}>Total</span>
+                      <span className={s.negotiationDiffValue}>{formatCurrency(Number(cot.total))}</span>
+                    </div>
+                    <div className={s.negotiationDiffRow}>
+                      <span className={s.negotiationDiffLabel}>Condiciones</span>
+                      <span className={s.negotiationDiffValue}>{cot.condicionesPago ?? '-'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className={s.field}>
+                <label className={s.label}>Mensaje de negociaci贸n</label>
+                <textarea
+                  className={s.textarea}
+                  rows={4}
+                  placeholder="Explica qu茅 cambios necesitas..."
+                  value={clientNegotiationMessage}
+                  onChange={(e) => setClientNegotiationMessage(e.target.value)}
+                />
+              </div>
+              <ModalFooter
+                actions={[
+                  { label: 'Cancelar', variant: 'secondary', onClick: () => setClientNegotiationOpen(false) },
+                  { label: 'Enviar propuesta', onClick: startClientNegotiation, disabled: clientNegotiationSending || !clientNegotiationMessage.trim() },
                 ]}
               />
             </div>

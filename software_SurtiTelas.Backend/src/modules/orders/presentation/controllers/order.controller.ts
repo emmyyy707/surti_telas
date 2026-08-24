@@ -154,18 +154,19 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
 export const assignDomiciliario = async (req: Request, res: Response) => {
   const { domiciliarioId } = parseDto(AssignDomiciliarioSchema, req.body);
-  const order = await orderUseCases.assignDomiciliario.execute(req.params.id, domiciliarioId);
+  const domiciliario = await prisma.user.findFirst({ where: { id: domiciliarioId, deletedAt: null }, select: { nombre: true } });
+  const order = await orderUseCases.assignDomiciliario.execute(req.params.id, domiciliarioId, (domiciliario as any)?.nombre ?? '', req.requestId);
   return ok(res, order, 'Domiciliario asignado');
 };
 
 export const updateOrderFull = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateOrderFullSchema, req.body);
-  const order = await orderUseCases.updateOrderFull.execute(req.params.id, changes);
+  const order = await orderUseCases.updateOrderFull.execute(req.params.id, changes, req.requestId);
   return ok(res, order, 'Pedido actualizado');
 };
 
 export const deleteOrder = async (req: Request, res: Response) => {
-  await orderUseCases.deleteOrder.execute(req.params.id);
+  await orderUseCases.deleteOrder.execute(req.params.id, req.requestId);
   return res.status(204).send();
 };
 

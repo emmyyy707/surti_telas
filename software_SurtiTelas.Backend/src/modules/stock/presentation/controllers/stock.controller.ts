@@ -29,7 +29,7 @@ export const listSuppliers = async (req: Request, res: Response) => {
 
 export const createSupplier = async (req: Request, res: Response) => {
   const input = parseDto(CreateSupplierSchema, req.body);
-  const supplier = await stockUseCases.createSupplier.execute(input);
+  const supplier = await stockUseCases.createSupplier.execute({ ...input, usuarioId: req.user!.id });
   return created(res, supplier, 'Proveedor creado');
 };
 
@@ -43,12 +43,12 @@ export const getSupplier = async (req: Request, res: Response) => {
 
 export const updateSupplier = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateSupplierSchema, req.body);
-  const supplier = await stockUseCases.updateSupplier.execute(req.params.id, changes);
+  const supplier = await stockUseCases.updateSupplier.execute(req.params.id, { ...changes, usuarioId: req.user!.id });
   return ok(res, supplier, 'Proveedor actualizado');
 };
 
 export const deleteSupplier = async (req: Request, res: Response) => {
-  await stockUseCases.deleteSupplier.execute(req.params.id);
+  await stockUseCases.deleteSupplier.execute(req.params.id, req.user!.id);
   return noContent(res);
 };
 
@@ -67,18 +67,18 @@ export const listRawMaterials = async (req: Request, res: Response) => {
 
 export const createRawMaterial = async (req: Request, res: Response) => {
   const input = parseDto(CreateRawMaterialSchema, req.body);
-  const material = await stockUseCases.createRawMaterial.execute(input);
+  const material = await stockUseCases.createRawMaterial.execute({ ...input, usuarioId: req.user!.id });
   return created(res, material, 'Insumo creado');
 };
 
 export const updateRawMaterial = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateRawMaterialSchema, req.body);
-  const material = await stockUseCases.updateRawMaterial.execute(req.params.id, changes);
+  const material = await stockUseCases.updateRawMaterial.execute(req.params.id, { ...changes, usuarioId: req.user!.id });
   return ok(res, material, 'Insumo actualizado');
 };
 
 export const deleteRawMaterial = async (req: Request, res: Response) => {
-  await stockUseCases.deleteRawMaterial.execute(req.params.id);
+  await stockUseCases.deleteRawMaterial.execute(req.params.id, req.user!.id);
   return noContent(res);
 };
 

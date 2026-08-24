@@ -49,6 +49,13 @@ export interface CustomOrderVariantRepository {
   findByPersonalizationId(personalizationId: string, tx?: any): Promise<any[]>;
 }
 
+export interface QuotationNegotiationRepository {
+  create(data: any, tx?: any): Promise<any>;
+  findByQuoteId(quoteId: string, tx?: any): Promise<any[]>;
+  findById(id: string, tx?: any): Promise<any>;
+  update(id: string, changes: any, tx?: any): Promise<any>;
+}
+
 export interface CustomOrderHistoryRepository {
   create(data: {
     customOrderId: string;

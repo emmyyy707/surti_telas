@@ -4,7 +4,7 @@ import { PedidoPersonalizado } from '../../domain/entities/PedidoPersonalizado';
 import { CustomOrderStatus, QuotationStatus } from '../../domain/value-objects/CustomOrderStatus';
 import { PrismaClient } from '@prisma/client';
 import type { EventBus } from '../../../../shared/application/events';
-import { CustomOrderCreatedEvent, CustomOrderSubmittedEvent, QuotationGeneratedEvent, QuotationAcceptedEvent, QuotationRejectedEvent, CustomOrderConvertedEvent } from '../../../../shared/application/events';
+import { CustomOrderCreatedEvent, CustomOrderSubmittedEvent, QuotationGeneratedEvent, QuotationAcceptedEvent, QuotationRejectedEvent, CustomOrderConvertedEvent, CustomOrderStatusUpdatedEvent, CustomOrderUpdatedEvent, CustomOrderDeletedEvent } from '../../../../shared/application/events';
 
 export class ListCustomOrders {
   constructor(private readonly repo: CustomOrderRepository) {}
@@ -152,7 +152,8 @@ export class CreateCustomOrder {
 export class UpdateCustomOrder {
   constructor(
     private readonly repo: CustomOrderRepository,
-    private readonly prisma: PrismaClient
+    private readonly prisma: PrismaClient,
+    private readonly eventBus?: EventBus,
   ) {}
 
   private normalizeUbicacion(value: unknown): string[] {
@@ -161,14 +162,9 @@ export class UpdateCustomOrder {
     return [];
   }
 
-  async execute(id: string, changes: any) {
+  async execute(id: string, changes: any, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
-
-    console.log('[backend][UpdateCustomOrder] id', id, 'changes keys', Object.keys(changes), 'usoFinal', changes.usoFinal, 'direccionEntrega', changes.direccionEntrega, 'itemsCount', changes.items?.length);
-    if (changes.items?.length) {
-      console.log('[backend][UpdateCustomOrder] first item', changes.items[0]);
-    }
 
     const { items, ...cabecera } = changes;
 
@@ -201,7 +197,6 @@ export class UpdateCustomOrder {
               orden: item.orden ?? index,
             } as any,
           });
-          console.log('[backend][updateItem] saved distribucion_tallas', savedItem.distribucion_tallas, 'imagenes_referencia', savedItem.imagenes_referencia);
 
           if (item.personalizaciones && item.personalizaciones.length > 0) {
             for (const pers of item.personalizaciones) {
@@ -233,7 +228,22 @@ export class UpdateCustomOrder {
       });
     }
 
-    return await this.repo.getById(id);
+    const updated = await this.repo.getById(id);
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new CustomOrderUpdatedEvent({
+          customOrderId: id,
+          numeroSolicitud: updated.numeroSolicitud,
+          cambios: cabecera,
+          clienteId: updated.clienteId,
+          clienteNombre: updated.clienteNombre,
+          asesorId: updated.asesorId ?? undefined,
+          asesorNombre: updated.asesorNombre ?? undefined,
+        }, requestId)
+      );
+    }
+
+    return updated;
   }
 }
 
@@ -437,7 +447,7 @@ export class RejectQuotation {
 
     const negotiationCount = (cotizacion.negotiationCount ?? 0) + 1;
     const maxNegotiations = 3;
-    const nuevoEstado = negotiationCount >= maxNegotiations ? QuotationStatus.CANCELADA : QuotationStatus.PENDIENTE;
+    const nuevoEstado = negotiationCount >= maxNegotiations ? QuotationStatus.CANCELADA : QuotationStatus.RECHAZADA;
 
     const historyEntry = {
       step: negotiationCount,
@@ -708,14 +718,26 @@ export class ConvertToOrder {
 }
 
 export class DeleteCustomOrder {
-  constructor(private readonly repo: CustomOrderRepository) {}
+  constructor(private readonly repo: CustomOrderRepository, private readonly eventBus?: EventBus) {}
 
-  async execute(id: string) {
+  async execute(id: string, requestId?: string) {
     const order = await this.repo.getById(id);
     if (!order) {
       throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
     }
     await this.repo.remove(id);
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new CustomOrderDeletedEvent({
+          customOrderId: order.id,
+          numeroSolicitud: order.numeroSolicitud,
+          clienteId: order.clienteId,
+          clienteNombre: order.clienteNombre,
+          asesorId: order.asesorId ?? undefined,
+          asesorNombre: order.asesorNombre ?? undefined,
+        }, requestId)
+      );
+    }
   }
 }
 
@@ -742,20 +764,18 @@ export class ChangeCustomOrderStatus {
     });
 
     if (this.eventBus) {
-      this.eventBus.publish({
-        type: 'customOrder.status.updated',
-        occurredAt: new Date(),
-        payload: {
+      this.eventBus.publish(
+        new CustomOrderStatusUpdatedEvent({
           customOrderId: updated.id,
           numeroSolicitud: updated.numeroSolicitud,
           previousStatus,
           newStatus: updated.estado,
           clienteId: updated.clienteId,
           clienteNombre: updated.clienteNombre,
-          asesorId: updated.asesorId ?? null,
-          asesorNombre: updated.asesorNombre ?? null,
-        },
-      } as any);
+          asesorId: updated.asesorId ?? undefined,
+          asesorNombre: updated.asesorNombre ?? undefined,
+        })
+      );
     }
 
     return updated;

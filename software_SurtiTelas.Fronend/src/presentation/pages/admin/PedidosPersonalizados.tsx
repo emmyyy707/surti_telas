@@ -7,9 +7,10 @@ import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { CustomOrderStatusSelector } from '@/shared/ui/CustomOrderStatusSelector';
-import { customOrdersApi, type CustomOrder } from '@/infrastructure/api/customOrdersApi';
+import { customOrdersApi, type CustomOrder, type NegotiationMessage } from '@/infrastructure/api/customOrdersApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
+import { useAuthStore } from '@/core/stores/authStore';
 import { CustomOrderFormModal } from '@/presentation/components/CustomOrderFormModal';
 import { CustomOrderSummary, type CustomOrderSummaryData } from '../cliente/quotation-steps/CustomOrderSummary';
 import clienteS from '../cliente/MisPedidosPersonalizados.module.css';
@@ -148,10 +149,29 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<CustomOrder | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [negotiationOpen, setNegotiationOpen] = useState(false);
+  const [negotiationMessage, setNegotiationMessage] = useState('');
+  const [negotiationProposalData, setNegotiationProposalData] = useState({
+    subtotal: 0,
+    total: 0,
+    descuento: 0,
+    impuestos: 0,
+    condicionesPago: '',
+    valorAnticipo: 0,
+    saldo: 0,
+    porcentajeAnticipo: 50,
+    tiempoEstimadoDias: 7,
+  });
+  const [negotiationHistory, setNegotiationHistory] = useState<NegotiationMessage[]>([]);
+  const [negotiationLoading, setNegotiationLoading] = useState(false);
+  const [negotiationSending, setNegotiationSending] = useState(false);
+
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(o => o.estado === 'SOLICITUD_RECIBIDA' || o.estado === 'PENDIENTE').length;
   const quotedOrders = orders.filter(o => o.estado === 'COTIZADO' || o.estado === 'COTIZACION_ACEPTADA').length;
   const productionOrders = orders.filter(o => o.estado === 'EN_PRODUCCION').length;
+
+  const currentUser = useAuthStore((state) => state.user);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -503,6 +523,115 @@ export const AdminPedidosPersonalizados: React.FC = () => {
      }
    };
 
+   const openNegotiation = () => {
+     if (!selectedOrder?.cotizacion) return;
+     const cot = selectedOrder.cotizacion;
+     setNegotiationProposalData({
+       subtotal: Number(cot.subtotal) || 0,
+       total: Number(cot.total) || 0,
+       descuento: Number(cot.descuento) || 0,
+       impuestos: Number(cot.impuestos) || 0,
+       condicionesPago: cot.condicionesPago || '',
+       valorAnticipo: Number(cot.valorAnticipo) || 0,
+       saldo: Number(cot.saldo) || 0,
+       porcentajeAnticipo: cot.porcentajeAnticipo ?? 50,
+       tiempoEstimadoDias: cot.tiempoEstimadoDias ?? 7,
+     });
+     setNegotiationMessage('');
+     setNegotiationOpen(true);
+     loadNegotiationHistory();
+   };
+
+   const loadNegotiationHistory = async () => {
+     if (!selectedOrder) return;
+     setNegotiationLoading(true);
+     try {
+       const history = await customOrdersApi.getNegotiationHistory(selectedOrder.id);
+       setNegotiationHistory(history);
+     } catch {
+       // silent
+     } finally {
+       setNegotiationLoading(false);
+     }
+   };
+
+   const handleStartNegotiation = async () => {
+     if (!selectedOrder || !negotiationMessage.trim()) {
+       toast.error('Ingresa un mensaje para la negociación');
+       return;
+     }
+     setNegotiationSending(true);
+     try {
+       const proposal = {
+         subtotal: Number(negotiationProposalData.subtotal),
+         total: Number(negotiationProposalData.total),
+         descuento: Number(negotiationProposalData.descuento),
+         impuestos: Number(negotiationProposalData.impuestos),
+         condicionesPago: negotiationProposalData.condicionesPago,
+         valorAnticipo: Number(negotiationProposalData.valorAnticipo),
+         saldo: Number(negotiationProposalData.saldo),
+         porcentajeAnticipo: Number(negotiationProposalData.porcentajeAnticipo),
+         tiempoEstimadoDias: Number(negotiationProposalData.tiempoEstimadoDias),
+       };
+       await customOrdersApi.startNegotiation(selectedOrder.id, negotiationMessage.trim(), proposal);
+       toast.success('Propuesta enviada');
+       setNegotiationOpen(false);
+       setNegotiationMessage('');
+       await loadNegotiationHistory();
+       await loadOrders();
+     } catch {
+       toast.error('Error al enviar propuesta de negociación');
+     } finally {
+       setNegotiationSending(false);
+     }
+   };
+
+   const handleRespondToNegotiation = async (negotiationId: string, message: string, proposalData?: any) => {
+     if (!selectedOrder) return;
+     setNegotiationSending(true);
+     try {
+       await customOrdersApi.respondToNegotiation(selectedOrder.id, message, proposalData, negotiationId);
+       toast.success('Respuesta enviada');
+       setNegotiationMessage('');
+       await loadNegotiationHistory();
+       await loadOrders();
+     } catch {
+       toast.error('Error al responder negociación');
+     } finally {
+       setNegotiationSending(false);
+     }
+   };
+
+   const handleAcceptProposal = async (negotiationId: string) => {
+     if (!selectedOrder) return;
+     try {
+       await customOrdersApi.acceptNegotiationProposal(selectedOrder.id, negotiationId);
+       toast.success('Propuesta aceptada');
+       await loadNegotiationHistory();
+       await loadOrders();
+     } catch {
+       toast.error('Error al aceptar propuesta');
+     }
+   };
+
+   const handleRejectProposal = async (negotiationId: string, reason?: string) => {
+     if (!selectedOrder) return;
+     try {
+       await customOrdersApi.rejectNegotiationProposal(selectedOrder.id, negotiationId, reason);
+       toast.success('Propuesta rechazada');
+       await loadNegotiationHistory();
+       await loadOrders();
+     } catch {
+       toast.error('Error al rechazar propuesta');
+     }
+   };
+
+   const getAdminNegotiationCounts = () => {
+     const adminRounds = negotiationHistory.filter(m => m.authorRole === 'admin' || m.authorRole === 'asesor').length;
+     const clientRounds = negotiationHistory.filter(m => m.authorRole === 'cliente').length;
+     return { adminRounds, clientRounds, adminRemaining: 3 - adminRounds, clientRemaining: 3 - clientRounds };
+   };
+
   const openQuotationEditor = (order: CustomOrder) => {
     let existingLines: QuotationLine[] = [];
     
@@ -591,6 +720,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setQuotationSaving(false);
     setSelectedOrder(order);
     setQuotationOpen(true);
+    if (order.cotizacion?.estado === 'RECHAZADA') {
+      loadNegotiationHistory();
+    }
   };
 
   const addQuotationLine = (productId?: string) => {
@@ -831,6 +963,11 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         usoFinal: selectedOrder.usoFinal ?? undefined,
         direccionEntrega: selectedOrder.direccionEntrega ?? undefined,
         notasCliente: selectedOrder.notasCliente ?? undefined,
+        paymentStatus: selectedOrder.paymentStatus ?? undefined,
+        paymentProofUrl: selectedOrder.paymentProofUrl ?? undefined,
+        paymentProofOrderId: selectedOrder.id,
+        paymentKey: selectedOrder.paymentKey ?? undefined,
+        anticipoPagado: selectedOrder.anticipoPagado ?? undefined,
       }
     : null;
 
@@ -968,26 +1105,42 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                   <div className={s.sectionTitle}>Estado de la cotización</div>
                 </div>
                 <div className={s.quotationStatusRow}>
-                  {selectedOrder.cotizacion && (() => {
-                    const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
-                    return (
-                      <>
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                        <span className={s.quotationNegotiation}>
-                          Negociaciones: {selectedOrder.cotizacion.negotiationCount ?? 0}/3
-                        </span>
-                      </>
-                    );
-                  })()}
+                {selectedOrder.cotizacion && (() => {
+                  const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
+                  return (
+                    <>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                      <span className={s.quotationNegotiation}>
+                        Negociaciones: {selectedOrder.cotizacion.negotiationCount ?? 0}/3
+                      </span>
+                    </>
+                  );
+                })()}
+                {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && selectedOrder.cotizacion.motivoRechazo && (
+                  <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(220, 38, 38, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+                    <strong>Motivo del rechazo:</strong> {selectedOrder.cotizacion.motivoRechazo}
+                  </div>
+                )}
                 </div>
-                {selectedOrder.cotizacion.negotiationHistory && selectedOrder.cotizacion.negotiationHistory.length > 0 && (
+                {negotiationLoading ? (
+                  <div className={s.negotiationHistory}>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Cargando negociaciones...</span>
+                  </div>
+                ) : negotiationHistory.length > 0 && (
                   <div className={s.negotiationHistory}>
                     <div className={s.sectionTitle}>Historial de negociaciones</div>
-                    {selectedOrder.cotizacion.negotiationHistory.map((entry: any, idx: number) => (
-                      <div key={idx} className={s.negotiationEntry}>
-                        <strong>Negociación {entry.step ?? idx + 1}</strong>
-                        <span>{entry.reason}</span>
-                        <span className={s.negotiationDate}>{new Date(entry.date).toLocaleString()}</span>
+                    {negotiationHistory.map((entry) => (
+                      <div key={entry.id} className={s.negotiationEntry}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong>Negociación {entry.round}</strong>
+                          <span className={s.negotiationDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
+                        </div>
+                        <span>{entry.message}</span>
+                        {entry.proposalData && (
+                          <div style={{ marginTop: '6px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                            Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1135,6 +1288,11 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
             <div className={s.formActions}>
               <Button variant="secondary" onClick={() => setQuotationOpen(false)}>Cancelar</Button>
+              {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && (
+                <Button variant="outline" onClick={openNegotiation}>
+                  Negociar
+                </Button>
+              )}
               <Button 
                 onClick={handleSaveQuotation} 
                 disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
@@ -1144,6 +1302,119 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal open={negotiationOpen} onClose={() => setNegotiationOpen(false)} title="Negociar cotización" description="Envía una propuesta de negociación al cliente." size="lg">
+        {selectedOrder?.cotizacion && (() => {
+          const cot = selectedOrder.cotizacion;
+          const counts = getAdminNegotiationCounts();
+          return (
+            <div className={s.form}>
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Cotización actual (referencia)</div>
+                </div>
+                <div className={s.quotationSummary}>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(Number(cot.subtotal))}</span>
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Descuento</span>
+                    <span>{formatCurrency(Number(cot.descuento))}</span>
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Impuestos</span>
+                    <span>{formatCurrency(Number(cot.impuestos))}</span>
+                  </div>
+                  <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
+                    <span>Total</span>
+                    <span>{formatCurrency(Number(cot.total))}</span>
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Condiciones de pago</span>
+                    <span>{cot.condicionesPago || '-'}</span>
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Tiempo estimado</span>
+                    <span>{cot.tiempoEstimadoDias ?? '-'} días</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Tu propuesta</div>
+                </div>
+                <div className={s.quotationSummary}>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Subtotal</span>
+                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.subtotal} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, subtotal: Number(e.target.value) })} />
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Descuento</span>
+                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.descuento} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, descuento: Number(e.target.value) })} />
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Impuestos</span>
+                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.impuestos} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, impuestos: Number(e.target.value) })} />
+                  </div>
+                  <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
+                    <span>Total</span>
+                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.total} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, total: Number(e.target.value) })} />
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Condiciones de pago</span>
+                    <input className={s.quotationInput} type="text" value={negotiationProposalData.condicionesPago} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, condicionesPago: e.target.value })} />
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>% Anticipo</span>
+                    <input className={s.quotationInput} type="number" min="0" max="100" value={negotiationProposalData.porcentajeAnticipo} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, porcentajeAnticipo: Number(e.target.value) })} />
+                  </div>
+                  <div className={s.quotationSummaryRow}>
+                    <span>Tiempo estimado (días)</span>
+                    <input className={s.quotationInput} type="number" min="1" value={negotiationProposalData.tiempoEstimadoDias} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, tiempoEstimadoDias: Number(e.target.value) })} />
+                  </div>
+                </div>
+              </div>
+
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Mensaje</div>
+                </div>
+                <textarea
+                  className={s.textarea}
+                  rows={3}
+                  placeholder="Explica los cambios en tu propuesta..."
+                  value={negotiationMessage}
+                  onChange={(e) => setNegotiationMessage(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div className={s.negotiationCounter}>
+                  Ronda {counts.adminRounds + 1}/3 (te quedan {counts.adminRemaining} respuestas)
+                </div>
+                <div className={s.negotiationCounter}>
+                  Cliente: ronda {counts.clientRounds + 1}/3 (quedan {counts.clientRemaining} para el cliente)
+                </div>
+              </div>
+
+              <div className={s.formActions}>
+                <Button variant="secondary" onClick={() => setNegotiationOpen(false)}>Cancelar</Button>
+                <Button 
+                  onClick={handleStartNegotiation}
+                  disabled={negotiationSending || !negotiationMessage.trim() || counts.adminRemaining <= 0}
+                >
+                  {negotiationSending ? 'Enviando...' : 'Enviar propuesta'}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
       <CustomOrderFormModal
@@ -1365,34 +1636,34 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                     <label className={s.label}>Ubicación</label>
                     <div className={s.multiSelectContainer}>
                       <div className={s.multiSelectOptions}>
-                        {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'OTRA'].map((option) => {
-                          const isSelected = (pers.ubicacion || []).includes(option);
-                          return (
-                            <button
-                              key={option}
-                              type="button"
-                              className={`${s.multiSelectOption} ${isSelected ? s.multiSelectOptionSelected : ''}`}
-                              onClick={() => {
-                                const current = pers.ubicacion || [];
-                                const next = isSelected ? current.filter((u) => u !== option) : [...current, option];
-                                actualizarPersonalizacion(persIndex, 'ubicacion', next);
-                              }}
-                            >
-                              {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
-                            </button>
-                          );
-                        })}
+                         {['FRENTE', 'ESPALDA', 'MANGA_IZQUIERDA', 'MANGA_DERECHA', 'PECHO', 'PUNTO_CORAZON', 'OTRA'].map((option) => {
+                           const isSelected = (pers.ubicacion || []).includes(option);
+                           return (
+                             <button
+                               key={option}
+                               type="button"
+                               className={`${s.multiSelectOption} ${isSelected ? s.multiSelectOptionSelected : ''}`}
+                               onClick={() => {
+                                 const current = pers.ubicacion || [];
+                                 const next = isSelected ? current.filter((u) => u !== option) : [...current, option];
+                                 actualizarPersonalizacion(persIndex, 'ubicacion', next);
+                               }}
+                             >
+                               {option.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.').replace('PUNTO_CORAZON', 'Punto corazón')}
+                             </button>
+                           );
+                         })}
                       </div>
                       {(pers.ubicacion || []).length > 0 && (
                         <div className={s.multiSelectChips}>
-                          {(pers.ubicacion || []).map((u) => (
-                            <span key={u} className={s.multiSelectChip}>
-                              {u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.')}
-                              <button type="button" className={s.multiSelectChipRemove} onClick={() => actualizarPersonalizacion(persIndex, 'ubicacion', (pers.ubicacion || []).filter((val) => val !== u))}>
-                                <X size={12} />
-                              </button>
-                            </span>
-                          ))}
+                           {(pers.ubicacion || []).map((u) => (
+                             <span key={u} className={s.multiSelectChip}>
+                               {u.replace('MANGA_IZQUIERDA', 'Manga izq.').replace('MANGA_DERECHA', 'Manga der.').replace('PUNTO_CORAZON', 'Punto corazón')}
+                               <button type="button" className={s.multiSelectChipRemove} onClick={() => actualizarPersonalizacion(persIndex, 'ubicacion', (pers.ubicacion || []).filter((val) => val !== u))}>
+                                 <X size={12} />
+                               </button>
+                             </span>
+                           ))}
                         </div>
                       )}
                     </div>
@@ -1497,7 +1768,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             {paymentConfirm.paymentProofUrl && (
               <div className={s.field}>
                 <span className={s.label}>Comprobante</span>
-                <a href={paymentConfirm.paymentProofUrl} target="_blank" rel="noreferrer" className={s.fileLink}>
+                <a href={customOrdersApi.getPaymentProofUrl(paymentConfirm.id)} target="_blank" rel="noreferrer" className={s.fileLink}>
                   Ver comprobante adjunto
                 </a>
               </div>

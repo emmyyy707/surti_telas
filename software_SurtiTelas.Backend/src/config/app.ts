@@ -132,6 +132,11 @@ export function createApp(): Express {
   });
 
   app.use(express.json({ limit: '2mb' }));
+
+  app.use('/uploads/custom-orders/payments', (_req: Request, res: Response) => {
+    res.status(404).json({ success: false, error: 'not_found', message: 'Ruta no disponible' });
+  });
+
   app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
   app.use(sanitizeInput);

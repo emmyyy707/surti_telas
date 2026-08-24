@@ -1182,10 +1182,31 @@ model quotes {
   version                 Int?          @default(1)
   quote_items             quote_items[]
   custom_orders           custom_orders @relation(fields: [custom_order_id], references: [id])
+  quote_negotiations      quote_negotiations[]
 
   @@index([custom_order_id])
   @@index([deleted_at])
   @@index([estado])
+}
+
+model quote_negotiations {
+  id             String    @id @default(cuid())
+  quote_id       String
+  author_id      String
+  author_role    String
+  message        String    @db.Text
+  round          Int
+  proposal_data  Json?
+  status         String    @default("PENDING")
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  deleted_at     DateTime?
+
+  quotes quotes @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+
+  @@index([quote_id])
+  @@index([author_id])
+  @@index([created_at])
 }
 
 model survey_responses {

@@ -39,7 +39,7 @@ describe('notification.controller', () => {
 
     await markAsRead(req, res);
 
-    expect(notificationUseCases.markAsRead.execute).toHaveBeenCalledWith('notif-1');
+    expect(notificationUseCases.markAsRead.execute).toHaveBeenCalledWith('notif-1', 'user-1');
     expect(res.json).toHaveBeenCalled();
   });
 });

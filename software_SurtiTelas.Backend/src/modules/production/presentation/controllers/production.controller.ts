@@ -34,20 +34,18 @@ export const listWorkshops = async (req: Request, res: Response) => {
 
 export const createWorkshop = async (req: Request, res: Response) => {
   const input = parseDto(CreateWorkshopSchema, req.body);
-  const workshop = await productionUseCases.registerWorkshop.execute(input);
+  const workshop = await productionUseCases.registerWorkshop.execute({ ...input, usuarioId: req.user!.id });
   return created(res, workshop, 'Taller creado');
 };
 
 export const updateWorkshop = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateWorkshopSchema, req.body);
-  console.log('[Workshops] update changes', JSON.stringify(changes));
-  const workshop = await productionUseCases.updateWorkshop.execute(req.params.id, changes);
-  console.log('[Workshops] update response', JSON.stringify(workshop));
+  const workshop = await productionUseCases.updateWorkshop.execute(req.params.id, { ...changes, usuarioId: req.user!.id });
   return ok(res, workshop, 'Taller actualizado');
 };
 
 export const deleteWorkshop = async (req: Request, res: Response) => {
-  await productionUseCases.deleteWorkshop.execute(req.params.id);
+  await productionUseCases.deleteWorkshop.execute(req.params.id, req.user!.id);
   return noContent(res);
 };
 
@@ -69,30 +67,31 @@ export const createProductionOrder = async (req: Request, res: Response) => {
   const order = await productionUseCases.createProductionOrder.execute({
     ...input,
     fechaEstimada: new Date(input.fechaEstimada),
+    usuarioId: req.user!.id,
   });
   return created(res, order, 'Orden de producción creada');
 };
 
 export const assignToWorkshop = async (req: Request, res: Response) => {
   const { tallerId } = parseDto(AssignToWorkshopSchema, req.body);
-  const order = await productionUseCases.assignToWorkshop.execute(req.params.id, tallerId);
+  const order = await productionUseCases.assignToWorkshop.execute(req.params.id, tallerId, req.user!.id);
   return ok(res, order, 'Taller asignado');
 };
 
 export const updateProgress = async (req: Request, res: Response) => {
   const { avance } = parseDto(UpdateProgressSchema, req.body);
-  const order = await productionUseCases.updateProgress.execute(req.params.id, avance);
+  const order = await productionUseCases.updateProgress.execute(req.params.id, avance, req.user!.id);
   return ok(res, order, 'Avance actualizado');
 };
 
 export const updateProductionOrder = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateProductionOrderSchema, req.body);
-  const order = await productionUseCases.updateProductionOrder.execute(req.params.id, changes);
+  const order = await productionUseCases.updateProductionOrder.execute(req.params.id, { ...changes, usuarioId: req.user!.id });
   return ok(res, order, 'Orden de producción actualizada');
 };
 
 export const deleteProductionOrder = async (req: Request, res: Response) => {
-  await productionUseCases.deleteProductionOrder.execute(req.params.id);
+  await productionUseCases.deleteProductionOrder.execute(req.params.id, req.user!.id);
   return noContent(res);
 };
 
@@ -112,6 +111,7 @@ export const createControlPrenda = async (req: Request, res: Response) => {
   const control = await productionUseCases.createControlPrenda.execute({
     ...input,
     creadoPorId: req.user!.id,
+    usuarioId: req.user!.id,
   });
   return created(res, control, 'Control de prenda creado');
 };
@@ -123,8 +123,9 @@ export const reviewControlPrenda = async (req: Request, res: Response) => {
     cantidadAprobada: req.body.cantidadAprobada,
     cantidadRechazada: req.body.cantidadRechazada,
     revisadoPorId: req.user!.id,
+    usuarioId: req.user!.id,
   });
-  return ok(res, control, 'Control actualizado');
+  return ok(res, control, estado === 'APROBADO' ? 'Prenda aprobada' : 'Prenda rechazada');
 };
 
 export const listControlPrendas = async (req: Request, res: Response) => {
@@ -150,11 +151,11 @@ export const listControlPrendas = async (req: Request, res: Response) => {
 
 export const updateControlPrenda = async (req: Request, res: Response) => {
   const input = parseDto(UpdateControlPrendaSchema, req.body);
-  const control = await productionUseCases.updateControlPrenda.execute(req.params.id, input);
+  const control = await productionUseCases.updateControlPrenda.execute(req.params.id, { ...input, usuarioId: req.user!.id });
   return ok(res, control, 'Control de prenda actualizado');
 };
 
 export const deleteControlPrenda = async (req: Request, res: Response) => {
-  await productionUseCases.deleteControlPrenda.execute(req.params.id);
+  await productionUseCases.deleteControlPrenda.execute(req.params.id, req.user!.id);
   return noContent(res);
 };

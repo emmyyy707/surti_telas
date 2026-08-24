@@ -176,6 +176,7 @@ const App: React.FC = () => {
             <Route path="reportes-inventario" element={<Navigate to="/admin/reportes/inventario" replace />} />
             <Route path="finanzas" element={<Navigate to="/admin/reportes/finanzas" replace />} />
             <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
+            <Route path="notificaciones" element={<AdminNotificaciones />} />
           </Route>x
 
           {/* ASESOR - Protected routes for asesor role */}

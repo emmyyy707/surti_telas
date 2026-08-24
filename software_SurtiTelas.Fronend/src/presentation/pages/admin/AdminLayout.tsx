@@ -33,9 +33,9 @@ const adminMenu: SidebarItem[] = [
     key: 'usuarios',
     subItems: [
       { icon: UserSearch, label: adminContent.layout.menu.usuarios.gestionUsuarios.label, key: 'gestion-usuarios' },
-      { icon: Shield, label: adminContent.layout.menu.usuarios.seguridad.label, key: 'seguridad' },
-      { icon: UserCheck, label: adminContent.layout.menu.usuarios.asesores.label, key: 'asesores' },
       { icon: KeyRound, label: adminContent.layout.menu.usuarios.gestionAcceso.label, key: 'gestion-acceso' },
+      { icon: UserCheck, label: adminContent.layout.menu.usuarios.asesores.label, key: 'asesores' },
+      { icon: Users2, label: 'Domiciliarios', key: 'domicilios' },
     ],
   },
   {

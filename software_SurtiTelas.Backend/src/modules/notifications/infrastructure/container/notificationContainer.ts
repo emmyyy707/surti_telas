@@ -15,4 +15,4 @@ export const notificationUseCases = {
   deleteNotification: new DeleteNotification(notificationRepository),
 };
 
-export const notificationSubscriber = new NotificationSubscriber(notificationRepository);
+export const notificationSubscriber = new NotificationSubscriber(notificationRepository, prisma);

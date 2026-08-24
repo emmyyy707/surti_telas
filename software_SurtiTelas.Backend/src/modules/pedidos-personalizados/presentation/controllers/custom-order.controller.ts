@@ -1,20 +1,25 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { created, ok } from '../../../../shared/presentation/http/HttpResponse';
+import { created, ok, badRequest } from '../../../../shared/presentation/http/HttpResponse';
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { prisma } from '../../../../config/database';
 import { customOrderUseCases } from '../../infrastructure/container/customOrderContainer';
+import { eventBus } from '../../../../shared/infrastructure/eventBus';
+import { CustomOrderReferenceUploadedEvent, CustomOrderPaymentUpdatedEvent } from '../../../../shared/application/events';
 import {
   QuotationSchema,
   AcceptQuotationSchema,
   RejectQuotationSchema,
+  StartNegotiationSchema,
+  RespondToNegotiationSchema,
+  RejectNegotiationSchema,
   CustomOrderFiltersSchema,
   CreateCustomOrderSchema,
   UpdateCustomOrderSchemaBase,
 } from '../validators/custom-order.validators';
 import { isAllowedStatusTransition } from '../../domain/value-objects/CustomOrderStatusTransitions';
-import path from 'path';
+import path, { extname } from 'path';
 import fs from 'fs';
 import { randomUUID } from 'node:crypto';
 
@@ -177,6 +182,68 @@ export const rejectQuotation = async (req: Request, res: Response) => {
   return ok(res, pedido.toDTO(), 'Cotización rechazada');
 };
 
+export const startNegotiation = async (req: Request, res: Response) => {
+  const input = parseDto(StartNegotiationSchema, req.body);
+  const result = await customOrderUseCases.startNegotiation.execute(
+    req.params.id,
+    req.user?.id ?? '',
+    req.user?.role ?? 'CLIENTE',
+    input.message,
+    input.proposalData
+  );
+  return created(res, result, 'Negociación iniciada');
+};
+
+export const respondToNegotiation = async (req: Request, res: Response) => {
+  const input = parseDto(RespondToNegotiationSchema, req.body);
+  const result = await customOrderUseCases.respondToNegotiation.execute(
+    req.params.id,
+    req.user?.id ?? '',
+    req.user?.role ?? 'CLIENTE',
+    input.message,
+    input.proposalData,
+    req.body.parentId
+  );
+  return created(res, result, 'Respuesta enviada');
+};
+
+export const acceptNegotiationProposal = async (req: Request, res: Response) => {
+  const { negotiationId } = req.body as { negotiationId: string };
+  if (!negotiationId) {
+    return badRequest(res, 'negotiationId es requerido');
+  }
+  const result = await customOrderUseCases.acceptNegotiationProposal.execute(
+    req.params.id,
+    negotiationId,
+    req.user?.id ?? ''
+  );
+  return ok(res, result, 'Propuesta aceptada');
+};
+
+export const rejectNegotiationProposal = async (req: Request, res: Response) => {
+  const input = parseDto(RejectNegotiationSchema, req.body);
+  const result = await customOrderUseCases.rejectNegotiationProposal.execute(
+    req.params.id,
+    input.negotiationId,
+    req.user?.id ?? '',
+    input.reason
+  );
+  return ok(res, result, 'Propuesta rechazada');
+};
+
+export const getNegotiationHistory = async (req: Request, res: Response) => {
+  const pedido = await customOrderUseCases.getCustomOrder.execute(req.params.id);
+  if (!pedido) {
+    return ok(res, []);
+  }
+  const quoteId = (pedido as any).cotizacion?.id;
+  if (!quoteId) {
+    return ok(res, []);
+  }
+  const history = await customOrderUseCases.getNegotiationHistory.execute(quoteId);
+  return ok(res, history, 'Historial de negociación');
+};
+
 export const sendQuotation = async (req: Request, res: Response) => {
   const pedido = await customOrderUseCases.sendQuotation.execute(req.params.id, req.user?.id);
   return ok(res, pedido.toDTO(), 'Cotización enviada al cliente');
@@ -203,8 +270,47 @@ export const uploadPaymentProof = async (req: Request, res: Response) => {
   const filePath = path.join(PAYMENT_UPLOAD_DIR, fileName);
   fs.copyFileSync(file.path, filePath);
 
-  const relativePath = `/uploads/custom-orders/payments/${fileName}`;
+  const relativePath = fileName;
   return ok(res, { paymentProofUrl: relativePath }, 'Comprobante subido correctamente');
+};
+
+export const servePaymentProof = async (req: Request, res: Response): Promise<void> => {
+  const order = await customOrderUseCases.getCustomOrder.execute(req.params.id);
+  if (!order) {
+    return res.status(404).json({ success: false, error: 'not_found', message: 'Solicitud no encontrada' }) as any;
+  }
+
+  const stored = order.paymentProofUrl;
+  if (!stored) {
+    return res.status(404).json({ success: false, error: 'not_found', message: 'Comprobante de pago no encontrado' }) as any;
+  }
+
+  let fileName: string;
+  if (stored.startsWith('/uploads/custom-orders/payments/')) {
+    fileName = path.basename(stored);
+  } else {
+    fileName = stored;
+  }
+
+  const resolved = path.join(PAYMENT_UPLOAD_DIR, fileName);
+  const allowedBase = PAYMENT_UPLOAD_DIR;
+
+  if (!resolved.startsWith(allowedBase + path.sep) && resolved !== allowedBase) {
+    return res.status(403).json({ success: false, error: 'forbidden', message: 'Ruta de archivo inválida' }) as any;
+  }
+
+  if (!fs.existsSync(resolved)) {
+    return res.status(404).json({ success: false, error: 'not_found', message: 'Archivo no encontrado' }) as any;
+  }
+
+  const mimeType = extname(resolved).toLowerCase() === '.pdf' ? 'application/pdf' : 'image/jpeg';
+  res.setHeader('Content-Type', mimeType);
+  res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(resolved).pipe(res);
+    res.on('finish', resolve);
+    res.on('error', reject);
+  });
 };
 
 export const uploadReferenceImage = async (req: Request, res: Response) => {
@@ -235,6 +341,25 @@ export const uploadReferenceImage = async (req: Request, res: Response) => {
   fs.copyFileSync(file.path, filePath);
 
   const relativePath = `/uploads/custom-orders/references/${fileName}`;
+
+  const customOrder = await prisma.custom_orders.findFirst({
+    where: { id: req.params.id, deleted_at: null },
+    select: { id: true, numero: true, cliente_id: true, cliente_nombre: true, asesor_id: true },
+  });
+
+  if (customOrder) {
+    eventBus.publish(
+      new CustomOrderReferenceUploadedEvent({
+        customOrderId: customOrder.id,
+        numeroSolicitud: customOrder.numero,
+        clienteId: customOrder.cliente_id,
+        clienteNombre: customOrder.cliente_nombre ?? '',
+        asesorId: customOrder.asesor_id ?? undefined,
+        asesorNombre: undefined,
+      }, req.requestId)
+    );
+  }
+
   return ok(res, { url: relativePath }, 'Imagen de referencia subida correctamente');
 };
 
@@ -242,7 +367,7 @@ export const updatePaymentInfo = async (req: Request, res: Response) => {
   const { paymentKey } = req.body;
   const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, {
     paymentKey: paymentKey || undefined,
-  });
+  }, req.requestId);
   return ok(res, pedido.toDTO(), 'Información de pago actualizada');
 };
 
@@ -281,7 +406,7 @@ export const updateCustomOrder = async (req: Request, res: Response) => {
     clienteId,
   };
 
-  const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, payload);
+  const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, payload, req.requestId);
   return ok(res, pedido.toDTO(), 'Solicitud actualizada');
 };
 
@@ -298,12 +423,32 @@ export const updatePaymentStatus = async (req: Request, res: Response) => {
   if (input.paymentProofUrl !== undefined) changes.paymentProofUrl = input.paymentProofUrl || null;
   if (input.paymentKey !== undefined) changes.paymentKey = input.paymentKey;
 
-  const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, changes);
+  const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, changes, req.requestId);
+
+  const customOrder = await prisma.custom_orders.findFirst({
+    where: { id: req.params.id, deleted_at: null },
+    select: { id: true, numero: true, cliente_id: true, cliente_nombre: true, asesor_id: true },
+  });
+
+  if (customOrder) {
+    eventBus.publish(
+      new CustomOrderPaymentUpdatedEvent({
+        customOrderId: customOrder.id,
+        numeroSolicitud: customOrder.numero,
+        cambios: changes,
+        clienteId: customOrder.cliente_id,
+        clienteNombre: customOrder.cliente_nombre ?? '',
+        asesorId: customOrder.asesor_id ?? undefined,
+        asesorNombre: undefined,
+      }, req.requestId)
+    );
+  }
+
   return ok(res, pedido.toDTO(), 'Estado de pago actualizado');
 };
 
 export const removeCustomOrder = async (req: Request, res: Response) => {
-  await customOrderUseCases.deleteCustomOrder.execute(req.params.id);
+  await customOrderUseCases.deleteCustomOrder.execute(req.params.id, req.requestId);
   return ok(res, { id: req.params.id }, 'Solicitud eliminada');
 };
 

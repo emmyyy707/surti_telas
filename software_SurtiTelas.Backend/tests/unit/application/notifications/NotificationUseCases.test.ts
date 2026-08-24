@@ -43,8 +43,8 @@ describe('MarkNotificationAsRead', () => {
   it('should mark as read', async () => {
     mockRepo.markAsRead.mockResolvedValue(undefined as any);
     const useCase = new MarkNotificationAsRead(mockRepo);
-    await useCase.execute('1');
-    expect(mockRepo.markAsRead).toHaveBeenCalledWith('1');
+    await useCase.execute('1', 'u-1');
+    expect(mockRepo.markAsRead).toHaveBeenCalledWith('1', 'u-1');
   });
 });
 
@@ -59,6 +59,15 @@ describe('NotificationSubscriber', () => {
     expect(mockEventBus.subscribe).toHaveBeenCalledWith('production.completed', expect.any(Function));
     expect(mockEventBus.subscribe).toHaveBeenCalledWith('order.delivered', expect.any(Function));
     expect(mockEventBus.subscribe).toHaveBeenCalledWith('order.canceled', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('user.created', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('user.updated', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('user.deleted', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('product.created', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('product.updated', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('product.deleted', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('order.dispatched', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('order.receipt.generated', expect.any(Function));
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith('receipt.paid', expect.any(Function));
   });
 
   it('should create notification on order.created', async () => {
@@ -81,12 +90,20 @@ describe('NotificationSubscriber', () => {
         },
         occurredAt: new Date(),
       });
-      expect(mockRepo.create).toHaveBeenCalledWith({
-        tipo: 'SUCCESS',
-        titulo: 'Nuevo pedido creado',
-        mensaje: expect.stringContaining('PED-000001'),
-        usuarioId: 'asesor1',
-      });
+      expect(mockRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tipo: 'SUCCESS',
+          titulo: 'Nuevo pedido creado',
+          mensaje: expect.stringContaining('PED-000001'),
+          usuarioId: 'asesor1',
+          modulo: 'ORDERS',
+          entityType: 'ORDER',
+          entityId: '1',
+          action: 'CREATED',
+          actorId: 'asesor1',
+          targetUserId: 'asesor1',
+        })
+      );
     }
   });
 
@@ -110,12 +127,20 @@ describe('NotificationSubscriber', () => {
         },
         occurredAt: new Date(),
       });
-      expect(mockRepo.create).toHaveBeenCalledWith({
-        tipo: 'SUCCESS',
-        titulo: 'Pedido PED-000001 actualizado',
-        mensaje: expect.stringContaining('Entregado'),
-        usuarioId: 'asesor1',
-      });
+      expect(mockRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tipo: 'SUCCESS',
+          titulo: 'Pedido PED-000001 actualizado',
+          mensaje: expect.stringContaining('Entregado'),
+          usuarioId: 'asesor1',
+          modulo: 'ORDERS',
+          entityType: 'ORDER',
+          entityId: '1',
+          action: 'STATUS_CHANGED',
+          actorId: 'asesor1',
+          targetUserId: 'asesor1',
+        })
+      );
     }
   });
 });

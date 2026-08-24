@@ -25,7 +25,7 @@ export const getUnreadCount = async (req: Request, res: Response) => {
 };
 
 export const markAsRead = async (req: Request, res: Response) => {
-  const notification = await notificationUseCases.markAsRead.execute(req.params.id);
+  const notification = await notificationUseCases.markAsRead.execute(req.params.id, req.user!.id);
   return ok(res, notification, 'Notificación marcada como leída');
 };
 
@@ -35,7 +35,7 @@ export const markAllAsRead = async (req: Request, res: Response) => {
 };
 
 export const getNotificationById = async (req: Request, res: Response) => {
-  const notification = await notificationUseCases.getNotificationById.execute(req.params.id);
+  const notification = await notificationUseCases.getNotificationById.execute(req.params.id, req.user!.id);
   return ok(res, notification);
 };
 
@@ -47,11 +47,11 @@ export const createNotification = async (req: Request, res: Response) => {
 
 export const updateNotification = async (req: Request, res: Response) => {
   const input = parseDto(UpdateNotificationSchema, req.body);
-  const notification = await notificationUseCases.updateNotification.execute(req.params.id, input);
+  const notification = await notificationUseCases.updateNotification.execute(req.params.id, req.user!.id, input);
   return ok(res, notification, 'Notificación actualizada');
 };
 
 export const deleteNotification = async (req: Request, res: Response) => {
-  await notificationUseCases.deleteNotification.execute(req.params.id);
+  await notificationUseCases.deleteNotification.execute(req.params.id, req.user!.id);
   return noContent(res);
 };

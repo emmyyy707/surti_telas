@@ -6,7 +6,7 @@ import { ReceiptFiltersSchema, CreateReceiptSchema, UpdateReceiptSchema, UpdateR
 import { PrismaClient } from '@prisma/client';
 import type { Receipt } from '../../domain/entities/Receipt';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
-import { ReceiptPaidEvent } from '../../../../shared/application/events';
+import { ReceiptPaidEvent, ReceiptCreatedEvent, ReceiptUpdatedEvent, ReceiptStatusUpdatedEvent, ReceiptDeletedEvent } from '../../../../shared/application/events';
 
 const prisma = new PrismaClient();
 
@@ -359,18 +359,51 @@ export const createReceipt = async (req: Request, res: Response) => {
     ...input,
     emitidoPor: req.user?.nombre,
   });
+  eventBus.publish(
+    new ReceiptCreatedEvent({
+      receiptId: receipt.id,
+      orderId: receipt.orderId,
+      customerId: receipt.customerId,
+      numero: receipt.numero,
+      total: Number(receipt.total),
+      estado: receipt.estado,
+      emitidoPor: receipt.emitidoPor,
+    }),
+    req.requestId
+  );
   return created(res, receipt, 'Recibo creado');
 };
 
 export const updateReceipt = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateReceiptSchema, req.body);
   const receipt = await receiptUseCases.updateReceipt.execute(req.params.id, changes);
+  eventBus.publish(
+    new ReceiptUpdatedEvent({
+      receiptId: receipt.id,
+      orderId: receipt.orderId,
+      customerId: receipt.customerId,
+      cambios: changes,
+    }),
+    req.requestId
+  );
   return ok(res, receipt, 'Recibo actualizado');
 };
 
 export const updateReceiptStatus = async (req: Request, res: Response) => {
   const { estado } = parseDto(UpdateReceiptStatusSchema, req.body);
+  const previous = await receiptUseCases.getReceiptById.execute(req.params.id);
   const receipt = await receiptUseCases.updateReceiptStatus.execute(req.params.id, estado);
+
+  eventBus.publish(
+    new ReceiptStatusUpdatedEvent({
+      receiptId: receipt.id,
+      orderId: receipt.orderId,
+      customerId: receipt.customerId,
+      previousStatus: previous?.estado ?? estado,
+      newStatus: estado,
+    }),
+    req.requestId
+  );
 
   if (estado === 'PAGADO') {
     try {
@@ -392,6 +425,15 @@ export const updateReceiptStatus = async (req: Request, res: Response) => {
 };
 
 export const deleteReceipt = async (req: Request, res: Response) => {
+  const receipt = await receiptUseCases.getReceiptById.execute(req.params.id);
   await receiptUseCases.deleteReceipt.execute(req.params.id);
+  eventBus.publish(
+    new ReceiptDeletedEvent({
+      receiptId: req.params.id,
+      orderId: receipt?.orderId,
+      customerId: receipt?.customerId ?? '',
+    }),
+    req.requestId
+  );
   return noContent(res);
 };

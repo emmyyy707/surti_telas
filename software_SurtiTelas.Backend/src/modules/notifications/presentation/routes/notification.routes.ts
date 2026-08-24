@@ -44,56 +44,7 @@ notificationRouter.get('/', requirePermission('notifications:read'), asyncHandle
 notificationRouter.get('/unread-count', requirePermission('notifications:read'), asyncHandler(controller.getUnreadCount));
 notificationRouter.post('/', requirePermission('notifications:update'), asyncHandler(controller.createNotification));
 notificationRouter.get('/:id', requirePermission('notifications:read'), asyncHandler(controller.getNotificationById));
+notificationRouter.patch('/:id/read', requirePermission('notifications:update'), asyncHandler(controller.markAsRead));
+notificationRouter.patch('/read-all', requirePermission('notifications:update'), asyncHandler(controller.markAllAsRead));
 notificationRouter.patch('/:id', requirePermission('notifications:update'), asyncHandler(controller.updateNotification));
 notificationRouter.delete('/:id', requirePermission('notifications:update'), asyncHandler(controller.deleteNotification));
-
-/**
- * @swagger
- * /notifications/{id}/read:
- *   patch:
- *     tags: [Notifications]
- *     summary: Mark notification as read
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Notification marked as read
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success: { type: boolean, example: true }
- *                 message: { type: string, example: Notificación marcada como leída }
- */
-notificationRouter.patch('/:id/read', requirePermission('notifications:update'), asyncHandler(controller.markAsRead));
-
-/**
- * @swagger
- * /notifications/read-all:
- *   patch:
- *     tags: [Notifications]
- *     summary: Mark all notifications as read for current user
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: All notifications marked as read
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success: { type: boolean, example: true }
- *                 message: { type: string, example: 5 notificaciones marcadas como leídas }
- *                 data:
- *                   type: object
- *                   properties:
- *                     count: { type: integer, example: 5 }
- */
-notificationRouter.patch('/read-all', requirePermission('notifications:update'), asyncHandler(controller.markAllAsRead));

@@ -25,10 +25,10 @@ describe('MarkNotificationAsRead', () => {
     };
 
     const useCase = new MarkNotificationAsRead(repo);
-    const result = await useCase.execute('1');
+    const result = await useCase.execute('1', 'user-1');
 
     expect(result.leida).toBe(true);
-    expect(repo.markAsRead).toHaveBeenCalledWith('1');
+    expect(repo.markAsRead).toHaveBeenCalledWith('1', 'user-1');
   });
 
   it('should throw error if notification not found', async () => {

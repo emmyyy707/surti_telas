@@ -18,6 +18,9 @@ import {
   OrderReceiptGeneratedEvent,
   OrderCanceledEvent,
   OrderDispatchedEvent,
+  OrderAssignedEvent,
+  OrderUpdatedEvent,
+  OrderDeletedEvent,
 } from '../../../../shared/application/events';
 import { toOrderData } from '../../infrastructure/mappers/OrderMapper';
 import { logger } from '../../../../shared/infrastructure/logger';
@@ -455,28 +458,69 @@ export class UpdateOrderStatus {
 }
 
 export class AssignDomiciliario {
-  constructor(private readonly repo: OrderRepository) {}
-  async execute(id: string, domiciliarioId: string) {
+  constructor(private readonly repo: OrderRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, domiciliarioId: string, domiciliarioNombre: string, requestId?: string) {
+    const existing = await this.repo.getById(id);
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
     const order = await this.repo.assignDomiciliario(id, domiciliarioId);
-    if (!order) throw new NotFoundError('Pedido no encontrado');
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new OrderAssignedEvent({
+          orderId: existing.id,
+          orderNumero: existing.numero || existing.id,
+          domiciliarioId,
+          domiciliarioNombre,
+          clienteId: existing.clienteId,
+          clienteNombre: existing.cliente,
+          asesorId: existing.asesorId,
+          asesorNombre: existing.asesor,
+        }, requestId)
+      );
+    }
     return order;
   }
 }
 
 export class DeleteOrder {
-  constructor(private readonly repo: OrderRepository) {}
-  async execute(id: string) {
+  constructor(private readonly repo: OrderRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Pedido no encontrado');
     await this.repo.softDelete(id);
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new OrderDeletedEvent({
+          orderId: existing.id,
+          orderNumero: existing.numero || existing.id,
+          clienteId: existing.clienteId,
+          clienteNombre: existing.cliente,
+          asesorId: existing.asesorId,
+          asesorNombre: existing.asesor,
+        }, requestId)
+      );
+    }
   }
 }
 
 export class UpdateOrderFull {
-  constructor(private readonly repo: OrderRepository) {}
-  async execute(id: string, changes: { clienteId?: string; asesorId?: string; prioridad?: OrderPriority; observaciones?: string; itemsList?: OrderItem[] }) {
+  constructor(private readonly repo: OrderRepository, private readonly eventBus?: EventBus) {}
+  async execute(id: string, changes: { clienteId?: string; asesorId?: string; prioridad?: OrderPriority; observaciones?: string; itemsList?: OrderItem[] }, requestId?: string) {
+    const existing = await this.repo.getById(id);
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
     const order = await this.repo.updateFull(id, changes);
-    if (!order) throw new NotFoundError('Pedido no encontrado');
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new OrderUpdatedEvent({
+          orderId: existing.id,
+          orderNumero: existing.numero || existing.id,
+          cambios: changes,
+          clienteId: existing.clienteId,
+          clienteNombre: existing.cliente,
+          asesorId: existing.asesorId,
+          asesorNombre: existing.asesor,
+        }, requestId)
+      );
+    }
     return order;
   }
 }

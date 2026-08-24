@@ -7,3 +7,6 @@ export const created = (res: Response, data: unknown, message?: string) =>
   res.status(201).json({ success: true, data, message });
 
 export const noContent = (res: Response) => res.status(204).send();
+
+export const badRequest = (res: Response, message: string) =>
+  res.status(400).json({ success: false, message });

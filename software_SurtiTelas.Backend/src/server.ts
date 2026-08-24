@@ -10,7 +10,6 @@ const app = createApp();
 import { eventBus } from './shared/infrastructure/eventBus';
 import { notificationSubscriber } from './modules/notifications/infrastructure/container/notificationContainer';
 import { OrderReceiptPaymentSubscriber } from './modules/orders/application/use-cases/OrderReceiptPaymentSubscriber';
-import { SalesOrderNotificationSubscriber } from './modules/sales-orders/application/use-cases/SalesOrderNotificationSubscriber';
 import { ReceiptSendSubscriber } from './modules/sales-orders/application/use-cases/ReceiptSendSubscriber';
 import { PrismaOrderRepository } from './modules/orders/infrastructure/repositories/PrismaOrderRepository';
 import { PrismaSaleRepository } from './modules/sales-orders/infrastructure/repositories/PrismaSaleRepository';
@@ -20,14 +19,11 @@ import { receiptSender } from './modules/sales-orders/infrastructure/container/s
 import { ReceiptPaymentSubscriber } from './modules/receipts/application/use-cases/ReceiptPaymentSubscriber';
 import { OrderDeliverySubscriber } from './modules/orders/application/use-cases/OrderDeliverySubscriber';
 import { WebhookSubscriber } from './modules/webhooks/infrastructure/subscribers/WebhookSubscriber';
-import { registerCustomOrderNotificationSubscriber } from './modules/pedidos-personalizados/application/subscribers/CustomOrderNotificationSubscriber';
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
-new SalesOrderNotificationSubscriber(eventBus);
 new ReceiptPaymentSubscriber(eventBus);
 new OrderDeliverySubscriber(eventBus);
-registerCustomOrderNotificationSubscriber();
 
 const orderRepository = new PrismaOrderRepository(prisma);
 const saleRepository = new PrismaSaleRepository(prisma);
