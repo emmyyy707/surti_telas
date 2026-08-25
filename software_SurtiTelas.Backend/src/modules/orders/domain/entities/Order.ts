@@ -4,7 +4,11 @@ export type OrderStatus =
   | 'En proceso'
   | 'Enviado'
   | 'Entregado'
-  | 'Rechazado';
+  | 'Rechazado'
+  | 'En validación'
+  | 'Recibo generado'
+  | 'Recibo enviado'
+  | 'Cancelado';
 
 export type OrderPriority = 'Estándar' | 'Prioritario';
 export type OrderFlow = 'PRODUCCION' | 'VENTAS';
@@ -206,18 +210,22 @@ export class Order {
     if (nextStatus === this.estado) return true;
 
     const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-      Pendiente: ['Aceptado', 'Rechazado'],
-      Aceptado: ['En proceso', 'Enviado', 'Entregado'],
-      'En proceso': ['Enviado', 'Entregado'],
-      Enviado: ['Entregado'],
+      Pendiente: ['En validación', 'Aceptado', 'Rechazado', 'Cancelado'],
+      'En validación': ['Aceptado', 'Recibo generado', 'Rechazado', 'Cancelado'],
+      Aceptado: ['Recibo generado', 'En proceso', 'Enviado', 'Entregado', 'Cancelado'],
+      'Recibo generado': ['Recibo enviado', 'En proceso', 'Enviado', 'Entregado', 'Cancelado'],
+      'Recibo enviado': ['Entregado', 'Cancelado'],
+      'En proceso': ['Enviado', 'Entregado', 'Cancelado'],
+      Enviado: ['Entregado', 'Cancelado'],
       Entregado: [],
+      Cancelado: [],
       Rechazado: [],
     };
     return allowedTransitions[this.estado].includes(nextStatus);
   }
 
   isTerminal(): boolean {
-    return this.estado === 'Entregado' || this.estado === 'Rechazado';
+    return this.estado === 'Entregado' || this.estado === 'Rechazado' || this.estado === 'Cancelado';
   }
 
   canAcceptPaymentProof(): boolean {
@@ -237,23 +245,23 @@ export class Order {
   }
 
   canBeAccepted(): boolean {
-    return this.estado === 'Pendiente';
+    return this.estado === 'Pendiente' || this.estado === 'En validación';
   }
 
   canBeRejected(): boolean {
-    return this.estado === 'Pendiente' || this.estado === 'Aceptado';
+    return this.estado === 'Pendiente' || this.estado === 'En validación' || this.estado === 'Aceptado';
   }
 
   canBeAssigned(): boolean {
-    return this.estado === 'Aceptado' || this.estado === 'En proceso' || this.estado === 'Enviado';
+    return this.estado === 'Aceptado' || this.estado === 'En proceso' || this.estado === 'Enviado' || this.estado === 'Recibo generado';
   }
 
   canBeDelivered(): boolean {
-    return this.estado === 'Enviado' || this.estado === 'En proceso';
+    return this.estado === 'Enviado' || this.estado === 'En proceso' || this.estado === 'Recibo enviado';
   }
 
   canBeCanceled(): boolean {
-    if (this.estado === 'Entregado' || this.estado === 'Rechazado') {
+    if (this.estado === 'Entregado' || this.estado === 'Rechazado' || this.estado === 'Cancelado') {
       return false;
     }
     return true;
@@ -268,6 +276,6 @@ export class Order {
   }
 
   receiptRequired(): boolean {
-    return this.estado === 'Entregado';
+    return this.estado === 'Entregado' || this.estado === 'Recibo enviado';
   }
 }

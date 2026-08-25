@@ -37,4 +37,6 @@ export { productsApi } from './productsApi';
 export { controlPrendaApi } from './controlPrendaApi';
 export { accessApi } from './accessApi';
 export { domiciliariosApi } from './domiciliariosApi';
+export { employeesApi } from './employeesApi';
 export { customOrdersApi } from './customOrdersApi';
+export { salesApi } from './salesApi';

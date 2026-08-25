@@ -32,8 +32,8 @@ export function canRejectOrder(order: Order, user: AuthUser): boolean {
 }
 
 export function canRetryReceipt(order: Order, user: AuthUser): boolean {
-  if (user.role === 'ADMIN') return order.estado === 'Aceptado';
-  if (user.role === 'ASESOR') return order.asesorId === user.id && order.estado === 'Aceptado';
+  if (user.role === 'ADMIN') return order.estado === 'Recibo generado';
+  if (user.role === 'ASESOR') return order.asesorId === user.id && order.estado === 'Recibo generado';
   return false;
 }
 

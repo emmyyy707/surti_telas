@@ -39,29 +39,30 @@ model User {
   controlPrendasRevisadas     ControlPrenda[]               @relation("ControlPrendaRevisadoPor")
   advisorConversations        Conversation[]                @relation("AdvisorConversations")
   clientConversations         Conversation[]                @relation("ClientConversations")
-  custom_order_attachments custom_order_attachments[]
-  custom_order_notes       custom_order_notes[]
-  custom_orders            custom_orders[]
+  custom_order_attachments    custom_order_attachments[]
+  customOrderHistory          custom_order_history[]        @relation("CustomOrderHistoryUsuario")
+  custom_order_notes          custom_order_notes[]
+  custom_orders               custom_orders[]
   customers                   Customer[]                    @relation("AsesorClientes")
   domiciliarioDeliveries      Delivery[]                    @relation("DomiciliarioDeliveries")
   domiciliario                Domiciliario?
+  employeeProfile             EmployeeProfile?
   favorites                   Favorite[]
   movements                   InventoryMovement[]           @relation("UsuarioMovements")
   message_templates           message_templates[]
   sentMessages                Message[]
   notifications               Notification[]
   historialPedidos            OrderHistory[]                @relation("OrderHistorialUsuario")
-  customOrderHistory          custom_order_history[]        @relation("CustomOrderHistoryUsuario")
   orders                      Order[]                       @relation("AsesorOrders")
   comprobantesCargados        Order[]                       @relation("OrderComprobanteCargadoPor")
   ordersValidados             Order[]                       @relation("OrderValidadoPor")
   payments                    Payment[]                     @relation("AsesorPayments")
   productions                 ProductionOrder[]             @relation("OperarioProductions")
+  purchases                   Purchase[]
   surveys                     surveys[]
   technical_sheet_approvals   technical_sheet_approvals[]
   technical_sheet_attachments technical_sheet_attachments[]
   video_calls                 video_calls[]
-  purchases                   Purchase[]
 
   @@index([role])
   @@index([deletedAt])
@@ -81,6 +82,24 @@ model Domiciliario {
 
   @@index([userId])
   @@map("domiciliarios")
+}
+
+model EmployeeProfile {
+  id                String        @id @default(cuid())
+  userId            String        @unique @map("user_id")
+  cargo             String?
+  fechaContratacion DateTime?     @map("fecha_contratacion")
+  salario           Decimal?      @db.Decimal(12, 2)
+  tipoEmpleado      TipoEmpleado? @map("tipo_empleado")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  deletedAt         DateTime?     @map("deleted_at")
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tipoEmpleado])
+  @@index([deletedAt])
+  @@map("employee_profiles")
 }
 
 model Favorite {
@@ -134,9 +153,9 @@ model Category {
   nombre      String
   slug        String     @unique
   parentId    String?    @map("parent_id")
-  estado      String     @default("ACTIVO") @map("estado")
-  descripcion String?
   createdAt   DateTime   @default(now())
+  descripcion String?
+  estado      String     @default("ACTIVO") @map("estado")
   parent      Category?  @relation("Subcategorias", fields: [parentId], references: [id])
   children    Category[] @relation("Subcategorias")
   products    Product[]
@@ -309,30 +328,30 @@ model Supplier {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   deletedAt         DateTime?      @map("deleted_at")
-  rawMaterials      RawMaterial[]
   purchases         Purchase[]
+  rawMaterials      RawMaterial[]
 
   @@index([deletedAt])
   @@map("suppliers")
 }
 
 model RawMaterial {
-  id             String              @id @default(cuid())
+  id             String               @id @default(cuid())
   nombre         String
   categoria      String?
-  categoriaId    String?             @map("categoria_id")
-  unidadMedida   String              @map("unidad_medida")
-  stockActual    Int                 @default(0) @map("stock_actual")
-  stockMinimo    Int                 @default(0) @map("stock_minimo")
-  proveedorId    String?             @map("proveedor_id")
-  precioUnitario Decimal             @map("precio_unitario") @db.Decimal(12, 2)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  deletedAt      DateTime?           @map("deleted_at")
+  unidadMedida   String               @map("unidad_medida")
+  stockActual    Int                  @default(0) @map("stock_actual")
+  stockMinimo    Int                  @default(0) @map("stock_minimo")
+  proveedorId    String?              @map("proveedor_id")
+  precioUnitario Decimal              @map("precio_unitario") @db.Decimal(12, 2)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  deletedAt      DateTime?            @map("deleted_at")
+  categoriaId    String?              @map("categoria_id")
   movements      InventoryMovement[]
-  proveedor      Supplier?           @relation(fields: [proveedorId], references: [id])
-  category       RawMaterialCategory? @relation(fields: [categoriaId], references: [id])
   purchaseItems  PurchaseItem[]
+  category       RawMaterialCategory? @relation(fields: [categoriaId], references: [id])
+  proveedor      Supplier?            @relation(fields: [proveedorId], references: [id])
 
   @@index([proveedorId])
   @@index([stockActual])
@@ -341,14 +360,14 @@ model RawMaterial {
 }
 
 model RawMaterialCategory {
-  id          String   @id @default(cuid())
-  nombre      String
-  slug        String   @unique
-  descripcion String?
-  estado      String   @default("ACTIVO") @map("estado")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime? @map("deleted_at")
+  id           String        @id @default(cuid())
+  nombre       String
+  slug         String        @unique
+  descripcion  String?
+  estado       String        @default("ACTIVO") @map("estado")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?     @map("deleted_at")
   rawMaterials RawMaterial[]
 
   @@index([slug])
@@ -436,17 +455,17 @@ model Notification {
   mensaje      String
   leida        Boolean          @default(false)
   usuarioId    String?          @map("usuario_id")
-  modulo       String?
-  referenciaId String?          @map("referencia_id")
-  entityType   String?          @map("entity_type")
-  entityId     String?          @map("entity_id")
-  action       String?
-  actorId      String?          @map("actor_id")
-  targetUserId String?          @map("target_user_id")
-  readAt       DateTime?        @map("read_at")
-  metadata     Json?
   createdAt    DateTime         @default(now())
   deletedAt    DateTime?        @map("deleted_at")
+  modulo       String?
+  referenciaId String?          @map("referencia_id")
+  action       String?
+  actorId      String?          @map("actor_id")
+  entityId     String?          @map("entity_id")
+  entityType   String?          @map("entity_type")
+  metadata     Json?
+  readAt       DateTime?        @map("read_at")
+  targetUserId String?          @map("target_user_id")
   usuario      User?            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([usuarioId, leida])
@@ -546,23 +565,24 @@ model Receipt {
 }
 
 model Sale {
-  id            String    @id @default(cuid())
-  orderId       String    @unique @map("order_id")
-  clienteId     String    @map("cliente_id")
-  clienteNombre String    @map("cliente_nombre")
-  asesorId      String    @map("asesor_id")
-  asesorNombre  String    @map("asesor_nombre")
-  fechaVenta    DateTime  @default(now()) @map("fecha_venta")
-  subtotal      Decimal   @db.Decimal(12, 2)
-  impuestos     Decimal   @db.Decimal(12, 2)
-  descuentos    Decimal   @db.Decimal(12, 2)
-  total         Decimal   @db.Decimal(12, 2)
-  estado        String    @default("COMPLETADA")
-  medioPago     String?   @map("medio_pago")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime? @map("deleted_at")
-  order         Order     @relation(fields: [orderId], references: [id])
+  id              String    @id @default(cuid())
+  orderId         String    @unique @map("order_id")
+  clienteId       String    @map("cliente_id")
+  clienteNombre   String    @map("cliente_nombre")
+  asesorId        String    @map("asesor_id")
+  asesorNombre    String    @map("asesor_nombre")
+  fechaVenta      DateTime  @default(now()) @map("fecha_venta")
+  subtotal        Decimal   @db.Decimal(12, 2)
+  impuestos       Decimal   @db.Decimal(12, 2)
+  descuentos      Decimal   @db.Decimal(12, 2)
+  total           Decimal   @db.Decimal(12, 2)
+  estado          String    @default("COMPLETADA")
+  medioPago       String?   @map("medio_pago")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? @map("deleted_at")
+  motivoAnulacion String?   @map("motivo_anulacion")
+  order           Order     @relation(fields: [orderId], references: [id])
 
   @@index([clienteId])
   @@index([asesorId])
@@ -957,8 +977,6 @@ model custom_orders {
   id                       String                     @id @default(cuid())
   numero                   String                     @unique
   cliente_id               String
-  cliente_nombre           String?
-  cliente_telefono         String?
   asesor_id                String?
   estado                   CustomOrderStatus          @default(PENDIENTE)
   tipo_prenda              String
@@ -984,14 +1002,17 @@ model custom_orders {
   motivo_rechazo           String?
   notas_cliente            String?                    @map("notas_cliente")
   notas_internas           String?
-  uso_final                String?                    @map("uso_final")
-  direccion_entrega        String?                    @map("direccion_entrega")
   payment_key              String?
   payment_proof_url        String?
   payment_status           String?
+  direccion_entrega        String?                    @map("direccion_entrega")
+  uso_final                String?                    @map("uso_final")
+  cliente_nombre           String?
+  cliente_telefono         String?
   custom_order_attachments custom_order_attachments[]
+  custom_order_history     custom_order_history[]
+  custom_order_items       custom_order_items[]       @relation("CustomOrderItems")
   custom_order_notes       custom_order_notes[]
-  custom_order_items       custom_order_items[] @relation("CustomOrderItems")
   users                    User?                      @relation(fields: [asesor_id], references: [id])
   customers                Customer                   @relation(fields: [cliente_id], references: [id])
   conversations            Conversation?              @relation(fields: [conversacion_id], references: [id])
@@ -1002,7 +1023,6 @@ model custom_orders {
   surveys                  surveys?
   technical_sheets         technical_sheets[]
   video_calls              video_calls?
-  custom_order_history     custom_order_history[]
 
   @@index([asesor_id])
   @@index([cliente_id, deleted_at])
@@ -1011,18 +1031,18 @@ model custom_orders {
 }
 
 model custom_order_history {
-  id             String    @id @default(cuid())
-  customOrderId  String    @map("custom_order_id")
-  usuarioId      String?   @map("usuario_id")
+  id             String        @id @default(cuid())
+  customOrderId  String        @map("custom_order_id")
+  usuarioId      String?       @map("usuario_id")
   accion         String
-  estadoAnterior String    @map("estado_anterior")
-  estadoNuevo    String    @map("estado_nuevo")
+  estadoAnterior String        @map("estado_anterior")
+  estadoNuevo    String        @map("estado_nuevo")
   razon          String?
   informacion    Json?
-  createdAt      DateTime  @default(now())
-  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime      @default(now())
+  deletedAt      DateTime?     @map("deleted_at")
   customOrder    custom_orders @relation(fields: [customOrderId], references: [id], onDelete: Cascade)
-  usuario        User?     @relation("CustomOrderHistoryUsuario", fields: [usuarioId], references: [id])
+  usuario        User?         @relation("CustomOrderHistoryUsuario", fields: [usuarioId], references: [id])
 
   @@index([customOrderId])
   @@index([usuarioId])
@@ -1091,7 +1111,7 @@ model quote_items {
 }
 
 model custom_order_items {
-  id                   String    @id @default(cuid())
+  id                   String             @id @default(cuid())
   custom_order_id      String
   producto_id          String?
   producto_nombre      String?
@@ -1103,86 +1123,83 @@ model custom_order_items {
   color                String?
   material             String?
   ubicacion            Json?
+  orden                Int                @default(0)
+  deleted_at           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   distribucion_tallas  Json?
   imagenes_referencia  String[]
-  orden                Int       @default(0)
-  deleted_at           DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  custom_orders custom_orders @relation("CustomOrderItems", fields: [custom_order_id], references: [id], onDelete: Cascade)
-  personalizations personalizations[] @relation("CustomOrderItemPersonalizations")
+  custom_orders        custom_orders      @relation("CustomOrderItems", fields: [custom_order_id], references: [id], onDelete: Cascade)
+  personalizations     personalizations[] @relation("CustomOrderItemPersonalizations")
 
   @@index([custom_order_id])
 }
 
 model personalizations {
-  id                    String    @id @default(cuid())
-  custom_order_item_id  String
-  tipo                  String
-  tecnica               String?
-  ubicacion             Json?
-  descripcion           String
-  archivos              String[]
-  orden                 Int       @default(0)
-  deleted_at            DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  custom_order_items custom_order_items @relation("CustomOrderItemPersonalizations", fields: [custom_order_item_id], references: [id], onDelete: Cascade)
-  variants           variants[] @relation("PersonalizationVariants")
+  id                   String             @id @default(cuid())
+  custom_order_item_id String
+  tipo                 String
+  tecnica              String?
+  ubicacion            Json?
+  descripcion          String
+  archivos             String[]
+  orden                Int                @default(0)
+  deleted_at           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  custom_order_items   custom_order_items @relation("CustomOrderItemPersonalizations", fields: [custom_order_item_id], references: [id], onDelete: Cascade)
+  variants             variants[]         @relation("PersonalizationVariants")
 
   @@index([custom_order_item_id])
 }
 
 model variants {
-  id                        String    @id @default(cuid())
+  id                              String           @id @default(cuid())
   custom_order_personalization_id String
-  talla                     String
-  color                     String
-  cantidad                  Int
-  deleted_at                DateTime?
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-
-  personalizations personalizations @relation("PersonalizationVariants", fields: [custom_order_personalization_id], references: [id], onDelete: Cascade)
+  talla                           String
+  color                           String
+  cantidad                        Int
+  deleted_at                      DateTime?
+  createdAt                       DateTime         @default(now())
+  updatedAt                       DateTime         @updatedAt
+  personalizations                personalizations @relation("PersonalizationVariants", fields: [custom_order_personalization_id], references: [id], onDelete: Cascade)
 
   @@index([custom_order_personalization_id])
 }
 
 model quotes {
-  id                      String        @id
-  custom_order_id         String        @unique
-  numero                  String        @unique
-  estado                  QuoteStatus   @default(BORRADOR)
-  subtotal                Decimal       @db.Decimal(12, 2)
-  impuestos               Decimal       @default(0) @db.Decimal(12, 2)
-  descuentos              Decimal       @default(0) @db.Decimal(12, 2)
-  total                   Decimal       @db.Decimal(12, 2)
-  tiempo_estimado_dias    Int
-  validez_dias            Int           @default(15)
-  observaciones           String?
-  aprobado_por            String?
-  aprobado_at             DateTime?
-  motivo_rechazo          String?
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime
-  deleted_at              DateTime?
-  condiciones_pago        String?
-  generado_por_id         String?
-  generado_por_nombre     String?
-  porcentaje_anticipo     Int           @default(50)
-  valida_hasta            DateTime?
-  saldo                   Decimal       @default(0) @db.Decimal(12, 2)
-  valor_anticipo          Decimal       @default(0) @map("valor_anticipo") @db.Decimal(12, 2)
-  enviada_en              DateTime?
-  respondida_en           DateTime?
-  negotiation_count       Int?          @default(0)
-  negotiation_history     Json?         @default("[]")
-  version                 Int?          @default(1)
-  quote_items             quote_items[]
-  custom_orders           custom_orders @relation(fields: [custom_order_id], references: [id])
-  quote_negotiations      quote_negotiations[]
+  id                   String               @id
+  custom_order_id      String               @unique
+  numero               String               @unique
+  estado               QuoteStatus          @default(BORRADOR)
+  subtotal             Decimal              @db.Decimal(12, 2)
+  impuestos            Decimal              @default(0) @db.Decimal(12, 2)
+  descuentos           Decimal              @default(0) @db.Decimal(12, 2)
+  total                Decimal              @db.Decimal(12, 2)
+  tiempo_estimado_dias Int
+  validez_dias         Int                  @default(15)
+  observaciones        String?
+  aprobado_por         String?
+  aprobado_at          DateTime?
+  motivo_rechazo       String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  deleted_at           DateTime?
+  condiciones_pago     String?
+  generado_por_id      String?
+  generado_por_nombre  String?
+  porcentaje_anticipo  Int                  @default(50)
+  valida_hasta         DateTime?
+  saldo                Decimal              @default(0) @db.Decimal(12, 2)
+  valor_anticipo       Decimal              @default(0) @map("valor_anticipo") @db.Decimal(12, 2)
+  negotiation_count    Int?                 @default(0)
+  negotiation_history  Json?                @default("[]")
+  version              Int?                 @default(1)
+  enviada_en           DateTime?
+  respondida_en        DateTime?
+  quote_items          quote_items[]
+  quote_negotiations   quote_negotiations[]
+  custom_orders        custom_orders        @relation(fields: [custom_order_id], references: [id])
 
   @@index([custom_order_id])
   @@index([deleted_at])
@@ -1190,19 +1207,18 @@ model quotes {
 }
 
 model quote_negotiations {
-  id             String    @id @default(cuid())
-  quote_id       String
-  author_id      String
-  author_role    String
-  message        String    @db.Text
-  round          Int
-  proposal_data  Json?
-  status         String    @default("PENDING")
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
-  deleted_at     DateTime?
-
-  quotes quotes @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  quote_id      String
+  author_id     String
+  author_role   String
+  message       String
+  round         Int
+  proposal_data Json?
+  status        String    @default("PENDING")
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  deleted_at    DateTime?
+  quotes        quotes    @relation(fields: [quote_id], references: [id], onDelete: Cascade)
 
   @@index([quote_id])
   @@index([author_id])
@@ -1333,6 +1349,54 @@ model video_calls {
   @@index([deleted_at])
 }
 
+model Purchase {
+  id                String         @id @default(cuid())
+  numero            String         @unique
+  proveedorId       String         @map("proveedor_id")
+  usuarioId         String         @map("usuario_id")
+  fecha             DateTime       @default(now())
+  total             Decimal        @db.Decimal(12, 2)
+  estado            PurchaseStatus @default(PENDIENTE)
+  observaciones     String?
+  motivoCancelacion String?        @map("motivo_cancelacion")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?      @map("deleted_at")
+  items             PurchaseItem[]
+  proveedor         Supplier       @relation(fields: [proveedorId], references: [id])
+  usuario           User           @relation(fields: [usuarioId], references: [id])
+
+  @@index([proveedorId])
+  @@index([usuarioId])
+  @@index([estado])
+  @@index([deletedAt])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id             String       @id @default(cuid())
+  purchaseId     String       @map("purchase_id")
+  rawMaterialId  String?      @map("raw_material_id")
+  nombre         String
+  cantidad       Int
+  precioUnitario Decimal      @db.Decimal(12, 2)
+  subtotal       Decimal      @db.Decimal(12, 2)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?    @map("deleted_at")
+  purchase       Purchase     @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  rawMaterial    RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+
+  @@index([purchaseId])
+  @@index([rawMaterialId])
+  @@map("purchase_items")
+}
+
+enum TipoEmpleado {
+  ASESOR
+  DOMICILIARIO
+}
+
 enum EstadoUsuario {
   ACTIVO
   INACTIVO
@@ -1395,49 +1459,6 @@ enum PurchaseStatus {
   ANULADA
 }
 
-model Purchase {
-  id              String           @id @default(cuid())
-  numero          String           @unique
-  proveedorId     String           @map("proveedor_id")
-  usuarioId       String           @map("usuario_id")
-  fecha           DateTime         @default(now())
-  total           Decimal          @db.Decimal(12, 2)
-  estado          PurchaseStatus   @default(PENDIENTE)
-  observaciones   String?
-  motivoCancelacion String?        @map("motivo_cancelacion")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deletedAt       DateTime?        @map("deleted_at")
-  proveedor       Supplier         @relation(fields: [proveedorId], references: [id])
-  usuario         User             @relation(fields: [usuarioId], references: [id])
-  items           PurchaseItem[]
-
-  @@index([proveedorId])
-  @@index([usuarioId])
-  @@index([estado])
-  @@index([deletedAt])
-  @@map("purchases")
-}
-
-model PurchaseItem {
-  id          String    @id @default(cuid())
-  purchaseId  String    @map("purchase_id")
-  rawMaterialId String? @map("raw_material_id")
-  nombre      String
-  cantidad    Int
-  precioUnitario Decimal @db.Decimal(12, 2)
-  subtotal    Decimal   @db.Decimal(12, 2)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime? @map("deleted_at")
-  purchase    Purchase  @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  rawMaterial RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-
-  @@index([purchaseId])
-  @@index([rawMaterialId])
-  @@map("purchase_items")
-}
-
 enum WorkshopStatus {
   ACTIVO
   INACTIVO
@@ -1493,9 +1514,6 @@ enum ControlPrendaEstado {
 }
 
 enum CustomOrderStatus {
-  PENDIENTE
-  ACEPTADO
-  CANCELADO
   SOLICITUD_RECIBIDA
   EN_REVISION
   COTIZADO
@@ -1503,11 +1521,14 @@ enum CustomOrderStatus {
   COTIZACION_RECHAZADA
   EN_PRODUCCION
   COMPLETADO
+  CANCELADO
   CONVERTIDO_A_PEDIDO
   PAGO_PENDIENTE
   PAGO_EN_VERIFICACION
   PAGO_APROBADO
   VENCIDO
+  PENDIENTE
+  ACEPTADO
 }
 
 enum ApprovalStatus {
@@ -1529,12 +1550,12 @@ enum MessageTemplateType {
 
 enum QuoteStatus {
   BORRADOR
-  PENDIENTE
   ENVIADA
   ACEPTADA
   RECHAZADA
-  CANCELADA
   VENCIDA
+  PENDIENTE
+  CANCELADA
 }
 
 enum SurveyQuestionType {

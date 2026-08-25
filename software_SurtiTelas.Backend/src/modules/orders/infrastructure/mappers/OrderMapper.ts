@@ -8,6 +8,10 @@ const STATUS_TO_DB: Record<OrderStatus, DbStatus> = {
   Enviado: 'DESPACHADO',
   Entregado: 'ENTREGADO',
   Rechazado: 'RECHAZADO',
+  'En validación': 'EN_VALIDACION',
+  'Recibo generado': 'RECIBO_GENERADO',
+  'Recibo enviado': 'RECIBO_ENVIADO',
+  Cancelado: 'CANCELADO',
 };
 
 const DB_TO_STATUS: Record<DbStatus, OrderStatus> = {
@@ -17,13 +21,13 @@ const DB_TO_STATUS: Record<DbStatus, OrderStatus> = {
   DESPACHADO: 'Enviado',
   EN_CAMINO: 'En proceso',
   ENTREGADO: 'Entregado',
-  CANCELADO: 'Rechazado',
+  CANCELADO: 'Cancelado',
   PENDIENTE: 'Pendiente',
-  EN_VALIDACION: 'Pendiente',
+  EN_VALIDACION: 'En validación',
   ACEPTADO: 'Aceptado',
   RECHAZADO: 'Rechazado',
-  RECIBO_GENERADO: 'Aceptado',
-  RECIBO_ENVIADO: 'Entregado',
+  RECIBO_GENERADO: 'Recibo generado',
+  RECIBO_ENVIADO: 'Recibo enviado',
 };
 
 const PRIORITY_TO_DB: Record<OrderPriority, DbPriority> = {

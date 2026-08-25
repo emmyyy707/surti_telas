@@ -7,56 +7,147 @@ export const adminContent = {
       default: import.meta.env.VITE_ADMIN_ROLE_DEFAULT?.trim() || 'Usuario',
     },
     menu: {
-      dashboard: { label: import.meta.env.VITE_ADMIN_MENU_DASHBOARD?.trim() || 'Dashboard General' },
+      dashboard: {
+        label: import.meta.env.VITE_ADMIN_MENU_DASHBOARD?.trim() || 'Dashboard General',
+      },
       configuracion: {
         label: import.meta.env.VITE_ADMIN_MENU_CONFIGURACION?.trim() || 'Configuración',
-        roles: { label: import.meta.env.VITE_ADMIN_MENU_ROLES?.trim() || 'Roles' },
-        permisos: { label: import.meta.env.VITE_ADMIN_MENU_PERMISOS?.trim() || 'Permisos' },
+        rolesPermisos: {
+          label: import.meta.env.VITE_ADMIN_MENU_ROLES_PERMISOS?.trim() || 'Gestión de Roles y Permisos',
+        },
+        roles: {
+          label: import.meta.env.VITE_ADMIN_MENU_ROLES?.trim() || 'Roles',
+        },
+        permisos: {
+          label: import.meta.env.VITE_ADMIN_MENU_PERMISOS?.trim() || 'Permisos',
+        },
       },
       usuarios: {
         label: import.meta.env.VITE_ADMIN_MENU_USUARIOS?.trim() || 'Usuarios',
-        gestionUsuarios: { label: import.meta.env.VITE_ADMIN_MENU_GESTION_USUARIOS?.trim() || 'Gestión de Usuarios' },
-        seguridad: { label: import.meta.env.VITE_ADMIN_MENU_SEGURIDAD?.trim() || 'Seguridad' },
-        asesores: { label: import.meta.env.VITE_ADMIN_MENU_ASESORES?.trim() || 'Asesores' },
-        gestionAcceso: { label: import.meta.env.VITE_ADMIN_MENU_GESTION_ACCESO?.trim() || 'Gestión de Acceso' },
+        gestionUsuarios: {
+          label: import.meta.env.VITE_ADMIN_MENU_GESTION_USUARIOS?.trim() || 'Gestión de Usuarios',
+        },
+        gestionAcceso: {
+          label: import.meta.env.VITE_ADMIN_MENU_GESTION_ACCESO?.trim() || 'Gestión de Acceso',
+        },
+        empleados: {
+          label: 'Gestión de Empleados',
+        },
       },
       inventario: {
         label: import.meta.env.VITE_ADMIN_MENU_INVENTARIO?.trim() || 'Existencias',
-        productos: { label: import.meta.env.VITE_ADMIN_MENU_PRODUCTOS?.trim() || 'Productos Terminados' },
-        categorias: { label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS?.trim() || 'Categorías' },
-        categoriasInsumos: { label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS_INSUMOS?.trim() || 'Categorías de Insumos' },
-        insumos: { label: import.meta.env.VITE_ADMIN_MENU_INSUMOS?.trim() || 'Insumos' },
-        proveedores: { label: import.meta.env.VITE_ADMIN_MENU_PROVEEDORES?.trim() || 'Proveedores' },
-        alertasStock: { label: import.meta.env.VITE_ADMIN_MENU_ALERTAS_STOCK?.trim() || 'Alertas de Stock' },
-        stockDevuelto: { label: import.meta.env.VITE_ADMIN_MENU_STOCK_DEVUELTO?.trim() || 'Stock Devuelto' },
-        compras: { label: import.meta.env.VITE_ADMIN_MENU_COMPRAS?.trim() || 'Compras' },
+        productos: {
+          label: import.meta.env.VITE_ADMIN_MENU_PRODUCTOS?.trim() || 'Productos Terminados',
+        },
+        categorias: {
+          label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS?.trim() || 'Gestión de Categorías Productos ',
+        },
+        categoriasInsumos: {
+          label: import.meta.env.VITE_ADMIN_MENU_CATEGORIAS_INSUMOS?.trim() || 'Categorías de Insumos',
+        },
+        insumos: {
+          label: import.meta.env.VITE_ADMIN_MENU_INSUMOS?.trim() || 'Gestión de Insumos',
+        },
+        proveedores: {
+          label: import.meta.env.VITE_ADMIN_MENU_PROVEEDORES?.trim() || 'Gestión de Proveedores',
+        },
+        alertasStock: {
+          label: import.meta.env.VITE_ADMIN_MENU_ALERTAS_STOCK?.trim() || 'Alertas de Stock',
+        },
+        stockDevuelto: {
+          label: import.meta.env.VITE_ADMIN_MENU_STOCK_DEVUELTO?.trim() || 'Gestión de Stock Devuelto',
+        },
+        compras: {
+          label: 'Gestión de Compras',
+        },
+      },
+      compras: {
+        label: 'Gestión de Compras',
+        compras: {
+          label: 'Gestión de Compras',
+        },
+        insumos: {
+          label: 'Gestión de Insumos',
+        },
+        categoriasInsumos: {
+          label: 'Gestión de Categorías Insumos',
+        },
+        categorias: {
+          label: 'Categorías',
+        },
+        proveedores: {
+          label: 'Gestión de Proveedores',
+        },
+      },
+      ventas: {
+        label: import.meta.env.VITE_ADMIN_MENU_VENTAS?.trim() || 'Ventas',
+        pedidos: {
+          label: import.meta.env.VITE_ADMIN_MENU_PEDIDOS?.trim() || 'Gestión de Pedidos',
+        },
+        facturacion: {
+          label: import.meta.env.VITE_ADMIN_MENU_FACTURACION?.trim() || 'Gestión de Recibos',
+        },
+        pagos: {
+          label: import.meta.env.VITE_ADMIN_MENU_PAGOS?.trim() || 'Gestión de Pagos',
+        },
+        clientes: {
+          label: import.meta.env.VITE_ADMIN_MENU_CLIENTES?.trim() || 'Gestión de Clientes',
+        },
+        cotizaciones: {
+          label: 'Gestión de Cotizaciones',
+        },
+        domiciliarios: {
+          label: 'Gestión de Domicilios',
+        },
+        rutaDelDia: {
+          label: 'Gestión de Ruta del Día',
+        },
       },
       produccion: {
-        label: import.meta.env.VITE_ADMIN_MENU_PRODUCCION?.trim() || 'Producción en Talleres Externos',
-        talleres: { label: import.meta.env.VITE_ADMIN_MENU_TALLERES?.trim() || 'Registro de Talleres' },
-        prendas: { label: import.meta.env.VITE_ADMIN_MENU_PRENDAS?.trim() || 'Control de Prendas' },
-        asignacion: { label: import.meta.env.VITE_ADMIN_MENU_ASIGNACION?.trim() || 'Asignación de Producción' },
-        seguimiento: { label: import.meta.env.VITE_ADMIN_MENU_SEGUIMIENTO?.trim() || 'Seguimiento' },
+        label: import.meta.env.VITE_ADMIN_MENU_PRODUCCION?.trim() || 'Producción',
+        talleres: {
+          label: import.meta.env.VITE_ADMIN_MENU_TALLERES?.trim() || 'Gestión de Talleres',
+        },
+        prendas: {
+          label: import.meta.env.VITE_ADMIN_MENU_PRENDAS?.trim() || 'Gestión de Control de Prendas',
+        },
+        asignacion: {
+          label: import.meta.env.VITE_ADMIN_MENU_ASIGNACION?.trim() || 'Gestión de Producción',
+        },
+        seguimiento: {
+          label: import.meta.env.VITE_ADMIN_MENU_SEGUIMIENTO?.trim() || 'Gestión de Seguimiento de Producción',
+        },
       },
-      domicilios: { label: import.meta.env.VITE_ADMIN_MENU_DOMICILIOS?.trim() || 'Logística y Domicilios' },
-      ventas: {
-        label: import.meta.env.VITE_ADMIN_MENU_VENTAS?.trim() || 'Ventas y Pedidos',
-        pedidos: { label: import.meta.env.VITE_ADMIN_MENU_PEDIDOS?.trim() || 'Pedidos' },
-        facturacion: { label: import.meta.env.VITE_ADMIN_MENU_FACTURACION?.trim() || 'Recibos' },
-        pagos: { label: import.meta.env.VITE_ADMIN_MENU_PAGOS?.trim() || 'Pagos' },
-        clientes: { label: import.meta.env.VITE_ADMIN_MENU_CLIENTES?.trim() || 'Clientes' },
+      domicilios: {
+        label: import.meta.env.VITE_ADMIN_MENU_DOMICILIOS?.trim() || 'Gestión de Domicilios',
       },
       reportes: {
         label: import.meta.env.VITE_ADMIN_MENU_REPORTES?.trim() || 'Dashboard de Reportes (Analítica)',
-        ventas: { label: import.meta.env.VITE_ADMIN_MENU_REPORTES_VENTAS?.trim() || 'Reportes de Ventas' },
-        usuarios: { label: import.meta.env.VITE_ADMIN_MENU_REPORTES_USUARIOS?.trim() || 'Reportes de Usuarios' },
-        produccion: { label: import.meta.env.VITE_ADMIN_MENU_REPORTES_PRODUCCION?.trim() || 'Reportes de Producción' },
-        inventario: { label: import.meta.env.VITE_ADMIN_MENU_REPORTES_INVENTARIO?.trim() || 'Reportes de Inventario' },
+        ventas: {
+          label: import.meta.env.VITE_ADMIN_MENU_REPORTES_VENTAS?.trim() || 'Reportes de Ventas',
+        },
+        usuarios: {
+          label: import.meta.env.VITE_ADMIN_MENU_REPORTES_USUARIOS?.trim() || 'Reportes de Usuarios',
+        },
+        produccion: {
+          label: import.meta.env.VITE_ADMIN_MENU_REPORTES_PRODUCCION?.trim() || 'Reportes de Producción',
+        },
+        inventario: {
+          label: import.meta.env.VITE_ADMIN_MENU_REPORTES_INVENTARIO?.trim() || 'Reportes de Inventario',
+        },
       },
-      catalogo: { label: import.meta.env.VITE_ADMIN_MENU_CATALOGO?.trim() || 'Catálogo Digital' },
-      webhooks: { label: import.meta.env.VITE_ADMIN_MENU_WEBHOOKS?.trim() || 'Webhooks' },
-      rutaDelDia: { label: import.meta.env.VITE_ADMIN_MENU_RUTA_DEL_DIA?.trim() || 'Ruta del Día' },
-      finanzas: { label: import.meta.env.VITE_ADMIN_MENU_FINANZAS?.trim() || 'Finanzas' },
+      catalogo: {
+        label: import.meta.env.VITE_ADMIN_MENU_CATALOGO?.trim() || 'Gestión de Productos ',
+      },
+      finanzas: {
+        label: import.meta.env.VITE_ADMIN_MENU_FINANZAS?.trim() || 'Finanzas',
+      },
+      webhooks: {
+        label: import.meta.env.VITE_ADMIN_MENU_WEBHOOKS?.trim() || 'Webhooks',
+      },
+      rutaDelDia: {
+        label: import.meta.env.VITE_ADMIN_MENU_RUTA_DEL_DIA?.trim() || 'Gestión de Ruta del Día',
+      },
     },
   },
   dashboard: {

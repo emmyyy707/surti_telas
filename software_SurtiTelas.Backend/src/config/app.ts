@@ -33,6 +33,7 @@ import { favoriteRouter } from '../modules/favorites/presentation/routes/favorit
 import { healthRouter } from '../modules/health/presentation/routes/health.routes';
 import { orderApprovalRouter } from '../modules/sales-orders/presentation/routes/orderApproval.routes';
 import { salesReportRouter } from '../modules/sales-orders/presentation/routes/salesReport.routes';
+import { saleRouter } from '../modules/sales-orders/presentation/routes/sale.routes';
 import { userRateLimiter } from '../modules/shared/presentation/middlewares/userRateLimiter';
 import { redisUserRateLimiter } from '../modules/shared/presentation/middlewares/redisUserRateLimiter';
 import { metricsMiddleware, metricsEndpoint } from '../modules/shared/presentation/middlewares/metrics';
@@ -49,6 +50,7 @@ import { commissionRouter } from '../modules/commission/presentation/routes/comm
 import { alertInventoryRouter } from '../modules/alert/presentation/routes/alert-inventory.routes';
 import { financialRouter } from '../modules/financial/presentation/routes/financial.routes';
 import { domiciliarioRouter } from '../modules/domiciliarios/presentation/routes/domiciliario.routes';
+import { employeeRouter } from '../modules/employees/presentation/routes/employee.routes';
 import { customOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/custom-order.routes';
 import { adminCustomOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/admin-custom-order.routes';
 import { purchasesRouter } from '../modules/purchases/presentation/routes/purchases.routes';
@@ -230,8 +232,9 @@ app.use('/api/v1/reports', reportRouter);
 app.use('/api/v1/returns', returnRouter);
 app.use('/api/v1/client/returns', clientReturnRouter);
 app.use('/api/v1/favorites', favoriteRouter);
-app.use('/api/v1/sales-orders', orderApprovalRouter);
+  app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/sales-orders', salesReportRouter);
+  app.use('/api/v1/sales', saleRouter);
 
 
 
@@ -247,6 +250,7 @@ app.use('/api/v1/sales-orders', orderApprovalRouter);
   app.use('/api/v1/purchases', purchasesRouter);
   app.use('/api/v1/raw-material-categories', rawMaterialCategoriesRouter);
   app.use('/api/v1/domiciliarios', domiciliarioRouter);
+  app.use('/api/v1/employees', employeeRouter);
   app.use('/api/v1/catalog', catalogRouter);
   app.use('/api/v1/customers', customerRouter);
   app.use('/api/v1/orders', orderRouter);

@@ -6,10 +6,12 @@ export const PERMISSIONS = {
   delivery: ['delivery:read', 'delivery:update', 'delivery:track'],
   customers: ['customers:read', 'customers:create', 'customers:update', 'customers:delete'],
   users: ['users:read', 'users:create', 'users:update', 'users:delete'],
+  employees: ['employees:read', 'employees:create', 'employees:update', 'employees:delete'],
   audit: ['audit:read'],
   financial: ['financial:read', 'financial:export'],
   config: ['config:read', 'config:update'],
   alerts: ['alerts:read', 'alerts:manage'],
+  sales: ['sales:read', 'sales:create', 'sales:update', 'sales:delete'],
   customOrders: [
     'customOrders:read',
     'customOrders:create',

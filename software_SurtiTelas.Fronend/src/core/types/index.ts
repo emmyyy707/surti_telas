@@ -141,6 +141,40 @@ export interface Notificacion {
   createdAt: number;
 }
 
+export interface VentaItem {
+  id: string;
+  nombre: string;
+  precio: number;
+  cantidad: number;
+  productId?: string | null;
+}
+
+export interface Venta {
+  id: string;
+  orderId: string;
+  numero: string;
+  clienteId: string;
+  cliente: string;
+  asesorId: string;
+  asesor: string;
+  fechaVenta: string;
+  subtotal: number;
+  impuestos: number;
+  descuentos: number;
+  total: number;
+  estado: 'COMPLETADA' | 'ANULADA';
+  motivoAnulacion?: string;
+  medioPago?: string;
+  itemsCount: number;
+  items: VentaItem[];
+  orderEstado?: string;
+  payment?: { id: string; amount: number; status: string; method: string; paidAt?: string | null } | null;
+  receipt?: { id: string; numero: string; estado: string; estadoEnvio?: string | null } | null;
+  customOrder?: { id: string; numero: string; estado: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Proveedor {
   id: string;
   nombre: string;

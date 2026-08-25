@@ -32,6 +32,9 @@ const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/Ruta
 const AdminRoles = React.lazy(() => import('@/presentation/pages/admin/Roles').then(m => ({ default: m.AdminRoles })));
 const AdminPermisos = React.lazy(() => import('@/presentation/pages/admin/Permisos').then(m => ({ default: m.AdminPermisos })));
 const AdminGestionUsuarios = React.lazy(() => import('@/presentation/pages/admin/GestionUsuarios').then(m => ({ default: m.AdminGestionUsuarios })));
+const AdminGestionEmpleados = React.lazy(() => import('@/presentation/pages/admin/GestionEmpleados').then(m => ({ default: m.GestionEmpleados })));
+const AdminGestionVentas = React.lazy(() => import('@/presentation/pages/admin/GestionVentas').then(m => ({ default: m.AdminGestionVentas })));
+const AdminGestionRolesPermisos = React.lazy(() => import('@/presentation/pages/admin/GestionRolesPermisos').then(m => ({ default: m.AdminGestionRolesPermisos })));
 const AdminSeguridadUsuarios = React.lazy(() => import('@/presentation/pages/admin/SeguridadUsuarios').then(m => ({ default: m.AdminSeguridadUsuarios })));
 const AdminProductosTerminados = React.lazy(() => import('@/presentation/pages/admin/ProductosTerminados').then(m => ({ default: m.AdminProductosTerminados })));
 const AdminInsumos = React.lazy(() => import('@/presentation/pages/admin/Insumos').then(m => ({ default: m.AdminInsumos })));
@@ -148,9 +151,12 @@ const App: React.FC = () => {
               <Route path="inventario" element={<AdminReportesInventario />} />
             </Route>
             <Route path="configuracion" element={<AdminConfiguracion />} />
-            <Route path="roles" element={<AdminRoles />} />
-            <Route path="permisos" element={<AdminPermisos />} />
+            <Route path="roles" element={<Navigate to="gestion-roles-permisos" replace />} />
+            <Route path="permisos" element={<Navigate to="gestion-roles-permisos" replace />} />
             <Route path="gestion-usuarios" element={<AdminGestionUsuarios />} />
+            <Route path="empleados" element={<AdminGestionEmpleados />} />
+            <Route path="gestion-ventas" element={<AdminGestionVentas />} />
+            <Route path="gestion-roles-permisos" element={<AdminGestionRolesPermisos />} />
             <Route path="seguridad" element={<AdminSeguridadUsuarios />} />
             <Route path="productos" element={<AdminProductosTerminados />} />
             <Route path="insumos" element={<AdminInsumos />} />

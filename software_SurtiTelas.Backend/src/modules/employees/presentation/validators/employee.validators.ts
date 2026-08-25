@@ -1,0 +1,59 @@
+import { z } from 'zod';
+import { OptionalPhoneSchema, PaginationSchema } from '../../../../shared/presentation/validators';
+
+export const EmployeeRoleSchema = z.enum(['ASESOR', 'DOMICILIARIO']);
+export const EmployeeEstadoSchema = z.enum(['ACTIVO', 'INACTIVO']);
+
+export const EmployeeFiltersSchema = z.object({
+  search: z.string().optional(),
+  role: EmployeeRoleSchema.optional(),
+  estado: EmployeeEstadoSchema.optional(),
+  ...PaginationSchema.shape,
+  sort: z.enum(['nombre', 'email', 'createdAt']).optional(),
+  order: z.enum(['asc', 'desc']).optional(),
+});
+
+export const EmployeeProfileSchema = z.object({
+  cargo: z.string().max(100, 'Máximo 100 caracteres').optional(),
+  fechaContratacion: z.coerce.date().optional(),
+  salario: z.coerce.number().nonnegative('El salario no puede ser negativo').optional(),
+  tipoEmpleado: EmployeeRoleSchema.optional(),
+});
+
+export const CreateEmployeeSchema = z.object({
+  email: z.string().email('Correo inválido'),
+  nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
+  apellidos: z.string().min(3, 'Los apellidos deben tener al menos 3 caracteres').optional(),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  role: EmployeeRoleSchema,
+  telefono: OptionalPhoneSchema,
+  direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
+  tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
+  numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
+  profile: EmployeeProfileSchema.optional(),
+});
+
+export const UpdateEmployeeSchema = z.object({
+  nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres').optional(),
+  apellidos: z.string().min(3, 'Los apellidos deben tener al menos 3 caracteres').optional(),
+  email: z.string().email('Correo inválido').optional(),
+  telefono: OptionalPhoneSchema,
+  direccion: z.string().max(150, 'Máximo 150 caracteres').optional().nullable(),
+  tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional().nullable(),
+  numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional().nullable(),
+  avatar: z.string().min(1, 'Avatar inválido').max(500000, 'Avatar demasiado grande').optional().or(z.literal('')),
+  profile: z.object({
+    cargo: z.string().max(100, 'Máximo 100 caracteres').optional(),
+    fechaContratacion: z.coerce.date().optional().nullable(),
+    salario: z.coerce.number().nonnegative('El salario no puede ser negativo').optional().nullable(),
+    tipoEmpleado: EmployeeRoleSchema.optional().nullable(),
+  }).optional(),
+});
+
+export const ChangeEmployeeStatusSchema = z.object({
+  estado: EmployeeEstadoSchema,
+});
+
+export const EmployeeSearchSchema = z.object({
+  q: z.string().min(2, 'Mínimo 2 caracteres'),
+});

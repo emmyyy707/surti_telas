@@ -12,6 +12,7 @@ export interface SaleData {
   descuentos: number;
   total: number;
   estado: string;
+  motivoAnulacion?: string;
   medioPago?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -30,6 +31,7 @@ export class Sale {
   readonly descuentos: number;
   readonly total: number;
   readonly estado: string;
+  readonly motivoAnulacion?: string;
   readonly medioPago?: string;
   readonly createdAt?: string;
   readonly updatedAt?: string;
@@ -49,6 +51,7 @@ export class Sale {
     this.descuentos = data.descuentos;
     this.total = data.total;
     this.estado = data.estado;
+    this.motivoAnulacion = data.motivoAnulacion;
     this.medioPago = data.medioPago;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;

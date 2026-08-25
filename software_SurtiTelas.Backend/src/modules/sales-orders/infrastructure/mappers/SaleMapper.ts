@@ -14,6 +14,7 @@ type SaleRow = {
   descuentos: { toNumber(): number };
   total: { toNumber(): number };
   estado: string;
+  motivoAnulacion: string | null;
   medioPago: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +34,7 @@ export function toSaleData(row: SaleRow): SaleData {
     descuentos: Number(row.descuentos.toNumber()),
     total: Number(row.total.toNumber()),
     estado: row.estado,
+    motivoAnulacion: row.motivoAnulacion ?? undefined,
     medioPago: row.medioPago ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

@@ -18,15 +18,16 @@ import { adminContent } from '@/shared/config/adminContent';
 
 const adminMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: adminContent.layout.menu.dashboard.label, key: 'dashboard' },
+
   {
     icon: Settings2,
     label: adminContent.layout.menu.configuracion.label,
     key: 'configuracion',
     subItems: [
-      { icon: Shield, label: adminContent.layout.menu.configuracion.roles.label, key: 'roles' },
-      { icon: UserCog, label: adminContent.layout.menu.configuracion.permisos.label, key: 'permisos' },
+      { icon: Shield, label: adminContent.layout.menu.configuracion.rolesPermisos.label, key: 'gestion-roles-permisos' },
     ],
   },
+  
   {
     icon: Users,
     label: adminContent.layout.menu.usuarios.label,
@@ -34,22 +35,10 @@ const adminMenu: SidebarItem[] = [
     subItems: [
       { icon: UserSearch, label: adminContent.layout.menu.usuarios.gestionUsuarios.label, key: 'gestion-usuarios' },
       { icon: KeyRound, label: adminContent.layout.menu.usuarios.gestionAcceso.label, key: 'gestion-acceso' },
-      { icon: UserCheck, label: adminContent.layout.menu.usuarios.asesores.label, key: 'asesores' },
-      { icon: Users2, label: 'Domiciliarios', key: 'domicilios' },
+      { icon: UserCog, label: ' Gestión de Empleados', key: 'empleados' },
     ],
   },
-  {
-    icon: Package,
-    label: adminContent.layout.menu.inventario.label,
-    key: 'inventario',
-    subItems: [
-      { icon: PackageOpen, label: adminContent.layout.menu.inventario.productos.label, key: 'productos' },
-      { icon: FolderTree, label: adminContent.layout.menu.inventario.categorias.label, key: 'categorias' },
-      { icon: AlertTriangle, label: adminContent.layout.menu.inventario.alertasStock.label, key: 'alertas-stock' },
-      { icon: Archive, label: adminContent.layout.menu.inventario.stockDevuelto.label, key: 'stock-devuelto' },
-      { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
-    ],
-  },
+
   {
     icon: ShoppingBag,
     label: adminContent.layout.menu.inventario.compras.label,
@@ -61,39 +50,38 @@ const adminMenu: SidebarItem[] = [
       { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
     ],
   },
-  {
-    icon: Factory,
-    label: adminContent.layout.menu.produccion.label,
-    key: 'produccion',
-    subItems: [
-      { icon: ClipboardList, label: adminContent.layout.menu.produccion.talleres.label, key: 'talleres' },
-      { icon: Workflow, label: adminContent.layout.menu.produccion.prendas.label, key: 'prendas' },
-      { icon: ClipboardList, label: adminContent.layout.menu.produccion.asignacion.label, key: 'asignacion' },
-      { icon: LineChart, label: adminContent.layout.menu.produccion.seguimiento.label, key: 'seguimiento' },
-    ],
-  },
-  
-  {
-    icon: Truck,
-    label: adminContent.layout.menu.domicilios.label,
-    key: 'domicilios',
-    subItems: [
-      { icon: Users2, label: 'Domiciliarios', key: 'domicilios' },
-      { icon: MapPin, label: 'Ruta del Día', key: 'ruta-del-dia' },
-    ],
-  },
+
+    
   {
     icon: ShoppingCart,
     label: adminContent.layout.menu.ventas.label,
     key: 'ventas-pedidos',
     subItems: [
       { icon: ShoppingCart, label: adminContent.layout.menu.ventas.pedidos.label, key: 'pedidos' },
-      { icon: FileText, label: 'Cotizaciones', key: 'pedidos-personalizados' },
+      { icon: FileText, label: 'Gestión de Cotizaciones', key: 'pedidos-personalizados' },
+      { icon: Receipt, label: 'Gestión de Ventas', key: 'gestion-ventas' },
       { icon: Receipt, label: adminContent.layout.menu.ventas.facturacion.label, key: 'facturacion' },
       { icon: DollarSign, label: adminContent.layout.menu.ventas.pagos.label, key: 'pagos' },
       { icon: Users2, label: adminContent.layout.menu.ventas.clientes.label, key: 'clientes' },
+      { icon: Users2, label: adminContent.layout.menu.ventas.domiciliarios.label, key: 'domicilios' },
+      { icon: MapPin, label: adminContent.layout.menu.rutaDelDia.label, key: 'ruta-del-dia' },
     ],
   },
+  
+  {
+    icon: Factory,
+    label: adminContent.layout.menu.produccion.label,
+    key: 'produccion',
+    subItems: [
+      { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
+      { icon: ClipboardList, label: adminContent.layout.menu.produccion.talleres.label, key: 'talleres' },
+      { icon: Workflow, label: adminContent.layout.menu.produccion.prendas.label, key: 'prendas' },
+      { icon: ClipboardList, label: adminContent.layout.menu.produccion.asignacion.label, key: 'asignacion' },
+      { icon: LineChart, label: adminContent.layout.menu.produccion.seguimiento.label, key: 'seguimiento' },
+      { icon: FolderTree, label: adminContent.layout.menu.inventario.categorias.label, key: 'categorias' },
+    ],
+  },
+
   {
     icon: TrendingUp,
     label: adminContent.layout.menu.reportes.label,
@@ -103,7 +91,8 @@ const adminMenu: SidebarItem[] = [
       { icon: DollarSign, label: adminContent.layout.menu.finanzas.label, key: 'reportes/finanzas' },
       { icon: Users2, label: adminContent.layout.menu.reportes.usuarios.label, key: 'reportes/usuarios' },
       { icon: Factory, label: adminContent.layout.menu.reportes.produccion.label, key: 'reportes/produccion' },
-      { icon: Package, label: adminContent.layout.menu.reportes.inventario.label, key: 'reportes/inventario' },
+      { icon: Package, label: adminContent.layout.menu.reportes.inventario.label, key: 'reportes/inventario' }, 
+      { icon: AlertTriangle, label: adminContent.layout.menu.inventario.alertasStock.label, key: 'alertas-stock' }
     ],
   },
 ];

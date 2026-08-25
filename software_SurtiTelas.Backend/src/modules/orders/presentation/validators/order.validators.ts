@@ -37,6 +37,10 @@ export const UpdateOrderStatusSchema = z.object({
     'Enviado',
     'Entregado',
     'Rechazado',
+    'En validación',
+    'Recibo generado',
+    'Recibo enviado',
+    'Cancelado',
   ]),
 });
 

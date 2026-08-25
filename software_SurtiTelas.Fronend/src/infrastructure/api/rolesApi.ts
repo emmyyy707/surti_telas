@@ -65,8 +65,26 @@ export const rolesApi = {
     return toRole(dto, 0);
   },
 
-  async delete(id: string): Promise<void> {
+   async delete(id: string): Promise<void> {
     await api.delete<void>(`/auth/roles/${encodeURIComponent(id)}`);
+  },
+
+  async listRolePermissions(role: string): Promise<string[]> {
+    const response = await api.get<{ items: { permission: { code: string } }[] }>(
+      `/auth/roles/${encodeURIComponent(role)}/permissions`
+    );
+    return (response?.items ?? []).map((rp) => rp.permission.code);
+  },
+
+  async assignPermission(role: string, permissionId: string): Promise<void> {
+    await api.post<void>(`/auth/roles/${encodeURIComponent(role)}/permissions`, { permissionId });
+  },
+
+  async removePermission(role: string, permissionId: string): Promise<void> {
+    await api.delete<void>(
+      `/auth/roles/${encodeURIComponent(role)}/permissions`,
+      { permissionId }
+    );
   },
 };
 
