@@ -10,7 +10,7 @@ export const RegisterSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
   email: z.string().email('Correo inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
-  role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),
+   role: z.string().min(1, 'El rol es obligatorio'),
   telefono: OptionalPhoneSchema,
   direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
   tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
@@ -54,7 +54,7 @@ export const CreateUserSchema = z.object({
   apellidos: z.string().optional(),
   email: z.string().email('Correo inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
-  role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']),
+   role: z.string().min(1, 'El rol es obligatorio'),
   telefono: OptionalPhoneSchema,
   direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
   tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
@@ -71,7 +71,7 @@ export const UpdateRoleStatusSchema = z.object({
 
 export const UserFiltersSchema = z.object({
   search: z.string().optional(),
-  role: z.enum(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE', 'ALMACEN', 'PRODUCCION', 'REPORTES']).optional(),
+   role: z.string().min(1, 'El rol es obligatorio').optional(),
   estado: z.enum(['ACTIVO', 'INACTIVO', 'Activo', 'Inactivo']).transform((val) => val.toUpperCase()).optional(),
   ...PaginationSchema.shape,
   sort: z.enum(['nombre', 'email', 'createdAt']).optional(),

@@ -45,7 +45,7 @@ export const TEST_ACCOUNTS: { label: string; email: string; password: string }[]
 
 const AUTH_STORAGE_KEY = 'surtitelas.auth';
 
-const ROLE_MAP: Record<BackendRole, UserRole> = {
+const ROLE_MAP: Record<string, UserRole> = {
   ADMIN: 'admin',
   ALMACEN: 'almacen',
   ASESOR: 'asesor',
@@ -55,7 +55,14 @@ const ROLE_MAP: Record<BackendRole, UserRole> = {
   REPORTES: 'reportes',
 };
 
-export const mapRole = (role: BackendRole): UserRole => ROLE_MAP[role] ?? 'cliente';
+export const mapRole = (role: string): UserRole => {
+  const exact = ROLE_MAP[role];
+  if (exact) return exact;
+  for (const [backendRole, frontendRole] of Object.entries(ROLE_MAP)) {
+    if (role.startsWith(backendRole)) return frontendRole;
+  }
+  return 'cliente';
+};
 
 function isTokenExpired(token: string): boolean {
   try {

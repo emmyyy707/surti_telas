@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+﻿import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ProtectedRoute from '@/presentation/routes/ProtectedRoute';
@@ -29,8 +29,6 @@ const AdminConfiguracion = React.lazy(() => import('@/presentation/pages/admin/A
 const AdminDomicilios = React.lazy(() => import('@/presentation/pages/admin/AdminDomicilios').then(m => ({ default: m.AdminDomicilios })));
 const AdminDomiciliosLayout = React.lazy(() => import('@/presentation/pages/admin/AdminDomiciliosLayout').then(m => ({ default: m.AdminDomiciliosLayout })));
 const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/RutaDelDiaAdmin').then(m => ({ default: m.RutaDelDiaAdmin })));
-const AdminRoles = React.lazy(() => import('@/presentation/pages/admin/Roles').then(m => ({ default: m.AdminRoles })));
-const AdminPermisos = React.lazy(() => import('@/presentation/pages/admin/Permisos').then(m => ({ default: m.AdminPermisos })));
 const AdminGestionUsuarios = React.lazy(() => import('@/presentation/pages/admin/GestionUsuarios').then(m => ({ default: m.AdminGestionUsuarios })));
 const AdminGestionEmpleados = React.lazy(() => import('@/presentation/pages/admin/GestionEmpleados').then(m => ({ default: m.GestionEmpleados })));
 const AdminGestionVentas = React.lazy(() => import('@/presentation/pages/admin/GestionVentas').then(m => ({ default: m.AdminGestionVentas })));
@@ -58,7 +56,6 @@ const AdminReportesProduccion = React.lazy(() => import('@/presentation/pages/ad
 const AdminReportesInventario = React.lazy(() => import('@/presentation/pages/admin/ReportesInventario').then(m => ({ default: m.AdminReportesInventario })));
 
 const AdminNotificaciones = React.lazy(() => import('@/presentation/pages/admin/AdminNotificaciones').then(m => ({ default: m.AdminNotificaciones })));
-const AdminComisiones = React.lazy(() => import('@/presentation/pages/admin/AdminComisiones').then(m => ({ default: m.AdminComisiones })));
 const AdminFinanzas = React.lazy(() => import('@/presentation/pages/admin/AdminFinanzas').then(m => ({ default: m.AdminFinanzas })));
 const AdminPedidosPersonalizados = React.lazy(() => import('@/presentation/pages/admin/PedidosPersonalizados').then(m => ({ default: m.AdminPedidosPersonalizados })));
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
@@ -88,7 +85,7 @@ const MisPedidosPersonalizados = React.lazy(() => import('@/presentation/pages/c
 const HomePage = React.lazy(() => import('@/presentation/pages/public/HomePage'));
 const CatalogPage = React.lazy(() => import('@/presentation/pages/features/CatalogPage'));
 const CartPage = React.lazy(() => import('@/presentation/pages/features/CartPage'));
-const ContactPage = React.lazy(() => import('@/presentation/pages/features/ContactPage').then(m => ({ default: m.SurtitelaLayout })));
+const ContactPage = React.lazy(() => import('@/presentation/pages/features/ContactPage'));
 const AboutPage = React.lazy(() => import('@/presentation/pages/public/AboutPage'));
 const TooltipsDemo = React.lazy(() => import('@/presentation/pages/public/TooltipsDemo'));
 const LoginPage = React.lazy(() => import('@/presentation/pages/auth/LoginPage'));
@@ -116,11 +113,11 @@ const App: React.FC = () => {
           <Route path="/registro" element={<RegisterPage />} />
           <Route path="/olvide-contrasena" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/unauthorized" element={<Layout><div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">No autorizado</h1><p className="text-[var(--color-text-secondary)]">No tienes permisos para acceder a esta página.</p></div></div></Layout>} />
+          <Route path="/unauthorized" element={<Layout><div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">No autorizado</h1><p className="text-[var(--color-text-secondary)]">No tienes permisos para acceder a esta pÃ¡gina.</p></div></div></Layout>} />
 
           {/* ADMIN - Protected routes for admin role */}
           <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin', 'almacen', 'produccion', 'reportes']}>
               <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner size="lg" /></div>}>
                 <AdminLayout />
               </React.Suspense>
@@ -183,7 +180,7 @@ const App: React.FC = () => {
             <Route path="finanzas" element={<Navigate to="/admin/reportes/finanzas" replace />} />
             <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
             <Route path="notificaciones" element={<AdminNotificaciones />} />
-          </Route>x
+          </Route>
 
           {/* ASESOR - Protected routes for asesor role */}
           <Route path="/asesor" element={
@@ -245,3 +242,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

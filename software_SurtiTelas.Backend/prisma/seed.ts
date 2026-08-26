@@ -12,21 +12,30 @@ const PERMISSIONS: { code: string; description: string; module: string }[] = [
   { code: 'customers:read', description: 'Ver clientes', module: 'customers' },
   { code: 'customers:create', description: 'Crear clientes', module: 'customers' },
   { code: 'customers:update', description: 'Editar clientes', module: 'customers' },
+  { code: 'customers:delete', description: 'Eliminar clientes', module: 'customers' },
   { code: 'orders:read', description: 'Ver pedidos', module: 'orders' },
   { code: 'orders:create', description: 'Crear pedidos', module: 'orders' },
   { code: 'orders:update', description: 'Cambiar estado de pedidos', module: 'orders' },
+  { code: 'orders:delete', description: 'Eliminar pedidos', module: 'orders' },
   { code: 'stock:read', description: 'Ver inventario', module: 'stock' },
-  { code: 'stock:create', description: 'Gestionar insumos/proveedores', module: 'stock' },
+  { code: 'stock:create', description: 'Crear insumos/proveedores', module: 'stock' },
+  { code: 'stock:update', description: 'Editar insumos/proveedores', module: 'stock' },
+  { code: 'stock:delete', description: 'Eliminar insumos/proveedores', module: 'stock' },
   { code: 'stock:move', description: 'Registrar movimientos', module: 'stock' },
+  { code: 'stock:manage', description: 'Gestionar alertas de stock', module: 'stock' },
   { code: 'production:read', description: 'Ver producción', module: 'production' },
   { code: 'production:create', description: 'Crear órdenes de producción', module: 'production' },
   { code: 'production:update', description: 'Actualizar avance', module: 'production' },
+  { code: 'production:delete', description: 'Eliminar órdenes de producción', module: 'production' },
   { code: 'auth:manage', description: 'Gestionar usuarios y roles', module: 'auth' },
   { code: 'payments:read', description: 'Ver pagos', module: 'payments' },
   { code: 'payments:create', description: 'Registrar pagos', module: 'payments' },
   { code: 'payments:update', description: 'Actualizar estado de pagos', module: 'payments' },
+  { code: 'payments:delete', description: 'Eliminar pagos', module: 'payments' },
   { code: 'receipts:read', description: 'Ver recibos', module: 'receipts' },
   { code: 'receipts:create', description: 'Emitir recibos', module: 'receipts' },
+  { code: 'receipts:update', description: 'Editar recibos', module: 'receipts' },
+  { code: 'receipts:delete', description: 'Eliminar recibos', module: 'receipts' },
   { code: 'commissions:read', description: 'Ver comisiones', module: 'commissions' },
   { code: 'commissions:create', description: 'Registrar comisiones', module: 'commissions' },
   { code: 'company:update', description: 'Editar configuración de empresa', module: 'company' },
@@ -42,10 +51,33 @@ const PERMISSIONS: { code: string; description: string; module: string }[] = [
   { code: 'deliveries:update', description: 'Gestionar entregas/domicilios', module: 'deliveries' },
   { code: 'notifications:read', description: 'Ver notificaciones', module: 'notifications' },
   { code: 'notifications:update', description: 'Gestionar notificaciones', module: 'notifications' },
+  { code: 'alerts:read', description: 'Ver alertas', module: 'alerts' },
+  { code: 'alerts:create', description: 'Crear alertas', module: 'alerts' },
+  { code: 'alerts:update', description: 'Actualizar alertas', module: 'alerts' },
+  { code: 'employees:read', description: 'Ver empleados', module: 'employees' },
+  { code: 'employees:create', description: 'Crear empleados', module: 'employees' },
+  { code: 'employees:update', description: 'Editar empleados', module: 'employees' },
+  { code: 'employees:delete', description: 'Eliminar empleados', module: 'employees' },
+  { code: 'domiciliarios:read', description: 'Ver domiciliarios', module: 'domiciliarios' },
+  { code: 'domiciliarios:create', description: 'Crear domiciliarios', module: 'domiciliarios' },
+  { code: 'domiciliarios:update', description: 'Editar domiciliarios', module: 'domiciliarios' },
+  { code: 'purchases:read', description: 'Ver compras', module: 'purchases' },
+  { code: 'purchases:create', description: 'Crear compras', module: 'purchases' },
+  { code: 'purchases:update', description: 'Editar compras', module: 'purchases' },
+  { code: 'purchases:delete', description: 'Eliminar compras', module: 'purchases' },
+  { code: 'sales:read', description: 'Ver ventas', module: 'sales' },
+  { code: 'sales:create', description: 'Crear ventas', module: 'sales' },
+  { code: 'sales:update', description: 'Editar ventas', module: 'sales' },
+  { code: 'customOrders:read', description: 'Ver pedidos personalizados', module: 'customOrders' },
+  { code: 'customOrders:update', description: 'Actualizar pedidos personalizados', module: 'customOrders' },
+  { code: 'customOrders:delete', description: 'Eliminar pedidos personalizados', module: 'customOrders' },
+  { code: 'reports:read', description: 'Ver reportes y analíticas', module: 'reports' },
 ];
 
-const ROLE_PERMISSIONS: Record<Role, string[]> = {
-  ADMIN: PERMISSIONS.map((p) => p.code),
+const ALL_PERMISSION_CODES = PERMISSIONS.map((p) => p.code);
+
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  ADMIN: ALL_PERMISSION_CODES,
   ASESOR: [
     'catalog:read', 'catalog:create', 'catalog:update', 'catalog:publish',
     'customers:read', 'customers:create', 'customers:update',
@@ -58,16 +90,47 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'returns:read', 'returns:create', 'returns:update',
     'deliveries:read', 'deliveries:create', 'deliveries:update',
     'notifications:read',
-    'users:read',
+    'customOrders:read', 'customOrders:update',
   ],
   DOMICILIARIO: [
     'orders:read', 'orders:update',
     'deliveries:read', 'deliveries:update',
     'notifications:read',
     'customers:read',
-    'users:read',
   ],
   CLIENTE: ['catalog:read', 'orders:read', 'orders:create', 'customers:read', 'notifications:read'],
+  ALMACEN: [
+    'stock:read', 'stock:create', 'stock:update', 'stock:delete', 'stock:move', 'stock:manage',
+    'purchases:read', 'purchases:create', 'purchases:update', 'purchases:delete',
+    'returns:read', 'returns:create', 'returns:update',
+    'catalog:read',
+    'customers:read',
+    'orders:read',
+    'deliveries:read', 'deliveries:create', 'deliveries:update',
+    'notifications:read',
+  ],
+  PRODUCCION: [
+    'production:read', 'production:create', 'production:update', 'production:delete',
+    'stock:read',
+    'catalog:read',
+    'orders:read', 'orders:update',
+    'customers:read',
+    'notifications:read',
+    'returns:read',
+  ],
+  REPORTES: [
+    'reports:read',
+    'orders:read',
+    'stock:read',
+    'production:read',
+    'notifications:read',
+    'commissions:read',
+    'customers:read',
+    'payments:read',
+    'receipts:read',
+    'purchases:read',
+    'sales:read',
+  ],
 };
 
 function generatePassword(): string {
@@ -97,7 +160,7 @@ async function main() {
     });
   }
 
-  for (const role of Object.keys(ROLE_PERMISSIONS) as Role[]) {
+  for (const role of Object.keys(ROLE_PERMISSIONS)) {
     const codes = ROLE_PERMISSIONS[role];
     for (const code of codes) {
       const permission = await prisma.permission.findUnique({ where: { code } });

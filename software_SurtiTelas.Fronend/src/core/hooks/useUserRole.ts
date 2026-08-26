@@ -1,6 +1,6 @@
 ﻿import { useEffect } from 'react';
 
-const _ROLES = ['admin', 'asesor', 'domiciliario', 'cliente'] as const;
+const _ROLES = ['admin', 'almacen', 'asesor', 'domiciliario', 'cliente', 'produccion', 'reportes'] as const;
 type Role = (typeof _ROLES)[number];
 
 export const useUserRole = (role: Role): void => {
@@ -18,4 +18,3 @@ export const clearUserRole = (): void => {
   if (typeof document === 'undefined') return;
   document.documentElement.removeAttribute('data-role');
 };
-

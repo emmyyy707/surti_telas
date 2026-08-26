@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, Package, PackageOpen, Boxes, FolderTree, AlertTriangle, Archive, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, Truck, UserCheck, DollarSign, KeyRound, Webhook, Bug, MapPin, FileText, ShoppingBag, Tags } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, ShoppingBag, Package, Boxes, FolderTree, AlertTriangle, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, DollarSign, KeyRound, MapPin, FileText, Tags } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
@@ -15,6 +15,7 @@ import { useAppStore } from '@/core/stores';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
 import { reportsApi } from '@/infrastructure/api/reportsApi';
 import { adminContent } from '@/shared/config/adminContent';
+import { filterMenuByPermissions } from '@/shared/config/menuPermissions';
 
 const adminMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: adminContent.layout.menu.dashboard.label, key: 'dashboard' },
@@ -98,16 +99,16 @@ const adminMenu: SidebarItem[] = [
 ];
 
 export const AdminLayout: React.FC = () => {
-  useUserRole('admin');
+  const authUser = useAuthStore(state => state.user);
+  useUserRole(authUser?.role ?? 'admin');
   const [darkMode, toggleTheme] = useDashboardTheme();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem('surtitelas.sidebarCollapsed') === 'true';
   });
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  const authUser = useAuthStore(state => state.user);
-  const [debugOpen, setDebugOpen] = useState(false);
+   const navigate = useNavigate();
+   const { logout } = useAuth();
+   const filteredMenu = useMemo(() => filterMenuByPermissions(adminMenu, authUser), [authUser]);
 
   useEffect(() => {
     window.localStorage.setItem('surtitelas.sidebarCollapsed', String(isCollapsed));
@@ -172,10 +173,6 @@ export const AdminLayout: React.FC = () => {
     void value;
   };
 
-  const handleNotificationClick = (path: string) => {
-    navigate(path);
-  };
-
   const handleExport = async () => {
     try {
       const report = await reportsApi.getSalesReport().catch(() => null);
@@ -220,7 +217,7 @@ export const AdminLayout: React.FC = () => {
   return (
     <div data-dashboard-theme className={cn(s.appLayout, isCollapsed && s.collapsed)}>
       <Sidebar
-        menu={adminMenu}
+        menu={filteredMenu}
         basePath="/admin"
         logo={logoImg}
         brandName={adminContent.layout.brandName}
@@ -252,61 +249,6 @@ export const AdminLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
-
-      {import.meta.env.DEV && authUser && (
-        <>
-          <button
-            type="button"
-            onClick={() => setDebugOpen((prev) => !prev)}
-            style={{
-              position: 'fixed',
-              right: '16px',
-              bottom: '16px',
-              zIndex: 9999,
-              padding: '10px 12px',
-              borderRadius: '999px',
-              border: '1px solid rgba(255,255,255,0.18)',
-              background: 'rgba(0,0,0,0.55)',
-              color: '#fff',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '0.8rem',
-            }}
-          >
-            <Bug size={16} />
-            {debugOpen ? 'Ocultar debug' : 'Debug permisos'}
-          </button>
-
-          {debugOpen && (
-            <div style={{
-              position: 'fixed',
-              right: '16px',
-              bottom: '16px',
-              zIndex: 9999,
-              width: 'min(420px, calc(100vw - 32px))',
-              maxHeight: 'min(70vh, 400px)',
-              overflow: 'auto',
-              padding: '14px 16px',
-              background: 'rgba(15,15,20,0.92)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              borderRadius: '14px',
-              color: 'var(--color-text-secondary)',
-              fontSize: '0.82rem'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <strong style={{ color: 'var(--color-text-primary)' }}>Debug permisos</strong>
-                <button type="button" onClick={async () => { await useAuthStore.getState().checkSession(); window.location.reload(); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', color: 'inherit', borderRadius: '8px', padding: '4px 8px', cursor: 'pointer' }}>Refrescar</button>
-              </div>
-              <div>email: {authUser.email}</div>
-              <div>role: {authUser.role}</div>
-              <div style={{ wordBreak: 'break-all' }}>permissions: {JSON.stringify(authUser.permissions)}</div>
-              <div>menu visible: {(adminMenu as SidebarItem[]).map((item) => item.label ?? item.key ?? 'item').join(', ') || 'â€”'}</div>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 };

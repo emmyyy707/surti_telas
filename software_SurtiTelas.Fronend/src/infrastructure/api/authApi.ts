@@ -1,8 +1,8 @@
 import { api, ApiError, API_BASE_URL } from './httpClient';
 import type { PaginatedResponse } from './pagination';
 
-/** Roles tal como los devuelve el backend (enum Prisma). */
-export type BackendRole = 'ADMIN' | 'ASESOR' | 'DOMICILIARIO' | 'CLIENTE' | 'ALMACEN' | 'PRODUCCION' | 'REPORTES';
+/** Roles tal como los devuelve el backend (String, incluye roles personalizados). */
+export type BackendRole = string;
 
 export interface BackendAuthUser {
   id: string;

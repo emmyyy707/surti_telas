@@ -22,13 +22,7 @@ vi.mock('@/infrastructure/api/rolesApi', () => ({
 vi.mock('@/infrastructure/api/permissionsApi', () => ({
   permissionsApi: {
     list: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    updateStatus: vi.fn(),
     listRolePermissions: vi.fn(),
-    assignToRole: vi.fn(),
-    removeFromRole: vi.fn(),
   },
 }));
 
@@ -49,7 +43,6 @@ interface MockAction {
 
 interface MockDataTableProps {
   data: Array<Record<string, unknown>>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   columns: unknown[];
   actions: MockAction[] | ((item: Record<string, unknown>) => MockAction[]);
   emptyMessage: string;
@@ -150,7 +143,7 @@ vi.mock('@/shared/ui/ConfirmationModal', () => ({
       <div data-testid="confirmation-modal">
         <h2>{title}</h2>
         <p>{description}</p>
-        <button onClick={onConfirm} data-testid="confirm-btn">Confirmar</button>
+        <button onClick={onConfirm} data-testid="confirm-btn"> Confirmar</button>
       </div>
     ) : null,
 }));
@@ -181,8 +174,8 @@ const mockRoles: Rol[] = [
 ];
 
 const mockPermisos: Permission[] = [
-  { id: 'p1', code: 'users:read', description: 'Ver usuarios', module: 'Users', estado: 'Activo' },
-  { id: 'p2', code: 'catalog:create', description: 'Crear productos', module: 'Catalog', estado: 'Inactivo' },
+  { id: 'p1', code: 'employees:read', description: 'Ver empleados', module: 'employees', estado: 'Activo' },
+  { id: 'p2', code: 'catalog:create', description: 'Crear productos', module: 'catalog', estado: 'Inactivo' },
 ];
 
 import { AdminGestionRolesPermisos } from '@/presentation/pages/admin/GestionRolesPermisos';
@@ -203,7 +196,7 @@ describe('AdminGestionRolesPermisos', () => {
 
     expect(screen.getByText('Gestión de Roles y Permisos')).toBeInTheDocument();
     expect(screen.getByText('Roles')).toBeInTheDocument();
-    expect(screen.getByText('Permisos')).toBeInTheDocument();
+    expect(screen.getByText('Módulos del Sistema')).toBeInTheDocument();
   });
 
   it('shows loading state initially', () => {
@@ -228,7 +221,7 @@ describe('AdminGestionRolesPermisos', () => {
     });
   });
 
-  it('renders permisos table when switching tabs', async () => {
+  it('renders modules table when switching tabs', async () => {
     render(
       <MemoryRouter>
         <AdminGestionRolesPermisos />
@@ -239,7 +232,7 @@ describe('AdminGestionRolesPermisos', () => {
       expect(screen.getByTestId('row-count')).toHaveTextContent('2');
     });
 
-    fireEvent.click(screen.getByText('Permisos'));
+    fireEvent.click(screen.getByText('Módulos del Sistema'));
 
     await waitFor(() => {
       expect(screen.getByTestId('row-count')).toHaveTextContent('2');
@@ -287,7 +280,7 @@ describe('AdminGestionRolesPermisos', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(mockRolesApi.create).toHaveBeenCalledWith({ nombre: 'TEST', descripcion: 'Test role' });
+      expect(mockRolesApi.create).toHaveBeenCalledWith({ nombre: 'TEST', descripcion: 'Test role', permisos: [] });
     });
   });
 

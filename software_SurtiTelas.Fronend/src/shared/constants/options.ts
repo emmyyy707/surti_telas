@@ -7,6 +7,7 @@
  */
 
 import { appContent } from '@/shared/config/appContent';
+import { ALL_MODULE_KEYS, ALL_PERMISSION_CODES } from '@/shared/config/systemModules';
 
 // Productos terminados
 export const CATEGORIAS_PRODUCTO = appContent.catalog.productCategories as readonly string[];
@@ -68,23 +69,9 @@ export const ROL_COLORS: Record<string, string> = {
   reportes: '#64748b',
 };
 
-// Permisos del formulario de roles
-export const PERMISOS_SISTEMA = [
-  'Gestión usuarios',
-  'Gestión inventario',
-  'Reportes',
-  'Configuración',
-  'Ver clientes',
-  'Crear pedidos',
-  'Facturación',
-  'Alertas stock',
-] as const;
+export const PERMISOS_SISTEMA = [...ALL_PERMISSION_CODES] as readonly string[];
 
-// Tipos de permiso
-export const TIPOS_PERMISO = ['Lectura', 'Escritura', 'Administrador'] as const;
-
-// Módulos del sistema
-export const MODULOS_SISTEMA = ['Usuarios', 'Inventario', 'Reportes', 'Producción', 'Ventas'] as const;
+export const MODULOS_SISTEMA = [...ALL_MODULE_KEYS] as readonly string[];
 
 // Estados generales
 export const ESTADOS_GENERALES = ['Activo', 'Inactivo'] as const;

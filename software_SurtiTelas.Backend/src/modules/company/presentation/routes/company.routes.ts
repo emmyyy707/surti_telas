@@ -6,5 +6,5 @@ import * as controller from '../controllers/company.controller';
 
 export const companyRoutes = Router();
 
-companyRoutes.get('/', asyncHandler(controller.getCompany));
+companyRoutes.get('/', authenticate, asyncHandler(controller.getCompany));
 companyRoutes.patch('/', authenticate, requirePermission('company:update'), asyncHandler(controller.updateCompany));

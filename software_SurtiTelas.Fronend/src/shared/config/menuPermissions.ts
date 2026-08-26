@@ -1,58 +1,33 @@
 import type { SidebarItem } from '@/shared/layouts/Sidebar';
 import type { User } from '@/core/stores/authStore';
+import {
+  MODULE_MAP,
+  SIDEBAR_KEY_TO_MODULES,
+} from '@/shared/config/systemModules';
 
-export const MENU_ITEM_PERMISSIONS: Record<string, string | string[]> = {
-  dashboard: 'dashboard:read',
-  usuarios: 'users:read',
-  'usuarios.gestion-usuarios': 'users:manage',
-  'usuarios.gestion-acceso': 'access:manage',
-  'usuarios.empleados': 'employees:read',
-  'usuarios.gestion-ventas': 'sales:read',
-  configuracion: 'config:read',
-  'configuracion.gestion-roles-permisos': ['roles:read', 'permissions:read'],
-  inventario: 'inventory:read',
-  'inventario.productos': 'catalog:read',
-  'inventario.insumos': 'stock:read',
-  'inventario.proveedores': 'suppliers:read',
-  'inventario.alertasStock': 'stock:read',
-  'inventario.stockDevuelto': 'returns:read',
-  'inventario.categorias': 'catalog:read',
-  'inventario.categorias-insumos': 'catalog:read',
-  'inventario.compras': 'suppliers:read',
-  produccion: 'production:read',
-  'produccion.talleres': 'production:read',
-  'produccion.prendas': 'production:update',
-  'produccion.asignacion': 'production:update',
-  'produccion.seguimiento': 'production:read',
-  domicilios: 'deliveries:read',
-  'ventas-pedidos': 'orders:read',
-  'ventas-pedidos.pedidos': 'orders:read',
-  'ventas-pedidos.cotizaciones': 'orders:read',
-  'ventas-pedidos.gestion-ventas': 'sales:read',
-  'ventas-pedidos.facturacion': 'payments:read',
-  'ventas-pedidos.pagos': 'payments:read',
-  'ventas-pedidos.clientes': 'customers:read',
-  'ventas-pedidos.domicilios': 'deliveries:read',
-  'ventas-pedidos.ruta-del-dia': 'deliveries:read',
-  'ventas-pedidos.stock-devuelto': 'returns:read',
-  reportes: 'reports:read',
-  'reportes.reportes-ventas': 'reports:read',
-  'reportes.reportes-usuarios': 'reports:read',
-  'reportes.reportes-produccion': 'reports:read',
-  'reportes.reportes-inventario': 'reports:read',
-  catalogo: 'catalog:read',
-  webhooks: 'webhooks:read',
-  'ruta-del-dia': 'deliveries:read',
-  finanzas: 'financial:read',
-};
+function getUserPermissionSet(user: User | null): Set<string> {
+  return new Set(user?.permissions ?? []);
+}
+
+function userHasAnyModulePermission(moduleKey: string, userPerms: Set<string>): boolean {
+  const mod = MODULE_MAP[moduleKey];
+  if (!mod) return false;
+  return mod.permissionCodes.some((code) => userPerms.has(code));
+}
 
 export function hasMenuPermission(itemKey: string, user: User | null): boolean {
   if (!user) return false;
   if (user.role === 'admin') return true;
-  const required = MENU_ITEM_PERMISSIONS[itemKey];
-  if (!required) return true;
-  const codes = Array.isArray(required) ? required : [required];
-  return codes.some(code => user.permissions?.includes(code));
+
+  if (itemKey === 'dashboard') return true;
+
+  const moduleKeys = SIDEBAR_KEY_TO_MODULES[itemKey];
+  if (!moduleKeys || moduleKeys.length === 0) {
+    return true;
+  }
+
+  const userPerms = getUserPermissionSet(user);
+  return moduleKeys.some((mk) => userHasAnyModulePermission(mk, userPerms));
 }
 
 export function filterMenuByPermissions(menu: SidebarItem[], user: User | null): SidebarItem[] {
@@ -60,22 +35,62 @@ export function filterMenuByPermissions(menu: SidebarItem[], user: User | null):
 
   return menu.reduce<SidebarItem[]>((acc, item) => {
     const itemKey = String(item.key ?? item.label ?? '');
-    if (!hasMenuPermission(itemKey, user)) {
+
+    if (itemKey === 'dashboard') {
+      acc.push(item);
       return acc;
     }
 
     if (item.subItems && item.subItems.length > 0) {
-      const filteredSubs = item.subItems
-        .map(sub => ({ ...sub, key: `${itemKey}.${sub.key}` }))
-        .filter(sub => hasMenuPermission(`${itemKey}.${sub.key}`, user));
+      const visibleSubs = item.subItems.filter((sub) => {
+        const subKey = sub.key ?? sub.label ?? '';
+        const compositeKey = `${itemKey}.${subKey}`;
+        return hasMenuPermission(compositeKey, user);
+      });
 
-      if (filteredSubs.length > 0) {
-        acc.push({ ...item, subItems: filteredSubs });
+      if (visibleSubs.length > 0) {
+        acc.push({ ...item, subItems: visibleSubs });
       }
       return acc;
     }
 
-    acc.push(item);
+    if (hasMenuPermission(itemKey, user)) {
+      acc.push(item);
+    }
     return acc;
   }, []);
 }
+
+export { MENU_ITEM_PERMISSIONS };
+
+const MENU_ITEM_PERMISSIONS: Record<string, string | string[]> = {
+  dashboard: 'dashboard:always',
+  'configuracion.gestion-roles-permisos': 'auth:manage',
+  'usuarios.gestion-usuarios': 'auth:manage',
+  'usuarios.gestion-acceso': 'auth:manage',
+  'usuarios.empleados': 'employees:read',
+  'compras.compras': 'purchases:read',
+  'compras.insumos': 'stock:read',
+  'compras.categorias-insumos': 'stock:read',
+  'compras.proveedores': 'stock:read',
+  'ventas-pedidos.pedidos': 'orders:read',
+  'ventas-pedidos.pedidos-personalizados': 'customOrders:read',
+  'ventas-pedidos.gestion-ventas': 'sales:read',
+  'ventas-pedidos.facturacion': 'receipts:read',
+  'ventas-pedidos.pagos': 'payments:read',
+  'ventas-pedidos.clientes': 'customers:read',
+  'ventas-pedidos.domicilios': 'deliveries:read',
+  'ventas-pedidos.ruta-del-dia': 'deliveries:read',
+  'produccion.catalogo': 'catalog:read',
+  'produccion.talleres': 'production:read',
+  'produccion.prendas': 'production:update',
+  'produccion.asignacion': 'production:update',
+  'produccion.seguimiento': 'production:read',
+  'produccion.categorias': 'catalog:read',
+  'reportes.reportes/ventas': 'reports:read',
+  'reportes.reportes/finanzas': 'reports:read',
+  'reportes.reportes/usuarios': 'reports:read',
+  'reportes.reportes/produccion': 'reports:read',
+  'reportes.reportes/inventario': 'reports:read',
+  'reportes.alertas-stock': 'stock:read',
+};

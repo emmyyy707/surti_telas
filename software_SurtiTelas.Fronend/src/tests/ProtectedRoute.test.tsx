@@ -20,6 +20,7 @@ describe('ProtectedRoute', () => {
     mockUseAuth.mockReturnValue({
       user: { role: 'admin', email: 'admin@test.com' },
       isAuthenticated: true,
+      sessionChecked: true,
     });
 
     render(
@@ -43,6 +44,7 @@ describe('ProtectedRoute', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       isAuthenticated: false,
+      sessionChecked: true,
     });
 
     render(
@@ -66,6 +68,7 @@ describe('ProtectedRoute', () => {
     mockUseAuth.mockReturnValue({
       user: { role: 'cliente', email: 'cliente@test.com' },
       isAuthenticated: true,
+      sessionChecked: true,
     });
 
     render(

@@ -35,7 +35,7 @@ export const cmsRoutes = Router();
 
 cmsRoutes.use(authenticate);
 
-cmsRoutes.get('/', asyncHandler(controller.listCmsPages));
+cmsRoutes.get('/', requirePermission('cms:read'), asyncHandler(controller.listCmsPages));
 
 /**
  * @swagger
@@ -59,7 +59,7 @@ cmsRoutes.get('/', asyncHandler(controller.listCmsPages));
  *       401:
  *         $ref: '#/components/schemas/Error'
  */
-cmsRoutes.get('/:id', asyncHandler(controller.getCmsPage));
+cmsRoutes.get('/:id', requirePermission('cms:read'), asyncHandler(controller.getCmsPage));
 
 /**
  * @swagger

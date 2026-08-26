@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
-  Loader2, AlertCircle, EyeOff, Trash2, Plus, Edit,
+  Loader2,
+  AlertCircle,
+  EyeOff,
+  Trash2,
+  Plus,
+  Edit,
 } from 'lucide-react';
 import { rolesApi, type Rol } from '@/infrastructure/api/rolesApi';
 import { permissionsApi, type Permission } from '@/infrastructure/api/permissionsApi';
@@ -13,13 +18,40 @@ import { Badge } from '@/shared/ui/Badge';
 import { DataTable, DataTableColumn, DataTableAction } from '@/shared/ui/DataTable';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { useDelegatedTooltips } from '@/shared/components/Tooltip';
+import {
+  SYSTEM_MODULES,
+  MODULE_MAP,
+  CATEGORY_LABELS,
+  getAssignmentFromPermissions,
+  getPermissionIdsForModules,
+  type ModuleCategory,
+} from '@/shared/config/systemModules';
 import s from './GestionRolesPermisos.module.css';
 import f from '@/styles/Form.module.css';
 
 const PROTECTED_ROLES = new Set(['ADMIN', 'ASESOR', 'DOMICILIARIO', 'CLIENTE']);
 
+interface ModuleGroup {
+  category: ModuleCategory;
+  modules: typeof SYSTEM_MODULES;
+}
+
+function groupModulesByCategory(): ModuleGroup[] {
+  const grouped: Record<string, typeof SYSTEM_MODULES> = {};
+  for (const mod of SYSTEM_MODULES) {
+    if (!grouped[mod.category]) grouped[mod.category] = [];
+    grouped[mod.category].push(mod);
+  }
+  return Object.entries(grouped).map(([category, modules]) => ({
+    category: category as ModuleCategory,
+    modules,
+  }));
+}
+
+const MODULE_GROUPS = groupModulesByCategory();
+
 export const AdminGestionRolesPermisos: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'roles' | 'permisos'>('roles');
+  const [activeTab, setActiveTab] = useState<'roles' | 'modules'>('roles');
 
   // --- Roles state ---
   const [roles, setRoles] = useState<Rol[]>([]);
@@ -28,38 +60,24 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   const [roleSearch, setRoleSearch] = useState('');
   const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
 
-  // --- Permisos state ---
-  const [permisos, setPermisos] = useState<Permission[]>([]);
-  const [permisosLoading, setPermisosLoading] = useState(false);
-  const [permisosError, setPermisosError] = useState<string | null>(null);
-  const [permisoSearch, setPermisoSearch] = useState('');
-  const debouncedPermisoSearch = useDebouncedValue(permisoSearch, 300);
+  // --- Permissions state (needed for module assignment) ---
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
 
   // --- Modales y drawers ---
   const [rolFormOpen, setRolFormOpen] = useState(false);
   const [editingRol, setEditingRol] = useState<Rol | null>(null);
   const [rolDetailOpen, setRolDetailOpen] = useState(false);
   const [selectedRolForDetail, setSelectedRolForDetail] = useState<Rol | null>(null);
-  const [permManagementOpen, setPermManagementOpen] = useState(false);
-  const [permManagementRol, setPermManagementRol] = useState<Rol | null>(null);
-
-  const [permisoFormOpen, setPermisoFormOpen] = useState(false);
-  const [editingPermiso, setEditingPermiso] = useState<Permission | null>(null);
-  const [permisoDetailOpen, setPermisoDetailOpen] = useState(false);
-  const [selectedPermisoForDetail, setSelectedPermisoForDetail] = useState<Permission | null>(null);
+  const [moduleAssignmentOpen, setModuleAssignmentOpen] = useState(false);
+  const [assignmentRol, setAssignmentRol] = useState<Rol | null>(null);
+  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
+  const [moduleSearch, setModuleSearch] = useState('');
 
   const [deleteConfirmRole, setDeleteConfirmRole] = useState<Rol | null>(null);
-  const [deleteConfirmPermiso, setDeleteConfirmPermiso] = useState<Permission | null>(null);
-
-  // --- Permission management within a role ---
-  const [allPermisos, setAllPermisos] = useState<Permission[]>([]);
-  const [allPermisosLoading, setAllPermisosLoading] = useState(false);
-  const [permManagementSearch, setPermManagementSearch] = useState('');
-  const [selectedPermisoIds, setSelectedPermisoIds] = useState<Set<string>>(new Set());
 
   const tableRef = useRef<HTMLDivElement>(null);
   const rolFormRef = useRef<HTMLFormElement>(null);
-  const permisoFormRef = useRef<HTMLFormElement>(null);
   useDelegatedTooltips(tableRef, { placement: 'top' });
 
   // --- Fetch roles ---
@@ -76,62 +94,74 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     }
   }, []);
 
-  const fetchPermisos = useCallback(async () => {
-    setPermisosLoading(true);
-    setPermisosError(null);
+  // --- Fetch all permissions (needed for module assignment + module list) ---
+  const fetchAllPermissions = useCallback(async () => {
+    setPermissionsLoading(true);
     try {
       const result = await permissionsApi.list();
-      setPermisos(result.items);
-    } catch (err) {
-      setPermisosError(err instanceof Error ? err.message : 'No se pudieron cargar los permisos');
-    } finally {
-      setPermisosLoading(false);
-    }
-  }, []);
-
-  const fetchAllPermisosForManagement = useCallback(async () => {
-    setAllPermisosLoading(true);
-    try {
-      const result = await permissionsApi.list();
-      setAllPermisos(result.items);
+      setAllPermissions(result.items);
     } catch {
-      toast.error('No se pudieron cargar los permisos');
+      toast.error('No se pudieron cargar los permisos del sistema');
     } finally {
-      setAllPermisosLoading(false);
+      setPermissionsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void fetchRoles();
-    void fetchPermisos();
-  }, [fetchRoles, fetchPermisos]);
+    void fetchAllPermissions();
+  }, [fetchRoles, fetchAllPermissions]);
 
   // --- Filtered lists ---
   const filteredRoles = useMemo(() => {
-    return roles.filter(r =>
+    return roles.filter((r) =>
       String(r.nombre ?? '').toLowerCase().includes(debouncedRoleSearch.toLowerCase()) ||
-      String(r.descripcion ?? '').toLowerCase().includes(debouncedRoleSearch.toLowerCase()) ||
-      (r.permisos ?? []).some(p => p.toLowerCase().includes(debouncedRoleSearch.toLowerCase()))
+      String(r.descripcion ?? '').toLowerCase().includes(debouncedRoleSearch.toLowerCase()),
     );
   }, [roles, debouncedRoleSearch]);
 
-  const filteredPermisos = useMemo(() => {
-    return permisos.filter(p =>
-      p.code.toLowerCase().includes(debouncedPermisoSearch.toLowerCase()) ||
-      p.description.toLowerCase().includes(debouncedPermisoSearch.toLowerCase()) ||
-      p.module.toLowerCase().includes(debouncedPermisoSearch.toLowerCase())
-    );
-  }, [permisos, debouncedPermisoSearch]);
+  // --- Module groups filtered by search ---
+  const filteredModuleGroups = useMemo(() => {
+    const search = moduleSearch.toLowerCase();
+    if (!search) return MODULE_GROUPS;
+
+    return MODULE_GROUPS.map((group) => ({
+      ...group,
+      modules: group.modules.filter(
+        (m) =>
+          m.name.toLowerCase().includes(search) ||
+          m.key.toLowerCase().includes(search) ||
+          m.description.toLowerCase().includes(search),
+      ),
+    })).filter((group) => group.modules.length > 0);
+  }, [moduleSearch]);
+
+  // --- Helpers: convert between permission codes and module keys ---
+  const rolePermisosToModuleKeys = useCallback(
+    (permisoCodes: string[]): string[] => getAssignmentFromPermissions(permisoCodes),
+    [],
+  );
+
+  const moduleKeysToPermissionIds = useCallback(
+    (moduleKeys: string[]): string[] => getPermissionIdsForModules(allPermissions, moduleKeys),
+    [allPermissions],
+  );
 
   // --- Rol form ---
   const handleOpenRolForm = (rol?: Rol | null) => {
     setEditingRol(rol ?? null);
+    if (rol) {
+      setSelectedModules(new Set(rolePermisosToModuleKeys(rol.permisos)));
+    } else {
+      setSelectedModules(new Set());
+    }
     setRolFormOpen(true);
   };
 
   const handleCloseRolForm = () => {
     setRolFormOpen(false);
     setEditingRol(null);
+    setSelectedModules(new Set());
     rolFormRef.current?.reset();
   };
 
@@ -142,12 +172,14 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     const nombre = String(fd.get('nombre') ?? '').trim();
     const descripcion = String(fd.get('descripcion') ?? '').trim();
 
+    const permissionIds = moduleKeysToPermissionIds(Array.from(selectedModules));
+
     try {
       if (editingRol) {
-        await rolesApi.update(editingRol.id, { nombre, descripcion });
+        await rolesApi.update(editingRol.id, { nombre, descripcion, permisos: permissionIds });
         toast.success('Rol actualizado');
       } else {
-        await rolesApi.create({ nombre, descripcion });
+        await rolesApi.create({ nombre, descripcion, permisos: permissionIds });
         toast.success('Rol creado');
       }
       void fetchRoles();
@@ -158,40 +190,16 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     }
   };
 
-  // --- Permiso form ---
-  const handleOpenPermisoForm = (permiso?: Permission | null) => {
-    setEditingPermiso(permiso ?? null);
-    setPermisoFormOpen(true);
-  };
-
-  const handleClosePermisoForm = () => {
-    setPermisoFormOpen(false);
-    setEditingPermiso(null);
-    permisoFormRef.current?.reset();
-  };
-
-  const handleSubmitPermiso = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!permisoFormRef.current) return;
-    const fd = new FormData(permisoFormRef.current);
-    const code = String(fd.get('code') ?? '').trim();
-    const description = String(fd.get('description') ?? '').trim();
-    const module = String(fd.get('module') ?? '').trim();
-
-    try {
-      if (editingPermiso) {
-        await permissionsApi.update(editingPermiso.id, { code, description, module });
-        toast.success('Permiso actualizado');
+  const toggleModuleSelection = (moduleKey: string) => {
+    setSelectedModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(moduleKey)) {
+        next.delete(moduleKey);
       } else {
-        await permissionsApi.create({ code, description, module });
-        toast.success('Permiso creado');
+        next.add(moduleKey);
       }
-      void fetchPermisos();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al guardar el permiso');
-    } finally {
-      handleClosePermisoForm();
-    }
+      return next;
+    });
   };
 
   // --- Rol actions ---
@@ -199,15 +207,19 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     const nuevoEstado = rol.estado === 'Activo' ? 'Inactivo' : 'Activo';
     try {
       await rolesApi.updateStatus(rol.id, nuevoEstado);
-      setRoles(prev => prev.map(r => r.id === rol.id ? { ...r, estado: nuevoEstado } : r));
+      setRoles((prev) =>
+        prev.map((r) =>
+          r.id === rol.id ? { ...r, estado: nuevoEstado } : r,
+        ),
+      );
       toast.success(`Rol ${nuevoEstado.toLowerCase()} correctamente`);
     } catch {
       toast.error('No se pudo actualizar el estado del rol');
     }
   };
 
-  const handleDeleteRol = async (rol: Rol) => {
-    if ( PROTECTED_ROLES.has(rol.nombre?.toUpperCase() ?? '')) {
+  const handleDeleteRol = (rol: Rol) => {
+    if (PROTECTED_ROLES.has(rol.nombre?.toUpperCase() ?? '')) {
       toast.error('Rol protegido, no se puede eliminar');
       return;
     }
@@ -218,7 +230,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     if (!deleteConfirmRole) return;
     try {
       await rolesApi.delete(deleteConfirmRole.id);
-      setRoles(prev => prev.filter(r => r.id !== deleteConfirmRole.id));
+      setRoles((prev) => prev.filter((r) => r.id !== deleteConfirmRole.id));
       toast.success('Rol eliminado correctamente');
     } catch {
       toast.error('No se pudo eliminar el rol');
@@ -227,98 +239,78 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     }
   };
 
-  // --- Permiso actions ---
-  const togglePermisoEstado = async (permiso: Permission) => {
-    const nuevoEstado = permiso.estado === 'Activo' ? 'Inactivo' : 'Activo';
-    const backendEstado: 'ACTIVO' | 'INACTIVO' = nuevoEstado === 'Activo' ? 'ACTIVO' : 'INACTIVO';
-    try {
-      await permissionsApi.updateStatus(permiso.id, backendEstado);
-      setPermisos(prev => prev.map(p => p.id === permiso.id ? { ...p, estado: nuevoEstado } : p));
-      toast.success(`Permiso ${nuevoEstado.toLowerCase()} correctamente`);
-    } catch {
-      toast.error('No se pudo actualizar el estado del permiso');
-    }
+  // --- Module assignment drawer ---
+  const openModuleAssignment = (rol: Rol) => {
+    setAssignmentRol(rol);
+    const currentModules = rolePermisosToModuleKeys(rol.permisos);
+    setSelectedModules(new Set(currentModules));
+    setModuleSearch('');
+    setModuleAssignmentOpen(true);
   };
 
-  const handleDeletePermiso = (permiso: Permission) => {
-    setDeleteConfirmPermiso(permiso);
-  };
+  const saveModuleAssignment = async () => {
+    if (!assignmentRol) return;
 
-  const confirmDeletePermiso = async () => {
-    if (!deleteConfirmPermiso) return;
-    try {
-      await permissionsApi.delete(deleteConfirmPermiso.id);
-      setPermisos(prev => prev.filter(p => p.id !== deleteConfirmPermiso.id));
-      toast.success('Permiso eliminado correctamente');
-    } catch {
-      toast.error('No se pudo eliminar el permiso');
-    } finally {
-      setDeleteConfirmPermiso(null);
-    }
-  };
-
-  // --- Permission management for a role ---
-  const openPermManagement = async (rol: Rol) => {
-    setPermManagementRol(rol);
-    setPermManagementOpen(true);
-    setPermManagementSearch('');
-    void fetchAllPermisosForManagement();
-
-    const assigned = await rolesApi.listRolePermissions(rol.nombre);
-    setSelectedPermisoIds(new Set(assigned));
-  };
-
-  const handlePermSelectionChange = (permisoId: string) => {
-    const permiso = allPermisos.find(p => p.id === permisoId);
-    if (!permiso) return;
-    setSelectedPermisoIds(prev => {
-      const next = new Set(prev);
-      if (next.has(permiso.code)) {
-        next.delete(permiso.code);
-      } else {
-        next.add(permiso.code);
-      }
-      return next;
-    });
-  };
-
-  const savePermChanges = async () => {
-    if (!permManagementRol) return;
-
-    const rolName = permManagementRol.nombre;
-    const currentAssigned = await rolesApi.listRolePermissions(rolName);
-    const assignedCodes = new Set(currentAssigned);
-
-    // Add new
-    const toAdd = allPermisos.filter(p => selectedPermisoIds.has(p.code) && !assignedCodes.has(p.code));
-    // Remove old
-    const toRemove = allPermisos.filter(p => !selectedPermisoIds.has(p.code) && assignedCodes.has(p.code));
+    const permissionIds = moduleKeysToPermissionIds(Array.from(selectedModules));
 
     try {
-      for (const p of toAdd) {
-        await rolesApi.assignPermission(rolName, p.id);
-      }
-      for (const p of toRemove) {
-        await rolesApi.removePermission(rolName, p.id);
-      }
-      toast.success('Permisos del rol actualizados');
+      await rolesApi.update(assignmentRol.id, { permisos: permissionIds });
+      toast.success('Módulos del rol actualizados');
       void fetchRoles();
     } catch {
-      toast.error('No se pudieron actualizar los permisos del rol');
+      toast.error('No se pudieron actualizar los módulos del rol');
     } finally {
-      setPermManagementOpen(false);
-      setPermManagementRol(null);
-      setSelectedPermisoIds(new Set());
+      setModuleAssignmentOpen(false);
+      setAssignmentRol(null);
+      setSelectedModules(new Set());
     }
   };
 
-  const filteredAllPermisos = useMemo(() => {
-    return allPermisos.filter(p =>
-      p.code.toLowerCase().includes(permManagementSearch.toLowerCase()) ||
-      p.description.toLowerCase().includes(permManagementSearch.toLowerCase()) ||
-      p.module.toLowerCase().includes(permManagementSearch.toLowerCase())
+  // --- Module list derived from permissions API ---
+  const moduleList = useMemo(() => {
+    const modulesByKey = new Map<string, Permission[]>();
+    for (const perm of allPermissions) {
+      if (!modulesByKey.has(perm.module)) {
+        modulesByKey.set(perm.module, []);
+      }
+      modulesByKey.get(perm.module)!.push(perm);
+    }
+
+    const result: Array<{
+      id: string;
+      module: string;
+      name: string;
+      description: string;
+      permissionCodes: string[];
+      estado: 'Activo' | 'Inactivo';
+    }> = [];
+
+    for (const [moduleKey, perms] of modulesByKey.entries()) {
+      const sysModule = MODULE_MAP[moduleKey];
+      const allInactive = perms.every((p) => p.estado === 'Inactivo');
+      result.push({
+        id: moduleKey,
+        module: moduleKey,
+        name: sysModule?.name ?? moduleKey,
+        description: sysModule?.description ?? '',
+        permissionCodes: perms.map((p) => p.code),
+        estado: allInactive ? 'Inactivo' : 'Activo',
+      });
+    }
+
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [allPermissions]);
+
+  const filteredModuleList = useMemo(() => {
+    const search = debouncedRoleSearch.toLowerCase();
+    if (!search) return moduleList;
+    return moduleList.filter(
+      (m) =>
+        m.name.toLowerCase().includes(search) ||
+        m.module.toLowerCase().includes(search) ||
+        m.description.toLowerCase().includes(search),
     );
-  }, [allPermisos, permManagementSearch]);
+  }, [moduleList, debouncedRoleSearch]);
 
   // --- Role columns ---
   const roleColumns: DataTableColumn<Rol>[] = [
@@ -328,7 +320,9 @@ export const AdminGestionRolesPermisos: React.FC = () => {
       sortable: true,
       minWidth: '160px',
       render: (item) => (
-        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: '0.88rem' }}>
+        <div
+          style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: '0.88rem' }}
+        >
           {item.nombre}
         </div>
       ),
@@ -345,98 +339,50 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     },
     {
       key: 'permisos',
-      header: 'Permisos',
+      header: 'Módulos',
       sortable: false,
-      render: (item) => (
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {(item.permisos ?? []).slice(0, 3).map((permiso, idx) => (
-                    <Badge key={idx} variant="outline" className="text-[0.72rem] px-[6px] py-[2px]">
-                      {permiso}
-                    </Badge>
-                  ))}
-                  {(item.permisos ?? []).length > 3 && (
-                    <Badge variant="outline" className="text-[0.72rem] px-[6px] py-[2px]">
-                      +{(item.permisos ?? []).length - 3}
-                    </Badge>
-                  )}
-        </div>
-      ),
+      render: (item) => {
+        const moduleKeys = rolePermisosToModuleKeys(item.permisos);
+        const visible = moduleKeys.slice(0, 4);
+        const extra = moduleKeys.length - 4;
+        return (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {visible.map((key) => {
+              const mod = MODULE_MAP[key];
+              return (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className="text-[0.72rem] px-[6px] py-[2px]"
+                >
+                  {mod?.name ?? key}
+                </Badge>
+              );
+            })}
+            {extra > 0 && (
+              <Badge variant="outline" className="text-[0.72rem] px-[6px] py-[2px]">
+                +{extra}
+              </Badge>
+            )}
+            {moduleKeys.length === 0 && (
+              <span
+                style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}
+              >
+                Sin módulos
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'usuarios',
       header: 'Usuarios',
       sortable: true,
       align: 'center',
-      render: (item) => <span style={{ fontSize: '0.84rem' }}>{item.usuarios}</span>,
-    },
-    {
-      key: 'estado',
-      header: 'Estado',
-      sortable: true,
-      align: 'center',
       render: (item) => (
-        <Badge variant={item.estado === 'Activo' ? 'success' : 'danger'}>{item.estado}</Badge>
+        <span style={{ fontSize: '0.84rem' }}>{item.usuarios}</span>
       ),
-    },
-  ];
-
-  const roleActions: DataTableAction<Rol>[] = [
-    {
-      label: 'Ver detalle',
-      icon: <Plus size={14} />,
-      onClick: (item) => {
-        setSelectedRolForDetail(item);
-        setRolDetailOpen(true);
-      },
-    },
-    {
-      label: 'Editar',
-      icon: <Edit size={14} />,
-      onClick: (item) => handleOpenRolForm(item),
-    },
-    {
-      label: (item) => item.estado === 'Activo' ? 'Desactivar' : 'Activar',
-      icon: <EyeOff size={14} />,
-      onClick: (item) => void toggleRolEstado(item),
-    },
-    {
-      label: (item) => PROTECTED_ROLES.has((item.nombre ?? '').toUpperCase()) ? 'Protegido' : 'Eliminar',
-      icon: <Trash2 size={14} />,
-      disabled: (item) => PROTECTED_ROLES.has((item.nombre ?? '').toUpperCase()),
-      danger: true,
-      onClick: (item) => handleDeleteRol(item),
-    },
-  ];
-
-  // --- Permiso columns ---
-  const permisoColumns: DataTableColumn<Permission>[] = [
-    {
-      key: 'code',
-      header: 'Código',
-      sortable: true,
-      minWidth: '180px',
-      render: (item) => (
-        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: '0.88rem', fontFamily: 'monospace' }}>
-          {item.code}
-        </div>
-      ),
-    },
-    {
-      key: 'description',
-      header: 'Descripción',
-      sortable: true,
-      render: (item) => (
-        <div style={{ fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>
-          {item.description}
-        </div>
-      ),
-    },
-    {
-      key: 'module',
-      header: 'Módulo',
-      sortable: true,
-      align: 'center',
-      render: (item) => <Badge variant="outline">{item.module}</Badge>,
     },
     {
       key: 'estado',
@@ -451,30 +397,104 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     },
   ];
 
-  const permisoActions: DataTableAction<Permission>[] = [
+  const roleActions: DataTableAction<Rol>[] = [
     {
       label: 'Ver detalle',
       icon: <Plus size={14} />,
-      onClick: (item) => {
-        setSelectedPermisoForDetail(item);
-        setPermisoDetailOpen(true);
+     onClick: (item) => {
+        setSelectedRolForDetail(item);
+        setRolDetailOpen(true);
       },
     },
     {
       label: 'Editar',
       icon: <Edit size={14} />,
-      onClick: (item) => handleOpenPermisoForm(item),
+      onClick: (item) => handleOpenRolForm(item),
     },
     {
-      label: (item) => item.estado === 'Activo' ? 'Desactivar' : 'Activar',
+      label: (item) => (item.estado === 'Activo' ? 'Desactivar' : 'Activar'),
       icon: <EyeOff size={14} />,
-      onClick: (item) => void togglePermisoEstado(item),
+      onClick: (item) => void toggleRolEstado(item),
     },
     {
-      label: 'Eliminar',
+      label: (item) =>
+        PROTECTED_ROLES.has((item.nombre ?? '').toUpperCase())
+          ? 'Protegido'
+          : 'Eliminar',
       icon: <Trash2 size={14} />,
+      disabled: (item) =>
+        PROTECTED_ROLES.has((item.nombre ?? '').toUpperCase()),
       danger: true,
-      onClick: (item) => handleDeletePermiso(item),
+      onClick: (item) => handleDeleteRol(item),
+    },
+  ];
+
+  // --- Module list columns ---
+  const moduleColumns: DataTableColumn<{
+    id: string;
+    module: string;
+    name: string;
+    description: string;
+    permissionCodes: string[];
+    estado: 'Activo' | 'Inactivo';
+  }>[] = [
+    {
+      key: 'name',
+      header: 'Módulo',
+      sortable: true,
+      minWidth: '200px',
+      render: (item) => (
+        <div
+          style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: '0.88rem' }}
+        >
+          {item.name}
+        </div>
+      ),
+    },
+    {
+      key: 'module',
+      header: 'Código',
+      sortable: true,
+      render: (item) => (
+        <code
+          style={{
+            fontFamily: 'monospace',
+            fontSize: '0.82rem',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {item.module}
+        </code>
+      ),
+    },
+    {
+      key: 'permissionCodes',
+      header: 'Permisos',
+      sortable: false,
+      render: (item) => (
+        <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
+          {item.permissionCodes.map((code) => (
+            <Badge
+              key={code}
+              variant="outline"
+              className="text-[0.68rem] px-[4px] py-[1px]"
+            >
+              {code}
+            </Badge>
+          ))}
+        </div>
+      ),
+    },
+    {
+      key: 'estado',
+      header: 'Estado',
+      sortable: true,
+      align: 'center',
+      render: (item) => (
+        <Badge variant={item.estado === 'Activo' ? 'success' : 'danger'}>
+          {item.estado}
+        </Badge>
+      ),
     },
   ];
 
@@ -483,7 +503,10 @@ export const AdminGestionRolesPermisos: React.FC = () => {
       <div className={s.header}>
         <div>
           <h1 className={s.pageTitle}>Gestión de Roles y Permisos</h1>
-          <p className={s.pageSubtitle}>Administre roles, permisos y sus relaciones desde un único lugar</p>
+          <p className={s.pageSubtitle}>
+            Administre roles, asigne módulos del sistema y visualice el catálogo de
+            módulos disponibles desde un único lugar
+          </p>
         </div>
       </div>
 
@@ -495,10 +518,10 @@ export const AdminGestionRolesPermisos: React.FC = () => {
           Roles
         </button>
         <button
-          className={cn(s.tab, activeTab === 'permisos' && s.tabActive)}
-          onClick={() => setActiveTab('permisos')}
+          className={cn(s.tab, activeTab === 'modules' && s.tabActive)}
+          onClick={() => setActiveTab('modules')}
         >
-          Permisos
+          Módulos del Sistema
         </button>
       </div>
 
@@ -550,63 +573,65 @@ export const AdminGestionRolesPermisos: React.FC = () => {
         </div>
       )}
 
-      {/* ===== PERMISOS TAB ===== */}
-      {activeTab === 'permisos' && (
+      {/* ===== MODULES TAB ===== */}
+      {activeTab === 'modules' && (
         <div className={s.tabContent}>
           <div className={s.toolbar}>
             <SearchInput
-              placeholder="Buscar permisos..."
-              value={permisoSearch}
-              onChange={(e) => setPermisoSearch(e.target.value)}
-              onSearch={(v) => setPermisoSearch(v)}
+              placeholder="Buscar módulos..."
+              value={roleSearch}
+              onChange={(e) => setRoleSearch(e.target.value)}
+              onSearch={(v) => setRoleSearch(v)}
               debounceMs={100}
               minChars={0}
             />
-            <Button leftIcon={<Plus size={16} />} onClick={() => handleOpenPermisoForm()}>
-              + Crear permiso
-            </Button>
           </div>
 
-          <div className={s.tableWrapper} ref={tableRef}>
-            {permisosLoading && (
+          <div className={s.tableWrapper}>
+            {permissionsLoading && (
               <div className={cn(s.stateBox)}>
                 <Loader2 size={28} className={s.spin} />
-                <p>Cargando permisos...</p>
+                <p>Cargando módulos del sistema...</p>
               </div>
             )}
-            {permisosError && (
-              <div className={cn(s.stateBox, s.errorBox)}>
-                <AlertCircle size={28} />
-                <p>{permisosError}</p>
-              </div>
-            )}
-            {!permisosLoading && !permisosError && (
+            {!permissionsLoading && (
               <DataTable
                 enableExport={false}
                 enableRowSelection={false}
-                data={filteredPermisos}
-                columns={permisoColumns}
-                actions={permisoActions}
+                data={filteredModuleList}
+                columns={moduleColumns}
+                actions={[]}
                 enableSorting={true}
                 enableColumnFilters={false}
                 toolbarLeft={null}
                 maxVisibleColumns={5}
-                emptyMessage="No se encontraron permisos"
+                emptyMessage="No se encontraron módulos"
               />
             )}
+
+            <div className={s.modulesNote}>
+              <AlertCircle size={16} />
+              <span>
+                Los módulos son definidos por el sistema y no pueden crearse, editarse
+                o eliminarse desde esta interfaz. Los permisos asociados a cada módulo
+                se gestionan a través de los roles.
+              </span>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ===== ROL FORM MODAL ===== */}
+      {/* ===== ROL FORM MODAL (con selección de módulos) ===== */}
       {rolFormOpen && (
         <div className={s.modalOverlay} onClick={() => handleCloseRolForm()}>
-          <div className={s.modal} onClick={e => e.stopPropagation()}>
+          <div className={s.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px' }}>
             <div className={s.modalHeader}>
               <h2 className={s.modalTitle}>
                 {editingRol ? 'Editar Rol' : 'Nuevo Rol'}
               </h2>
-              <button className={s.closeBtn} onClick={handleCloseRolForm}>×</button>
+              <button className={s.closeBtn} onClick={handleCloseRolForm}>
+                ×
+              </button>
             </div>
             <div className={s.modalBody}>
               <form className={f.form} ref={rolFormRef} onSubmit={handleSubmitRol}>
@@ -619,7 +644,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                         className={f.input}
                         name="nombre"
                         defaultValue={editingRol?.nombre}
-                        placeholder="Ej: VENDEDOR"
+                        placeholder="Ej: ALMACEN"
                         required
                       />
                     </div>
@@ -634,6 +659,115 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                <div className={f.formSection}>
+                  <h3 className={f.sectionTitle}>Módulos asignados</h3>
+                  <p
+                    style={{
+                      fontSize: '0.82rem',
+                      color: 'var(--color-text-secondary)',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    Seleccione los módulos a los que este rol tendrá acceso:
+                  </p>
+
+                  {MODULE_GROUPS.map((group) => {
+                    const visibleModules =
+                      moduleSearch.toLowerCase() === ''
+                        ? group.modules
+                        : group.modules.filter(
+                            (m) =>
+                              m.name.toLowerCase().includes(moduleSearch.toLowerCase()) ||
+                              m.key.toLowerCase().includes(moduleSearch.toLowerCase()),
+                          );
+                    if (visibleModules.length === 0 && moduleSearch) return null;
+
+                    return (
+                      <div
+                        key={group.category}
+                        style={{ marginBottom: '16px' }}
+                      >
+                        <h4
+                          style={{
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            color: 'var(--color-text-secondary)',
+                            marginBottom: '8px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          {CATEGORY_LABELS[group.category]}
+                        </h4>
+                        {visibleModules.map((mod) => {
+                          const isSelected = selectedModules.has(mod.key);
+                          return (
+                            <label
+                              key={mod.key}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                marginBottom: '4px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                backgroundColor: isSelected
+                                  ? 'rgba(59, 130, 246, 0.1)'
+                                  : 'transparent',
+                                border: `1px solid ${
+                                  isSelected
+                                    ? 'rgba(59, 130, 246, 0.3)'
+                                    : 'var(--color-border-light)'
+                                }`,
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleModuleSelection(mod.key)}
+                                style={{ marginTop: '2px' }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: '0.86rem',
+                                    color: 'var(--color-text-primary)',
+                                  }}
+                                >
+                                  {mod.name}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: '0.78rem',
+                                    color: 'var(--color-text-secondary)',
+                                  }}
+                                >
+                                  {mod.description}
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+
+                  {moduleSearch && selectedModules.size === 0 && (
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--color-text-muted)',
+                        padding: '8px',
+                      }}
+                    >
+                      No se seleccionaron módulos
+                    </p>
+                  )}
+                </div>
+
                 <div className={f.formActions}>
                   <Button variant="secondary" type="button" onClick={handleCloseRolForm}>
                     Cancelar
@@ -648,108 +782,88 @@ export const AdminGestionRolesPermisos: React.FC = () => {
         </div>
       )}
 
-      {/* ===== PERMISO FORM MODAL ===== */}
-      {permisoFormOpen && (
-        <div className={s.modalOverlay} onClick={() => handleClosePermisoForm()}>
-          <div className={s.modal} onClick={e => e.stopPropagation()}>
-            <div className={s.modalHeader}>
-              <h2 className={s.modalTitle}>
-                {editingPermiso ? 'Editar Permiso' : 'Nuevo Permiso'}
-              </h2>
-              <button className={s.closeBtn} onClick={handleClosePermisoForm}>×</button>
-            </div>
-            <div className={s.modalBody}>
-              <form className={f.form} ref={permisoFormRef} onSubmit={handleSubmitPermiso}>
-                <div className={f.formSection}>
-                  <h3 className={f.sectionTitle}>Información del permiso</h3>
-                  <div className={f.formRow}>
-                    <div className={f.field}>
-                      <label className={f.label}>Código</label>
-                      <input
-                        className={f.input}
-                        name="code"
-                        defaultValue={editingPermiso?.code}
-                        placeholder="ej: catalog:read"
-                        required
-                      />
-                    </div>
-                    <div className={f.field}>
-                      <label className={f.label}>Módulo</label>
-                      <input
-                        className={f.input}
-                        name="module"
-                        defaultValue={editingPermiso?.module}
-                        placeholder="ej: Catalog"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className={f.field}>
-                    <label className={f.label}>Descripción</label>
-                    <textarea
-                      className={f.textarea}
-                      name="description"
-                      defaultValue={editingPermiso?.description}
-                      placeholder="Descripción del permiso..."
-                    />
-                  </div>
-                </div>
-                <div className={f.formActions}>
-                  <Button variant="secondary" type="button" onClick={handleClosePermisoForm}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">
-                    {editingPermiso ? 'Guardar cambios' : 'Crear permiso'}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ===== ROL DETAIL DRAWER ===== */}
       {rolDetailOpen && selectedRolForDetail && (
         <div className={s.drawerOverlay} onClick={() => setRolDetailOpen(false)}>
-          <div className={s.drawer} onClick={e => e.stopPropagation()}>
+          <div className={s.drawer} onClick={(e) => e.stopPropagation()}>
             <div className={s.drawerHeader}>
               <h2 className={s.drawerTitle}>Detalle del Rol</h2>
-              <button className={s.closeBtn} onClick={() => setRolDetailOpen(false)}>×</button>
+              <button className={s.closeBtn} onClick={() => setRolDetailOpen(false)}>
+                ×
+              </button>
             </div>
             <div className={s.drawerBody}>
               <div className={s.detailSection}>
                 <h3>Información</h3>
                 <dl className={s.detailGrid}>
-                  <dt>Nombre</dt><dd>{selectedRolForDetail.nombre}</dd>
-                  <dt>Descripción</dt><dd>{selectedRolForDetail.descripcion || '—'}</dd>
-                  <dt>Estado</dt><dd>
-                    <Badge variant={selectedRolForDetail.estado === 'Activo' ? 'success' : 'danger'}>
+                  <dt>Nombre</dt>
+                  <dd>{selectedRolForDetail.nombre}</dd>
+                  <dt>Descripción</dt>
+                  <dd>{selectedRolForDetail.descripcion || '—'}</dd>
+                  <dt>Estado</dt>
+                  <dd>
+                    <Badge
+                      variant={
+                        selectedRolForDetail.estado === 'Activo' ? 'success' : 'danger'
+                      }
+                    >
                       {selectedRolForDetail.estado}
                     </Badge>
                   </dd>
-                  <dt>Usuarios asignados</dt><dd>{selectedRolForDetail.usuarios}</dd>
+                  <dt>Usuarios asignados</dt>
+                  <dd>{selectedRolForDetail.usuarios}</dd>
                 </dl>
               </div>
+
               <div className={s.detailSection}>
-                <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  Permisos ({selectedRolForDetail.permisos?.length ?? 0})
+                <h3
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span>
+                    Módulos asignados (
+                    {rolePermisosToModuleKeys(selectedRolForDetail.permisos).length})
+                  </span>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => void openPermManagement(selectedRolForDetail)}
+                    onClick={() => {
+                      setRolDetailOpen(false);
+                      void openModuleAssignment(selectedRolForDetail);
+                    }}
                   >
-                    Gestionar permisos
+                    Asignar módulos
                   </Button>
                 </h3>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
-                  {selectedRolForDetail.permisos?.length ? (
-                    selectedRolForDetail.permisos.map((permiso, idx) => (
-                      <Badge key={idx} variant="outline">
-                        {permiso}
-                      </Badge>
-                    ))
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '4px',
+                    flexWrap: 'wrap',
+                    marginTop: '8px',
+                  }}
+                >
+                  {rolePermisosToModuleKeys(selectedRolForDetail.permisos).length ? (
+                    rolePermisosToModuleKeys(selectedRolForDetail.permisos).map((key) => {
+                      const mod = MODULE_MAP[key];
+                      return (
+                        <Badge key={key} variant="outline">
+                          {mod?.name ?? key}
+                        </Badge>
+                      );
+                    })
                   ) : (
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.84rem' }}>Sin permisos asignados</p>
+                    <p
+                      style={{
+                        color: 'var(--color-text-muted)',
+                        fontSize: '0.84rem',
+                      }}
+                    >
+                      Sin módulos asignados
+                    </p>
                   )}
                 </div>
               </div>
@@ -758,137 +872,165 @@ export const AdminGestionRolesPermisos: React.FC = () => {
         </div>
       )}
 
-      {/* ===== PERMISO DETAIL DRAWER ===== */}
-      {permisoDetailOpen && selectedPermisoForDetail && (
-        <div className={s.drawerOverlay} onClick={() => setPermisoDetailOpen(false)}>
-          <div className={s.drawer} onClick={e => e.stopPropagation()}>
-            <div className={s.drawerHeader}>
-              <h2 className={s.drawerTitle}>Detalle del Permiso</h2>
-              <button className={s.closeBtn} onClick={() => setPermisoDetailOpen(false)}>×</button>
-            </div>
-            <div className={s.drawerBody}>
-              <div className={s.detailSection}>
-                <h3>Información</h3>
-                <dl className={s.detailGrid}>
-                  <dt>Código</dt><dd>{selectedPermisoForDetail.code}</dd>
-                  <dt>Descripción</dt><dd>{selectedPermisoForDetail.description}</dd>
-                  <dt>Módulo</dt><dd>{selectedPermisoForDetail.module}</dd>
-                  <dt>Estado</dt><dd>
-                    <Badge variant={selectedPermisoForDetail.estado === 'Activo' ? 'success' : 'danger'}>
-                      {selectedPermisoForDetail.estado}
-                    </Badge>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ===== PERMISSION MANAGEMENT DRAWER ===== */}
-      {permManagementOpen && permManagementRol && (
-        <div className={s.drawerOverlay} onClick={() => setPermManagementOpen(false)}>
-          <div className={s.drawer} onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+      {/* ===== MODULE ASSIGNMENT DRAWER ===== */}
+      {moduleAssignmentOpen && assignmentRol && (
+        <div className={s.drawerOverlay} onClick={() => setModuleAssignmentOpen(false)}>
+          <div
+            className={s.drawer}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '700px' }}
+          >
             <div className={s.drawerHeader}>
               <h2 className={s.drawerTitle}>
-                Gestionar permisos — {permManagementRol.nombre}
+                Asignar módulos — {assignmentRol.nombre}
               </h2>
-              <button className={s.closeBtn} onClick={() => setPermManagementOpen(false)}>×</button>
+              <button className={s.closeBtn} onClick={() => setModuleAssignmentOpen(false)}>
+                ×
+              </button>
             </div>
             <div className={s.drawerBody}>
               <div className={s.detailSection}>
-                <h3>Permisos asociados</h3>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                  {Array.from(selectedPermisoIds).map((code) => (
-                    <Badge key={code} variant="outline">
-                      {code}
-                    </Badge>
-                  ))}
-                  {selectedPermisoIds.size === 0 && (
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.84rem' }}>Selecciona permisos para asignar</p>
+                <h3>Módulos seleccionados</h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '4px',
+                    flexWrap: 'wrap',
+                    marginBottom: '12px',
+                  }}
+                >
+                  {Array.from(selectedModules).map((key) => {
+                    const mod = MODULE_MAP[key];
+                    return (
+                      <Badge key={key} variant="outline">
+                        {mod?.name ?? key}
+                      </Badge>
+                    );
+                  })}
+                  {selectedModules.size === 0 && (
+                    <p
+                      style={{
+                        color: 'var(--color-text-muted)',
+                        fontSize: '0.84rem',
+                      }}
+                    >
+                      Selecciona módulos para asignar
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className={s.detailSection}>
-                <h3>Todos los permisos disponibles</h3>
+                <h3>Buscar módulo</h3>
                 <div style={{ marginBottom: '8px' }}>
                   <input
                     type="text"
                     className={f.input}
-                    placeholder="Buscar permisos..."
-                    value={permManagementSearch}
-                    onChange={(e) => setPermManagementSearch(e.target.value)}
+                    placeholder="Buscar módulos..."
+                    value={moduleSearch}
+                    onChange={(e) => setModuleSearch(e.target.value)}
                   />
                 </div>
-                {allPermisosLoading ? (
-                  <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <Loader2 size={24} className={s.spin} />
-                  </div>
-                ) : (
-                  <div style={{ maxHeight: '320px', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
-                    {filteredAllPermisos.map((permiso) => {
-                      const isSelected = selectedPermisoIds.has(permiso.code);
-                      return (
-                        <label
-                          key={permiso.id}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            padding: '8px 12px', cursor: 'pointer',
-                            backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                            borderBottom: '1px solid var(--color-border-light)',
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handlePermSelectionChange(permiso.id)}
-                          />
-                          <code style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{permiso.code}</code>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
-                            ({permiso.module}) {permiso.description}
-                          </span>
-                        </label>
-                      );
-                    })}
-                    {filteredAllPermisos.length === 0 && (
-                      <p style={{ padding: '12px', color: 'var(--color-text-muted)', fontSize: '0.84rem' }}>
-                        No se encontraron permisos
-                      </p>
-                    )}
-                  </div>
-                )}
+
+                {filteredModuleGroups.map((group) => {
+                  if (group.modules.length === 0) return null;
+                  return (
+                    <div key={group.category} style={{ marginBottom: '14px' }}>
+                      <h4
+                        style={{
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          color: 'var(--color-text-secondary)',
+                          marginBottom: '6px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        {CATEGORY_LABELS[group.category]}
+                      </h4>
+                      {group.modules.map((mod) => {
+                        const isSelected = selectedModules.has(mod.key);
+                        return (
+                          <label
+                            key={mod.key}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '8px',
+                              padding: '8px 12px',
+                              marginBottom: '4px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              backgroundColor: isSelected
+                                ? 'rgba(59, 130, 246, 0.1)'
+                                : 'transparent',
+                              borderBottom:
+                                '1px solid var(--color-border-light)',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleModuleSelection(mod.key)}
+                              style={{ marginTop: '2px' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div
+                                style={{
+                                  fontWeight: 600,
+                                  fontSize: '0.84rem',
+                                  color: 'var(--color-text-primary)',
+                                }}
+                              >
+                                {mod.name}
+                              </div>
+                              <code
+                                style={{
+                                  fontFamily: 'monospace',
+                                  fontSize: '0.76rem',
+                                  color: 'var(--color-text-secondary)',
+                                }}
+                              >
+                                {mod.key}
+                              </code>
+                              <div
+                                style={{
+                                  fontSize: '0.74rem',
+                                  color: 'var(--color-text-secondary)',
+                                }}
+                              >
+                                {mod.description}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
             <div className={s.drawerFooter}>
-              <Button variant="secondary" onClick={() => setPermManagementOpen(false)}>
+              <Button variant="secondary" onClick={() => setModuleAssignmentOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={savePermChanges}>
-                Guardar cambios
-              </Button>
+              <Button onClick={saveModuleAssignment}>Guardar cambios</Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ===== CONFIRMATION MODALS ===== */}
+      {/* ===== CONFIRMATION MODAL (delete role) ===== */}
       <ConfirmationModal
         open={!!deleteConfirmRole}
         onClose={() => setDeleteConfirmRole(null)}
         onConfirm={confirmDeleteRol}
         title="Eliminar rol"
-        description={`¿Estás seguro de que deseas eliminar "${deleteConfirmRole?.nombre}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
-        variant="danger"
-      />
-
-      <ConfirmationModal
-        open={!!deleteConfirmPermiso}
-        onClose={() => setDeleteConfirmPermiso(null)}
-        onConfirm={confirmDeletePermiso}
-        title="Eliminar permiso"
-        description={`¿Estás seguro de que deseas eliminar "${deleteConfirmPermiso?.code}"? Esta acción no se puede deshacer.`}
+        description={
+          deleteConfirmRole
+            ? `¿Estás seguro de que deseas eliminar "${deleteConfirmRole.nombre}"? Esta acción no se puede deshacer.`
+            : ''
+        }
         confirmLabel="Eliminar"
         variant="danger"
       />

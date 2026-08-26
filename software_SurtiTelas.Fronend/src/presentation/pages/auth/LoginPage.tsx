@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
     const state = location.state as { redirectTo?: string } | null;
     const redirectTo = state?.redirectTo;
     if (redirectTo) return redirectTo;
-    if (role === 'admin') return '/admin/dashboard';
+    if (role === 'admin' || role === 'almacen' || role === 'produccion' || role === 'reportes') return '/admin/dashboard';
     if (role === 'asesor') return '/asesor/dashboard';
     if (role === 'domiciliario') return '/domiciliario/dashboard';
     return '/cliente/inicio';
