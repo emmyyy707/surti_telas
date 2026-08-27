@@ -183,6 +183,7 @@ export const QuotationSchema = z.object({
   observaciones: z.string().optional(),
   generadoPorId: z.string().optional(),
   generadoPorNombre: z.string().optional(),
+  draft: z.boolean().optional(),
   detalles: z.array(QuotationDetalleSchema).min(1, 'Debe incluir al menos un detalle'),
   negotiationCount: z.number().int().nonnegative().optional(),
   negotiationHistory: z.array(z.object({

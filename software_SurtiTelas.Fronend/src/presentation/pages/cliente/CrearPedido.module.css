@@ -166,8 +166,8 @@
 }
 
 .trustedSection {
-  background: color-mix(in srgb, var(--color-bg-accent, #f0f7ff), transparent 20%);
-  border: 1px solid color-mix(in srgb, var(--color-accent-primary, #3b82f6), transparent 50%);
+  background: color-mix(in srgb, var(--color-bg-accent, #f5f0e8), transparent 20%);
+  border: 1px solid color-mix(in srgb, var(--color-accent-primary, #C4A574), transparent 50%);
   border-radius: var(--radius-md);
   padding: 16px;
   margin-top: 8px;
@@ -176,7 +176,7 @@
 .trustedTitle {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-accent-primary, #3b82f6);
+  color: var(--color-accent-primary, #C4A574);
   margin: 0 0 12px 0;
   display: flex;
   align-items: center;

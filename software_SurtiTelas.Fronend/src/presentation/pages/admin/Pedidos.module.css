@@ -3,6 +3,8 @@
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .pageTitle {
@@ -16,6 +18,13 @@
   font-size: 0.9rem;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .toolbar {
@@ -130,7 +139,8 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .actionBtn {
@@ -142,6 +152,7 @@
   font-size: 0.8rem;
   cursor: pointer;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .actionBtn:hover {
@@ -180,6 +191,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .modalTitle {
@@ -277,8 +289,8 @@
 
 .modalActions {
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
@@ -322,13 +334,79 @@
   background: #ffffff;
 }
 
-.proofDetailNone {
+.ProofDetailNone {
   padding: 24px;
   text-align: center;
   color: var(--color-text-muted);
   font-size: 13px;
   border: 1px dashed var(--color-border);
   border-radius: 8px;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.detailTable thead th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.detailTable tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+}
+
+.detailTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.detailTable tbody tr:hover {
+  background: var(--color-bg-elevated);
+}
+
+.detailCellLabel {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  width: 120px;
+  white-space: nowrap;
+}
+
+.detailCellValue {
+  color: var(--color-text-primary);
+}
+
+.rightAlign {
+  text-align: right;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableScroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: var(--color-bg-elevated);
+  border-radius: 3px;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
 }
 
 .statusTransitionHeader {
@@ -397,7 +475,7 @@
 
 .statusOptionSelected {
   border-color: var(--color-accent);
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(196, 165, 116, 0.08);
 }
 
 .statusOptionRadio {

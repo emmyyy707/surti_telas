@@ -60,11 +60,11 @@ export const ROL_LABELS: Record<string, string> = {
 };
 
 export const ROL_COLORS: Record<string, string> = {
-  admin: '#f59e0b',
-  asesor: '#3b82f6',
-  domiciliario: '#8b5cf6',
-  cliente: '#10b981',
-  almacen: '#06b6d4',
+  admin: 'var(--chart-series-3)',
+  asesor: 'var(--chart-series-1)',
+  domiciliario: 'var(--chart-series-2)',
+  cliente: 'var(--chart-series-4)',
+  almacen: 'var(--chart-series-5)',
   produccion: '#ec4899',
   reportes: '#64748b',
 };

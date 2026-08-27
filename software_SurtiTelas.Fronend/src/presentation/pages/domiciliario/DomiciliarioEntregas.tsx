@@ -10,7 +10,7 @@ const ESTADOS = ['ASIGNADO', 'EN_RUTA', 'ENTREGADO', 'FALLIDO'] as const;
 
 const estadoConfig: Record<string, { label: string; variant: 'success' | 'info' | 'warning' | 'danger' | 'default'; color: string }> = {
   ASIGNADO: { label: 'Pendiente', variant: 'warning', color: '#f59e0b' },
-  EN_RUTA: { label: 'En camino', variant: 'info', color: '#3b82f6' },
+  EN_RUTA: { label: 'En camino', variant: 'info', color: '#C4A574' },
   ENTREGADO: { label: 'Entregado', variant: 'success', color: '#10b981' },
   FALLIDO: { label: 'Fallido', variant: 'danger', color: '#ef4444' },
 };

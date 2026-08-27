@@ -55,7 +55,7 @@
 .timelineLabel { font-size: 0.72rem; color: var(--color-text-muted); font-weight: 600; text-align: center; }
 .timelineCompleted .timelineDot { background: var(--color-accent); border-color: var(--color-accent); }
 .timelineCompleted .timelineLabel { color: var(--color-text-primary); }
-.timelineCurrent .timelineDot { background: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 0 0 4px rgba(59,130,246,0.25); }
+.timelineCurrent .timelineDot { background: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 0 0 4px rgba(196,165,116,0.25); }
 .timelineCurrent .timelineLabel { color: var(--color-accent); }
 .tableWrapper { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }

@@ -345,10 +345,8 @@ export const AdminWebhooks: React.FC = () => {
             )}
           </div>
 
-          <div className={f.formActions}>
-            <ModalFooter
-              actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingWebhook ? 'Guardar cambios' : 'Crear webhook' , type: 'submit', loading: saving }]} />
-          </div>
+          <ModalFooter
+            actions={[{ label: 'Cancelar', variant: 'secondary', type: 'button', onClick: closeModal, disabled: saving }, { label: editingWebhook ? 'Guardar cambios' : 'Crear webhook' , type: 'submit', loading: saving }]} />
         </form>
       </Modal>
 

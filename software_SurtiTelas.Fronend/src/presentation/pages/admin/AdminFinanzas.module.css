@@ -158,13 +158,13 @@
 }
 
 .kpiIconInfo {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(196, 165, 116, 0.1);
+  color: #C4A574;
 }
 
 [data-theme="dark"] .kpiIconInfo {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
+  background: rgba(212, 165, 116, 0.2);
+  color: #D4A574;
 }
 
 .kpiIconPurple {
@@ -178,13 +178,13 @@
 }
 
 .kpiIconCyan {
-  background: rgba(6, 182, 212, 0.1);
-  color: #06b6d4;
+  background: rgba(196, 165, 116, 0.1);
+  color: #C4A574;
 }
 
 [data-theme="dark"] .kpiIconCyan {
-  background: rgba(6, 182, 212, 0.2);
-  color: #22d3ee;
+  background: rgba(212, 165, 116, 0.2);
+  color: #D4A574;
 }
 
 .sections {

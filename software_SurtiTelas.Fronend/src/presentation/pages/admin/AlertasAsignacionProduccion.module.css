@@ -4,6 +4,7 @@
   justify-content: space-between;
   margin-bottom: 24px;
   gap: 24px;
+  flex-wrap: wrap;
 }
 
 .pageTitle {

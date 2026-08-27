@@ -91,7 +91,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerValue, centerLabel 
     <div className={s.pieContainer}>
       <svg width={180} height={180} viewBox="0 0 180 180" className={s.pieSvg}>
         <g transform="rotate(-90 90 90)">
-          <circle cx={90} cy={90} r={54} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={18} />
+          <circle cx={90} cy={90} r={54} fill="none" stroke="var(--chart-grid)" strokeWidth={18} />
           {segments.map((seg: { color: string; drawLen: number; pct: number }, i: number) => {
             const offset = -accumulated;
             accumulated += (seg.drawLen + DONUT_GAP);
@@ -218,9 +218,9 @@ export const AdminReportesUsuarios: React.FC = () => {
   }));
 
   const estadoData = [
-    { estado: 'Activos', cantidad: usuarios.filter(u => u.estado === 'Activo').length, color: '#10b981' },
-    { estado: 'Inactivos', cantidad: usuarios.filter(u => u.estado === 'Inactivo').length, color: '#ef4444' },
-    { estado: 'Pendientes', cantidad: usuarios.filter(u => u.estado === 'Pendiente').length, color: '#f59e0b' },
+    { estado: 'Activos', cantidad: usuarios.filter(u => u.estado === 'Activo').length, color: 'var(--chart-series-4)' },
+    { estado: 'Inactivos', cantidad: usuarios.filter(u => u.estado === 'Inactivo').length, color: 'var(--color-error)' },
+    { estado: 'Pendientes', cantidad: usuarios.filter(u => u.estado === 'Pendiente').length, color: 'var(--chart-series-3)' },
   ];
 
   const filtrados = usuarios.filter(u =>
@@ -371,7 +371,7 @@ export const AdminReportesUsuarios: React.FC = () => {
             render: (item) => (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-white font-semibold text-lg">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-600 text-white font-semibold text-lg">
                     {item.nombre.charAt(0).toUpperCase()}
                   </div>
                   <div>

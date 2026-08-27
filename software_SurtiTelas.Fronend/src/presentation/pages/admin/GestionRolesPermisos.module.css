@@ -107,9 +107,12 @@
 .modal {
   background: var(--color-bg-primary, #ffffff);
   border-radius: 12px;
-  max-width: 560px;
   width: 100%;
+  max-height: calc(100vh - 32px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modalHeader {
@@ -118,6 +121,7 @@
   align-items: center;
   padding: 20px 24px 12px;
   border-bottom: 1px solid var(--color-border, #e4e4e7);
+  flex-shrink: 0;
 }
 
 .modalTitle {
@@ -129,6 +133,18 @@
 
 .modalBody {
   padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border, #e4e4e7);
+  flex-shrink: 0;
 }
 
 .closeBtn {
@@ -139,6 +155,12 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.closeBtn:hover {
+  background-color: var(--color-bg-elevated, #f4f4f5);
 }
 
 .drawerOverlay {
@@ -222,4 +244,29 @@
   color: var(--color-text-primary);
   font-size: 0.88rem;
   margin: 0;
+}
+
+.permissionsTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.permissionsTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.permissionsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.permissionsTable tr:hover {
+  background-color: var(--color-bg-elevated);
+}
+
+.permissionsTable input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }

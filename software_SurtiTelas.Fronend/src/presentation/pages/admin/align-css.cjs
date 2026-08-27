@@ -96,8 +96,8 @@ if (!content.includes('.metricCardPrimary {')) {
   content = content.replace(
     '.metricCard:hover {',
     `.metricCardPrimary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
-  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(196, 165, 116, 0.06) 0%, rgba(196, 165, 116, 0.02) 100%);
+  border-color: rgba(196, 165, 116, 0.25);
 }
 
 .metricCardSuccess {
@@ -111,7 +111,7 @@ if (!content.includes('.metricCardPrimary {')) {
 }
 
 .metricIconPending {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(196, 165, 116, 0.12);
   color: var(--color-accent);
 }
 

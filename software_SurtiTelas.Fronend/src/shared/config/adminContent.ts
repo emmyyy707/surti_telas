@@ -58,7 +58,7 @@ export const adminContent = {
           label: import.meta.env.VITE_ADMIN_MENU_STOCK_DEVUELTO?.trim() || 'Gestión de Stock Devuelto',
         },
         compras: {
-          label: 'Gestión de Compras',
+          label: ' Compras',
         },
       },
       compras: {
@@ -97,7 +97,7 @@ export const adminContent = {
           label: 'Gestión de Cotizaciones',
         },
         domiciliarios: {
-          label: 'Gestión de Domicilios',
+          label: 'Gestión de Domicilíarios',
         },
         rutaDelDia: {
           label: 'Gestión de Ruta del Día',

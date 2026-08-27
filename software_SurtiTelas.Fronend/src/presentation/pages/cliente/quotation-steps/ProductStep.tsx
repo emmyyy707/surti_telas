@@ -79,7 +79,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                 </div>
                 {idx === activeItemIndex && (
                   <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
-                    <Check size={16} className="text-blue-600" />
+                    <Check size={16} className="text-amber-600" />
                   </div>
                 )}
               </div>

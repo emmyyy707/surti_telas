@@ -1,5 +1,6 @@
 import React, { useId, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { Button } from './Button';
 import m from './AdminModal.module.css';
 
 interface AdminModalProps {
@@ -76,14 +77,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               <p id={descId} className={m.modalDescription}>{description}</p>
             )}
           </div>
-          <button
+          <Button
             type="button"
-            className={m.closeBtn}
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
             aria-label="Cerrar"
           >
             <X size={16} />
-          </button>
+          </Button>
         </div>
         <div className={m.modalBody}>
           {children}

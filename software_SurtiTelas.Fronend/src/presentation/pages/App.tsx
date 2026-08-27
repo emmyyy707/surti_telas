@@ -58,6 +58,7 @@ const AdminReportesInventario = React.lazy(() => import('@/presentation/pages/ad
 const AdminNotificaciones = React.lazy(() => import('@/presentation/pages/admin/AdminNotificaciones').then(m => ({ default: m.AdminNotificaciones })));
 const AdminFinanzas = React.lazy(() => import('@/presentation/pages/admin/AdminFinanzas').then(m => ({ default: m.AdminFinanzas })));
 const AdminPedidosPersonalizados = React.lazy(() => import('@/presentation/pages/admin/PedidosPersonalizados').then(m => ({ default: m.AdminPedidosPersonalizados })));
+const AdminDevoluciones = React.lazy(() => import('@/presentation/pages/admin/AdminDevoluciones').then(m => ({ default: m.AdminDevoluciones })));
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
 const AsesorDashboard = React.lazy(() => import('@/presentation/pages/asesor/Dashboard').then(m => ({ default: m.AsesorDashboard })));
 const AsesorClientes = React.lazy(() => import('@/presentation/pages/asesor/MisClientes').then(m => ({ default: m.AsesorClientes })));
@@ -179,6 +180,7 @@ const App: React.FC = () => {
             <Route path="reportes-inventario" element={<Navigate to="/admin/reportes/inventario" replace />} />
             <Route path="finanzas" element={<Navigate to="/admin/reportes/finanzas" replace />} />
             <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
+            <Route path="devoluciones" element={<AdminDevoluciones />} />
             <Route path="notificaciones" element={<AdminNotificaciones />} />
           </Route>
 

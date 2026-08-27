@@ -171,17 +171,20 @@ export const DetailModal = ({
                 </div>
 
                 {section.children || (
-                  <div className={cn(s.fieldsGrid, section.fullWidth && s.fieldsGridFull)}>
-                    {section.fields?.map((field, fieldIndex) => (
-                      <article key={`${field.label}-${fieldIndex}`} className={cn(s.fieldCard, field.fullWidth && s.fieldFull, s[`fieldCard--${field.tone ?? 'default'}`])}>
-                        <div className={s.fieldLabel}>
-                          {field.icon && <span className={s.fieldIcon}>{field.icon}</span>}
-                          <span>{field.label}</span>
-                        </div>
-                        <div className={cn(s.fieldValue, field.monospace && s.monoValue)}>{field.value}</div>
-                        {field.helper && <p className={s.fieldHelper}>{field.helper}</p>}
-                      </article>
-                    ))}
+                  <div className={s.tableWrapper}>
+                    <table className={s.detailTable}>
+                      <tbody>
+                        {section.fields?.map((field, fieldIndex) => (
+                          <tr key={`${field.label}-${fieldIndex}`}>
+                            <td className={s.detailCellLabel}>
+                              {field.icon && <span className={s.fieldIcon}>{field.icon}</span>}
+                              {field.label}
+                            </td>
+                            <td className={cn(s.detailCell, field.monospace && s.monoValue)}>{field.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </section>

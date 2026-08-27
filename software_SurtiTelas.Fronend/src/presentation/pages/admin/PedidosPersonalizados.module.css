@@ -49,8 +49,8 @@
 }
 
 .metricCardPrimary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.07) 0%, rgba(59, 130, 246, 0.02) 100%);
-  border-color: rgba(59, 130, 246, 0.28);
+  background: linear-gradient(135deg, rgba(196, 165, 116, 0.07) 0%, rgba(196, 165, 116, 0.02) 100%);
+  border-color: rgba(196, 165, 116, 0.28);
 }
 
 .metricCardSuccess {
@@ -74,7 +74,7 @@
 }
 
 .metricIconPending {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(196, 165, 116, 0.12);
   color: var(--color-accent);
 }
 
@@ -212,7 +212,7 @@
 .searchInput:focus {
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.1);
 }
 
 .tableWrapper {
@@ -441,7 +441,7 @@
 .select:focus {
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 textarea.input {
@@ -474,7 +474,7 @@ textarea.input {
 }
 
 .registroInfo:hover {
-  border-color: rgba(59, 130, 246, 0.25);
+  border-color: rgba(196, 165, 116, 0.25);
 }
 
 .infoRow {
@@ -580,6 +580,7 @@ textarea.input {
 .adminModalMd { max-width: min(560px, calc(100vw - 32px)); }
 .adminModalLg { max-width: min(720px, calc(100vw - 32px)); }
 .adminModalXl { max-width: min(960px, calc(100vw - 32px)); }
+.adminModal4xl { max-width: min(1280px, calc(100vw - 32px)); }
 
 .colSpan2 {
   grid-column: 1 / -1;
@@ -703,7 +704,7 @@ textarea.input {
 .textarea:focus {
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .textareaError {
@@ -879,7 +880,7 @@ textarea.input {
 }
 
 .multiSelectOptionSelected {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(196, 165, 116, 0.1);
   border-color: var(--color-accent);
   color: var(--color-accent);
   font-weight: 600;
@@ -1014,7 +1015,7 @@ textarea.input {
 
 .quotationAddLine:hover {
   border-color: var(--color-accent);
-  background: rgba(59, 130, 246, 0.04);
+  background: rgba(196, 165, 116, 0.04);
 }
 
 .quotationSummary {
@@ -1066,7 +1067,7 @@ textarea.input {
 
 .quotationInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .quotationSubtotal {
@@ -1161,7 +1162,7 @@ textarea.input {
 
 .distributionInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .distributionValue {
@@ -1403,7 +1404,7 @@ textarea.input {
 
 .negotiationInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .negotiationTextarea {
@@ -1423,7 +1424,7 @@ textarea.input {
 
 .negotiationTextarea:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .negotiationSectionTitle {
@@ -1464,5 +1465,204 @@ textarea.input {
 
 .negotiationDiffNew {
   color: var(--color-success);
+}
+
+.quotationEditor {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.quotationEditorMain {
+  min-width: 0;
+}
+
+.quotationEditorSummary {
+  position: sticky;
+  top: 8px;
+  align-self: start;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+.quotationEditorActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 1024px) {
+  .quotationEditor {
+    grid-template-columns: 1fr;
+  }
+  .quotationEditorSummary {
+    position: relative;
+    top: 0;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+.statusBadgePending {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.cotizacionEstadoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.cotizacionEstadoBadge.enviada {
+  background: rgba(196, 165, 116, 0.12);
+  color: var(--color-accent);
+  border: 1px solid rgba(196, 165, 116, 0.3);
+}
+
+.cotizacionEstadoBadge.pendiente {
+  background: rgba(244, 162, 97, 0.12);
+  color: #f97316;
+  border: 1px solid rgba(244, 162, 97, 0.3);
+}
+
+.cotizacionEstadoBadge.aceptada {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.cotizacionEstadoBadge.rechazada {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--color-danger);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.cotizacionEstadoBadge.cancelada {
+  background: rgba(100, 116, 122, 0.12);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.rowActionPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid #C4A574;
+  background: #C4A574;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.rowActionPrimary:hover {
+  background: #A8895A;
+  border-color: #A8895A;
+  transform: translateY(-1px);
+}
+
+.rowActionSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid #C4A574;
+  background: transparent;
+  color: #4a4a4a;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.rowActionSecondary:hover {
+  background: rgba(196, 165, 116, 0.1);
+  color: #1a1a1a;
+  border-color: #C4A574;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cotizacionEstadoCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cotizacionEstadoCell .badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
+
+.metricValueSmall {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.noWrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clientNameCell {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.requestNumberCell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode overrides for action buttons */
+[data-theme="dark"] .rowActionPrimary {
+  border-color: #D4A574;
+  background: #D4A574;
+  color: #0a0a0c;
+}
+
+[data-theme="dark"] .rowActionPrimary:hover {
+  background: #B8956A;
+  border-color: #B8956A;
+}
+
+[data-theme="dark"] .rowActionSecondary {
+  border-color: #D4A574;
+  background: transparent;
+  color: #D4A574;
+}
+
+[data-theme="dark"] .rowActionSecondary:hover {
+  background: #D4A574;
+  color: #0a0a0c;
+  border-color: #D4A574;
 }
 

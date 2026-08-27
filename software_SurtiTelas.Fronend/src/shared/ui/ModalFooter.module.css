@@ -4,10 +4,14 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: var(--modal-footer-padding, 20px 24px);
+  padding: 16px 24px;
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-surface);
   flex-shrink: 0;
+}
+
+.modalFooter > * {
+  min-height: 40px;
 }
 
 .align--center {
@@ -27,5 +31,6 @@
 
   .modalFooter > * {
     width: 100%;
+    min-height: 44px;
   }
 }

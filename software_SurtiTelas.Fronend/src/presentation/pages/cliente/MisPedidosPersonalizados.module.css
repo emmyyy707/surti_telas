@@ -48,8 +48,8 @@
 }
 
 .metricCardPrimary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
-  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(196, 165, 116, 0.06) 0%, rgba(196, 165, 116, 0.02) 100%);
+  border-color: rgba(196, 165, 116, 0.25);
 }
 
 .metricCardSuccess {
@@ -73,7 +73,7 @@
 }
 
 .metricIconPending {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(196, 165, 116, 0.12);
   color: var(--color-accent);
 }
 
@@ -211,7 +211,7 @@
 .searchInput:focus {
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.1);
 }
 
 .tableWrapper {
@@ -273,7 +273,7 @@
 .textarea:focus {
   border-color: var(--color-accent);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.12);
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
@@ -308,7 +308,7 @@
 }
 
 .registroInfo:hover {
-  border-color: rgba(59, 130, 246, 0.25);
+  border-color: rgba(196, 165, 116, 0.25);
 }
 
 .infoRow {
@@ -796,7 +796,7 @@
 }
 
 .multiSelectOptionSelected {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(196, 165, 116, 0.1);
   border-color: var(--color-accent);
   color: var(--color-accent);
   font-weight: 600;
@@ -947,7 +947,7 @@
 
 .quotationInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .quotationSubtotal {
@@ -1042,7 +1042,7 @@
 
 .distributionInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .distributionValue {
@@ -1226,12 +1226,12 @@
   border-color: var(--color-accent);
   background: var(--color-accent);
   color: #fff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 4px rgba(196, 165, 116, 0.15);
 }
 
 .stepperCircleCompleted {
   border-color: var(--color-accent);
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(196, 165, 116, 0.1);
   color: var(--color-accent);
 }
 
@@ -1283,7 +1283,7 @@
 
 .productCardActive {
   border-color: var(--color-accent);
-  background: rgba(59, 130, 246, 0.02);
+  background: rgba(196, 165, 116, 0.02);
   box-shadow: 0 0 0 1px var(--color-accent);
 }
 
@@ -1364,7 +1364,7 @@
 
 .distributionInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .distributionTotal {
@@ -1629,7 +1629,7 @@
 .btnPrimary:hover {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 12px rgba(196, 165, 116, 0.25);
 }
 
 .btnPrimary:active {
@@ -1688,12 +1688,12 @@
 }
 
 .cardActionBtnEdit {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(196, 165, 116, 0.1);
   color: var(--color-accent);
 }
 
 .cardActionBtnEdit:hover {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(196, 165, 116, 0.2);
 }
 
 .cardActionBtnDelete {
@@ -1848,8 +1848,8 @@
 }
 
 .paymentQrBlock .bq-row--highlight {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: rgba(196, 165, 116, 0.08);
+  border: 1px solid rgba(196, 165, 116, 0.18);
 }
 
 .paymentQrBlock .bq-copy-btn {
@@ -1858,7 +1858,7 @@
 }
 
 .paymentQrBlock .bq-copy-btn:hover {
-  background: rgba(59, 130, 246, 0.18);
+  background: rgba(196, 165, 116, 0.18);
   color: var(--color-accent);
 }
 
@@ -2044,7 +2044,7 @@
 
 .negotiationInput:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .negotiationTextarea {
@@ -2064,7 +2064,7 @@
 
 .negotiationTextarea:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.08);
 }
 
 .negotiationSectionTitle {

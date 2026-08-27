@@ -233,6 +233,62 @@
   overflow-wrap: anywhere;
 }
 
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: var(--color-bg-elevated);
+  border-radius: 3px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.detailTable tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.detailTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.detailTable tbody tr:hover {
+  background: var(--color-bg-elevated);
+}
+
+.detailCellLabel {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  width: 40%;
+  white-space: nowrap;
+}
+
+.detailCell {
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.fieldIcon {
+  margin-right: 6px;
+  color: var(--color-text-secondary);
+}
+
 .observationBlock {
   padding: 18px;
   border: 1px solid var(--color-border);

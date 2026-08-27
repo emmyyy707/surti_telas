@@ -19,25 +19,25 @@ import s from './Chart.module.css';
 /* ========================================= */
 
 const COLORS = [
-  '#3b82f6',
-  '#8b5cf6',
-  '#f59e0b',
-  '#10b981',
-  '#94a3b8',
+  'var(--chart-series-1)',
+  'var(--chart-series-2)',
+  'var(--chart-series-3)',
+  'var(--chart-series-4)',
+  'var(--chart-series-5)',
 ];
 
 const TOOLTIP_CONTENT_STYLE = {
-  background: 'var(--color-bg-elevated)',
-  border: '1px solid var(--color-border)',
+  background: 'var(--chart-tooltip-bg)',
+  border: '1px solid var(--chart-tooltip-border)',
   borderRadius: 'var(--radius-md)',
   padding: '10px 14px',
-  color: 'var(--color-text-primary)',
+  color: 'var(--chart-tooltip-text)',
   fontSize: '0.82rem',
   lineHeight: 1.4,
 };
 
 const TOOLTIP_ITEM_STYLE = {
-  color: 'var(--color-text-secondary)',
+  color: 'var(--chart-text)',
 };
 
 /* ========================================= */
@@ -93,22 +93,22 @@ export function BarChart({
         <ReBarChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--color-border-subtle)"
+            stroke="var(--chart-grid)"
           />
 
           <XAxis
             dataKey="label"
-            stroke="var(--color-text-muted)"
-            tick={{ fontSize: 11 }}
+            stroke="var(--chart-axis)"
+            tick={{ fontSize: 11, fill: 'var(--chart-text)' }}
           />
 
           <YAxis
-            stroke="var(--color-text-muted)"
-            tick={{ fontSize: 11 }}
+            stroke="var(--chart-axis)"
+            tick={{ fontSize: 11, fill: 'var(--chart-text)' }}
           />
 
           <Tooltip
-            cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+            cursor={{ fill: 'var(--chart-cursor-fill)' }}
             contentStyle={TOOLTIP_CONTENT_STYLE}
             itemStyle={TOOLTIP_ITEM_STYLE}
           />
@@ -116,7 +116,7 @@ export function BarChart({
           <Bar
             dataKey="value"
             radius={[8, 8, 0, 0]}
-            fill="#10b981"
+            fill="var(--chart-series-4)"
           />
         </ReBarChart>
       </ResponsiveContainer>
@@ -150,18 +150,18 @@ export function LineChart({
         <ReLineChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--color-border-subtle)"
+            stroke="var(--chart-grid)"
           />
 
           <XAxis
             dataKey="label"
-            stroke="var(--color-text-muted)"
-            tick={{ fontSize: 11 }}
+            stroke="var(--chart-axis)"
+            tick={{ fontSize: 11, fill: 'var(--chart-text)' }}
           />
 
           <YAxis
-            stroke="var(--color-text-muted)"
-            tick={{ fontSize: 11 }}
+            stroke="var(--chart-axis)"
+            tick={{ fontSize: 11, fill: 'var(--chart-text)' }}
           />
 
           <Tooltip
@@ -172,9 +172,9 @@ export function LineChart({
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#111827"
+            stroke="var(--chart-line-stroke)"
             strokeWidth={3}
-            dot={{ r: 4 }}
+            dot={{ r: 4, fill: 'var(--chart-line-stroke)' }}
           />
         </ReLineChart>
       </ResponsiveContainer>

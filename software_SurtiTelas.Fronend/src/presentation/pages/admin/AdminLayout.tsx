@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, ShoppingBag, Package, Boxes, FolderTree, AlertTriangle, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, DollarSign, KeyRound, MapPin, FileText, Tags } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, ShoppingBag, Package, Boxes, FolderTree, AlertTriangle, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, DollarSign, KeyRound, MapPin, FileText, Tags, RotateCcw } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
@@ -45,7 +45,7 @@ const adminMenu: SidebarItem[] = [
     label: adminContent.layout.menu.inventario.compras.label,
     key: 'compras',
     subItems: [
-      { icon: ShoppingBag, label: adminContent.layout.menu.inventario.compras.label, key: 'compras' },
+      { icon: ShoppingBag, label: 'Gestión de Compras', key: 'compras' },
       { icon: Boxes, label: adminContent.layout.menu.inventario.insumos.label, key: 'insumos' },
       { icon: Tags, label: adminContent.layout.menu.inventario.categoriasInsumos.label, key: 'categorias-insumos' },
       { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
@@ -66,6 +66,7 @@ const adminMenu: SidebarItem[] = [
       { icon: Users2, label: adminContent.layout.menu.ventas.clientes.label, key: 'clientes' },
       { icon: Users2, label: adminContent.layout.menu.ventas.domiciliarios.label, key: 'domicilios' },
       { icon: MapPin, label: adminContent.layout.menu.rutaDelDia.label, key: 'ruta-del-dia' },
+      { icon: RotateCcw, label: ' Gestión de Devoluciones', key: 'devoluciones' },
     ],
   },
   

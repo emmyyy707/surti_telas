@@ -228,6 +228,7 @@ export interface QuotationInput {
   observaciones?: string;
   generadoPorId: string;
   generadoPorNombre: string;
+  draft?: boolean;
   detalles: {
     tipo: string;
     descripcion: string;

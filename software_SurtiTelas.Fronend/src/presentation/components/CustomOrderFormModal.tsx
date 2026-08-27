@@ -1,4 +1,5 @@
 import { Modal } from '@/shared/ui/Modal';
+import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
 import styles from './CustomOrderFormModal.module.css';
 
@@ -77,55 +78,54 @@ export function CustomOrderFormModal({
         </div>
       }
       footer={
-        <>
-          <button
+        <div className={styles.quotationFooter}>
+          <Button
             type="button"
+            variant="ghost"
+            size="md"
             onClick={onClose}
-            className={`${styles.quotationBtn} ${styles.quotationBtnGhost}`}
           >
             Cancelar
-          </button>
+          </Button>
           <div className={styles.quotationFooterActions}>
             {step > 1 && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
                 onClick={onBack}
-                className={`${styles.quotationBtn} ${styles.quotationBtnSecondary}`}
               >
                 Anterior
-              </button>
+              </Button>
             )}
             {step < steps.length && (
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="md"
                 onClick={handleNext}
-                className={`${styles.quotationBtn} ${styles.quotationBtnPrimary}`}
                 data-testid="quotation-next"
               >
                 Siguiente
-              </button>
+              </Button>
             )}
             {isLastStep && (
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="md"
                 onClick={onSubmit}
-                disabled={saving}
-                className={`${styles.quotationBtn} ${styles.quotationBtnPrimary} ${styles.quotationBtnSubmit}`}
+                loading={saving}
                 data-testid="quotation-submit"
               >
-                {saving ? (
-                  <>
-                    <span className={styles.quotationSpinner} aria-hidden="true" />
-                    Enviando...
-                  </>
-                ) : isEditing ? 'Guardar cambios' : 'Solicitar cotización'}
-              </button>
+                {isEditing ? 'Guardar cambios' : 'Solicitar cotización'}
+              </Button>
             )}
             {footerActions}
           </div>
-        </>
+        </div>
       }
-      footerClassName={styles.quotationFooter}
+      footerClassName={styles.quotationFooterWrapper}
       bodyClassName={styles.quotationModalBody}
     >
       <div className={styles.quotationLayout}>

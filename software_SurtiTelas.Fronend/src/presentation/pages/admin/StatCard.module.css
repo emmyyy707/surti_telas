@@ -42,8 +42,8 @@
 }
 
 .statCardIcon--info {
-  background: rgba(59, 130, 246, 0.12);
-  color: var(--color-info);
+  background: rgba(196, 165, 116, 0.12);
+  color: var(--color-accent);
 }
 
 .statCardIcon--warning {

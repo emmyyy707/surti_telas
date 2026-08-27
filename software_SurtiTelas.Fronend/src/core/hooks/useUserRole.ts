@@ -1,9 +1,6 @@
 ﻿import { useEffect } from 'react';
 
-const _ROLES = ['admin', 'almacen', 'asesor', 'domiciliario', 'cliente', 'produccion', 'reportes'] as const;
-type Role = (typeof _ROLES)[number];
-
-export const useUserRole = (role: Role): void => {
+export const useUserRole = (role: string): void => {
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-role', role);

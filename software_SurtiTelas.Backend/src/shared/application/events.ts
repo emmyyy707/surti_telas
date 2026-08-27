@@ -470,6 +470,7 @@ export class QuotationGeneratedEvent implements DomainEvent {
       total: number;
       valorAnticipo: number;
       saldo: number;
+      draft?: boolean;
     },
     public readonly requestId?: string
   ) {}

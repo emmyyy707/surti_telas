@@ -332,7 +332,7 @@ export const RutaDelDia: React.FC = () => {
                         selected ? 'border-[var(--color-primary)] bg-[var(--color-bg-elevated)] shadow-sm' : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)]'
                       )}
                     >
-                      <span className={cn('flex h-10 w-10 items-center justify-center rounded-lg text-white', tone === 'success' && 'bg-emerald-500', tone === 'info' && 'bg-sky-500', tone === 'warning' && 'bg-amber-500', tone === 'danger' && 'bg-red-500')}>
+                      <span className={cn('flex h-10 w-10 items-center justify-center rounded-lg text-white', tone === 'success' && 'bg-emerald-500', tone === 'info' && 'bg-amber-500', tone === 'warning' && 'bg-amber-500', tone === 'danger' && 'bg-red-500')}>
                         <PackageCheck size={18} />
                       </span>
                       <div>

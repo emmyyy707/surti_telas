@@ -7,6 +7,7 @@
   justify-content: space-between;
   margin-bottom: 16px;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .metricsRow {
@@ -35,8 +36,8 @@
 }
 
 .metricCardPrimary {
-  background: rgba(59, 130, 246, 0.05);
-  border-color: rgba(59, 130, 246, 0.2);
+  background: rgba(196, 165, 116, 0.05);
+  border-color: rgba(196, 165, 116, 0.2);
 }
 
 .metricCardSuccess {
@@ -60,7 +61,7 @@
 }
 
 .metricIconPending {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(196, 165, 116, 0.12);
   color: var(--color-accent);
 }
 
@@ -274,7 +275,7 @@
 }
 
 .quickStatIconPending {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(196, 165, 116, 0.1);
   color: var(--color-accent);
 }
 

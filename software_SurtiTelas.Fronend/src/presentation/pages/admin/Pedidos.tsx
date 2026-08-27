@@ -327,19 +327,67 @@ export const AdminPedidos: React.FC = () => {
               render: (p, onClose) => (
                 <div className={s.detailModalContent}>
                   <div className={s.detailSection}>
-                    <h4 className={s.detailSectionTitle}>Detalles del pedido</h4>
-                    <div className={s.detailGrid}>
-                      <div className={s.detailItem}><span className={s.detailLabel}>ID</span><span>{p.numero ?? p.id}</span></div>
-                      <div className={s.detailItem}><span className={s.detailLabel}>Cliente</span><span>{p.cliente}</span></div>
-                      <div className={s.detailItem}><span className={s.detailLabel}>Asesor</span><span>{p.asesor}</span></div>
-                      <div className={s.detailItem}><span className={s.detailLabel}>Items</span><span>{p.items}</span></div>
-                      <div className={s.detailItem}><span className={s.detailLabel}>Total</span><span>{p.total}</span></div>
-                      <div className={s.detailItem}><span className={s.detailLabel}>Estado</span><span><Badge variant={orderStatuses[p.estado]}>{p.estado}</Badge></span></div>
-                    </div>
+                    <h4 className={s.detailSectionTitle}>Resumen</h4>
+                    <table className={s.detailTable}>
+                      <tbody>
+                        <tr>
+                          <td className={s.detailCellLabel}>ID</td>
+                          <td className={s.detailCellValue}>{p.numero ?? p.id}</td>
+                        </tr>
+                        <tr>
+                          <td className={s.detailCellLabel}>Cliente</td>
+                          <td className={s.detailCellValue}>{p.cliente}</td>
+                        </tr>
+                        <tr>
+                          <td className={s.detailCellLabel}>Asesor</td>
+                          <td className={s.detailCellValue}>{p.asesor}</td>
+                        </tr>
+                        <tr>
+                          <td className={s.detailCellLabel}>Fecha</td>
+                          <td className={s.detailCellValue}>{p.fecha}</td>
+                        </tr>
+                        <tr>
+                          <td className={s.detailCellLabel}>Estado</td>
+                          <td className={s.detailCellValue}><Badge variant={orderStatuses[p.estado]}>{p.estado}</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className={s.detailCellLabel}>Total</td>
+                          <td className={s.detailCellValue}>{p.total}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
+
+                  {p.itemsList && p.itemsList.length > 0 && (
+                    <div className={s.detailSection}>
+                      <h4 className={s.detailSectionTitle}>Productos</h4>
+                      <div className={s.tableScroll}>
+                        <table className={s.detailTable}>
+                          <thead>
+                            <tr>
+                              <th>Producto</th>
+                              <th className={s.rightAlign}>Cantidad</th>
+                              <th className={s.rightAlign}>Precio</th>
+                              <th className={s.rightAlign}>Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {p.itemsList.map((item, idx) => (
+                              <tr key={idx}>
+                                <td>{item.nombre}</td>
+                                <td className={s.rightAlign}>{item.cantidad}</td>
+                                <td className={s.rightAlign}>{formatoCOP(item.precio)}</td>
+                                <td className={s.rightAlign}>{formatoCOP(item.precio * item.cantidad)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
                   <ModalFooter
                     actions={[{ label: 'Cerrar', variant: 'secondary', onClick: onClose }]} />
-
                 </div>
               ),
             }}

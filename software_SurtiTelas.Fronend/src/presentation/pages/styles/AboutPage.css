@@ -277,9 +277,9 @@
 .team-card:nth-child(1) .team-icon-wrapper { background-color: #A855F7; }
 .team-card:nth-child(1):hover { border-color: #A855F7; }
 
-/* Card 2 - María (Azul como Visión) */
-.team-card:nth-child(2) .team-icon-wrapper { background-color: #3B82F6; }
-.team-card:nth-child(2):hover { border-color: #3B82F6; }
+/* Card 2 - María (Dorado como Visión) */
+.team-card:nth-child(2) .team-icon-wrapper { background-color: #C4A574; }
+.team-card:nth-child(2):hover { border-color: #C4A574; }
 
 /* Card 3 - Juan (Verde como Valores) */
 .team-card:nth-child(3) .team-icon-wrapper { background-color: #22C55E; }
@@ -363,7 +363,7 @@
     position: absolute;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(196, 165, 116, 0.05) 0%, transparent 70%);
     top: -200px;
     right: -100px;
 }

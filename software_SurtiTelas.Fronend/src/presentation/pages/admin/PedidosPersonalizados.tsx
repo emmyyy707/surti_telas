@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, QrCode, X, PlusCircle, Search } from 'lucide-react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, X, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -108,6 +108,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<CustomOrder | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [detailView, setDetailView] = useState<'detail' | 'quotation' | 'negotiation'>('detail');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -117,14 +118,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
-  const [currentProduct, setCurrentProduct] = useState('');
+  const [_, setCurrentProduct] = useState('');
   const [activeItemIndex, setActiveItemIndex] = useState(0);
 
   const [statusConfirm, setStatusConfirm] = useState<CustomOrder | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<CustomOrder['estado'] | null>(null);
   const [paymentConfirm, setPaymentConfirm] = useState<CustomOrder | null>(null);
 
-  const [quotationOpen, setQuotationOpen] = useState(false);
   const [quotationProducts, setQuotationProducts] = useState<QuotationProduct[]>([]);
   const [quotationDiscount, setQuotationDiscount] = useState(0);
   const [quotationTaxRate, setQuotationTaxRate] = useState(19);
@@ -133,6 +133,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [quotationDeliveryDays, setQuotationDeliveryDays] = useState(7);
   const [quotationPaymentTerms, setQuotationPaymentTerms] = useState('50% anticipo, 50% contra entrega');
   const [quotationSaving, setQuotationSaving] = useState(false);
+  const [hasQuotationChanges, setHasQuotationChanges] = useState(false);
 
   const [wizardStep, setWizardStep] = useState(1);
   const [wizardData, setWizardData] = useState<WizardData>({});
@@ -149,7 +150,6 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<CustomOrder | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [negotiationOpen, setNegotiationOpen] = useState(false);
   const [negotiationMessage, setNegotiationMessage] = useState('');
   const [negotiationProposalData, setNegotiationProposalData] = useState({
     subtotal: 0,
@@ -254,11 +254,14 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         color: item.color ?? '',
         material: item.material ?? '',
         ubicacion: toUbicacionArray(item.ubicacion),
-        personalizaciones: (item.personalizaciones || []).map((pers: any) => ({
+        personalizaciones: (item.personalizaciones || []).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (pers: any) => ({
           tipo: pers.tipo,
           tecnica: pers.tecnica ?? '',
           ubicacion: toUbicacionArray(pers.ubicacion),
           descripcion: pers.descripcion,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           variantes: (pers.variantes || []).map((v: any) => ({
             talla: v.talla,
             color: v.color,
@@ -299,7 +302,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setForm({ ...form, items });
   };
 
-  const actualizarPersonalizacion = (persIndex: number, field: string, value: any) => {
+  const actualizarPersonalizacion = (persIndex: number, field: string, value: unknown) => {
     const items = [...form.items];
     const pers = [...(items[activeItemIndex]?.personalizaciones || [])];
     pers[persIndex] = { ...pers[persIndex], [field]: value };
@@ -329,7 +332,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setForm({ ...form, items });
   };
 
-  const actualizarVariante = (persIndex: number, varIndex: number, field: string, value: any) => {
+  const actualizarVariante = (persIndex: number, varIndex: number, field: string, value: unknown) => {
     const items = [...form.items];
     const pers = [...(items[activeItemIndex]?.personalizaciones || [])];
     const variantes = [...(pers[persIndex]?.variantes || [])];
@@ -342,7 +345,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const validate = (): boolean => {
     const next: Record<string, string> = {};
     if (!(form.clienteNombre || '').trim()) next.clienteNombre = 'Selecciona un cliente';
-    const hasInvalidItem = form.items.some((item, idx) => {
+    const _hasInvalidItem = form.items.some((item, idx) => {
       if (!(item.descripcion || '').trim()) next[`items.${idx}.descripcion`] = 'La descripción es obligatoria';
       if (!item.tipoPersonalizacion) next[`items.${idx}.tipoPersonalizacion`] = 'Selecciona el tipo de personalización';
       if (!item.cantidad || Number(item.cantidad) <= 0) next[`items.${idx}.cantidad`] = 'Ingresa una cantidad válida';
@@ -523,24 +526,29 @@ export const AdminPedidosPersonalizados: React.FC = () => {
      }
    };
 
-   const openNegotiation = () => {
-     if (!selectedOrder?.cotizacion) return;
-     const cot = selectedOrder.cotizacion;
-     setNegotiationProposalData({
-       subtotal: Number(cot.subtotal) || 0,
-       total: Number(cot.total) || 0,
-       descuento: Number(cot.descuento) || 0,
-       impuestos: Number(cot.impuestos) || 0,
-       condicionesPago: cot.condicionesPago || '',
-       valorAnticipo: Number(cot.valorAnticipo) || 0,
-       saldo: Number(cot.saldo) || 0,
-       porcentajeAnticipo: cot.porcentajeAnticipo ?? 50,
-       tiempoEstimadoDias: cot.tiempoEstimadoDias ?? 7,
-     });
-     setNegotiationMessage('');
-     setNegotiationOpen(true);
-     loadNegotiationHistory();
-   };
+    const openNegotiation = () => {
+      if (!selectedOrder?.cotizacion) return;
+      const cot = selectedOrder.cotizacion;
+      setNegotiationProposalData({
+        subtotal: Number(cot.subtotal) || 0,
+        total: Number(cot.total) || 0,
+        descuento: Number(cot.descuento) || 0,
+        impuestos: Number(cot.impuestos) || 0,
+        condicionesPago: cot.condicionesPago || '',
+        valorAnticipo: Number(cot.valorAnticipo) || 0,
+        saldo: Number(cot.saldo) || 0,
+        porcentajeAnticipo: cot.porcentajeAnticipo ?? 50,
+        tiempoEstimadoDias: cot.tiempoEstimadoDias ?? 7,
+      });
+      setNegotiationMessage('');
+      setDetailView('negotiation');
+      loadNegotiationHistory();
+    };
+
+    const closeNegotiation = () => {
+      setDetailView('detail');
+      setNegotiationMessage('');
+    };
 
    const loadNegotiationHistory = async () => {
      if (!selectedOrder) return;
@@ -555,73 +563,78 @@ export const AdminPedidosPersonalizados: React.FC = () => {
      }
    };
 
-   const handleStartNegotiation = async () => {
-     if (!selectedOrder || !negotiationMessage.trim()) {
-       toast.error('Ingresa un mensaje para la negociación');
-       return;
-     }
-     setNegotiationSending(true);
-     try {
-       const proposal = {
-         subtotal: Number(negotiationProposalData.subtotal),
-         total: Number(negotiationProposalData.total),
-         descuento: Number(negotiationProposalData.descuento),
-         impuestos: Number(negotiationProposalData.impuestos),
-         condicionesPago: negotiationProposalData.condicionesPago,
-         valorAnticipo: Number(negotiationProposalData.valorAnticipo),
-         saldo: Number(negotiationProposalData.saldo),
-         porcentajeAnticipo: Number(negotiationProposalData.porcentajeAnticipo),
-         tiempoEstimadoDias: Number(negotiationProposalData.tiempoEstimadoDias),
-       };
-       await customOrdersApi.startNegotiation(selectedOrder.id, negotiationMessage.trim(), proposal);
-       toast.success('Propuesta enviada');
-       setNegotiationOpen(false);
-       setNegotiationMessage('');
-       await loadNegotiationHistory();
-       await loadOrders();
-     } catch {
-       toast.error('Error al enviar propuesta de negociación');
-     } finally {
-       setNegotiationSending(false);
-     }
-   };
+    const handleStartNegotiation = async () => {
+      if (!selectedOrder || !negotiationMessage.trim()) {
+        toast.error('Ingresa un mensaje para la negociación');
+        return;
+      }
+      const counts = getAdminNegotiationCounts();
+      if (counts.adminRemaining <= 0) {
+        toast.error('Has alcanzado el límite de negociaciones (3)');
+        return;
+      }
+      setNegotiationSending(true);
+      try {
+        const proposal = {
+          subtotal: Number(negotiationProposalData.subtotal),
+          total: Number(negotiationProposalData.total),
+          descuento: Number(negotiationProposalData.descuento),
+          impuestos: Number(negotiationProposalData.impuestos),
+          condicionesPago: negotiationProposalData.condicionesPago,
+          valorAnticipo: Number(negotiationProposalData.valorAnticipo),
+          saldo: Number(negotiationProposalData.saldo),
+          porcentajeAnticipo: Number(negotiationProposalData.porcentajeAnticipo),
+          tiempoEstimadoDias: Number(negotiationProposalData.tiempoEstimadoDias),
+        };
+        await customOrdersApi.startNegotiation(selectedOrder.id, negotiationMessage.trim(), proposal);
+        toast.success('Propuesta enviada');
+        setDetailView('detail');
+        setNegotiationMessage('');
+        await loadNegotiationHistory();
+        await loadOrders();
+      } catch {
+        toast.error('Error al enviar propuesta de negociación');
+      } finally {
+        setNegotiationSending(false);
+      }
+    };
 
-   const handleRespondToNegotiation = async (negotiationId: string, message: string, proposalData?: any) => {
-     if (!selectedOrder) return;
-     setNegotiationSending(true);
-     try {
-       await customOrdersApi.respondToNegotiation(selectedOrder.id, message, proposalData, negotiationId);
-       toast.success('Respuesta enviada');
-       setNegotiationMessage('');
-       await loadNegotiationHistory();
-       await loadOrders();
-     } catch {
-       toast.error('Error al responder negociación');
-     } finally {
-       setNegotiationSending(false);
-     }
-   };
+    const _handleRespondToNegotiation = async (negotiationId: string, message: string, proposalData?: Record<string, unknown>) => {
+      if (!selectedOrder) return;
+      setNegotiationSending(true);
+      try {
+        await customOrdersApi.respondToNegotiation(selectedOrder.id, message, proposalData, negotiationId);
+        toast.success('Respuesta enviada');
+        setNegotiationMessage('');
+        await loadNegotiationHistory();
+        await loadOrders();
+      } catch {
+        toast.error('Error al responder negociación');
+      } finally {
+        setNegotiationSending(false);
+      }
+    };
 
-   const handleAcceptProposal = async (negotiationId: string) => {
-     if (!selectedOrder) return;
-     try {
-       await customOrdersApi.acceptNegotiationProposal(selectedOrder.id, negotiationId);
-       toast.success('Propuesta aceptada');
-       await loadNegotiationHistory();
-       await loadOrders();
-     } catch {
-       toast.error('Error al aceptar propuesta');
-     }
-   };
+    const _handleAcceptProposal = async (negotiationId: string) => {
+      if (!selectedOrder) return;
+      try {
+        await customOrdersApi.acceptNegotiationProposal(selectedOrder.id, negotiationId);
+        toast.success('Propuesta aceptada');
+        await loadNegotiationHistory();
+        await loadOrders();
+      } catch {
+        toast.error('Error al aceptar propuesta');
+      }
+    };
 
-   const handleRejectProposal = async (negotiationId: string, reason?: string) => {
-     if (!selectedOrder) return;
-     try {
-       await customOrdersApi.rejectNegotiationProposal(selectedOrder.id, negotiationId, reason);
-       toast.success('Propuesta rechazada');
-       await loadNegotiationHistory();
-       await loadOrders();
-     } catch {
+    const _handleRejectProposal = async (negotiationId: string, reason?: string) => {
+      if (!selectedOrder) return;
+      try {
+        await customOrdersApi.rejectNegotiationProposal(selectedOrder.id, negotiationId, reason);
+        toast.success('Propuesta rechazada');
+        await loadNegotiationHistory();
+        await loadOrders();
+      } catch {
        toast.error('Error al rechazar propuesta');
      }
    };
@@ -718,14 +731,39 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setQuotationDeliveryDays(order.cotizacion?.tiempoEstimadoDias ?? 7);
     setQuotationPaymentTerms(order.cotizacion?.condicionesPago ?? '50% anticipo, 50% contra entrega');
     setQuotationSaving(false);
+    setHasQuotationChanges(false);
     setSelectedOrder(order);
-    setQuotationOpen(true);
+    setDetailOpen(true);
+    setDetailView('quotation');
     if (order.cotizacion?.estado === 'RECHAZADA') {
       loadNegotiationHistory();
+    } else if (order.estado === 'SOLICITUD_RECIBIDA') {
+      void customOrdersApi.submit(order.id).catch(() => {});
     }
   };
 
-  const addQuotationLine = (productId?: string) => {
+  const handleCloseDetail = () => {
+    if (detailView === 'quotation' && hasQuotationChanges) {
+      if (!window.confirm('Hay cambios sin guardar. ¿Deseas salir sin guardar?')) {
+        return;
+      }
+    }
+    setDetailOpen(false);
+    setDetailView('detail');
+    setHasQuotationChanges(false);
+  };
+
+  const handleBackFromQuotation = () => {
+    if (hasQuotationChanges) {
+      if (!window.confirm('Hay cambios sin guardar. ¿Deseas volver sin guardar?')) {
+        return;
+      }
+    }
+    setDetailView('detail');
+    setHasQuotationChanges(false);
+  };
+
+   const addQuotationLine = (productId?: string) => {
     const newLine: QuotationLine = {
       id: `line-${Date.now()}`,
       tipo: 'OTRO',
@@ -746,26 +784,16 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         };
       }));
     } else {
-      setQuotationProducts(prev => {
-        if (prev.length === 0) {
-          return [{
-            id: `product-${Date.now()}`,
-            nombre: 'Producto personalizado',
-            cantidad: 1,
-            conceptos: [newLine],
-            expanded: true,
-          }];
-        }
-        return prev.map((product, idx) => {
-          if (idx !== 0) return product;
-          return {
-            ...product,
-            conceptos: [...product.conceptos, newLine],
-            expanded: true,
-          };
-        });
-      });
+      const newProduct: QuotationProduct = {
+        id: `product-${Date.now()}`,
+        nombre: 'Producto personalizado',
+        cantidad: 1,
+        conceptos: [newLine],
+        expanded: true,
+      };
+      setQuotationProducts(prev => [...prev, newProduct]);
     }
+    setHasQuotationChanges(true);
   };
 
   const removeQuotationLine = (productId: string, lineId: string) => {
@@ -776,6 +804,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         conceptos: product.conceptos.filter(line => line.id !== lineId),
       };
     }));
+    setHasQuotationChanges(true);
   };
 
   const updateQuotationLine = (productId: string, lineId: string, field: keyof QuotationLine, value: string | number) => {
@@ -794,6 +823,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         }),
       };
     }));
+    setHasQuotationChanges(true);
   };
 
   const toggleProductExpanded = (productId: string) => {
@@ -801,9 +831,10 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       if (product.id !== productId) return product;
       return { ...product, expanded: !product.expanded };
     }));
+    setHasQuotationChanges(true);
   };
 
-  const handleSaveQuotation = async () => {
+  const handleSaveDraftQuotation = async () => {
     if (!selectedOrder) return;
     if (!validateQuotation()) return;
     setQuotationSaving(true);
@@ -827,12 +858,14 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         validaHasta: new Date(Date.now() + quotationDeliveryDays * 24 * 60 * 60 * 1000).toISOString(),
         condicionesPago: quotationPaymentTerms,
         observaciones: quotationNotes,
-        generadoPorId: 'admin',
-        generadoPorNombre: 'Administrador',
+        generadoPorId: currentUser?.uid ?? 'admin',
+        generadoPorNombre: currentUser?.name ?? currentUser?.email ?? 'Administrador',
+        draft: true,
       };
 
       const result = await customOrdersApi.generateQuotation(selectedOrder.id, payload);
-      toast.success('Cotización guardada y enviada al cliente');
+      toast.success('Cotización guardada como borrador (PENDIENTE)');
+      setHasQuotationChanges(false);
       if (result?.pedido && result?.cotizacion) {
         setSelectedOrder(result.pedido);
         setOrders(prev => prev.map(o => o.id === result.pedido.id ? result.pedido : o));
@@ -840,44 +873,186 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         void loadOrders();
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al generar cotización';
+      const message = err instanceof Error ? err.message : 'Error al guardar cotización';
       if (message.includes('Ya existe una cotización') || message.includes('409')) {
         toast.error('Este pedido ya tiene una cotización. Consulta o edita la cotización existente.');
       } else {
-        toast.error(message || 'Error al generar cotización');
+        toast.error(message || 'Error al guardar cotización');
       }
     } finally {
       setQuotationSaving(false);
     }
   };
 
+  const handleSendQuotation = async () => {
+    if (!selectedOrder) return;
+    if (!validateQuotation()) return;
+    setQuotationSaving(true);
+    try {
+      const allLines = quotationProducts.flatMap(product => product.conceptos);
+      const payload = {
+        detalles: allLines.map((line, index) => ({
+          tipo: line.tipo,
+          descripcion: line.descripcion,
+          cantidad: Number(line.cantidad),
+          unidadMedida: line.unidadMedida,
+          precioUnitario: Number(line.precioUnitario),
+          subtotal: calcLineSubtotal(line),
+          observaciones: line.observaciones,
+          orden: index,
+        })),
+        subtotal: Number(calcQuotation.subtotal),
+        impuestos: Number(calcQuotation.taxes),
+        descuento: Number(calcQuotation.discount),
+        tiempoEstimadoDias: Number(quotationDeliveryDays),
+        validaHasta: new Date(Date.now() + quotationDeliveryDays * 24 * 60 * 60 * 1000).toISOString(),
+        condicionesPago: quotationPaymentTerms,
+        observaciones: quotationNotes,
+        generadoPorId: currentUser?.uid ?? 'admin',
+        generadoPorNombre: currentUser?.name ?? currentUser?.email ?? 'Administrador',
+        draft: false,
+      };
+
+      const result = await customOrdersApi.generateQuotation(selectedOrder.id, payload);
+      toast.success('Cotización enviada al cliente');
+      setHasQuotationChanges(false);
+      if (result?.pedido && result?.cotizacion) {
+        setSelectedOrder(result.pedido);
+        setOrders(prev => prev.map(o => o.id === result.pedido.id ? result.pedido : o));
+      } else {
+        void loadOrders();
+      }
+      setDetailView('detail');
+      setDetailOpen(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al enviar cotización';
+      if (message.includes('Ya existe una cotización') || message.includes('409')) {
+        toast.error('Este pedido ya tiene una cotización. Consulta o edita la cotización existente.');
+      } else {
+        toast.error(message || 'Error al enviar cotización');
+      }
+    } finally {
+      setQuotationSaving(false);
+    }
+  };
+
+  const handleResendQuotation = async () => {
+    if (!selectedOrder) return;
+    if (hasQuotationChanges) {
+      toast.error('Guarda los cambios antes de reenviar');
+      return;
+    }
+    setQuotationSaving(true);
+    try {
+      const result = await customOrdersApi.sendQuotation(selectedOrder.id);
+      toast.success('Cotización reenviada al cliente');
+      setHasQuotationChanges(false);
+      if (result) {
+        setSelectedOrder(result);
+        setOrders(prev => prev.map(o => o.id === result.id ? result : o));
+      } else {
+        void loadOrders();
+      }
+      setDetailView('detail');
+      setDetailOpen(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al reenviar cotización';
+      toast.error(message || 'Error al reenviar cotización');
+    } finally {
+      setQuotationSaving(false);
+    }
+  };
+
   const columns = [
-    { 
-      key: 'detalle', 
-      header: 'Detalle',
-      render: (row: CustomOrder) => (
-        <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(row); setDetailOpen(true); }} title="Ver detalle">
-          <Eye size={16} />
-        </Button>
-      )
-    },
-    { 
-      key: 'numeroSolicitud', 
+    {
+      key: 'numeroSolicitud',
       header: 'Solicitud',
       render: (row: CustomOrder) => (
-        <span className={s.tdMono + ' ' + s.tdPrimary}>{row.numeroSolicitud}</span>
+        <span className={s.tdMono + ' ' + s.tdPrimary + ' ' + s.requestNumberCell}>{row.numeroSolicitud}</span>
       )
     },
-    { 
-      key: 'clienteNombre', 
+    {
+      key: 'clienteNombre',
       header: 'Cliente',
       render: (row: CustomOrder) => (
-        <span className={s.tdPrimary}>{row.clienteNombre}</span>
+        <span className={s.clientNameCell + ' ' + s.noWrap}>{row.clienteNombre}</span>
       )
     },
-    { key: 'estado', header: 'Estado', render: (row: CustomOrder) => (
-      <Badge variant={CUSTOM_ORDER_STATUS_COLORS[row.estado] ?? 'default'}>{getStatusLabel(row.estado)}</Badge>
-    )},
+    {
+      key: 'createdAt',
+      header: 'Fecha',
+      render: (row: CustomOrder) => (
+        <span className={s.tdMono}>{formatDate(row.createdAt)}</span>
+      )
+    },
+    {
+      key: 'items',
+      header: 'Productos',
+      render: (row: CustomOrder) => (
+        <span className={s.tdMono + ' ' + s.noWrap}>{row.items.length} producto{row.items.length !== 1 ? 's' : ''}</span>
+      )
+    },
+    {
+      key: 'fechaEntregaDeseada',
+      header: 'Entrega',
+      render: (row: CustomOrder) => (
+        <span className={s.tdMono}>{row.fechaEntregaDeseada ? formatDate(row.fechaEntregaDeseada) : '-'}</span>
+      )
+    },
+    {
+      key: 'estado',
+      header: 'Estado',
+      render: (row: CustomOrder) => (
+        <Badge variant={CUSTOM_ORDER_STATUS_COLORS[row.estado] ?? 'default'}>{getStatusLabel(row.estado)}</Badge>
+      )
+    },
+    {
+      key: 'cotizacionEstado',
+      header: 'Cotización',
+      render: (row: CustomOrder) => {
+        if (!row.cotizacion) {
+          return <span className={s.metricValueSmall}>Sin cotizar</span>;
+        }
+        const qs = getQuotationAdminStatus(row.cotizacion.estado);
+        return (
+          <span className={s.cotizacionEstadoCell}>
+            <Badge variant={qs.variant}>{qs.label}</Badge>
+            {row.cotizacion && (row.cotizacion.negotiationCount ?? 0) > 0 && (
+              <span className={s.metricValueSmall}>Negoc. {row.cotizacion.negotiationCount}/3</span>
+            )}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'accionesInline',
+      header: 'Acción',
+      render: (row: CustomOrder) => {
+        const canQuote = !['CONVERTIDO_A_PEDIDO', 'COMPLETADO', 'CANCELADO', 'VENCIDO', 'EN_PRODUCCION'].includes(row.estado);
+        return (
+          <div className={s.rowActions}>
+             <button
+               className={s.rowActionPrimary}
+               onClick={() => { setSelectedOrder(row); setDetailOpen(true); setDetailView('detail'); }}
+               data-testid="btn-ver-detalle"
+             >
+               <Eye size={16} />
+               <span>Ver detalle</span>
+             </button>
+              {canQuote && (!row.cotizacion || !['ENVIADA', 'ACEPTADA', 'CANCELADA'].includes(row.cotizacion.estado)) && (
+                <button
+                  className={s.rowActionSecondary}
+                  onClick={() => { setSelectedOrder(row); setDetailOpen(true); setDetailView('quotation'); openQuotationEditor(row); }}
+                  data-testid="btn-gestionar-cotizacion"
+                >
+                  <FileText size={14} />
+                  <span>{row.cotizacion ? 'Editar cotización' : 'Cotizar'}</span>
+                </button>
+              )}
+          </div>
+        );
+      }
+    },
   ];
 
   const getStatusLabel = (estado: string) => {
@@ -904,9 +1079,20 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   };
 
   const getQuotationAdminStatus = (estado: string) => {
-    if (estado === 'PENDIENTE' || estado === 'ENVIADA') return { label: 'Editable', variant: 'warning' as const };
-    if (estado === 'ACEPTADA' || estado === 'CANCELADA') return { label: 'Cerrada', variant: 'success' as const };
+    if (estado === 'PENDIENTE' || estado === 'BORRADOR' || estado === 'VENCIDA') return { label: 'Borrador', variant: 'warning' as const };
+    if (estado === 'ENVIADA' || estado === 'ACEPTADA') return { label: 'Enviada', variant: 'success' as const };
+    if (estado === 'RECHAZADA') return { label: 'Rechazada', variant: 'danger' as const };
+    if (estado === 'CANCELADA') return { label: 'Cancelada', variant: 'default' as const };
     return { label: estado, variant: 'default' as const };
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return '-';
+    try {
+      return new Date(value).toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch {
+      return value;
+    }
   };
 
   const calcLineSubtotal = (line: QuotationLine) => Number((line.cantidad * line.precioUnitario).toFixed(2));
@@ -1065,174 +1251,329 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
       <Modal
         open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        title={`Solicitud ${selectedOrder?.numeroSolicitud ?? ''}`}
+        onClose={handleCloseDetail}
+        title={
+          detailView === 'quotation'
+            ? 'Editor de Cotización'
+            : detailView === 'negotiation'
+            ? 'Negociar cotización'
+            : `Solicitud ${selectedOrder?.numeroSolicitud ?? ''}`
+        }
+        description={
+          detailView === 'quotation'
+            ? 'Construye la cotización con conceptos, precios y condiciones.'
+            : detailView === 'negotiation'
+            ? 'Envía una propuesta de negociación al cliente.'
+            : undefined
+        }
+        size={detailView === 'quotation' ? '2xl' : 'xl'}
         footer={null}
       >
-        {summaryData && (
-          <CustomOrderSummary
-            data={summaryData}
-            styles={summaryStyles}
-            cotizacion={selectedOrder?.cotizacion}
-            footerActions={
-              [
-                { label: 'Cerrar', variant: 'secondary', onClick: () => setDetailOpen(false) },
-                ...(selectedOrder && (selectedOrder.estado === 'ACEPTADO' || selectedOrder.estado === 'COTIZADO')
-                  ? [{ label: selectedOrder.cotizacion ? 'Editar cotización' : 'Generar cotización', onClick: () => openQuotationEditor(selectedOrder) }]
-                  : []),
-                ...(selectedOrder && selectedOrder.estado === 'PAGO_PENDIENTE' && !selectedOrder.anticipoPagado
-                  ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
-                  : []),
-                ...(selectedOrder && selectedOrder.estado === 'PAGO_APROBADO'
-                  ? [{ label: 'Convertir a pedido', onClick: async () => { try { await customOrdersApi.convertToOrder(selectedOrder.id); toast.success('Pedido convertido exitosamente'); setDetailOpen(false); void loadOrders(); } catch { toast.error('Error al convertir a pedido'); } } }]
-                  : []),
-                ...(selectedOrder && !selectedOrder.anticipoPagado && (selectedOrder.paymentKey || selectedOrder.paymentProofUrl) && selectedOrder.estado !== 'COTIZACION_ACEPTADA'
-                  ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
-                  : []),
-              ]
-            }
-          />
-        )}
-      </Modal>
+        {detailView === 'negotiation' && selectedOrder?.cotizacion ? (
+          <div className={s.form} data-testid="negotiation-form">
+            <div className={s.sectionBlock}>
+              <div className={s.sectionHeader}>
+                <FileText size={18} />
+                <div className={s.sectionTitle}>Cotización actual (referencia)</div>
+              </div>
+              <div className={s.quotationSummary}>
+                <div className={s.quotationSummaryRow}>
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(Number(selectedOrder.cotizacion.subtotal))}</span>
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Descuento</span>
+                  <span>{formatCurrency(Number(selectedOrder.cotizacion.descuento))}</span>
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Impuestos</span>
+                  <span>{formatCurrency(Number(selectedOrder.cotizacion.impuestos))}</span>
+                </div>
+                <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
+                  <span>Total</span>
+                  <span>{formatCurrency(Number(selectedOrder.cotizacion.total))}</span>
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Condiciones de pago</span>
+                  <span>{selectedOrder.cotizacion.condicionesPago || '-'}</span>
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Tiempo estimado</span>
+                  <span>{selectedOrder.cotizacion.tiempoEstimadoDias ?? '-'} días</span>
+                </div>
+              </div>
+            </div>
 
-      <Modal open={!!quotationOpen} onClose={() => setQuotationOpen(false)} title="Editor de Cotización" description="Construye la cotización con conceptos, precios y condiciones." size="xl">
-        {selectedOrder && (
-          <div className={s.form}>
-            {selectedOrder.cotizacion && (
+            {selectedOrder.cotizacion.motivoRechazo && (
               <div className={s.sectionBlock}>
                 <div className={s.sectionHeader}>
                   <FileText size={18} />
-                  <div className={s.sectionTitle}>Estado de la cotización</div>
+                  <div className={s.sectionTitle}>Motivo del rechazo</div>
                 </div>
-                <div className={s.quotationStatusRow}>
-                {selectedOrder.cotizacion && (() => {
-                  const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
-                  return (
-                    <>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                      <span className={s.quotationNegotiation}>
-                        Negociaciones: {selectedOrder.cotizacion.negotiationCount ?? 0}/3
-                      </span>
-                    </>
-                  );
-                })()}
-                {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && selectedOrder.cotizacion.motivoRechazo && (
-                  <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(220, 38, 38, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
-                    <strong>Motivo del rechazo:</strong> {selectedOrder.cotizacion.motivoRechazo}
-                  </div>
-                )}
+                <div style={{ padding: '8px 12px', background: 'rgba(220, 38, 38, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+                  {selectedOrder.cotizacion.motivoRechazo}
                 </div>
-                {negotiationLoading ? (
-                  <div className={s.negotiationHistory}>
-                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Cargando negociaciones...</span>
-                  </div>
-                ) : negotiationHistory.length > 0 && (
-                  <div className={s.negotiationHistory}>
-                    <div className={s.sectionTitle}>Historial de negociaciones</div>
-                    {negotiationHistory.map((entry) => (
-                      <div key={entry.id} className={s.negotiationEntry}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <strong>Negociación {entry.round}</strong>
-                          <span className={s.negotiationDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
-                        </div>
-                        <span>{entry.message}</span>
-                        {entry.proposalData && (
-                          <div style={{ marginTop: '6px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                            Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
-                          </div>
-                        )}
+              </div>
+            )}
+
+            {negotiationHistory.length > 0 && (
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Historial de negociaciones</div>
+                </div>
+                <div className={s.negotiationHistory} data-testid="negotiation-history">
+                  {negotiationHistory.map((entry) => (
+                    <div key={entry.id} className={s.negotiationEntry} data-testid={`negotiation-entry-${entry.round}`}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <strong>Negociación {entry.round}</strong>
+                        <span className={s.negotiationDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <span>{entry.message}</span>
+                      {entry.proposalData && (
+                        <div style={{ marginTop: '6px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                          Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             <div className={s.sectionBlock}>
               <div className={s.sectionHeader}>
                 <FileText size={18} />
-                <div className={s.sectionTitle}>Productos y conceptos</div>
+                <div className={s.sectionTitle}>Tu propuesta</div>
               </div>
-              <p className={s.sectionDescription}>Organiza la cotización por producto. Cada producto puede tener múltiples conceptos.</p>
-              
-              {quotationProducts.map((product) => (
-                <div key={product.id} className={s.productCard}>
-                  <div className={s.productHeader} onClick={() => toggleProductExpanded(product.id)}>
-                    <div className={s.productInfo}>
-                      <div>
-                        <div className={s.productTitle}>{product.nombre}</div>
-                        <div className={s.productMeta}>
-                          <span>Cantidad: {product.cantidad}</span>
-                          {product.talla && <span>Talla: {product.talla}</span>}
-                          {product.color && <span>Color: {product.color}</span>}
-                          {product.material && <span>Material: {product.material}</span>}
-                        </div>
-                      </div>
-                    </div>
-                    <div className={s.productSubtotal}>
-                      {formatCurrency(product.conceptos.reduce((sum, line) => sum + calcLineSubtotal(line), 0))}
-                    </div>
-                  </div>
-                  
-                  {product.expanded && (
-                    <div className={s.productBody}>
-                      <div className={s.productConceptsTable}>
-                        <div className={s.productConceptsHeader}>
-                          <span>Concepto</span>
-                          <span>Cant.</span>
-                          <span>P. unitario</span>
-                          <span>Subtotal</span>
-                        </div>
-                        {product.conceptos.map((line) => (
-                          <div key={line.id} className={s.productConceptRow}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <select className={s.select} value={line.tipo} onChange={(e) => updateQuotationLine(product.id, line.id, 'tipo', e.target.value)}>
-                                <option value="PRODUCTO_BASE">Producto base</option>
-                                <option value="MATERIA_PRIMA">Materia prima</option>
-                                <option value="MANO_OBRA">Mano de obra</option>
-                                <option value="DISENO">Diseño</option>
-                                <option value="LOGISTICA">Logística</option>
-                                <option value="OTRO">Otro</option>
-                              </select>
-                              <input className={s.input} placeholder="Descripción del concepto" value={line.descripcion} onChange={(e) => updateQuotationLine(product.id, line.id, 'descripcion', e.target.value)} />
-                            </div>
-                            <div>
-                              <input className={s.input} type="number" min="1" value={line.cantidad} onChange={(e) => updateQuotationLine(product.id, line.id, 'cantidad', Number(e.target.value))} />
-                            </div>
-                            <div>
-                              <input className={s.input} type="number" min="0" step="1" value={line.precioUnitario} onChange={(e) => updateQuotationLine(product.id, line.id, 'precioUnitario', Number(e.target.value))} />
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                              <span className={s.quotationSubtotal}>{formatCurrency(calcLineSubtotal(line))}</span>
-                              <div className={s.productConceptActions}>
-                                <button type="button" className={s.removeFileBtn} onClick={() => removeQuotationLine(product.id, line.id)}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine(product.id)}>
-                          <PlusCircle size={16} />
-                          <span>Agregar concepto</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
+              <div className={s.quotationSummary}>
+                <div className={s.quotationSummaryRow}>
+                  <span>Subtotal</span>
+                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.subtotal} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, subtotal: Number(e.target.value) })} />
                 </div>
-              ))}
-
-              <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine()} style={{ marginTop: '8px' }}>
-                <PlusCircle size={16} />
-                <span>Agregar producto</span>
-              </button>
+                <div className={s.quotationSummaryRow}>
+                  <span>Descuento</span>
+                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.descuento} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, descuento: Number(e.target.value) })} />
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Impuestos</span>
+                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.impuestos} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, impuestos: Number(e.target.value) })} />
+                </div>
+                <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
+                  <span>Total</span>
+                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.total} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, total: Number(e.target.value) })} />
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Condiciones de pago</span>
+                  <input className={s.quotationInput} type="text" value={negotiationProposalData.condicionesPago} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, condicionesPago: e.target.value })} />
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>% Anticipo</span>
+                  <input className={s.quotationInput} type="number" min="0" max="100" value={negotiationProposalData.porcentajeAnticipo} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, porcentajeAnticipo: Number(e.target.value) })} />
+                </div>
+                <div className={s.quotationSummaryRow}>
+                  <span>Tiempo estimado (días)</span>
+                  <input className={s.quotationInput} type="number" min="1" value={negotiationProposalData.tiempoEstimadoDias} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, tiempoEstimadoDias: Number(e.target.value) })} />
+                </div>
+              </div>
             </div>
 
             <div className={s.sectionBlock}>
               <div className={s.sectionHeader}>
                 <FileText size={18} />
-                <div className={s.sectionTitle}>Resumen</div>
+                <div className={s.sectionTitle}>Mensaje</div>
               </div>
+              <textarea
+                className={s.textarea}
+                rows={3}
+                placeholder="Explica los cambios en tu propuesta..."
+                value={negotiationMessage}
+                onChange={(e) => setNegotiationMessage(e.target.value)}
+                data-testid="negotiation-message"
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div className={s.negotiationCounter} data-testid="negotiation-counter-admin">
+                Ronda {(getAdminNegotiationCounts().adminRounds) + 1}/3 (te quedan {getAdminNegotiationCounts().adminRemaining} respuestas)
+              </div>
+              <div className={s.negotiationCounter}>
+                Cliente: ronda {(getAdminNegotiationCounts().clientRounds) + 1}/3 (quedan {getAdminNegotiationCounts().clientRemaining} para el cliente)
+              </div>
+            </div>
+
+            <div className={s.quotationEditorActions}>
+              <Button variant="secondary" onClick={closeNegotiation}>← Volver</Button>
+              <Button
+                onClick={handleStartNegotiation}
+                disabled={negotiationSending || !negotiationMessage.trim() || getAdminNegotiationCounts().adminRemaining <= 0}
+                data-testid="negotiation-send-btn"
+              >
+                {negotiationSending ? 'Enviando...' : 'Enviar propuesta'}
+              </Button>
+            </div>
+          </div>
+        ) : detailView === 'quotation' && selectedOrder ? (
+          <div className={s.quotationEditor} data-testid="quotation-editor">
+            <div className={s.quotationEditorMain}>
+              {selectedOrder.cotizacion && (
+                <div className={s.sectionBlock}>
+                  <div className={s.sectionHeader}>
+                    <FileText size={18} />
+                    <div className={s.sectionTitle}>Estado de la cotización</div>
+                  </div>
+                   <div className={s.quotationStatusRow}>
+                     {selectedOrder.cotizacion && (() => {
+                       const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
+                       return (
+                         <>
+                           <Badge variant={status.variant} data-testid="quotation-status-badge">{status.label}</Badge>
+                           <span className={s.quotationNegotiation} data-testid="quotation-negotiation-count">
+                             Negociaciones: {selectedOrder.cotizacion.negotiationCount ?? 0}/3
+                           </span>
+                         </>
+                       );
+                     })()}
+                     {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && selectedOrder.cotizacion.motivoRechazo && (
+                       <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(220, 38, 38, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.85rem', color: 'var(--color-danger)' }} data-testid="rejection-reason">
+                         <strong>Motivo del rechazo:</strong> {selectedOrder.cotizacion.motivoRechazo}
+                       </div>
+                     )}
+                     {selectedOrder?.cotizacion?.estado === 'CANCELADA' && (
+                       <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(100, 116, 122, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(100, 116, 122, 0.2)', fontSize: '0.85rem', color: 'var(--color-text-muted)' }} data-testid="cancelled-notice">
+                         <strong>Cotización cancelada por agotamiento de negociaciones.</strong>
+                       </div>
+                     )}
+                   </div>
+                   {negotiationLoading ? (
+                     <div className={s.negotiationHistory}>
+                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Cargando negociaciones...</span>
+                     </div>
+                   ) : negotiationHistory.length > 0 && (
+                     <div className={s.negotiationHistory} data-testid="negotiation-history">
+                       <div className={s.sectionTitle}>Historial de negociaciones</div>
+                       {negotiationHistory.map((entry) => (
+                         <div key={entry.id} className={s.negotiationEntry} data-testid={`negotiation-entry-${entry.round}`}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             <strong>Negociación {entry.round}</strong>
+                             <span className={s.negotiationDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
+                           </div>
+                           <span>{entry.message}</span>
+                           {entry.proposalData && (
+                             <div style={{ marginTop: '6px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                               Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
+                             </div>
+                           )}
+                         </div>
+                       ))}
+                     </div>
+                   )}
+                </div>
+              )}
+
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Productos y conceptos</div>
+                </div>
+                <p className={s.sectionDescription}>Organiza la cotización por producto. Cada producto puede tener múltiples conceptos.</p>
+
+                {quotationProducts.map((product) => (
+                  <div key={product.id} className={s.productCard}>
+                    <div className={s.productHeader} onClick={() => toggleProductExpanded(product.id)}>
+                      <div className={s.productInfo}>
+                        <div>
+                          <div className={s.productTitle}>{product.nombre}</div>
+                          <div className={s.productMeta}>
+                            <span>Cantidad: {product.cantidad}</span>
+                            {product.talla && <span>Talla: {product.talla}</span>}
+                            {product.color && <span>Color: {product.color}</span>}
+                            {product.material && <span>Material: {product.material}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={s.productSubtotal}>
+                        {formatCurrency(product.conceptos.reduce((sum, line) => sum + calcLineSubtotal(line), 0))}
+                      </div>
+                    </div>
+
+                    {product.expanded && (
+                      <div className={s.productBody}>
+                        <div className={s.productConceptsTable}>
+                          <div className={s.productConceptsHeader}>
+                            <span>Concepto</span>
+                            <span>Cant.</span>
+                            <span>P. unitario</span>
+                            <span>Subtotal</span>
+                          </div>
+                          {product.conceptos.map((line) => (
+                            <div key={line.id} className={s.productConceptRow} data-testid="concept-row">
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <select className={s.select} value={line.tipo} onChange={(e) => updateQuotationLine(product.id, line.id, 'tipo', e.target.value)}>
+                                  <option value="PRODUCTO_BASE">Producto base</option>
+                                  <option value="MATERIA_PRIMA">Materia prima</option>
+                                  <option value="MANO_OBRA">Mano de obra</option>
+                                  <option value="DISENO">Diseño</option>
+                                  <option value="LOGISTICA">Logística</option>
+                                  <option value="OTRO">Otro</option>
+                                </select>
+                                <input className={s.input} placeholder="Descripción del concepto" value={line.descripcion} onChange={(e) => updateQuotationLine(product.id, line.id, 'descripcion', e.target.value)} />
+                              </div>
+                              <div>
+                                <input className={s.input} type="number" min="1" value={line.cantidad} onChange={(e) => updateQuotationLine(product.id, line.id, 'cantidad', Number(e.target.value))} />
+                              </div>
+                              <div>
+                                <input className={s.input} type="number" min="0" step="1" value={line.precioUnitario} onChange={(e) => updateQuotationLine(product.id, line.id, 'precioUnitario', Number(e.target.value))} />
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                <span className={s.quotationSubtotal}>{formatCurrency(calcLineSubtotal(line))}</span>
+                                <div className={s.productConceptActions}>
+                                  <button type="button" className={s.removeFileBtn} onClick={() => removeQuotationLine(product.id, line.id)}>
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine(product.id)}>
+                            <PlusCircle size={16} />
+                            <span>Agregar concepto</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine()} style={{ marginTop: '8px' }}>
+                  <PlusCircle size={16} />
+                  <span>Agregar producto</span>
+                </button>
+              </div>
+
+              <div className={s.sectionBlock}>
+                <div className={s.sectionHeader}>
+                  <FileText size={18} />
+                  <div className={s.sectionTitle}>Condiciones</div>
+                </div>
+                <div className={s.formRow}>
+                  <div className={s.field}>
+                    <label className={s.label}>Tiempo estimado (días)</label>
+                    <input className={s.input} type="number" min="1" value={quotationDeliveryDays} onChange={(e) => { setQuotationDeliveryDays(Number(e.target.value)); setHasQuotationChanges(true); }} />
+                  </div>
+                  <div className={`${s.field} ${s.colSpan2}`}>
+                    <label className={s.label}>Condiciones de pago</label>
+                    <input className={s.input} value={quotationPaymentTerms} onChange={(e) => { setQuotationPaymentTerms(e.target.value); setHasQuotationChanges(true); }} />
+                  </div>
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Observaciones</label>
+                  <textarea className={s.textarea} rows={2} value={quotationNotes} onChange={(e) => { setQuotationNotes(e.target.value); setHasQuotationChanges(true); }} />
+                </div>
+              </div>
+            </div>
+
+            <div className={s.quotationEditorSummary}>
               <div className={s.quotationSummary}>
                 <div className={s.quotationSummaryRow}>
                   <span>Subtotal</span>
@@ -1240,7 +1581,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                 </div>
                 <div className={s.quotationSummaryRow}>
                   <span>Descuento</span>
-                  <input className={s.quotationInput} type="number" min="0" value={quotationDiscount} onChange={(e) => setQuotationDiscount(Number(e.target.value))} />
+                  <input className={s.quotationInput} type="number" min="0" value={quotationDiscount} onChange={(e) => { setQuotationDiscount(Number(e.target.value)); setHasQuotationChanges(true); }} />
                 </div>
                 <div className={s.quotationSummaryRow}>
                   <span>Base gravable</span>
@@ -1248,7 +1589,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                 </div>
                 <div className={s.quotationSummaryRow}>
                   <span>Impuestos ({quotationTaxRate}%)</span>
-                  <input className={s.quotationInput} type="number" min="0" max="100" value={quotationTaxRate} onChange={(e) => setQuotationTaxRate(Number(e.target.value))} />
+                  <input className={s.quotationInput} type="number" min="0" max="100" value={quotationTaxRate} onChange={(e) => { setQuotationTaxRate(Number(e.target.value)); setHasQuotationChanges(true); }} />
                 </div>
                 <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
                   <span>Total</span>
@@ -1256,7 +1597,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                 </div>
                 <div className={s.quotationSummaryRow}>
                   <span>Anticipo ({quotationAdvanceRate}%)</span>
-                  <input className={s.quotationInput} type="number" min="0" max="100" value={quotationAdvanceRate} onChange={(e) => setQuotationAdvanceRate(Number(e.target.value))} />
+                  <input className={s.quotationInput} type="number" min="0" max="100" value={quotationAdvanceRate} onChange={(e) => { setQuotationAdvanceRate(Number(e.target.value)); setHasQuotationChanges(true); }} />
                 </div>
                 <div className={`${s.quotationSummaryRow} ${s.quotationSummaryBalance}`}>
                   <span>Saldo</span>
@@ -1265,156 +1606,65 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               </div>
             </div>
 
-            <div className={s.sectionBlock}>
-              <div className={s.sectionHeader}>
-                <FileText size={18} />
-                <div className={s.sectionTitle}>Condiciones</div>
-              </div>
-              <div className={s.formRow}>
-                <div className={s.field}>
-                  <label className={s.label}>Tiempo estimado (días)</label>
-                  <input className={s.input} type="number" min="1" value={quotationDeliveryDays} onChange={(e) => setQuotationDeliveryDays(Number(e.target.value))} />
-                </div>
-                <div className={`${s.field} ${s.colSpan2}`}>
-                  <label className={s.label}>Condiciones de pago</label>
-                  <input className={s.input} value={quotationPaymentTerms} onChange={(e) => setQuotationPaymentTerms(e.target.value)} />
-                </div>
-              </div>
-              <div className={s.field}>
-                <label className={s.label}>Observaciones</label>
-                <textarea className={s.textarea} rows={2} value={quotationNotes} onChange={(e) => setQuotationNotes(e.target.value)} />
-              </div>
-            </div>
-
-            <div className={s.formActions}>
-              <Button variant="secondary" onClick={() => setQuotationOpen(false)}>Cancelar</Button>
-              {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && (
-                <Button variant="outline" onClick={openNegotiation}>
-                  Negociar
+            <div className={s.quotationEditorActions}>
+              <Button variant="secondary" onClick={handleBackFromQuotation}>← Volver</Button>
+              {selectedOrder?.cotizacion?.estado === 'PENDIENTE' && (
+                <Button variant="outline" onClick={handleResendQuotation} disabled={quotationSaving || hasQuotationChanges} data-testid="btn-reenviar">
+                  {quotationSaving ? 'Reenviando...' : 'Reenviar cotización'}
                 </Button>
               )}
-              <Button 
-                onClick={handleSaveQuotation} 
+              <Button variant="secondary" onClick={handleSaveDraftQuotation}
                 disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
+                data-testid="btn-guardar-cotizacion"
               >
                 {quotationSaving ? 'Guardando...' : 'Guardar cotización'}
               </Button>
+              <Button
+                onClick={handleSendQuotation}
+                disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
+                data-testid="btn-enviar-cotizacion"
+              >
+                {quotationSaving ? 'Enviando...' : 'Enviar cotización'}
+              </Button>
             </div>
           </div>
+        ) : (
+          summaryData && (
+            <CustomOrderSummary
+              data={summaryData}
+              styles={summaryStyles}
+              cotizacion={selectedOrder?.cotizacion}
+              footerActions={
+                  [
+                    { label: 'Cerrar', variant: 'secondary' as const, onClick: () => setDetailOpen(false) },
+                    ...(selectedOrder && selectedOrder.cotizacion?.estado === 'CANCELADA'
+                      ? [{ label: 'Cotización cancelada (sin acciones)', variant: 'secondary' as const, onClick: () => {}, disabled: true }]
+                      : []),
+                    ...(selectedOrder && selectedOrder.cotizacion?.estado === 'RECHAZADA' && selectedOrder.cotizacion.negotiationCount !== 3
+                      ? [{ label: 'Negociar', onClick: () => openNegotiation(), variant: 'secondary' as const }]
+                      : []),
+                    ...(selectedOrder && selectedOrder.cotizacion?.estado === 'PENDIENTE' && selectedOrder.cotizacion.negotiationCount !== 3
+                      ? [{ label: 'Reenviar cotización', onClick: () => handleResendQuotation(), variant: 'primary' as const }]
+                      : []),
+                    ...(selectedOrder && !['CONVERTIDO_A_PEDIDO', 'COMPLETADO', 'CANCELADO', 'VENCIDO', 'EN_PRODUCCION'].includes(selectedOrder.estado)
+                      && (!selectedOrder.cotizacion || ['PENDIENTE', 'BORRADOR', 'RECHAZADA', 'VENCIDA'].includes(selectedOrder.cotizacion.estado))
+                      && selectedOrder.cotizacion?.estado !== 'CANCELADA' && (selectedOrder.cotizacion?.negotiationCount ?? 0) < 3
+                      ? [{ label: selectedOrder.cotizacion ? 'Editar cotización' : 'Gestionar cotización', onClick: () => openQuotationEditor(selectedOrder), variant: 'primary' as const }]
+                      : []),
+                    ...(selectedOrder && selectedOrder.estado === 'PAGO_PENDIENTE' && !selectedOrder.anticipoPagado
+                      ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
+                      : []),
+                    ...(selectedOrder && selectedOrder.estado === 'PAGO_APROBADO'
+                      ? [{ label: 'Convertir a pedido', onClick: async () => { try { await customOrdersApi.convertToOrder(selectedOrder.id); toast.success('Pedido convertido exitosamente'); setDetailOpen(false); void loadOrders(); } catch { toast.error('Error al convertir a pedido'); } } }]
+                      : []),
+                    ...(selectedOrder && !selectedOrder.anticipoPagado && (selectedOrder.paymentKey || selectedOrder.paymentProofUrl) && selectedOrder.estado !== 'COTIZACION_ACEPTADA'
+                      ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
+                      : []),
+                  ]
+                }
+            />
+          )
         )}
-      </Modal>
-
-      <Modal open={negotiationOpen} onClose={() => setNegotiationOpen(false)} title="Negociar cotización" description="Envía una propuesta de negociación al cliente." size="lg">
-        {selectedOrder?.cotizacion && (() => {
-          const cot = selectedOrder.cotizacion;
-          const counts = getAdminNegotiationCounts();
-          return (
-            <div className={s.form}>
-              <div className={s.sectionBlock}>
-                <div className={s.sectionHeader}>
-                  <FileText size={18} />
-                  <div className={s.sectionTitle}>Cotización actual (referencia)</div>
-                </div>
-                <div className={s.quotationSummary}>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(Number(cot.subtotal))}</span>
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Descuento</span>
-                    <span>{formatCurrency(Number(cot.descuento))}</span>
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Impuestos</span>
-                    <span>{formatCurrency(Number(cot.impuestos))}</span>
-                  </div>
-                  <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                    <span>Total</span>
-                    <span>{formatCurrency(Number(cot.total))}</span>
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Condiciones de pago</span>
-                    <span>{cot.condicionesPago || '-'}</span>
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Tiempo estimado</span>
-                    <span>{cot.tiempoEstimadoDias ?? '-'} días</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={s.sectionBlock}>
-                <div className={s.sectionHeader}>
-                  <FileText size={18} />
-                  <div className={s.sectionTitle}>Tu propuesta</div>
-                </div>
-                <div className={s.quotationSummary}>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Subtotal</span>
-                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.subtotal} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, subtotal: Number(e.target.value) })} />
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Descuento</span>
-                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.descuento} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, descuento: Number(e.target.value) })} />
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Impuestos</span>
-                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.impuestos} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, impuestos: Number(e.target.value) })} />
-                  </div>
-                  <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                    <span>Total</span>
-                    <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.total} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, total: Number(e.target.value) })} />
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Condiciones de pago</span>
-                    <input className={s.quotationInput} type="text" value={negotiationProposalData.condicionesPago} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, condicionesPago: e.target.value })} />
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>% Anticipo</span>
-                    <input className={s.quotationInput} type="number" min="0" max="100" value={negotiationProposalData.porcentajeAnticipo} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, porcentajeAnticipo: Number(e.target.value) })} />
-                  </div>
-                  <div className={s.quotationSummaryRow}>
-                    <span>Tiempo estimado (días)</span>
-                    <input className={s.quotationInput} type="number" min="1" value={negotiationProposalData.tiempoEstimadoDias} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, tiempoEstimadoDias: Number(e.target.value) })} />
-                  </div>
-                </div>
-              </div>
-
-              <div className={s.sectionBlock}>
-                <div className={s.sectionHeader}>
-                  <FileText size={18} />
-                  <div className={s.sectionTitle}>Mensaje</div>
-                </div>
-                <textarea
-                  className={s.textarea}
-                  rows={3}
-                  placeholder="Explica los cambios en tu propuesta..."
-                  value={negotiationMessage}
-                  onChange={(e) => setNegotiationMessage(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div className={s.negotiationCounter}>
-                  Ronda {counts.adminRounds + 1}/3 (te quedan {counts.adminRemaining} respuestas)
-                </div>
-                <div className={s.negotiationCounter}>
-                  Cliente: ronda {counts.clientRounds + 1}/3 (quedan {counts.clientRemaining} para el cliente)
-                </div>
-              </div>
-
-              <div className={s.formActions}>
-                <Button variant="secondary" onClick={() => setNegotiationOpen(false)}>Cancelar</Button>
-                <Button 
-                  onClick={handleStartNegotiation}
-                  disabled={negotiationSending || !negotiationMessage.trim() || counts.adminRemaining <= 0}
-                >
-                  {negotiationSending ? 'Enviando...' : 'Enviar propuesta'}
-                </Button>
-              </div>
-            </div>
-          );
-        })()}
       </Modal>
 
       <CustomOrderFormModal
@@ -1696,7 +1946,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                     <span>Agregar variante</span>
                   </button>
                   <div style={{ marginTop: '8px', fontWeight: 600 }}>
-                    Total personalización: {(pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0)}
+                    Total personalización: {(pers.variantes || []).reduce((sum: number, v: Record<string, unknown>) => sum + (Number(v.cantidad) || 0), 0)}
                   </div>
                 </div>
               </div>

@@ -23,7 +23,7 @@
 
 .loadingSpinner {
   animation: icSpin 0.9s linear infinite;
-  color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #C4A574);
 }
 
 @keyframes icSpin {
@@ -174,7 +174,7 @@
 
 .quickAccessIcon--accent { background: rgba(244,162,97,0.12); color: var(--color-accent); }
 .quickAccessIcon--success { background: rgba(34,197,94,0.12); color: var(--color-success); }
-.quickAccessIcon--info { background: rgba(59,130,246,0.12); color: var(--color-info); }
+.quickAccessIcon--info { background: rgba(196,165,116,0.12); color: var(--color-info); }
 
 .quickAccessLabel {
   font-size: 0.92rem;

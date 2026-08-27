@@ -191,7 +191,7 @@ export const AtencionCliente: React.FC = () => {
               {historialCliente.map(p => (
                 <button key={p.id} type="button" className={s.orderItem} onClick={() => openPedidoDetail(p)}>
                   <div className={s.orderIcon}>
-                    {p.estado === 'Entregado' ? <CheckCircle2 size={16} color="#10b981" /> : <Clock size={16} color="#3b82f6" />}
+                    {p.estado === 'Entregado' ? <CheckCircle2 size={16} color="#10b981" /> : <Clock size={16} color="#C4A574" />}
                   </div>
                   <div className={s.orderInfo}>
                     <strong>{p.id}</strong>
@@ -201,7 +201,7 @@ export const AtencionCliente: React.FC = () => {
               ))}
               {historialCliente.length === 0 && (
                 <div className={s.orderItem}>
-                  <div className={s.orderIcon}><Clock size={16} color="#3b82f6" /></div>
+                  <div className={s.orderIcon}><Clock size={16} color="#C4A574" /></div>
                   <div className={s.orderInfo}>
                     <strong>Sin pedidos</strong>
                     <span>Este cliente aún no registra compras</span>

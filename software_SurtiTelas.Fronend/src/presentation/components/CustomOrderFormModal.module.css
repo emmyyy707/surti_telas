@@ -208,6 +208,12 @@
   gap: 8px;
 }
 
+.quotationFooterWrapper {
+  padding: 0 !important;
+  border-top: none !important;
+  background: transparent !important;
+}
+
 .quotationFooter {
   display: flex;
   align-items: center;
@@ -223,90 +229,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.quotationBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px 18px;
-  border-radius: 12px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  min-height: 44px;
-  border: 1px solid transparent;
-  outline: none;
-}
-
-.quotationBtn:focus-visible {
-  box-shadow: 0 0 0 3px var(--color-accent-dim);
-}
-
-.quotationBtn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.quotationBtnPrimary {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border-color: var(--btn-primary-border);
-  box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.1));
-}
-
-.quotationBtnPrimary:hover:not(:disabled) {
-  background: var(--btn-primary-bg-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0,0,0,0.1));
-}
-
-.quotationBtnPrimary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.quotationBtnSecondary {
-  background: transparent;
-  color: var(--color-text-secondary);
-  border-color: var(--color-border);
-}
-
-.quotationBtnSecondary:hover:not(:disabled) {
-  background: var(--color-bg-surface);
-  border-color: var(--color-text-muted);
-  color: var(--color-text-primary);
-}
-
-.quotationBtnGhost {
-  background: transparent;
-  color: var(--color-text-secondary);
-}
-
-.quotationBtnGhost:hover:not(:disabled) {
-  background: var(--color-bg-surface);
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
-}
-
-.quotationSpinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: quotationSpin 0.6s linear infinite;
-}
-
-@keyframes quotationSpin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* ============================================================
@@ -337,12 +259,6 @@
   .quotationFooterActions {
     gap: 8px;
   }
-
-  .quotationBtn {
-    padding: 10px 14px;
-    font-size: 0.84rem;
-    min-height: 40px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -358,12 +274,8 @@
   }
 
   .quotationFooterActions {
-    flex-direction: column-reverse; /* Cambia el orden para que la acción principal quede arriba o viceversa según prefieras */
+    flex-direction: column-reverse;
     width: 100%;
     gap: 8px;
-  }
-
-  .quotationBtn {
-    width: 100%;
   }
 }

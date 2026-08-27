@@ -90,9 +90,9 @@
 }
 
 .badge_Nuevo {
-  background: rgba(59, 130, 246, 0.1);
-  color: #2563eb;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(196, 165, 116, 0.1);
+  color: #C4A574;
+  border: 1px solid rgba(196, 165, 116, 0.25);
 }
 
 .badge_En_produccion {
@@ -134,7 +134,8 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .actionBtn {

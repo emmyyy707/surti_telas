@@ -2,7 +2,7 @@ import type { SidebarItem } from '@/shared/layouts/Sidebar';
 import type { User } from '@/core/stores/authStore';
 import {
   MODULE_MAP,
-  SIDEBAR_KEY_TO_MODULES,
+  SYSTEM_MODULES,
 } from '@/shared/config/systemModules';
 
 function getUserPermissionSet(user: User | null): Set<string> {
@@ -15,19 +15,56 @@ function userHasAnyModulePermission(moduleKey: string, userPerms: Set<string>): 
   return mod.permissionCodes.some((code) => userPerms.has(code));
 }
 
+const MENU_KEY_TO_MODULE: Record<string, string> = {
+  'configuracion.gestion-roles-permisos': 'admin.roles.permisos',
+  'usuarios.gestion-usuarios': 'admin.usuarios',
+  'usuarios.gestion-acceso': 'admin.acceso',
+  'usuarios.empleados': 'admin.empleados',
+  'compras.compras': 'admin.compras',
+  'compras.insumos': 'admin.insumos',
+  'compras.categorias-insumos': 'admin.insumos.categorias',
+  'compras.proveedores': 'admin.proveedores',
+  'ventas-pedidos.pedidos': 'admin.pedidos',
+  'ventas-pedidos.pedidos-personalizados': 'admin.pedidos.personalizados',
+  'ventas-pedidos.gestion-ventas': 'admin.ventas',
+  'ventas-pedidos.facturacion': 'admin.facturacion',
+  'ventas-pedidos.pagos': 'admin.pagos',
+  'ventas-pedidos.clientes': 'admin.clientes',
+  'ventas-pedidos.domicilios': 'admin.domicilios',
+  'ventas-pedidos.ruta-del-dia': 'admin.ruta.dia',
+  'ventas-pedidos.devoluciones': 'admin.devoluciones',
+  'produccion.catalogo': 'admin.catalogo',
+  'produccion.talleres': 'admin.talleres',
+  'produccion.prendas': 'admin.prendas',
+  'produccion.asignacion': 'admin.produccion.asignacion',
+  'produccion.seguimiento': 'admin.produccion.seguimiento',
+  'produccion.categorias': 'admin.categorias',
+  'reportes.reportes/ventas': 'admin.reportes.ventas',
+  'reportes.reportes/finanzas': 'admin.reportes.finanzas',
+  'reportes.reportes/usuarios': 'admin.reportes.usuarios',
+  'reportes.reportes/produccion': 'admin.reportes.produccion',
+  'reportes.reportes/inventario': 'admin.reportes.inventario',
+  'reportes.alertas-stock': 'admin.alertas.stock',
+};
+
 export function hasMenuPermission(itemKey: string, user: User | null): boolean {
   if (!user) return false;
   if (user.role === 'admin') return true;
 
   if (itemKey === 'dashboard') return true;
 
-  const moduleKeys = SIDEBAR_KEY_TO_MODULES[itemKey];
-  if (!moduleKeys || moduleKeys.length === 0) {
-    return true;
+  const moduleKey = MENU_KEY_TO_MODULE[itemKey];
+  if (moduleKey) {
+    const userPerms = getUserPermissionSet(user);
+    return userHasAnyModulePermission(moduleKey, userPerms);
   }
 
-  const userPerms = getUserPermissionSet(user);
-  return moduleKeys.some((mk) => userHasAnyModulePermission(mk, userPerms));
+  if (MODULE_MAP[itemKey]) {
+    const userPerms = getUserPermissionSet(user);
+    return userHasAnyModulePermission(itemKey, userPerms);
+  }
+
+  return false;
 }
 
 export function filterMenuByPermissions(menu: SidebarItem[], user: User | null): SidebarItem[] {
@@ -61,36 +98,9 @@ export function filterMenuByPermissions(menu: SidebarItem[], user: User | null):
   }, []);
 }
 
-export { MENU_ITEM_PERMISSIONS };
-
-const MENU_ITEM_PERMISSIONS: Record<string, string | string[]> = {
-  dashboard: 'dashboard:always',
-  'configuracion.gestion-roles-permisos': 'auth:manage',
-  'usuarios.gestion-usuarios': 'auth:manage',
-  'usuarios.gestion-acceso': 'auth:manage',
-  'usuarios.empleados': 'employees:read',
-  'compras.compras': 'purchases:read',
-  'compras.insumos': 'stock:read',
-  'compras.categorias-insumos': 'stock:read',
-  'compras.proveedores': 'stock:read',
-  'ventas-pedidos.pedidos': 'orders:read',
-  'ventas-pedidos.pedidos-personalizados': 'customOrders:read',
-  'ventas-pedidos.gestion-ventas': 'sales:read',
-  'ventas-pedidos.facturacion': 'receipts:read',
-  'ventas-pedidos.pagos': 'payments:read',
-  'ventas-pedidos.clientes': 'customers:read',
-  'ventas-pedidos.domicilios': 'deliveries:read',
-  'ventas-pedidos.ruta-del-dia': 'deliveries:read',
-  'produccion.catalogo': 'catalog:read',
-  'produccion.talleres': 'production:read',
-  'produccion.prendas': 'production:update',
-  'produccion.asignacion': 'production:update',
-  'produccion.seguimiento': 'production:read',
-  'produccion.categorias': 'catalog:read',
-  'reportes.reportes/ventas': 'reports:read',
-  'reportes.reportes/finanzas': 'reports:read',
-  'reportes.reportes/usuarios': 'reports:read',
-  'reportes.reportes/produccion': 'reports:read',
-  'reportes.reportes/inventario': 'reports:read',
-  'reportes.alertas-stock': 'stock:read',
-};
+export function getModuleKeysFromPermissions(permissions: string[]): string[] {
+  const permSet = new Set(permissions);
+  return SYSTEM_MODULES.filter((mod) =>
+    mod.permissionCodes.some((code) => permSet.has(code))
+  ).map((mod) => mod.key);
+}

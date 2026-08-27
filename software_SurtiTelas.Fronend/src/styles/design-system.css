@@ -1,9 +1,9 @@
-﻿/*
- * SISTEMA DE DISEÃ‘O DE BOTONES â€” SurtiTelas
- * GuÃ­a visual unificada para los 4 paneles de usuario
+/*
+ * SISTEMA DE DISEÑO DE BOTONES — SurtiTelas
+ * Guía visual unificada para los 4 paneles de usuario
  * ====================================================
  * Roles: admin | asesor | domiciliario | cliente
- * SeÃ±ales visuales: [data-role] en el elemento raÃ­z
+ * Señales visuales: [data-role] en el elemento raíz
  * Temas: :root (claro) + [data-theme="dark"] (oscuro)
  *
  * Uso: <button class="btn btn--primary">Guardar</button>
@@ -11,20 +11,20 @@
  *      <button class="btn btn--tertiary">Editar</button>
  *      <button class="btn btn--danger">Eliminar</button>
  *
- * TamaÃ±os: btn--sm | btn--md (default) | btn--lg | btn--xl
+ * Tamaños: btn--sm | btn--md (default) | btn--lg | btn--xl
  * Estados: .is-hover | .is-active | .is-focus | .is-disabled | .is-loading
  */
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ─────────────────────────────────────────────────────────────
    CAPA 1: TOKENS BASE (heredados del sistema existente)
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* TipografÃ­a */
+  /* Tipografía */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
-  /* Spacing / TamaÃ±os */
+  /* Spacing / Tamaños */
   --sp-xxs: 4px;
   --sp-xs: 8px;
   --sp-sm: 12px;
@@ -89,115 +89,115 @@
   --border-focus: #d4a574;
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ─────────────────────────────────────────────────────────────
    CAPA 2: TOKENS DE COLOR POR ROL
    Estrategia: cada rol redefine --role-hue y --role-* que luego
-   se usan en los tokens de botÃ³n. Las seÃ±ales son sutiles:
-   el cambio principal es en el color primario del botÃ³n,
-   manteniendo tipografÃ­a, radios y espaciado idÃ©nticos.
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   se usan en los tokens de botón. Las señales son sutiles:
+   el cambio principal es en el color primario del botón,
+   manteniendo tipografía, radios y espaciado idénticos.
+   ───────────────────────────────────────────────────────────── */
 
-/* ADMIN â€” Ãndigo oscuro | Autoridad | GestiÃ³n */
+/* ADMIN — Índigo oscuro | Autoridad | Gestión */
 :root[data-role="admin"] {
   --role-name: admin;
-  --role-hue: 221;
-  --role-primary: #4361ee;
-  --role-primary-hover: #3a56e6;
-  --role-primary-active: #314ac1;
-  --role-primary-contrast: #ffffff;
-  --role-primary-dim: rgba(67, 97, 238, 0.08);
-  --role-primary-border: rgba(67, 97, 238, 0.25);
-  --role-accent-sidebar: #4361ee;
+  --role-hue: 220;
+  --role-primary: #374151;
+  --role-primary-hover: #1F2937;
+  --role-primary-active: #111827;
+  --role-primary-contrast: #FFFFFF;
+  --role-primary-dim: rgba(55, 65, 81, 0.08);
+  --role-primary-border: rgba(55, 65, 81, 0.25);
+  --role-accent-sidebar: #374151;
 }
 
 :root[data-role="admin"][data-theme="dark"] {
-  --role-primary: #5c7cfa;
-  --role-primary-hover: #6f90e6;
-  --role-primary-active: #4a6fd1;
-  --role-primary-dim: rgba(92, 124, 250, 0.12);
-  --role-accent-sidebar: #5c7cfa;
+  --role-primary: #D4A574;
+  --role-primary-hover: #B8956A;
+  --role-primary-active: #A8895A;
+  --role-primary-dim: rgba(212, 165, 116, 0.12);
+  --role-accent-sidebar: #D4A574;
 }
 
-/* ASESOR â€” Esmeralda | Crecimiento | GuÃ­a */
+/* ASESOR — Esmeralda | Crecimiento | Guía */
 :root[data-role="asesor"] {
   --role-name: asesor;
-  --role-hue: 158;
-  --role-primary: #10b981;
-  --role-primary-hover: #059669;
-  --role-primary-active: #047857;
-  --role-primary-contrast: #ffffff;
-  --role-primary-dim: rgba(16, 185, 129, 0.08);
-  --role-primary-border: rgba(16, 185, 129, 0.25);
-  --role-accent-sidebar: #10b981;
+  --role-hue: 220;
+  --role-primary: #4B5563;
+  --role-primary-hover: #374151;
+  --role-primary-active: #1F2937;
+  --role-primary-contrast: #FFFFFF;
+  --role-primary-dim: rgba(75, 85, 99, 0.08);
+  --role-primary-border: rgba(75, 85, 99, 0.25);
+  --role-accent-sidebar: #4B5563;
 }
 
 :root[data-role="asesor"][data-theme="dark"] {
-  --role-primary: #34d399;
-  --role-primary-hover: #4ade80;
-  --role-primary-active: #2bb673;
-  --role-primary-dim: rgba(52, 211, 153, 0.12);
-  --role-accent-sidebar: #34d399;
+  --role-primary: #6B7280;
+  --role-primary-hover: #4B5563;
+  --role-primary-active: #374151;
+  --role-primary-dim: rgba(107, 114, 128, 0.12);
+  --role-accent-sidebar: #6B7280;
 }
 
-/* DOMICILIARIO â€” Ãmbar | Urgencia | Movimiento */
+/* DOMICILIARIO — Ámbar | Urgencia | Movimiento */
 :root[data-role="domiciliario"] {
   --role-name: domiciliario;
-  --role-hue: 38;
-  --role-primary: #f59e0b;
-  --role-primary-hover: #d97706;
-  --role-primary-active: #b45309;
-  --role-primary-contrast: #1f1404;
-  --role-primary-dim: rgba(245, 158, 11, 0.10);
-  --role-primary-border: rgba(245, 158, 11, 0.30);
-  --role-accent-sidebar: #f59e0b;
+  --role-hue: 220;
+  --role-primary: #4B5563;
+  --role-primary-hover: #374151;
+  --role-primary-active: #1F2937;
+  --role-primary-contrast: #FFFFFF;
+  --role-primary-dim: rgba(75, 85, 99, 0.08);
+  --role-primary-border: rgba(75, 85, 99, 0.25);
+  --role-accent-sidebar: #4B5563;
 }
 
 :root[data-role="domiciliario"][data-theme="dark"] {
-  --role-primary: #fbbf24;
-  --role-primary-hover: #fcd34d;
-  --role-primary-active: #d9a023;
-  --role-primary-dim: rgba(251, 191, 36, 0.14);
-  --role-accent-sidebar: #fbbf24;
+  --role-primary: #6B7280;
+  --role-primary-hover: #4B5563;
+  --role-primary-active: #374151;
+  --role-primary-dim: rgba(107, 114, 128, 0.12);
+  --role-accent-sidebar: #6B7280;
 }
 
-/* CLIENTE â€” Teal | Confianza | Servicio */
+/* CLIENTE — Teal | Confianza | Servicio */
 :root[data-role="cliente"] {
   --role-name: cliente;
   --role-hue: 174;
-  --role-primary: #0d9488;
-  --role-primary-hover: #0b7a6f;
-  --role-primary-active: #085f55;
-  --role-primary-contrast: #ffffff;
-  --role-primary-dim: rgba(13, 148, 136, 0.08);
-  --role-primary-border: rgba(13, 148, 136, 0.25);
-  --role-accent-sidebar: #0d9488;
+  --role-primary: #4B5563;
+  --role-primary-hover: #374151;
+  --role-primary-active: #1F2937;
+  --role-primary-contrast: #FFFFFF;
+  --role-primary-dim: rgba(75, 85, 99, 0.08);
+  --role-primary-border: rgba(75, 85, 99, 0.25);
+  --role-accent-sidebar: #4B5563;
 }
 
 :root[data-role="cliente"][data-theme="dark"] {
-  --role-primary: #2dd4bf;
-  --role-primary-hover: #5eead4;
-  --role-primary-active: #2ac2b3;
-  --role-primary-dim: rgba(45, 212, 191, 0.12);
-  --role-accent-sidebar: #2dd4bf;
+  --role-primary: #6B7280;
+  --role-primary-hover: #4B5563;
+  --role-primary-active: #374151;
+  --role-primary-dim: rgba(107, 114, 128, 0.12);
+  --role-accent-sidebar: #6B7280;
 }
 
-/* Sin rol definido â†’ default (negro como el sistema existente) */
+/* Sin rol definido → default (negro como el sistema existente) */
 :root:not([data-role]) {
   --role-primary: #000000;
   --role-primary-hover: #222222;
   --role-primary-active: #111111;
-  --role-primary-contrast: #ffffff;
+  --role-primary-contrast: #FFFFFF;
   --role-primary-dim: rgba(0, 0, 0, 0.05);
   --role-primary-border: rgba(0, 0, 0, 0.20);
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   CAPA 3: TOKENS DE BOTÃ“N (derivados de --role-*)
+/* ─────────────────────────────────────────────────────────────
+   CAPA 3: TOKENS DE BOTÓN (derivados de --role-*)
    Estos tokens se consumen directamente en las clases .btn
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* Primario â€” usa el color del rol */
+  /* Primario — usa el color del rol */
   --btn-primary-bg: var(--role-primary);
   --btn-primary-bg-hover: var(--role-primary-hover);
   --btn-primary-bg-active: var(--role-primary-active);
@@ -205,7 +205,7 @@
   --btn-primary-border: var(--role-primary);
   --btn-primary-focus-ring: var(--role-primary);
 
-  /* Secundario â€” fondo transparente, borde gris, texto primario */
+  /* Secundario — fondo transparente, borde gris, texto primario */
   --btn-secondary-bg: transparent;
   --btn-secondary-bg-hover: var(--bg-elevated);
   --btn-secondary-bg-active: var(--bg-subtle);
@@ -213,7 +213,7 @@
   --btn-secondary-border: var(--border-default);
   --btn-secondary-focus-ring: var(--border-focus);
 
-  /* Terciario â€” sin borde, sin fondo, solo texto */
+  /* Terciario — sin borde, sin fondo, solo texto */
   --btn-tertiary-bg: transparent;
   --btn-tertiary-bg-hover: var(--role-primary-dim);
   --btn-tertiary-bg-active: var(--role-primary-dim);
@@ -222,7 +222,7 @@
   --btn-tertiary-border: transparent;
   --btn-tertiary-focus-ring: var(--role-primary);
 
-  /* Peligro â€” rojo consistente en todos los roles */
+  /* Peligro — rojo consistente en todos los roles */
   --btn-danger-bg: #dc2626;
   --btn-danger-bg-hover: #b91c1c;
   --btn-danger-bg-active: #a31d1d;
@@ -237,9 +237,9 @@
   --btn-danger-bg-active: #f87171;
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   CAPA 4: ESTILOS BASE â€” .btn
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─────────────────────────────────────────────────────────────
+   CAPA 4: ESTILOS BASE — .btn
+   ───────────────────────────────────────────────────────────── */
 
 .btn {
   display: inline-flex;
@@ -264,7 +264,7 @@
     opacity var(--transition-normal);
 }
 
-/* TamaÃ±os */
+/* Tamaños */
 .btn--sm {
   height: 32px;
   padding: 0 var(--sp-sm);
@@ -296,7 +296,7 @@
   font-weight: 600;
 }
 
-/* Ãconos */
+/* Íconos */
 .btn--icon {
   width: 36px;
   height: 36px;
@@ -314,10 +314,10 @@
   height: 44px;
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   CAPA 5: VARIANTES DE COLOR â€” botones Primario, Secundario,
+/* ─────────────────────────────────────────────────────────────
+   CAPA 5: VARIANTES DE COLOR — botones Primario, Secundario,
    Terciario y Peligro. Cada uno incluye todos los estados.
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ───────────────────────────────────────────────────────────── */
 
 /* ===== PRIMARY ===== */
 .btn--primary {
@@ -469,9 +469,9 @@
   cursor: not-allowed;
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ─────────────────────────────────────────────────────────────
    CAPA 6: ESTADO DE CARGA
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ───────────────────────────────────────────────────────────── */
 
 .btn.is-loading {
   pointer-events: none;
@@ -502,21 +502,21 @@
   to { transform: rotate(360deg); }
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ─────────────────────────────────────────────────────────────
    CAPA 7: ACCESIBILIDAD (WCAG 2.1 AA)
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ───────────────────────────────────────────────────────────── */
 
-/* TamaÃ±o tÃ¡ctil mÃ­nimo: 44Ã—44px */
-/* Los botones .btn--sm son 32Ã—32 â†’ usar .btn--md o .btn--lg para touch targets */
+/* Tamaño táctil mínimo: 44×44px */
+/* Los botones .btn--sm son 32×32 → usar .btn--md o .btn--lg para touch targets */
 .btn--md,
 .btn--lg,
 .btn--xl {
   min-height: 44px;
 }
 
-/* Foco visible: contraste mÃ­nimo 3:1 contra fondo */
+/* Foco visible: contraste mínimo 3:1 contra fondo */
 /* Los anillos de foco usan --ring-width: 2px + offset de 2px */
-/* Contraste de texto: 4.5:1 mÃ­nimo (cumplido con los tokens de color) */
+/* Contraste de texto: 4.5:1 mínimo (cumplido con los tokens de color) */
 
 /* Modo reducido de movimiento */
 @media (prefers-reduced-motion: reduce) {

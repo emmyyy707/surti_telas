@@ -11,7 +11,7 @@ interface TopHeaderProps {
   user: {
     name: string;
     email: string;
-    role: 'admin' | 'almacen' | 'asesor' | 'domiciliario' | 'cliente' | 'produccion' | 'reportes';
+    role: string;
     initial: string;
     avatar?: string | null;
   };

@@ -22,7 +22,7 @@
 
 .loadingSpinner {
   animation: rcSpin 0.9s linear infinite;
-  color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #C4A574);
 }
 
 @keyframes rcSpin {

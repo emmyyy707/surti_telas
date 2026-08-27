@@ -252,7 +252,7 @@ export const sendQuotation = async (req: Request, res: Response) => {
 export const generateQuotation = async (req: Request, res: Response) => {
   const input = parseDto(QuotationSchema, req.body);
   const result = await customOrderUseCases.generateQuotation.execute(req.params.id, input as any);
-  return created(res, { pedido: result.pedido.toDTO(), cotizacion: result.cotizacion.toDTO() }, 'Cotización generada y enviada al cliente');
+  return created(res, { pedido: result.pedido.toDTO(), cotizacion: result.cotizacion.toDTO() }, input.draft ? 'Cotización guardada como borrador' : 'Cotización generada y enviada al cliente');
 };
 
 export const convertToOrder = async (req: Request, res: Response) => {

@@ -45,7 +45,7 @@ interface OsrmRoute {
 
 const statusColor = (estado: Entrega['estado']) => {
   if (estado === 'Entregado') return '#10b981';
-  if (estado === 'En camino') return '#3b82f6';
+  if (estado === 'En camino') return '#C4A574';
   if (estado === 'Fallido') return '#ef4444';
   return '#f59e0b';
 };
@@ -254,7 +254,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({ entregas, selectedId, onSele
         {routeCoords.length > 1 && (
           <Polyline
             positions={routeCoords}
-            pathOptions={{ color: '#3b82f6', weight: 5, opacity: 0.8 }}
+            pathOptions={{ color: '#C4A574', weight: 5, opacity: 0.8 }}
           />
         )}
 

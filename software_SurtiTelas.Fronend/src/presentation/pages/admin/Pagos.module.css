@@ -106,8 +106,12 @@
 }
 
 .statIconPrimary {
-  color: #3b82f6;
+  color: #C4A574;
   opacity: 0.9;
+}
+
+[data-theme="dark"] .statIconPrimary {
+  color: #D4A574;
 }
 
 .statValue {

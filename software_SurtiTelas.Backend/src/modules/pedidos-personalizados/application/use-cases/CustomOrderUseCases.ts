@@ -308,7 +308,7 @@ export class GenerateQuotation {
       : await this.quotationRepo.nextNumero();
 
     const negotiationCount = existing?.negotiationCount ?? 0;
-    const estado = QuotationStatus.ENVIADA;
+    const estado = input.draft ? QuotationStatus.PENDIENTE : QuotationStatus.ENVIADA;
 
     const cotizacionData = {
       id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -376,9 +376,10 @@ export class GenerateQuotation {
         numeroCotizacion: cotizacionCompleta.numeroCotizacion,
         clienteId: pedidoActualizado.clienteId,
         clienteNombre: pedidoActualizado.clienteNombre,
-        total,
-        valorAnticipo,
-        saldo,
+        total: Number(cotizacionCompleta.total ?? 0),
+        valorAnticipo: Number(cotizacionCompleta.valorAnticipo ?? 0),
+        saldo: Number(cotizacionCompleta.saldo ?? 0),
+        draft: input.draft ?? false,
       }));
     }
 

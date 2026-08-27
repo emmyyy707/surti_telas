@@ -13,7 +13,7 @@
 .orderId { font-weight: 600; }
 .status { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
 .status.pending { background: #fef3c7; color: #d97706; }
-.status.processing { background: #dbeafe; color: #2563eb; }
+.status.processing { background: rgba(196, 165, 116, 0.08); color: #C4A574; }
 .status.shipped { background: #e0e7ff; color: #4f46e5; }
 .status.delivered { background: #d1fae5; color: #059669; }
 .status.canceled { background: #fee2e2; color: #dc2626; }

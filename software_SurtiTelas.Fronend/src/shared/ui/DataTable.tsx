@@ -104,7 +104,7 @@ const TABLE_EMPTY_TEXT = 'Sin registros por mostrar';
 const ACTION_COLUMN_KEYS = new Set(['acciones', 'actions', 'action']);
 
 const JumpButton = ({ disabled, onClick, title, children }: { disabled?: boolean; onClick?: () => void; title?: string; children?: ReactNode }) => (
-  <Button variant="ghost" size="icon-xs" onClick={onClick} disabled={disabled} data-bs-toggle="tooltip" data-bs-title={title} className={s.jumpButton}>
+  <Button variant="outline" size="icon-xs" onClick={onClick} disabled={disabled} data-bs-toggle="tooltip" data-bs-title={title} className={s.jumpButton}>
     {children}
   </Button>
 );

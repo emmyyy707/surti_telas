@@ -35,7 +35,7 @@ const deliveryStatusVariant: Record<Entrega['estado'], 'success' | 'warning' | '
 
 const estadoConfig: Record<Entrega['estado'], { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'default'; color: string }> = {
   'Pendiente': { label: 'Pendiente', variant: 'warning', color: '#f59e0b' },
-  'En camino': { label: 'En camino', variant: 'info', color: '#3b82f6' },
+  'En camino': { label: 'En camino', variant: 'info', color: '#C4A574' },
   'Entregado': { label: 'Entregado', variant: 'success', color: '#10b981' },
   'Fallido': { label: 'Fallido', variant: 'danger', color: '#ef4444' },
 };
@@ -290,11 +290,36 @@ export const DomiciliarioEntregas: React.FC = () => {
               </div>
             </div>
             <div className={s.modalBody}>
-              <div className={s.modalRow}><MapPin size={18} /> {selectedEntrega.direccion} - {selectedEntrega.barrio}</div>
-              <div className={s.modalRow}><Package size={18} /> Pedido #{selectedEntrega.pedido}</div>
-              <div className={s.modalRow}><Clock size={18} /> {selectedEntrega.horaEstimada}</div>
-              <div className={s.modalRow}><MapPin size={18} /> {selectedEntrega.ciudad}</div>
-              {selectedEntrega.telefono && <div className={s.modalRow}><Phone size={18} /> {selectedEntrega.telefono}</div>}
+              <table className={s.detailTable}>
+                <tbody>
+                  <tr>
+                    <td className={s.detailCellLabel}>Pedido</td>
+                    <td className={s.detailCell}>#{selectedEntrega.pedido}</td>
+                  </tr>
+                  <tr>
+                    <td className={s.detailCellLabel}>Cliente</td>
+                    <td className={s.detailCell}>{selectedEntrega.cliente}</td>
+                  </tr>
+                  <tr>
+                    <td className={s.detailCellLabel}>Dirección</td>
+                    <td className={s.detailCell}>{selectedEntrega.direccion} - {selectedEntrega.barrio}</td>
+                  </tr>
+                  <tr>
+                    <td className={s.detailCellLabel}>Ciudad</td>
+                    <td className={s.detailCell}>{selectedEntrega.ciudad}</td>
+                  </tr>
+                  <tr>
+                    <td className={s.detailCellLabel}>Hora estimada</td>
+                    <td className={s.detailCell}>{selectedEntrega.horaEstimada}</td>
+                  </tr>
+                  {selectedEntrega.telefono && (
+                    <tr>
+                      <td className={s.detailCellLabel}>Teléfono</td>
+                      <td className={s.detailCell}>{selectedEntrega.telefono}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
             <div className={s.modalActions}>
               {selectedEntrega.telefono && (

@@ -36,7 +36,7 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: #ff6b35;
+  background: var(--chart-series-1);
   color: var(--text-inverse);
   font-size: 0.75rem;
   font-weight: 600;
@@ -55,7 +55,7 @@
 
 .sales {
   font-size: 0.8rem;
-  color: #10b981;
+  color: var(--chart-series-4);
   font-weight: 600;
   flex-shrink: 0;
 }

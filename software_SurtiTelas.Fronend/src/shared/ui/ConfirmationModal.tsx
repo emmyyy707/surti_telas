@@ -44,13 +44,13 @@ export const ConfirmationModal = ({
       role="presentation"
     >
       <section
-        className="w-full max-w-md animate-in fade-in zoom-in-95 slide-in-from-bottom-2 rounded-[24px] border border-[var(--color-border)] bg-[var(--modal-bg)] p-6 shadow-[var(--shadow-modal)]"
+        className="w-full max-w-md animate-in fade-in zoom-in-95 slide-in-from-bottom-2 rounded-2xl border border-[var(--color-border)] bg-[var(--modal-bg)] p-6 shadow-[var(--shadow-modal)]"
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
         <div className="mb-5 flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]">
             <Icon size={20} />
           </div>
           <div>
@@ -60,12 +60,13 @@ export const ConfirmationModal = ({
         </div>
 
         <div className="flex items-center justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" size="md" onClick={onClose}>
             {cancelLabel}
           </Button>
           <Button
             type="button"
             variant={variant === 'danger' ? 'danger' : variant === 'success' ? 'success' : 'primary'}
+            size="md"
             onClick={onConfirm}
             loading={loading}
           >

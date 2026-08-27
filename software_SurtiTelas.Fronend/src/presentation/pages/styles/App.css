@@ -723,7 +723,7 @@ section {
 }
 
 .btn-action-location {
-    background-color: #006aff; /* Azul Ubicación exacto */
+    background-color: #C4A574; /* Dorado SurtiTelas */
     color: var(--white);
 }
 
@@ -860,7 +860,7 @@ section {
     transform: translate(-50%, -50%);
     width: 400px;
     height: 400px;
-    background: #3b82f6;
+    background: #C4A574;
     filter: blur(150px);
     opacity: 0.15;
     pointer-events: none;
@@ -900,7 +900,7 @@ section {
 }
 
 .digitalize-title span {
-    background: linear-gradient(90deg, #60a5fa, #a855f7);
+    background: linear-gradient(90deg, #C4A574, #a855f7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -979,7 +979,7 @@ section {
   --gris-profundo: #111827; /* Gris oscuro para el Hero y cards dark */
   --gris-intermedio: #1f2937; /* Gris oxford para la sección de digitalización */
   --blanco: #ffffff;
-  --azul-primary: #3b82f6;
+  --azul-primary: #C4A574;
   --whatsapp: #22c55e;
 }
 
@@ -991,7 +991,7 @@ section {
 }
 
 .section-badge {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(196, 165, 116, 0.1);
   color: var(--azul-primary);
   padding: 6px 12px;
   border-radius: 100px;
@@ -1094,7 +1094,7 @@ section {
 }
 
 :root {
-  --azul-surtitela: #3b82f6;
+  --azul-surtitela: #C4A574;
   --negro-surtitela: #0f172a;
   --gris-fondo: #ffffff;
   --gris-suave: #e2e8f0;
@@ -1158,7 +1158,7 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #3b82f6; /* Azul moderno */
+  background-color: #C4A574; /* Color primario SurtiTelas */
   color: white;
   font-size: 11px;
   font-weight: bold;
@@ -1646,8 +1646,8 @@ body {
 }
 
 .badge-blue {
-  background-color: #ebf8ff;
-  color: #2b6cb0;
+  background-color: #fef3e2;
+  color: #8b6914;
   padding: 0.35rem 1rem;
   border-radius: 9999px;
   font-size: 0.75rem;
