@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Download, X, Package, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, X, Package, DollarSign, Eye } from 'lucide-react';
 import s from './AdminCompras.module.css';
 import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
@@ -29,6 +29,9 @@ export const AdminCompras: React.FC = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelMotivo, setCancelMotivo] = useState('');
   const [cancelling, setCancelling] = useState<PurchaseDTO | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailCompra, setDetailCompra] = useState<PurchaseDTO | null>(null);
+  const [detailItems, setDetailItems] = useState<PurchaseItemDTO[]>([]);
 
   const [formNumero, setFormNumero] = useState('');
   const [formProveedorId, setFormProveedorId] = useState('');
@@ -100,6 +103,13 @@ export const AdminCompras: React.FC = () => {
     setItems(compraItems);
     setFormItems(compraItems.length ? compraItems.map(i => ({ rawMaterialId: i.rawMaterialId, nombre: i.nombre, cantidad: i.cantidad, precioUnitario: i.precioUnitario })) : [{ nombre: '', cantidad: 1, precioUnitario: 0 }]);
     setModalOpen(true);
+  };
+
+  const openDetail = async (compra: PurchaseDTO) => {
+    setDetailCompra(compra);
+    const compraItems = await purchasesApi.getItems(compra.id);
+    setDetailItems(compraItems);
+    setDetailModalOpen(true);
   };
 
   const handleSave = async () => {
@@ -234,6 +244,7 @@ export const AdminCompras: React.FC = () => {
   ];
 
   const actions = (c: PurchaseDTO) => [
+    { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => openDetail(c) },
     { label: 'Editar', icon: <Edit size={14} />, onClick: () => openEdit(c) },
     { label: 'Anular', icon: <X size={14} />, onClick: () => { setCancelling(c); setCancelModalOpen(true); }, disabled: c.estado === 'ANULADA' || c.estado === 'CANCELADA' },
     { label: 'PDF', icon: <Download size={14} />, onClick: () => handleExportPdf(c) },
@@ -337,6 +348,69 @@ export const AdminCompras: React.FC = () => {
           <ModalFooter
             secondary={{ label: 'Cancelar', onClick: () => { setCancelModalOpen(false); setCancelling(null); setCancelMotivo(''); } }}
             primary={{ label: 'Anular compra', onClick: handleCancel }}
+          />
+        </div>
+      </Modal>
+
+      <Modal open={detailModalOpen} onClose={() => { setDetailModalOpen(false); setDetailCompra(null); setDetailItems([]); }} title={`Detalle de compra ${detailCompra?.numero ?? ''}`} size="lg">
+        <div className={f.form}>
+          {detailCompra && (
+            <>
+              <div className={s.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Número</label>
+                  <input className={f.input} value={detailCompra.numero} readOnly />
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Proveedor</label>
+                  <input className={f.input} value={suppliers.find(s => s.id === detailCompra.proveedorId)?.nombre ?? detailCompra.proveedorId} readOnly />
+                </div>
+              </div>
+              <div className={s.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Estado</label>
+                  <Badge variant={detailCompra.estado === 'PENDIENTE' ? 'default' : detailCompra.estado === 'RECIBIDA' ? 'success' : detailCompra.estado === 'CANCELADA' ? 'warning' : 'danger'}>{detailCompra.estado}</Badge>
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Total</label>
+                  <input className={f.input} value={new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(detailCompra.total)} readOnly />
+                </div>
+              </div>
+              <div className={f.field}>
+                <label className={f.label}>Observaciones</label>
+                <textarea className={f.textarea} value={detailCompra.observaciones ?? ''} readOnly rows={2} />
+              </div>
+              <div className={s.itemsSection}>
+                <label className={f.label}>Partidas</label>
+                {detailItems.length === 0 ? (
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>No hay ítems registrados</p>
+                ) : (
+                  <table className={s.itemsTable}>
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailItems.map((item, idx) => (
+                        <tr key={idx}>
+                          <td>{item.nombre}</td>
+                          <td>{item.cantidad}</td>
+                          <td>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(item.precioUnitario)}</td>
+                          <td>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(item.cantidad * item.precioUnitario)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+          <ModalFooter
+            secondary={{ label: 'Cerrar', onClick: () => { setDetailModalOpen(false); setDetailCompra(null); setDetailItems([]); } }}
           />
         </div>
       </Modal>

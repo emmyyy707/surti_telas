@@ -5,6 +5,7 @@ export interface CategoryDTO {
   nombre: string;
   slug: string;
   parentId?: string | null;
+  estado?: 'ACTIVO' | 'INACTIVO';
 }
 
 export interface CategoryWithStockDTO extends CategoryDTO {
@@ -52,7 +53,7 @@ export const categoriesApi = {
     return api.post<CategoryDTO>('/catalog/categories', input);
   },
 
-  async update(id: string, changes: { nombre?: string; slug?: string; parentId?: string | null }): Promise<CategoryDTO> {
+  async update(id: string, changes: { nombre?: string; slug?: string; parentId?: string | null; estado?: 'ACTIVO' | 'INACTIVO' }): Promise<CategoryDTO> {
     return api.patch<CategoryDTO>(`/catalog/categories/${encodeURIComponent(id)}`, changes);
   },
 

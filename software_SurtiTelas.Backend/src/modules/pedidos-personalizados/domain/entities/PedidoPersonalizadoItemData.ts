@@ -13,6 +13,7 @@ export interface PedidoPersonalizadoItemData {
   ubicacion?: string[] | null;
   distribucionTallas?: Record<string, number> | null;
   imagenesReferencia?: string[] | null;
+  customOrderItemId?: string | null;
   orden?: number;
   createdAt?: Date;
   updatedAt?: Date;

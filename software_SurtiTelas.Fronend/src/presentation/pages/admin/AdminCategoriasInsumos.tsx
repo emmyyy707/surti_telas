@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
 import s from './AdminCategoriasInsumos.module.css';
 import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
@@ -129,6 +129,17 @@ export const AdminCategoriasInsumos: React.FC = () => {
     }
   };
 
+  const handleToggleStatus = async (item: RawMaterialCategoryDTO) => {
+    const newStatus = item.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    try {
+      const updated = await rawMaterialCategoriesApi.update(item.id, { estado: newStatus });
+      setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)));
+      toast.success(`Categoría ${newStatus === 'ACTIVO' ? 'activada' : 'desactivada'}`);
+    } catch {
+      toast.error('No se pudo cambiar el estado');
+    }
+  };
+
   const columns: DataTableColumn<RawMaterialCategoryDTO>[] = [
     { key: 'nombre', header: 'Nombre', sortable: true, render: (c) => <span style={{ fontWeight: 600 }}>{c.nombre}</span> },
     { key: 'slug', header: 'Slug', render: (c) => <code style={{ fontSize: '0.8rem' }}>{c.slug}</code> },
@@ -143,6 +154,7 @@ export const AdminCategoriasInsumos: React.FC = () => {
 
   const actions = (c: RawMaterialCategoryDTO) => [
     { label: 'Editar', icon: <Edit size={14} />, onClick: () => openEdit(c) },
+    { label: c.estado === 'ACTIVO' ? 'Desactivar' : 'Activar', icon: <RefreshCw size={14} />, onClick: () => handleToggleStatus(c) },
     { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(c), danger: true },
   ];
 

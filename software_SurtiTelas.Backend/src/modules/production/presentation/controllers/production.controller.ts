@@ -51,6 +51,9 @@ export const deleteWorkshop = async (req: Request, res: Response) => {
 
 export const listProductionOrders = async (req: Request, res: Response) => {
   const filters = parseDto(ProductionOrderFiltersSchema, req.query);
+  if (req.user?.role === 'CLIENTE' && !filters.pedidoId) {
+    return res.status(403).json({ success: false, error: 'forbidden', message: 'Debes especificar el pedido para consultar su producción' });
+  }
   const result = await productionUseCases.getProductionOrders.execute(filters);
   const response = buildApiPaginatedResponse(
     result.data,

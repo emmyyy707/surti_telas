@@ -18,83 +18,80 @@ import { adminContent } from '@/shared/config/adminContent';
 import { filterMenuByPermissions } from '@/shared/config/menuPermissions';
 
 const adminMenu: SidebarItem[] = [
-  { icon: LayoutDashboard, label: adminContent.layout.menu.dashboard.label, key: 'dashboard' },
+  { icon: LayoutDashboard, label: 'Dashboard General', key: 'dashboard' },
 
   {
     icon: Settings2,
-    label: adminContent.layout.menu.configuracion.label,
+    label: 'Configuración',
     key: 'configuracion',
     subItems: [
-      { icon: Shield, label: adminContent.layout.menu.configuracion.rolesPermisos.label, key: 'gestion-roles-permisos' },
+      { icon: Shield, label: 'Gestión de Roles y Permisos', key: 'gestion-roles-permisos' },
     ],
   },
-  
+
   {
     icon: Users,
-    label: adminContent.layout.menu.usuarios.label,
+    label: 'Usuarios',
     key: 'usuarios',
     subItems: [
-      { icon: UserSearch, label: adminContent.layout.menu.usuarios.gestionUsuarios.label, key: 'gestion-usuarios' },
-      { icon: KeyRound, label: adminContent.layout.menu.usuarios.gestionAcceso.label, key: 'gestion-acceso' },
-      { icon: UserCog, label: ' Gestión de Empleados', key: 'empleados' },
+      { icon: UserSearch, label: 'Gestión de Usuarios', key: 'gestion-usuarios' },
+      { icon: KeyRound, label: 'Gestión de Accesos', key: 'gestion-acceso' },
+      { icon: UserCog, label: 'Gestión de Empleados', key: 'empleados' },
     ],
   },
 
   {
     icon: ShoppingBag,
-    label: adminContent.layout.menu.inventario.compras.label,
+    label: 'Compras',
     key: 'compras',
     subItems: [
       { icon: ShoppingBag, label: 'Gestión de Compras', key: 'compras' },
-      { icon: Boxes, label: adminContent.layout.menu.inventario.insumos.label, key: 'insumos' },
-      { icon: Tags, label: adminContent.layout.menu.inventario.categoriasInsumos.label, key: 'categorias-insumos' },
-      { icon: Package, label: adminContent.layout.menu.inventario.proveedores.label, key: 'proveedores' },
+      { icon: Boxes, label: 'Gestión de Insumos', key: 'insumos' },
+      { icon: Tags, label: 'Gestión de Categorías Insumos', key: 'categorias-insumos' },
+      { icon: Package, label: 'Gestión de Proveedores', key: 'proveedores' },
     ],
   },
 
-    
   {
     icon: ShoppingCart,
-    label: adminContent.layout.menu.ventas.label,
+    label: 'Ventas',
     key: 'ventas-pedidos',
     subItems: [
-      { icon: ShoppingCart, label: adminContent.layout.menu.ventas.pedidos.label, key: 'pedidos' },
+      { icon: TrendingUp, label: 'Gestión de Ventas', key: 'gestion-ventas' },
+      { icon: DollarSign, label: 'Gestión de Pagos', key: 'pagos' },
+      { icon: RotateCcw, label: 'Gestión de Devoluciones', key: 'devoluciones' },
+      { icon: MapPin, label: 'Gestión de Domicilios', key: 'domicilios' },
+      { icon: Users2, label: 'Gestión de Domiciliarios', key: 'domiciliarios' },
+      { icon: ShoppingCart, label: 'Gestión de Pedidos', key: 'pedidos' },
+      { icon: Users, label: 'Gestión de Clientes', key: 'clientes' },
       { icon: FileText, label: 'Gestión de Cotizaciones', key: 'pedidos-personalizados' },
-      { icon: Receipt, label: 'Gestión de Ventas', key: 'gestion-ventas' },
-      { icon: Receipt, label: adminContent.layout.menu.ventas.facturacion.label, key: 'facturacion' },
-      { icon: DollarSign, label: adminContent.layout.menu.ventas.pagos.label, key: 'pagos' },
-      { icon: Users2, label: adminContent.layout.menu.ventas.clientes.label, key: 'clientes' },
-      { icon: Users2, label: adminContent.layout.menu.ventas.domiciliarios.label, key: 'domicilios' },
-      { icon: MapPin, label: adminContent.layout.menu.rutaDelDia.label, key: 'ruta-del-dia' },
-      { icon: RotateCcw, label: ' Gestión de Devoluciones', key: 'devoluciones' },
-    ],
-  },
-  
-  {
-    icon: Factory,
-    label: adminContent.layout.menu.produccion.label,
-    key: 'produccion',
-    subItems: [
-      { icon: Store, label: adminContent.layout.menu.catalogo.label, key: 'catalogo' },
-      { icon: ClipboardList, label: adminContent.layout.menu.produccion.talleres.label, key: 'talleres' },
-      { icon: Workflow, label: adminContent.layout.menu.produccion.prendas.label, key: 'prendas' },
-      { icon: ClipboardList, label: adminContent.layout.menu.produccion.asignacion.label, key: 'asignacion' },
-      { icon: LineChart, label: adminContent.layout.menu.produccion.seguimiento.label, key: 'seguimiento' },
-      { icon: FolderTree, label: adminContent.layout.menu.inventario.categorias.label, key: 'categorias' },
+      { icon: Receipt, label: 'Gestión de Recibos', key: 'facturacion' },
     ],
   },
 
   {
-    icon: TrendingUp,
-    label: adminContent.layout.menu.reportes.label,
+    icon: Factory,
+    label: 'Producción',
+    key: 'produccion',
+    subItems: [
+      { icon: Factory, label: 'Gestión de Producción', key: 'produccion' },
+      { icon: ClipboardList, label: 'Gestión de Talleres', key: 'talleres' },
+      { icon: Package, label: 'Gestión de Productos', key: 'productos' },
+      { icon: FolderTree, label: 'Gestión de Categorías Productos', key: 'categorias' },
+      { icon: LineChart, label: 'Gestión de Seguimiento de Producción', key: 'seguimiento' },
+    ],
+  },
+
+  {
+    icon: BarChart3,
+    label: 'Reportes',
     key: 'reportes',
     subItems: [
-      { icon: BarChart3, label: adminContent.layout.menu.reportes.ventas.label, key: 'reportes/ventas' },
-      { icon: DollarSign, label: adminContent.layout.menu.finanzas.label, key: 'reportes/finanzas' },
-      { icon: Users2, label: adminContent.layout.menu.reportes.usuarios.label, key: 'reportes/usuarios' },
-      { icon: Factory, label: adminContent.layout.menu.reportes.produccion.label, key: 'reportes/produccion' },
-      { icon: Package, label: adminContent.layout.menu.reportes.inventario.label, key: 'reportes/inventario' }, 
-      { icon: AlertTriangle, label: adminContent.layout.menu.inventario.alertasStock.label, key: 'alertas-stock' }
+      { icon: Users2, label: 'Gestión de Reportes de Usuarios', key: 'reportes/usuarios' },
+      { icon: Factory, label: 'Gestión de Reportes de Producción', key: 'reportes/produccion' },
+      { icon: AlertTriangle, label: 'Gestión de Alertas de Stock', key: 'alertas-stock' },
+      { icon: Package, label: 'Gestión de Reportes de Inventario', key: 'reportes/inventario' },
+      { icon: BarChart3, label: 'Gestión de Reportes de Ventas', key: 'reportes/ventas' },
     ],
   },
 ];

@@ -288,6 +288,65 @@ export const AdminRecibos: React.FC = () => {
     }
   };
 
+  const handleExportPdf = (recibo: Recibo) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('No se pudo abrir la ventana para generar el PDF');
+      return;
+    }
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Recibo ${recibo.numeroRecibo}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .header h1 { margin: 0; color: #1a365d; }
+          .info { margin-bottom: 20px; }
+          .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+          .label { font-weight: bold; color: #666; }
+          .value { color: #333; }
+          .items { margin-top: 20px; border-top: 2px solid #1a365d; padding-top: 10px; }
+          .items table { width: 100%; border-collapse: collapse; }
+          .items th, .items td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+          .items th { background: #f7fafc; }
+          .total { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: bold; }
+          .footer { margin-top: 40px; text-align: center; color: #666; font-size: 0.9em; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>RECIBO</h1>
+          <p>N° ${recibo.numeroRecibo}</p>
+        </div>
+        <div class="info">
+          <div class="info-row"><span class="label">Cliente:</span><span class="value">${recibo.cliente}</span></div>
+          <div class="info-row"><span class="label">Fecha Emisión:</span><span class="value">${recibo.fechaEmision}</span></div>
+          <div class="info-row"><span class="label">Estado:</span><span class="value">${recibo.estado}</span></div>
+          <div class="info-row"><span class="label">Vendedor:</span><span class="value">${recibo.vendedor}</span></div>
+        </div>
+        <div class="items">
+          <table>
+            <thead>
+              <tr><th>Descripción</th><th>Cantidad</th><th>Precio Unit.</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+              ${recibo.items.map(item => `<tr><td>${item.descripcion}</td><td>${item.cantidad}</td><td>$${item.precioUnitario.toLocaleString()}</td><td>$${item.total.toLocaleString()}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="total">TOTAL: $${recibo.total.toLocaleString()}</div>
+        <div class="footer">
+          <p>Documento generado por SurtiTelas</p>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const handleDelete = async () => {
     if (!deleteConfirm) return;
     try {
@@ -466,8 +525,9 @@ export const AdminRecibos: React.FC = () => {
                   }
                 }
               }] : []),
-              ...(r.estado === 'Enviado' ? [{ label: 'Marcar pagado', icon: <CheckCircle size={14} />, onClick: async () => { await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Pagado']); await loadRecibos(); toast.success(`Recibo ${r.numeroRecibo} marcado como pagado`); } }] : []),
-              { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(r), danger: true },
+               ...(r.estado === 'Enviado' ? [{ label: 'Marcar pagado', icon: <CheckCircle size={14} />, onClick: async () => { await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Pagado']); await loadRecibos(); toast.success(`Recibo ${r.numeroRecibo} marcado como pagado`); } }] : []),
+               { label: 'PDF', icon: <FileText size={14} />, onClick: () => handleExportPdf(r) },
+               { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(r), danger: true },
             ]}
             detailPanel={{
               title: (r) => `Recibo ${r.numeroRecibo}`,

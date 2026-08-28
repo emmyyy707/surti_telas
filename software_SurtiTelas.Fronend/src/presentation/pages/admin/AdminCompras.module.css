@@ -43,6 +43,30 @@
   align-items: center;
 }
 
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.itemsTable th,
+.itemsTable td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+
+.itemsTable th {
+  background: var(--color-bg-elevated);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.itemsTable td {
+  color: var(--color-text-primary);
+}
+
 .tdRight {
   text-align: right;
   font-variant-numeric: tabular-nums;

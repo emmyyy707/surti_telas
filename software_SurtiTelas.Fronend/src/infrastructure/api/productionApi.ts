@@ -76,8 +76,8 @@ export function toProductionOrder(dto: ProductionOrderDTO): ProductionOrder {
 }
 
 export const productionApi = {
-  async list(): Promise<ProductionOrder[]> {
-    const response = await api.get<{ items: ProductionOrderDTO[]; meta: Record<string, unknown> }>('/production/orders');
+  async list(query?: Record<string, string | number | boolean | undefined | null>): Promise<ProductionOrder[]> {
+    const response = await api.get<{ items: ProductionOrderDTO[]; meta: Record<string, unknown> }>('/production/orders', { query });
     const data = response?.items ?? [];
     return data.map(toProductionOrder);
   },

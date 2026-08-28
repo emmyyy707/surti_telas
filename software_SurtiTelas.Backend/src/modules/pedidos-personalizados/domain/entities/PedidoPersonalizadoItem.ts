@@ -15,6 +15,7 @@ export class PedidoPersonalizadoItem {
   ubicacion?: string[] | null;
   distribucionTallas?: Record<string, number> | null;
   imagenesReferencia?: string[] | null;
+  customOrderItemId?: string | null;
   orden: number;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
@@ -34,6 +35,7 @@ export class PedidoPersonalizadoItem {
     this.ubicacion = data.ubicacion ?? null;
     this.distribucionTallas = data.distribucionTallas ?? null;
     this.imagenesReferencia = data.imagenesReferencia ?? null;
+    this.customOrderItemId = data.customOrderItemId ?? null;
     this.orden = data.orden ?? 0;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
@@ -55,6 +57,7 @@ export class PedidoPersonalizadoItem {
       ubicacion: this.ubicacion,
       distribucionTallas: this.distribucionTallas,
       imagenesReferencia: this.imagenesReferencia,
+      customOrderItemId: this.customOrderItemId,
       orden: this.orden,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

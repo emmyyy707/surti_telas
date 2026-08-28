@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, AlertTriangle, Package, PackageOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Package, PackageOpen, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import s from './AdminCategorias.module.css';
@@ -122,6 +122,17 @@ export const AdminCategorias: React.FC = () => {
     }
   };
 
+  const handleToggleStatus = async (item: CategoryDTO) => {
+    const newStatus = item.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    try {
+      const updated = await categoryService.update(item.id, { estado: newStatus } as any);
+      setItems((prev) => prev.map((it) => (it.id === updated.id ? { ...it, estado: newStatus } : it)));
+      toast.success(`Categoría ${newStatus === 'ACTIVO' ? 'activada' : 'desactivada'}`);
+    } catch {
+      toast.error('No se pudo cambiar el estado');
+    }
+  };
+
   const filtered = items.filter((it) => {
     const term = search.toLowerCase();
     return (
@@ -177,6 +188,11 @@ export const AdminCategorias: React.FC = () => {
       label: 'Editar',
       icon: <Edit size={14} aria-hidden="true" focusable="false" />,
       onClick: openEdit,
+    },
+    {
+      label: (item) => item.estado === 'ACTIVO' ? 'Desactivar' : 'Activar',
+      icon: <RefreshCw size={14} aria-hidden="true" focusable="false" />,
+      onClick: (item) => handleToggleStatus(item),
     },
     {
       label: 'Eliminar',

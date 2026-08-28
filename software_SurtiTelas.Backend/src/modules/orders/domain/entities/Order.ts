@@ -24,6 +24,7 @@ import { BadRequestError } from '../../../../shared/domain/errors';
 
 export interface OrderItem {
   productId?: string;
+  customOrderItemId?: string;
   nombre: string;
   precio: number;
   cantidad: number;

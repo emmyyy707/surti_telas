@@ -16,6 +16,7 @@ export type OrderPriority = 'Estándar' | 'Prioritario';
 
 export interface OrderItem {
   productId?: string;
+  customOrderItemId?: string;
   nombre: string;
   precio: number;
   cantidad: number;

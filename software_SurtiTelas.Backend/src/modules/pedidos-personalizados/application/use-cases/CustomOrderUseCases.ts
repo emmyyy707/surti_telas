@@ -4,7 +4,7 @@ import { PedidoPersonalizado } from '../../domain/entities/PedidoPersonalizado';
 import { CustomOrderStatus, QuotationStatus } from '../../domain/value-objects/CustomOrderStatus';
 import { PrismaClient } from '@prisma/client';
 import type { EventBus } from '../../../../shared/application/events';
-import { CustomOrderCreatedEvent, CustomOrderSubmittedEvent, QuotationGeneratedEvent, QuotationAcceptedEvent, QuotationRejectedEvent, CustomOrderConvertedEvent, CustomOrderStatusUpdatedEvent, CustomOrderUpdatedEvent, CustomOrderDeletedEvent } from '../../../../shared/application/events';
+import { CustomOrderCreatedEvent, CustomOrderSubmittedEvent, QuotationGeneratedEvent, QuotationAcceptedEvent, QuotationRejectedEvent, CustomOrderConvertedEvent, CustomOrderStatusUpdatedEvent, CustomOrderUpdatedEvent, CustomOrderDeletedEvent, CustomOrderPaymentUpdatedEvent } from '../../../../shared/application/events';
 
 export class ListCustomOrders {
   constructor(private readonly repo: CustomOrderRepository) {}
@@ -347,6 +347,7 @@ export class GenerateQuotation {
         data: input.detalles.map((d: any) => ({
           id: `${cotizacion.id}-${Math.random().toString(36).slice(2, 9)}`,
           quote_id: cotizacion.id,
+          custom_order_item_id: d.customOrderItemId ?? null,
           concepto: d.descripcion,
           tipo: d.tipo,
           descripcion: d.descripcion,
@@ -489,6 +490,350 @@ export class RejectQuotation {
   }
 }
 
+export interface QuotationItemDecisionInput {
+  acceptedIds: string[];
+  rejectedItems: Array<{
+    detalleId: string;
+    reason: string;
+    comment?: string;
+  }>;
+}
+
+export interface ProductDecisionInput {
+  acceptedProductIds: string[];
+  rejectedProducts: Array<{
+    productId: string;
+    reason: string;
+    comment?: string;
+  }>;
+}
+
+export interface AcceptQuotationDecisionsResult {
+  customOrderId: string;
+  quotationStatus: string;
+  acceptedItems: Array<{ id: string; descripcion: string; subtotal: number }>;
+  rejectedItems: Array<{ id: string; descripcion: string; reason: string; comment?: string }>;
+  totalAccepted: number;
+  orderId?: string;
+}
+
+function groupQuoteItemsByProduct(quoteItems: Array<{ id: string; custom_order_item_id?: string | null; [key: string]: any }>): Map<string, Array<{ id: string; custom_order_item_id?: string | null; [key: string]: any }>> {
+  const productMap = new Map<string, Array<{ id: string; custom_order_item_id?: string | null; [key: string]: any }>>();
+
+  for (const item of quoteItems) {
+    const productId = item.custom_order_item_id ?? `unattached-${item.id}`;
+    if (!productMap.has(productId)) {
+      productMap.set(productId, []);
+    }
+    productMap.get(productId)!.push(item);
+  }
+
+  return productMap;
+}
+
+export class AcceptQuotationWithDecisions {
+  constructor(
+    private readonly repo: CustomOrderRepository,
+    private readonly quotationRepo: QuotationRepository,
+    private readonly prisma: PrismaClient,
+    private readonly eventBus?: EventBus
+  ) {}
+
+  async execute(id: string, decisions: QuotationItemDecisionInput | ProductDecisionInput): Promise<AcceptQuotationDecisionsResult> {
+    const pedido = await this.repo.getById(id);
+    if (!pedido) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+
+    const cotizacion = await this.quotationRepo.getByPedidoId(id);
+    if (!cotizacion) throw new NotFoundError('Cotización no encontrada');
+    if (cotizacion.estado !== QuotationStatus.ENVIADA) {
+      throw new ConflictError('La cotización debe estar en estado ENVIADA para aceptarse');
+    }
+    if (cotizacion.validaHasta && new Date(cotizacion.validaHasta) < new Date()) {
+      throw new ConflictError('La cotización ha vencido');
+    }
+
+    const quoteItems = await this.prisma.quote_items.findMany({
+      where: { quote_id: cotizacion.id },
+    });
+
+    const productGroups = groupQuoteItemsByProduct(quoteItems);
+    const allProductIds = Array.from(productGroups.keys());
+
+    let acceptedProductIds: string[];
+    let rejectedProducts: Array<{ productId: string; reason: string; comment?: string }>;
+
+    if ('acceptedProductIds' in decisions && 'rejectedProducts' in decisions) {
+      acceptedProductIds = decisions.acceptedProductIds;
+      rejectedProducts = decisions.rejectedProducts;
+    } else {
+      const acceptedIdsSet = new Set(decisions.acceptedIds);
+      const rejectedIdsSet = new Set(decisions.rejectedItems.map(r => r.detalleId));
+
+      const productDecisionMap = new Map<string, { decision: 'ACEPTADO' | 'RECHAZADO'; reason?: string; comment?: string }>();
+
+      for (const [productId, items] of productGroups) {
+        const allAccepted = items.every(item => acceptedIdsSet.has(item.id));
+        const allRejected = items.every(item => rejectedIdsSet.has(item.id));
+
+        if (allAccepted) {
+          productDecisionMap.set(productId, { decision: 'ACEPTADO' });
+        } else if (allRejected) {
+          const firstRejected = decisions.rejectedItems.find(r => rejectedIdsSet.has(r.detalleId));
+          productDecisionMap.set(productId, {
+            decision: 'RECHAZADO',
+            reason: firstRejected?.reason,
+            comment: firstRejected?.comment,
+          });
+        } else {
+          const firstItem = items[0];
+          if (acceptedIdsSet.has(firstItem.id)) {
+            productDecisionMap.set(productId, { decision: 'ACEPTADO' });
+          } else if (rejectedIdsSet.has(firstItem.id)) {
+            const rej = decisions.rejectedItems.find(r => r.detalleId === firstItem.id);
+            productDecisionMap.set(productId, {
+              decision: 'RECHAZADO',
+              reason: rej?.reason,
+              comment: rej?.comment,
+            });
+          }
+        }
+      }
+
+      acceptedProductIds = allProductIds.filter(pid => productDecisionMap.get(pid)?.decision === 'ACEPTADO');
+      rejectedProducts = allProductIds
+        .filter(pid => productDecisionMap.get(pid)?.decision === 'RECHAZADO')
+        .map(pid => {
+          const dec = productDecisionMap.get(pid)!;
+          return { productId: pid, reason: dec.reason ?? 'OTRO', comment: dec.comment };
+        });
+    }
+
+    const rejectedProductIdsSet = new Set(rejectedProducts.map(r => r.productId));
+
+    for (const productId of acceptedProductIds) {
+      if (rejectedProductIdsSet.has(productId)) {
+        throw new ConflictError(`El producto ${productId} no puede estar aceptado y rechazado simultáneamente`);
+      }
+    }
+
+    for (const productId of acceptedProductIds) {
+      if (!productGroups.has(productId)) {
+        throw new NotFoundError(`El producto cotizado ${productId} no existe en esta cotización`);
+      }
+    }
+
+    for (const rejected of rejectedProducts) {
+      if (!productGroups.has(rejected.productId)) {
+        throw new NotFoundError(`El producto cotizado ${rejected.productId} no existe en esta cotización`);
+      }
+      if (!rejected.reason || rejected.reason.trim() === '') {
+        throw new ConflictError('Los productos rechazados deben tener un motivo');
+      }
+    }
+
+    const allDecidedProductIds = new Set([...acceptedProductIds, ...rejectedProducts.map(r => r.productId)]);
+    const pendingProducts = allProductIds.filter(pid => !allDecidedProductIds.has(pid));
+    if (pendingProducts.length > 0) {
+      throw new ConflictError('Debe decidir sobre todos los productos de la cotización antes de confirmar');
+    }
+
+    const alreadyDecided = await this.prisma.quote_item_decisions.findMany({
+      where: { quote_id: cotizacion.id },
+    });
+    if (alreadyDecided.length > 0) {
+      throw new ConflictError('Esta cotización ya fue procesada');
+    }
+
+    const acceptedItems = acceptedProductIds.flatMap(pid => productGroups.get(pid) || []);
+    const rejectedItems = rejectedProducts.flatMap(r => productGroups.get(r.productId) || []);
+
+    const allRejected = acceptedItems.length === 0;
+
+    const subtotalAccepted = acceptedItems.reduce((sum, qi) => sum + Number(qi.subtotal), 0);
+    const totalCotizacion = Number(cotizacion.total);
+    const descuentoProporcional = totalCotizacion > 0
+      ? Number(((Number(cotizacion.descuento ?? 0) * subtotalAccepted) / totalCotizacion).toFixed(2))
+      : 0;
+    const impuestosProporcional = totalCotizacion > 0
+      ? Number(((Number(cotizacion.impuestos ?? 0) * subtotalAccepted) / totalCotizacion).toFixed(2))
+      : 0;
+    const totalAccepted = Number((subtotalAccepted - descuentoProporcional + impuestosProporcional).toFixed(2));
+    if (Number.isNaN(totalAccepted)) {
+      console.warn('[AcceptQuotationWithDecisions] totalAccepted is NaN, falling back to subtotalAccepted');
+    }
+    const finalTotalAccepted = Number.isNaN(totalAccepted) ? subtotalAccepted : totalAccepted;
+
+    let orderId: string | undefined;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.quote_item_decisions.createMany({
+        data: [
+          ...acceptedItems.map(qi => ({
+            quote_item_id: qi.id,
+            quote_id: cotizacion.id,
+            decision: 'ACEPTADO',
+            decided_at: new Date(),
+          })),
+          ...rejectedItems.map(qi => {
+            const productRejection = rejectedProducts.find(r => qi.custom_order_item_id === r.productId);
+            return {
+              quote_item_id: qi.id,
+              quote_id: cotizacion.id,
+              decision: 'RECHAZADO',
+              reject_reason: productRejection?.reason,
+              reject_comment: productRejection?.comment,
+              decided_at: new Date(),
+            };
+          }),
+        ],
+      });
+
+      let newQuotationStatus: string;
+      let newCustomOrderStatus: string;
+      let respondidaEn: Date | null = null;
+      let motivoRechazo: string | null = null;
+
+      if (allRejected) {
+        newQuotationStatus = QuotationStatus.RECHAZADA;
+        newCustomOrderStatus = CustomOrderStatus.COTIZACION_RECHAZADA;
+        respondidaEn = new Date();
+        motivoRechazo = rejectedProducts.map(r => {
+          const productItems = productGroups.get(r.productId);
+          const productName = productItems?.[0]?.concepto || productItems?.[0]?.descripcion || r.productId;
+          return `${productName}: ${r.reason}${r.comment ? ` - ${r.comment}` : ''}`;
+        }).join('; ');
+      } else {
+        newQuotationStatus = QuotationStatus.ACEPTADA;
+        newCustomOrderStatus = CustomOrderStatus.PAGO_PENDIENTE;
+        respondidaEn = new Date();
+      }
+
+      await this.quotationRepo.update(cotizacion.id, {
+        estado: newQuotationStatus,
+        respondidaEn,
+        motivo_rechazo: motivoRechazo,
+        subtotal: subtotalAccepted,
+        descuentos: descuentoProporcional,
+        impuestos: impuestosProporcional,
+        total: finalTotalAccepted,
+      }, tx);
+
+      await this.repo.update(id, {
+        estado: newCustomOrderStatus,
+        motivoRechazo: motivoRechazo,
+        ...(newCustomOrderStatus === CustomOrderStatus.PAGO_PENDIENTE ? { fechaAceptacion: new Date() } : {}),
+      }, tx);
+
+      if (!allRejected && acceptedItems.length > 0) {
+        const asesorId = pedido.asesorId ?? await tx.user.findFirst({
+          where: { role: 'ADMIN', estado: 'ACTIVO' },
+          select: { id: true },
+        }).then(u => u?.id).catch(() => undefined);
+
+        if (!asesorId) {
+          throw new ConflictError('No se pudo determinar el asesor responsable');
+        }
+
+        const orderNumero = `PED-${Date.now().toString().slice(-6)}`;
+
+        const customer = await tx.customer.findUnique({
+          where: { id: pedido.clienteId },
+          select: { id: true },
+        });
+
+        if (!customer) {
+          throw new ConflictError(`El cliente ${pedido.clienteId} no existe`);
+        }
+
+        const orderItemsData = acceptedProductIds.map(productId => {
+          const items = productGroups.get(productId) || [];
+          const firstItem = items[0];
+          const totalProduct = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
+          return {
+            productId: null,
+            nombre: firstItem?.concepto || firstItem?.descripcion || 'Producto personalizado',
+            precio: items.length > 1 ? Math.round(totalProduct / (items.reduce((sum, i) => sum + Number(i.cantidad), 0) || 1)) : Number(firstItem?.precio_unitario ?? 0),
+            cantidad: items.reduce((sum, i) => sum + Number(i.cantidad), 0),
+            customOrderItemId: productId.startsWith('unattached-') ? null : productId,
+          };
+        });
+
+        const order = await tx.order.create({
+          data: {
+            numero: orderNumero,
+            clienteId: customer.id,
+            clienteNombre: pedido.clienteNombre,
+            asesorId,
+            asesorNombre: pedido.asesorNombre ?? 'Sistema',
+            tipoFlujo: 'PERSONALIZADO',
+            total: finalTotalAccepted,
+            itemsCount: orderItemsData.length,
+            estado: 'NUEVO',
+            prioridad: 'PRIORITARIO',
+            items: {
+              create: orderItemsData,
+            },
+          },
+          select: { id: true, numero: true },
+        });
+
+        orderId = order.id;
+
+        await tx.custom_orders.update({
+          where: { id },
+          data: { orden_id: order.id },
+        });
+      }
+    });
+
+    const updated = await this.repo.getById(id);
+
+    if (this.eventBus && updated && cotizacion) {
+      if (allRejected) {
+        this.eventBus.publish(new QuotationRejectedEvent({
+          customOrderId: updated.id,
+          numeroSolicitud: updated.numeroSolicitud,
+          numeroCotizacion: cotizacion.numeroCotizacion,
+          clienteId: updated.clienteId,
+          clienteNombre: updated.clienteNombre,
+          motivoRechazo: rejectedProducts.map(r => r.reason).join(', '),
+        }));
+      } else {
+        this.eventBus.publish(new QuotationAcceptedEvent({
+          customOrderId: updated.id,
+          numeroSolicitud: updated.numeroSolicitud,
+          numeroCotizacion: cotizacion.numeroCotizacion,
+          clienteId: updated.clienteId,
+          clienteNombre: updated.clienteNombre,
+          total: finalTotalAccepted,
+          valorAnticipo: Number((finalTotalAccepted * 0.5).toFixed(2)),
+        }));
+      }
+    }
+
+    return {
+      customOrderId: id,
+      quotationStatus: allRejected ? 'COTIZACION_RECHAZADA' : 'COTIZACION_ACEPTADA',
+      acceptedItems: acceptedItems.map(qi => ({
+        id: qi.id,
+        descripcion: qi.concepto || qi.descripcion || '',
+        subtotal: Number(qi.subtotal),
+      })),
+      rejectedItems: rejectedItems.map(qi => {
+        const productRejection = rejectedProducts.find(r => qi.custom_order_item_id === r.productId);
+        return {
+          id: qi.id,
+          descripcion: qi.concepto || qi.descripcion || '',
+          reason: productRejection?.reason ?? 'OTRO',
+          comment: productRejection?.comment,
+        };
+      }),
+      totalAccepted: finalTotalAccepted,
+      orderId,
+    };
+  }
+}
+
 export class SendQuotation {
   constructor(private readonly repo: CustomOrderRepository, private readonly quotationRepo: QuotationRepository, private readonly eventBus?: EventBus) {}
   async execute(id: string, enviadoPorId?: string) {
@@ -569,7 +914,44 @@ export class ConvertToOrder {
     });
 
     const cotizacion = await this.quotationRepo.getByPedidoId(id);
-    const quoteItems = cotizacion?.detalles ?? [];
+    const allQuoteItems: any[] = cotizacion?.detalles ?? [];
+
+    const quoteItemDecisions = await this.prisma.quote_item_decisions.findMany({
+      where: { quote_id: cotizacion?.id },
+    });
+
+    const acceptedQuoteItemIds = new Set(
+      quoteItemDecisions
+        .filter(d => d.decision === 'ACEPTADO')
+        .map(d => d.quote_item_id)
+    );
+
+    const productDecisionsMap = new Map<string, { accepted: number; total: number }>();
+    for (const qi of allQuoteItems) {
+      const productId = qi.customOrderItemId ?? `unattached-${qi.id}`;
+      if (!productDecisionsMap.has(productId)) {
+        productDecisionsMap.set(productId, { accepted: 0, total: 0 });
+      }
+      const stats = productDecisionsMap.get(productId)!;
+      stats.total += 1;
+      if (acceptedQuoteItemIds.has(qi.id)) {
+        stats.accepted += 1;
+      }
+    }
+
+    const acceptedProductIds = new Set<string>();
+    for (const [productId, stats] of productDecisionsMap) {
+      if (stats.total > 0 && stats.accepted === stats.total) {
+        acceptedProductIds.add(productId);
+      }
+    }
+
+    const quoteItems = acceptedProductIds.size > 0
+      ? allQuoteItems.filter(qi => {
+          const productId = qi.customOrderItemId ?? `unattached-${qi.id}`;
+          return acceptedProductIds.has(productId);
+        })
+      : allQuoteItems;
 
     const orderNumero = `PED-${Date.now().toString().slice(-6)}`;
 
@@ -579,12 +961,14 @@ export class ConvertToOrder {
           nombre: qi.descripcion || qi.concepto || 'Item cotizado',
           precio: Number(qi.precioUnitario ?? 0),
           cantidad: Number(qi.cantidad ?? 1),
+          customOrderItemId: qi.customOrderItemId ?? null,
         }))
       : items.map((ci: any) => ({
           productId: null,
           nombre: ci.descripcion || 'Item solicitud',
           precio: 0,
           cantidad: Number(ci.cantidad ?? 1),
+          customOrderItemId: ci.id,
         }));
 
     const totalUnidades = orderItemsData.reduce((acc: number, it: any) => acc + Number(it.cantidad || 0), 0);
@@ -612,7 +996,8 @@ export class ConvertToOrder {
     const telas = Array.from(new Set(items.map((ci: any) => ci.material).filter(Boolean))) as string[];
     const colores = Array.from(new Set(items.map((ci: any) => ci.color).filter(Boolean))) as string[];
 
-    const totalCotizacion = Number(pedido.cotizacion?.total ?? 0);
+    const totalAcceptedProducts = quoteItems.reduce((sum: number, qi: any) => sum + Number(qi.subtotal ?? 0), 0);
+    const totalCotizacion = acceptedProductIds.size > 0 ? totalAcceptedProducts : Number(pedido.cotizacion?.total ?? 0);
     const porcentaje = Number(pedido.cotizacion?.porcentajeAnticipo ?? 50);
     const anticipo = Number((totalCotizacion * (porcentaje / 100)).toFixed(2));
 
@@ -647,6 +1032,7 @@ export class ConvertToOrder {
           items: {
             create: orderItemsData.map((it: any) => ({
               productId: it.productId,
+              customOrderItemId: it.customOrderItemId,
               nombre: it.nombre,
               precio: it.precio,
               cantidad: it.cantidad,
@@ -780,6 +1166,73 @@ export class ChangeCustomOrderStatus {
     }
 
     return updated;
+  }
+}
+
+export class ConfirmPaymentAndConvertToOrder {
+  constructor(
+    private readonly repo: CustomOrderRepository,
+    private readonly prisma: PrismaClient,
+    private readonly quotationRepo: QuotationRepository,
+    private readonly historyRepo: CustomOrderHistoryRepository,
+    private readonly eventBus?: EventBus,
+  ) {}
+
+  async execute(id: string, changes: { paymentStatus?: string; anticipoPagado?: boolean; paymentProofUrl?: string; paymentKey?: string }) {
+    const existing = await this.repo.getById(id);
+    if (!existing) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+
+    if (existing.estado !== CustomOrderStatus.PAGO_EN_VERIFICACION && existing.estado !== CustomOrderStatus.PAGO_PENDIENTE) {
+      throw new ConflictError('La solicitud debe estar en estado PAGO_EN_VERIFICACION o PAGO_PENDIENTE para confirmar el pago');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const updateData: Record<string, unknown> = {};
+      if (changes.paymentStatus !== undefined) updateData.paymentStatus = changes.paymentStatus;
+      if (changes.anticipoPagado !== undefined) updateData.anticipoPagado = changes.anticipoPagado;
+      if (changes.paymentProofUrl !== undefined) updateData.paymentProofUrl = changes.paymentProofUrl || null;
+      if (changes.paymentKey !== undefined) updateData.paymentKey = changes.paymentKey;
+
+      await tx.custom_orders.update({
+        where: { id },
+        data: updateData,
+      });
+
+      await tx.custom_orders.update({
+        where: { id },
+        data: { estado: CustomOrderStatus.PAGO_APROBADO },
+      });
+
+      await this.historyRepo.create({
+        customOrderId: id,
+        usuarioId: undefined,
+        accion: 'CONFIRMAR_PAGO',
+        estadoAnterior: existing.estado,
+        estadoNuevo: CustomOrderStatus.PAGO_APROBADO,
+      });
+    });
+
+    if (this.eventBus) {
+      this.eventBus.publish(
+        new CustomOrderPaymentUpdatedEvent({
+          customOrderId: id,
+          numeroSolicitud: existing.numeroSolicitud,
+          cambios: changes,
+          clienteId: existing.clienteId,
+          clienteNombre: existing.clienteNombre ?? '',
+          asesorId: existing.asesorId ?? undefined,
+          asesorNombre: existing.asesorNombre ?? undefined,
+        })
+      );
+    }
+
+    const convertUseCase = new ConvertToOrder(this.repo, this.prisma, this.quotationRepo, this.eventBus);
+    await convertUseCase.execute(id);
+
+    const updatedOrder = await this.repo.getById(id);
+    if (!updatedOrder) throw new NotFoundError('Solicitud de pedido personalizado no encontrada');
+
+    return updatedOrder;
   }
 }
 

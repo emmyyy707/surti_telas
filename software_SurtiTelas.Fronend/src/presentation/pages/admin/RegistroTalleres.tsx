@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ToggleLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft, Eye } from 'lucide-react';
 import s from './RegistroTalleres.module.css';
 import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
@@ -44,6 +44,8 @@ export const AdminRegistroTalleres: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Taller | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailTaller, setDetailTaller] = useState<Taller | null>(null);
 
   const [nombre, setNombre] = useState('');
   const [capacidad, setCapacidad] = useState('');
@@ -152,6 +154,16 @@ export const AdminRegistroTalleres: React.FC = () => {
     setDeleteConfirm(taller);
   };
 
+  const openDetail = (taller: Taller) => {
+    setDetailTaller(taller);
+    setDetailModalOpen(true);
+  };
+
+  const closeDetail = () => {
+    setDetailModalOpen(false);
+    setDetailTaller(null);
+  };
+
   return (
     <div>
       <div className={s.header}>
@@ -180,6 +192,7 @@ export const AdminRegistroTalleres: React.FC = () => {
         pageSize={10}
         emptyMessage={loading ? 'Cargando talleres...' : error ? error : 'Sin resultados'}
         actions={(t) => [
+          { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => openDetail(t) },
           ...(t.estado === 'Activo' ? [{ label: 'Desactivar', icon: <ToggleLeft size={14} />, onClick: () => _handleToggleEstado(t.id, t.estado) }] : [{ label: 'Activar', icon: <ToggleLeft size={14} />, onClick: () => _handleToggleEstado(t.id, t.estado) }]),
           { label: 'Editar', icon: <Edit size={14} />, onClick: () => openModal(t) },
           { label: 'Eliminar', icon: <Trash2 size={14} />, danger: true, onClick: () => handleEliminar(t) },
@@ -297,6 +310,54 @@ export const AdminRegistroTalleres: React.FC = () => {
         confirmLabel="Eliminar"
         variant="danger"
       />
+
+      {detailModalOpen && detailTaller && (
+        <div className={s.modalOverlay} onClick={closeDetail}>
+          <div className={s.modal} onClick={e => e.stopPropagation()}>
+            <div className={s.modalHeader}>
+              <h2 className={s.modalTitle}>Detalle del Taller</h2>
+              <button className={s.closeBtn} onClick={closeDetail}>×</button>
+            </div>
+            <div className={s.modalBody}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Nombre</label>
+                  <p style={{ margin: '4px 0', fontWeight: 600 }}>{detailTaller.nombre}</p>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Estado</label>
+                  <p style={{ margin: '4px 0' }}>
+                    <Badge variant={detailTaller.estado === 'Activo' ? 'success' : 'default'}>{detailTaller.estado}</Badge>
+                  </p>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Teléfono</label>
+                  <p style={{ margin: '4px 0' }}>{detailTaller.telefono || '—'}</p>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Email</label>
+                  <p style={{ margin: '4px 0' }}>{detailTaller.email || '—'}</p>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Ciudad</label>
+                  <p style={{ margin: '4px 0' }}>{detailTaller.ciudad || '—'}</p>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Capacidad</label>
+                  <p style={{ margin: '4px 0' }}>{detailTaller.capacidad}</p>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Dirección</label>
+                  <p style={{ margin: '4px 0' }}>{detailTaller.direccion || '—'}</p>
+                </div>
+              </div>
+            </div>
+            <div className={s.modalFooter}>
+              <Button variant="secondary" onClick={closeDetail}>Cerrar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

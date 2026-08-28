@@ -10,6 +10,7 @@ import { CustomOrderReferenceUploadedEvent, CustomOrderPaymentUpdatedEvent } fro
 import {
   QuotationSchema,
   AcceptQuotationSchema,
+  AcceptQuotationDecisionsSchema,
   RejectQuotationSchema,
   StartNegotiationSchema,
   RespondToNegotiationSchema,
@@ -174,6 +175,15 @@ export const acceptQuotation = async (req: Request, res: Response) => {
   parseDto(AcceptQuotationSchema, req.body);
   const pedido = await customOrderUseCases.acceptQuotation.execute(req.params.id);
   return ok(res, pedido.toDTO(), 'Cotización aceptada. Se generará tu pedido.');
+};
+
+export const acceptQuotationWithDecisions = async (req: Request, res: Response) => {
+  const input = parseDto(AcceptQuotationDecisionsSchema, req.body);
+  const result = await customOrderUseCases.acceptQuotationWithDecisions.execute(req.params.id, {
+    acceptedIds: input.acceptedIds,
+    rejectedItems: input.rejectedItems,
+  });
+  return ok(res, result, 'Selección de cotización procesada correctamente');
 };
 
 export const rejectQuotation = async (req: Request, res: Response) => {
@@ -423,7 +433,19 @@ export const updatePaymentStatus = async (req: Request, res: Response) => {
   if (input.paymentProofUrl !== undefined) changes.paymentProofUrl = input.paymentProofUrl || null;
   if (input.paymentKey !== undefined) changes.paymentKey = input.paymentKey;
 
-  const pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, changes, req.requestId);
+  const isConfirmingPayment = input.anticipoPagado === true || input.paymentStatus === 'APPROVED';
+
+  let pedido: any;
+  if (isConfirmingPayment) {
+    pedido = await customOrderUseCases.confirmPaymentAndConvertToOrder.execute(req.params.id, {
+      paymentStatus: input.paymentStatus,
+      anticipoPagado: input.anticipoPagado,
+      paymentProofUrl: input.paymentProofUrl,
+      paymentKey: input.paymentKey,
+    });
+  } else {
+    pedido = await customOrderUseCases.updateCustomOrder.execute(req.params.id, changes, req.requestId);
+  }
 
   const customOrder = await prisma.custom_orders.findFirst({
     where: { id: req.params.id, deleted_at: null },
@@ -444,7 +466,7 @@ export const updatePaymentStatus = async (req: Request, res: Response) => {
     );
   }
 
-  return ok(res, pedido.toDTO(), 'Estado de pago actualizado');
+  return ok(res, pedido.toDTO(), isConfirmingPayment ? 'Anticipo confirmado y pedido convertido a producción' : 'Estado de pago actualizado');
 };
 
 export const removeCustomOrder = async (req: Request, res: Response) => {

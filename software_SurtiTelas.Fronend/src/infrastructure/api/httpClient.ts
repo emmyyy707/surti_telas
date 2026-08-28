@@ -252,4 +252,31 @@ export const api = {
     doFetch<T>(path, { ...opts, method: 'PUT', body }),
   delete: <T>(path: string, body?: unknown, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     doFetch<T>(path, { ...opts, method: 'DELETE', body }),
+  /**
+   * Obtiene un recurso binario (imagen, PDF) como Blob.
+   * Envía el header de autenticación Bearer automáticamente.
+   */
+  getBlob: async (path: string, opts?: Omit<RequestOptions, 'method' | 'body'>): Promise<Blob> => {
+    const { auth = true, query } = opts ?? {};
+    const headers: Record<string, string> = {
+      Accept: '*/*',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      Pragma: 'no-cache',
+    };
+    if (auth) {
+      const token = tokenStorage.getAccessToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+    }
+    const finalUrl = buildUrl(path, query);
+    const res = await fetch(finalUrl, {
+      method: 'GET',
+      headers,
+      credentials: 'include',
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      throw new ApiError(`Error ${res.status} al obtener recurso`, res.status);
+    }
+    return res.blob();
+  },
 };

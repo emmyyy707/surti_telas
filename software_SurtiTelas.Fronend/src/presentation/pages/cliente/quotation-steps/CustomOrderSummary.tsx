@@ -375,32 +375,6 @@ export const CustomOrderSummary = ({ data, styles, title, extraHeader, cotizacio
         </div>
       )}
 
-      {footerActions && footerActions.length > 0 && (
-        <div className={styles.formActions}>
-          {footerActions.map((action, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={action.onClick}
-              disabled={action.disabled}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 'var(--radius-md)',
-                border: 'none',
-                cursor: action.disabled ? 'not-allowed' : 'pointer',
-                opacity: action.disabled ? 0.6 : 1,
-                background: action.variant === 'danger' ? 'var(--color-danger)' : action.variant === 'secondary' ? 'transparent' : 'var(--color-accent)',
-                color: '#fff',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-              }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className={styles.summarySection}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <h3 className={styles.summaryTitle}>Entrega</h3>
@@ -410,6 +384,38 @@ export const CustomOrderSummary = ({ data, styles, title, extraHeader, cotizacio
         <div className={styles.summaryRow}><span>Dirección de entrega</span><span>{data.direccionEntrega || '-'}</span></div>
         <div className={styles.summaryRow}><span>Observaciones</span><span>{data.notasCliente || '-'}</span></div>
       </div>
+
+      {footerActions && footerActions.length > 0 && (
+        <div className={styles.summaryActions}>
+          <div className={styles.summaryActionsDivider} />
+          <div className={styles.summaryActionsButtons}>
+            {footerActions.map((action, idx) => {
+              const isPrimary = action.variant === 'primary' || !action.variant;
+              const isDanger = action.variant === 'danger';
+              const isSecondary = action.variant === 'secondary';
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={action.onClick}
+                  disabled={action.disabled}
+                  className={
+                    isDanger
+                      ? styles.summaryActionDanger
+                      : isSecondary
+                      ? styles.summaryActionSecondary
+                      : isPrimary
+                      ? styles.summaryActionPrimary
+                      : styles.summaryActionPrimary
+                  }
+                >
+                  {action.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

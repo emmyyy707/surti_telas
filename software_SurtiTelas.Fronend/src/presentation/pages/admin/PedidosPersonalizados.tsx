@@ -1,5 +1,5 @@
 ﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, X, PlusCircle } from 'lucide-react';
+import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, X, PlusCircle, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -15,6 +15,50 @@ import { CustomOrderFormModal } from '@/presentation/components/CustomOrderFormM
 import { CustomOrderSummary, type CustomOrderSummaryData } from '../cliente/quotation-steps/CustomOrderSummary';
 import clienteS from '../cliente/MisPedidosPersonalizados.module.css';
 import s from './PedidosPersonalizados.module.css';
+
+const PaymentProofImage: React.FC<{ src: string; onError?: () => void }> = ({ src, onError }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const handleLoad = () => {
+    setLoading(false);
+    setError(false);
+  };
+
+  const handleError = () => {
+    setLoading(false);
+    setError(true);
+    onError?.();
+  };
+
+  if (error) {
+    return (
+      <div className={s.paymentProofError}>
+        <AlertCircle size={32} />
+        <span>No se pudo cargar el comprobante.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: 'relative', width: '100%', minHeight: '300px' }}>
+      {loading && (
+        <div className={s.paymentProofLoading}>
+          <Loader2 size={24} className="animate-spin" />
+          <span style={{ marginLeft: '8px' }}>Cargando comprobante...</span>
+        </div>
+      )}
+      <img
+        src={src}
+        alt="Comprobante de pago"
+        className={s.paymentProofImage}
+        onLoad={handleLoad}
+        onError={handleError}
+        style={{ display: loading ? 'none' : 'block' }}
+      />
+    </div>
+  );
+};
 
 const CUSTOM_ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default'> = {
   SOLICITUD_RECIBIDA: 'info',
@@ -67,6 +111,7 @@ const toUbicacionArray = (value: unknown): string[] => {
 
 type QuotationLine = {
   id: string;
+  customOrderItemId?: string | null;
   tipo: string;
   descripcion: string;
   cantidad: number;
@@ -77,6 +122,7 @@ type QuotationLine = {
 
 type QuotationProduct = {
   id: string;
+  customOrderItemId: string;
   nombre: string;
   cantidad: number;
   talla?: string;
@@ -124,6 +170,10 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [statusConfirm, setStatusConfirm] = useState<CustomOrder | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<CustomOrder['estado'] | null>(null);
   const [paymentConfirm, setPaymentConfirm] = useState<CustomOrder | null>(null);
+  const [paymentProofViewer, setPaymentProofViewer] = useState<{ orderId: string; url: string } | null>(null);
+  const [paymentProofBlobUrl, setPaymentProofBlobUrl] = useState<string | null>(null);
+  const [paymentProofLoading, setPaymentProofLoading] = useState(false);
+  const [paymentProofError, setPaymentProofError] = useState<string | null>(null);
 
   const [quotationProducts, setQuotationProducts] = useState<QuotationProduct[]>([]);
   const [quotationDiscount, setQuotationDiscount] = useState(0);
@@ -216,6 +266,31 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     })();
     return () => { cancelled = true };
   }, [formOpen]);
+
+  useEffect(() => {
+    if (paymentConfirm?.paymentProofUrl && paymentConfirm.id) {
+      setPaymentProofLoading(true);
+      setPaymentProofError(null);
+      customOrdersApi.getPaymentProofBlobUrl(paymentConfirm.id)
+        .then((url) => {
+          setPaymentProofBlobUrl(url);
+        })
+        .catch((err) => {
+          setPaymentProofError(err instanceof Error ? err.message : 'Error al cargar comprobante');
+        })
+        .finally(() => {
+          setPaymentProofLoading(false);
+        });
+    } else {
+      setPaymentProofBlobUrl(null);
+      setPaymentProofError(null);
+    }
+    return () => {
+      if (paymentProofBlobUrl) {
+        URL.revokeObjectURL(paymentProofBlobUrl);
+      }
+    };
+  }, [paymentConfirm?.id, paymentConfirm?.paymentProofUrl]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -511,20 +586,25 @@ export const AdminPedidosPersonalizados: React.FC = () => {
      }
    };
 
-   const handleDelete = async () => {
-     if (!deleteConfirm) return;
-     setDeleting(true);
-     try {
-       await customOrdersApi.remove(deleteConfirm.id);
-       toast.success(`Solicitud ${deleteConfirm.numeroSolicitud} eliminada`);
-       setDeleteConfirm(null);
-       void loadOrders();
-     } catch {
-       toast.error('Error al eliminar');
-     } finally {
-       setDeleting(false);
-     }
-   };
+    const handleDelete = async () => {
+      if (!deleteConfirm) return;
+      setDeleting(true);
+      try {
+        await customOrdersApi.remove(deleteConfirm.id);
+        toast.success(`Solicitud ${deleteConfirm.numeroSolicitud} eliminada`);
+        setDeleteConfirm(null);
+        if (selectedOrder?.id === deleteConfirm.id) {
+          setDetailOpen(false);
+          setSelectedOrder(null);
+          setDetailView('detail');
+        }
+        void loadOrders();
+      } catch {
+        toast.error('Error al eliminar');
+      } finally {
+        setDeleting(false);
+      }
+    };
 
     const openNegotiation = () => {
       if (!selectedOrder?.cotizacion) return;
@@ -586,12 +666,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
           porcentajeAnticipo: Number(negotiationProposalData.porcentajeAnticipo),
           tiempoEstimadoDias: Number(negotiationProposalData.tiempoEstimadoDias),
         };
-        await customOrdersApi.startNegotiation(selectedOrder.id, negotiationMessage.trim(), proposal);
+        const updatedOrder = await customOrdersApi.startNegotiation(selectedOrder.id, negotiationMessage.trim(), proposal);
         toast.success('Propuesta enviada');
+        setSelectedOrder(updatedOrder);
+        setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
         setDetailView('detail');
         setNegotiationMessage('');
         await loadNegotiationHistory();
-        await loadOrders();
       } catch {
         toast.error('Error al enviar propuesta de negociación');
       } finally {
@@ -646,45 +727,46 @@ export const AdminPedidosPersonalizados: React.FC = () => {
    };
 
   const openQuotationEditor = (order: CustomOrder) => {
-    let existingLines: QuotationLine[] = [];
-    
-    if (order.cotizacion?.detalles && order.cotizacion.detalles.length > 0) {
-      existingLines = order.cotizacion.detalles.map((d, idx) => ({
-        id: d.id ?? `line-${idx}`,
-        tipo: d.tipo,
-        descripcion: d.descripcion,
-        cantidad: d.cantidad,
-        unidadMedida: d.unidadMedida ?? 'unidad',
-        precioUnitario: Number(d.precioUnitario),
-        observaciones: d.observaciones ?? '',
-      }));
-    }
+    const detallesConProducto = (order.cotizacion?.detalles ?? []).filter(d => d.customOrderItemId);
 
     const products: QuotationProduct[] = [];
-    
+
     if (order.items.length > 0) {
-      order.items.forEach((item, idx) => {
+      order.items.forEach((item) => {
         const productLines: QuotationLine[] = [];
-        
-        if (existingLines.length > 0) {
-          const linesPerProduct = Math.ceil(existingLines.length / order.items.length);
-          const startIdx = idx * linesPerProduct;
-          const endIdx = Math.min(startIdx + linesPerProduct, existingLines.length);
-          for (let i = startIdx; i < endIdx; i++) {
-            productLines.push(existingLines[i]);
+
+        if (detallesConProducto.length > 0) {
+          const itemDetalles = detallesConProducto.filter(d => d.customOrderItemId === item.id);
+          if (itemDetalles.length > 0) {
+            itemDetalles.forEach((d) => {
+              productLines.push({
+                id: d.id,
+                customOrderItemId: d.customOrderItemId,
+                tipo: d.tipo,
+                descripcion: d.descripcion,
+                cantidad: d.cantidad,
+                unidadMedida: d.unidadMedida ?? 'unidad',
+                precioUnitario: Number(d.precioUnitario),
+                observaciones: d.observaciones ?? '',
+              });
+            });
           }
-        } else {
+        }
+
+        if (productLines.length === 0) {
           productLines.push({
-            id: `line-${Date.now()}-${idx}-producto`,
+            id: `line-${Date.now()}-${item.id}-producto`,
+            customOrderItemId: item.id,
             tipo: 'PRODUCTO_BASE',
-            descripcion: item.productoNombre || item.descripcion || `Producto ${idx + 1}`,
+            descripcion: item.productoNombre || item.descripcion || 'Producto',
             cantidad: Number(item.cantidad) || 1,
             unidadMedida: 'unidad',
             precioUnitario: 0,
             observaciones: '',
           });
           productLines.push({
-            id: `line-${Date.now()}-${idx}-personalizacion`,
+            id: `line-${Date.now()}-${item.id}-personalizacion`,
+            customOrderItemId: item.id,
             tipo: 'MANO_OBRA',
             descripcion: (item.tipoPersonalizacion || 'Personalización').replace(/_/g, ' '),
             cantidad: Number(item.cantidad) || 1,
@@ -695,8 +777,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         }
 
         products.push({
-          id: `product-${idx}`,
-          nombre: item.productoNombre || item.descripcion || `Producto ${idx + 1}`,
+          id: `product-${item.id}`,
+          customOrderItemId: item.id,
+          nombre: item.productoNombre || item.descripcion || 'Producto',
           cantidad: Number(item.cantidad) || 1,
           talla: item.talla ?? undefined,
           color: item.color ?? undefined,
@@ -705,13 +788,42 @@ export const AdminPedidosPersonalizados: React.FC = () => {
           expanded: true,
         });
       });
+
+      const detallesSinProducto = (order.cotizacion?.detalles ?? []).filter(d => !d.customOrderItemId);
+      if (detallesSinProducto.length > 0 && products.length > 0) {
+        detallesSinProducto.forEach((d) => {
+          products[0].conceptos.push({
+            id: d.id,
+            customOrderItemId: products[0].customOrderItemId,
+            tipo: d.tipo,
+            descripcion: d.descripcion,
+            cantidad: d.cantidad,
+            unidadMedida: d.unidadMedida ?? 'unidad',
+            precioUnitario: Number(d.precioUnitario),
+            observaciones: d.observaciones ?? '',
+          });
+        });
+      }
     } else {
+      const existingLines: QuotationLine[] = (order.cotizacion?.detalles ?? []).map((d) => ({
+        id: d.id,
+        customOrderItemId: d.customOrderItemId,
+        tipo: d.tipo,
+        descripcion: d.descripcion,
+        cantidad: d.cantidad,
+        unidadMedida: d.unidadMedida ?? 'unidad',
+        precioUnitario: Number(d.precioUnitario),
+        observaciones: d.observaciones ?? '',
+      }));
+
       products.push({
         id: 'product-0',
+        customOrderItemId: '',
         nombre: 'Producto personalizado',
         cantidad: 1,
         conceptos: existingLines.length > 0 ? existingLines : [{
           id: `line-${Date.now()}`,
+          customOrderItemId: null,
           tipo: 'PRODUCTO_BASE',
           descripcion: 'Producto personalizado',
           cantidad: 1,
@@ -732,6 +844,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setQuotationPaymentTerms(order.cotizacion?.condicionesPago ?? '50% anticipo, 50% contra entrega');
     setQuotationSaving(false);
     setHasQuotationChanges(false);
+    setNegotiationHistory([]);
+    setNegotiationMessage('');
     setSelectedOrder(order);
     setDetailOpen(true);
     setDetailView('quotation');
@@ -764,33 +878,35 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   };
 
    const addQuotationLine = (productId?: string) => {
-    const newLine: QuotationLine = {
-      id: `line-${Date.now()}`,
-      tipo: 'OTRO',
-      descripcion: '',
-      cantidad: 1,
-      unidadMedida: 'unidad',
-      precioUnitario: 0,
-      observaciones: '',
-    };
+     const newLine: QuotationLine = {
+       id: `line-${Date.now()}`,
+       customOrderItemId: null,
+       tipo: 'OTRO',
+       descripcion: '',
+       cantidad: 1,
+       unidadMedida: 'unidad',
+       precioUnitario: 0,
+       observaciones: '',
+     };
 
-    if (productId) {
-      setQuotationProducts(prev => prev.map(product => {
-        if (product.id !== productId) return product;
-        return {
-          ...product,
-          conceptos: [...product.conceptos, newLine],
-          expanded: true,
-        };
-      }));
-    } else {
-      const newProduct: QuotationProduct = {
-        id: `product-${Date.now()}`,
-        nombre: 'Producto personalizado',
-        cantidad: 1,
-        conceptos: [newLine],
-        expanded: true,
-      };
+     if (productId) {
+       setQuotationProducts(prev => prev.map(product => {
+         if (product.id !== productId) return product;
+         return {
+           ...product,
+           conceptos: [...product.conceptos, { ...newLine, customOrderItemId: product.customOrderItemId }],
+           expanded: true,
+         };
+       }));
+     } else {
+       const newProduct: QuotationProduct = {
+         id: `product-${Date.now()}`,
+         customOrderItemId: '',
+         nombre: 'Producto personalizado',
+         cantidad: 1,
+         conceptos: [{ ...newLine, customOrderItemId: null }],
+         expanded: true,
+       };
       setQuotationProducts(prev => [...prev, newProduct]);
     }
     setHasQuotationChanges(true);
@@ -839,18 +955,20 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     if (!validateQuotation()) return;
     setQuotationSaving(true);
     try {
-      const allLines = quotationProducts.flatMap(product => product.conceptos);
       const payload = {
-        detalles: allLines.map((line, index) => ({
-          tipo: line.tipo,
-          descripcion: line.descripcion,
-          cantidad: Number(line.cantidad),
-          unidadMedida: line.unidadMedida,
-          precioUnitario: Number(line.precioUnitario),
-          subtotal: calcLineSubtotal(line),
-          observaciones: line.observaciones,
-          orden: index,
-        })),
+        detalles: quotationProducts.flatMap((product, productIndex) =>
+          product.conceptos.map((line, lineIndex) => ({
+            customOrderItemId: line.customOrderItemId ?? product.customOrderItemId,
+            tipo: line.tipo,
+            descripcion: line.descripcion,
+            cantidad: Number(line.cantidad),
+            unidadMedida: line.unidadMedida,
+            precioUnitario: Number(line.precioUnitario),
+            subtotal: calcLineSubtotal(line),
+            observaciones: line.observaciones,
+            orden: productIndex * 100 + lineIndex,
+          }))
+        ),
         subtotal: Number(calcQuotation.subtotal),
         impuestos: Number(calcQuotation.taxes),
         descuento: Number(calcQuotation.discount),
@@ -889,18 +1007,20 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     if (!validateQuotation()) return;
     setQuotationSaving(true);
     try {
-      const allLines = quotationProducts.flatMap(product => product.conceptos);
       const payload = {
-        detalles: allLines.map((line, index) => ({
-          tipo: line.tipo,
-          descripcion: line.descripcion,
-          cantidad: Number(line.cantidad),
-          unidadMedida: line.unidadMedida,
-          precioUnitario: Number(line.precioUnitario),
-          subtotal: calcLineSubtotal(line),
-          observaciones: line.observaciones,
-          orden: index,
-        })),
+        detalles: quotationProducts.flatMap((product, productIndex) =>
+          product.conceptos.map((line, lineIndex) => ({
+            customOrderItemId: line.customOrderItemId ?? product.customOrderItemId,
+            tipo: line.tipo,
+            descripcion: line.descripcion,
+            cantidad: Number(line.cantidad),
+            unidadMedida: line.unidadMedida,
+            precioUnitario: Number(line.precioUnitario),
+            subtotal: calcLineSubtotal(line),
+            observaciones: line.observaciones,
+            orden: productIndex * 100 + lineIndex,
+          }))
+        ),
         subtotal: Number(calcQuotation.subtotal),
         impuestos: Number(calcQuotation.taxes),
         descuento: Number(calcQuotation.discount),
@@ -968,35 +1088,32 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       key: 'numeroSolicitud',
       header: 'Solicitud',
       render: (row: CustomOrder) => (
-        <span className={s.tdMono + ' ' + s.tdPrimary + ' ' + s.requestNumberCell}>{row.numeroSolicitud}</span>
+        <span className={s.requestNumberCell}>{row.numeroSolicitud}</span>
       )
     },
     {
       key: 'clienteNombre',
       header: 'Cliente',
       render: (row: CustomOrder) => (
-        <span className={s.clientNameCell + ' ' + s.noWrap}>{row.clienteNombre}</span>
-      )
-    },
-    {
-      key: 'createdAt',
-      header: 'Fecha',
-      render: (row: CustomOrder) => (
-        <span className={s.tdMono}>{formatDate(row.createdAt)}</span>
+        <span className={s.clientNameCell} title={row.clienteNombre}>{row.clienteNombre}</span>
       )
     },
     {
       key: 'items',
       header: 'Productos',
       render: (row: CustomOrder) => (
-        <span className={s.tdMono + ' ' + s.noWrap}>{row.items.length} producto{row.items.length !== 1 ? 's' : ''}</span>
+        <span className={s.tdMono + ' ' + s.productosCell} title={row.items.map(i => i.descripcion).join(', ')}>
+          {row.items.length} producto{row.items.length !== 1 ? 's' : ''}
+        </span>
       )
     },
     {
-      key: 'fechaEntregaDeseada',
-      header: 'Entrega',
+      key: 'cantidadTotal',
+      header: 'Cantidad',
       render: (row: CustomOrder) => (
-        <span className={s.tdMono}>{row.fechaEntregaDeseada ? formatDate(row.fechaEntregaDeseada) : '-'}</span>
+        <span className={s.tdMono + ' ' + s.tdCenter}>
+          {row.items.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0)}
+        </span>
       )
     },
     {
@@ -1011,7 +1128,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       header: 'Cotización',
       render: (row: CustomOrder) => {
         if (!row.cotizacion) {
-          return <span className={s.metricValueSmall}>Sin cotizar</span>;
+          return <span className={s.statusBadge + ' ' + s.statusBadgeDefault}>Sin cotizar</span>;
         }
         const qs = getQuotationAdminStatus(row.cotizacion.estado);
         return (
@@ -1025,33 +1142,34 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       }
     },
     {
-      key: 'accionesInline',
-      header: 'Acción',
-      render: (row: CustomOrder) => {
-        const canQuote = !['CONVERTIDO_A_PEDIDO', 'COMPLETADO', 'CANCELADO', 'VENCIDO', 'EN_PRODUCCION'].includes(row.estado);
-        return (
-          <div className={s.rowActions}>
-             <button
-               className={s.rowActionPrimary}
-               onClick={() => { setSelectedOrder(row); setDetailOpen(true); setDetailView('detail'); }}
-               data-testid="btn-ver-detalle"
-             >
-               <Eye size={16} />
-               <span>Ver detalle</span>
-             </button>
-              {canQuote && (!row.cotizacion || !['ENVIADA', 'ACEPTADA', 'CANCELADA'].includes(row.cotizacion.estado)) && (
-                <button
-                  className={s.rowActionSecondary}
-                  onClick={() => { setSelectedOrder(row); setDetailOpen(true); setDetailView('quotation'); openQuotationEditor(row); }}
-                  data-testid="btn-gestionar-cotizacion"
-                >
-                  <FileText size={14} />
-                  <span>{row.cotizacion ? 'Editar cotización' : 'Cotizar'}</span>
-                </button>
-              )}
-          </div>
-        );
-      }
+      key: 'total',
+      header: 'Total',
+      render: (row: CustomOrder) => (
+        <span className={s.totalCell}>
+          {row.cotizacion ? formatCurrency(Number(row.cotizacion.total) || 0) : '-'}
+        </span>
+      )
+    },
+    {
+      key: 'createdAt',
+      header: 'Fecha',
+      render: (row: CustomOrder) => (
+        <span className={s.fechaCell}>{formatDate(row.createdAt)}</span>
+      )
+    },
+    {
+      key: 'verDetalle',
+      header: 'Ver detalle',
+      render: (row: CustomOrder) => (
+        <button
+          className={s.rowActionPrimary}
+          onClick={(e) => { e.stopPropagation(); setSelectedOrder(row); setDetailOpen(true); setDetailView('detail'); }}
+          data-testid="btn-ver-detalle"
+        >
+          <Eye size={14} />
+          <span>Ver detalle</span>
+        </button>
+      )
     },
   ];
 
@@ -1100,7 +1218,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const calcQuotation = useMemo(() => {
     const allLines = quotationProducts.flatMap(product => product.conceptos);
     const subtotal = Number(allLines.reduce((sum, line) => sum + calcLineSubtotal(line), 0).toFixed(2));
-    const discount = Number(Math.min(quotationDiscount, subtotal).toFixed(2));
+    const discountPercent = Math.min(Math.max(quotationDiscount, 0), 100);
+    const discount = Number((subtotal * (discountPercent / 100)).toFixed(2));
     const base = subtotal - discount;
     const taxes = Number((base * (quotationTaxRate / 100)).toFixed(2));
     const total = Number((base + taxes).toFixed(2));
@@ -1238,13 +1357,12 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             totalPages={totalPages}
             totalItems={totalItems}
             onPageChange={setPage}
-             actions={(row) => [
-               { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => { setSelectedOrder(row); setDetailOpen(true); } },
-               { label: 'Editar', icon: <Edit3 size={14} />, onClick: () => openEdit(row) },
-               { label: 'Cambiar estado', onClick: () => { setStatusConfirm(row); setSelectedStatus(null); } },
-               ...(!row.anticipoPagado && (row.paymentKey || row.paymentProofUrl) ? [{ label: 'Confirmar pago', onClick: () => setPaymentConfirm(row) }] : []),
-               { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(row), danger: true },
-             ]}
+            actions={(row) => [
+              { label: 'Editar', icon: <Edit3 size={14} />, onClick: () => openEdit(row) },
+              { label: 'Cambiar estado', onClick: () => { setStatusConfirm(row); setSelectedStatus(null); } },
+              ...(!row.anticipoPagado && (row.paymentKey || row.paymentProofUrl) ? [{ label: 'Confirmar pago', onClick: () => setPaymentConfirm(row) }] : []),
+              { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(row), danger: true },
+            ]}
           />
         </div>
       </div>
@@ -1254,7 +1372,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         onClose={handleCloseDetail}
         title={
           detailView === 'quotation'
-            ? 'Editor de Cotización'
+            ? 'Gestionar cotización'
             : detailView === 'negotiation'
             ? 'Negociar cotización'
             : `Solicitud ${selectedOrder?.numeroSolicitud ?? ''}`
@@ -1273,44 +1391,44 @@ export const AdminPedidosPersonalizados: React.FC = () => {
           <div className={s.form} data-testid="negotiation-form">
             <div className={s.sectionBlock}>
               <div className={s.sectionHeader}>
-                <FileText size={18} />
+                <FileText size={16} />
                 <div className={s.sectionTitle}>Cotización actual (referencia)</div>
               </div>
-              <div className={s.quotationSummary}>
-                <div className={s.quotationSummaryRow}>
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(Number(selectedOrder.cotizacion.subtotal))}</span>
+              <div className={s.summaryPanel}>
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Subtotal</span>
+                  <span className={s.summaryRowValue}>{formatCurrency(Number(selectedOrder.cotizacion.subtotal))}</span>
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Descuento</span>
-                  <span>{formatCurrency(Number(selectedOrder.cotizacion.descuento))}</span>
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Descuento</span>
+                  <span className={s.summaryRowValue}>{formatCurrency(Number(selectedOrder.cotizacion.descuento))}</span>
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Impuestos</span>
-                  <span>{formatCurrency(Number(selectedOrder.cotizacion.impuestos))}</span>
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Impuestos</span>
+                  <span className={s.summaryRowValue}>{formatCurrency(Number(selectedOrder.cotizacion.impuestos))}</span>
                 </div>
-                <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                  <span>Total</span>
-                  <span>{formatCurrency(Number(selectedOrder.cotizacion.total))}</span>
+                <div className={`${s.summaryRow} ${s.summaryTotal}`}>
+                  <span className={s.summaryRowLabel}>Total</span>
+                  <span className={s.summaryRowValue}>{formatCurrency(Number(selectedOrder.cotizacion.total))}</span>
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Condiciones de pago</span>
-                  <span>{selectedOrder.cotizacion.condicionesPago || '-'}</span>
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Condiciones de pago</span>
+                  <span className={s.summaryRowValue}>{selectedOrder.cotizacion.condicionesPago || '-'}</span>
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Tiempo estimado</span>
-                  <span>{selectedOrder.cotizacion.tiempoEstimadoDias ?? '-'} días</span>
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Tiempo estimado</span>
+                  <span className={s.summaryRowValue}>{selectedOrder.cotizacion.tiempoEstimadoDias ?? '-'} días</span>
                 </div>
               </div>
             </div>
 
             {selectedOrder.cotizacion.motivoRechazo && (
-              <div className={s.sectionBlock}>
+              <div className={s.sectionBlock} style={{ borderLeftColor: 'var(--color-danger)' }}>
                 <div className={s.sectionHeader}>
-                  <FileText size={18} />
+                  <FileText size={16} />
                   <div className={s.sectionTitle}>Motivo del rechazo</div>
                 </div>
-                <div style={{ padding: '8px 12px', background: 'rgba(220, 38, 38, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+                <div style={{ padding: '10px 14px', background: 'rgba(220, 38, 38, 0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.15)', fontSize: '0.82rem', color: 'var(--color-danger)' }}>
                   {selectedOrder.cotizacion.motivoRechazo}
                 </div>
               </div>
@@ -1319,19 +1437,19 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             {negotiationHistory.length > 0 && (
               <div className={s.sectionBlock}>
                 <div className={s.sectionHeader}>
-                  <FileText size={18} />
+                  <FileText size={16} />
                   <div className={s.sectionTitle}>Historial de negociaciones</div>
                 </div>
                 <div className={s.negotiationHistory} data-testid="negotiation-history">
                   {negotiationHistory.map((entry) => (
                     <div key={entry.id} className={s.negotiationEntry} data-testid={`negotiation-entry-${entry.round}`}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Negociación {entry.round}</strong>
-                        <span className={s.negotiationDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
+                      <div className={s.negotiationEntryHeader}>
+                        <span className={s.negotiationEntryTitle}>Negociación {entry.round}</span>
+                        <span className={s.negotiationEntryDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
                       </div>
-                      <span>{entry.message}</span>
+                      <div className={s.negotiationEntryMessage}>{entry.message}</div>
                       {entry.proposalData && (
-                        <div style={{ marginTop: '6px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                        <div className={s.negotiationEntryProposal}>
                           Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
                         </div>
                       )}
@@ -1343,44 +1461,44 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
             <div className={s.sectionBlock}>
               <div className={s.sectionHeader}>
-                <FileText size={18} />
+                <FileText size={16} />
                 <div className={s.sectionTitle}>Tu propuesta</div>
               </div>
-              <div className={s.quotationSummary}>
-                <div className={s.quotationSummaryRow}>
-                  <span>Subtotal</span>
-                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.subtotal} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, subtotal: Number(e.target.value) })} />
+              <div className={s.summaryPanel}>
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Subtotal</span>
+                  <input className={s.summaryInput} type="number" min="0" value={negotiationProposalData.subtotal} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, subtotal: Number(e.target.value) })} />
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Descuento</span>
-                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.descuento} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, descuento: Number(e.target.value) })} />
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Descuento (%)</span>
+                  <input className={s.summaryInput} type="number" min="0" max="100" value={negotiationProposalData.descuento} onChange={(e) => { const val = Math.min(Math.max(Number(e.target.value) || 0, 0), 100); setNegotiationProposalData({ ...negotiationProposalData, descuento: val }); }} />
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Impuestos</span>
-                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.impuestos} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, impuestos: Number(e.target.value) })} />
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Impuestos</span>
+                  <input className={s.summaryInput} type="number" min="0" value={negotiationProposalData.impuestos} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, impuestos: Number(e.target.value) })} />
                 </div>
-                <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                  <span>Total</span>
-                  <input className={s.quotationInput} type="number" min="0" value={negotiationProposalData.total} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, total: Number(e.target.value) })} />
+                <div className={`${s.summaryRow} ${s.summaryTotal}`}>
+                  <span className={s.summaryRowLabel}>Total</span>
+                  <input className={s.summaryInput} type="number" min="0" value={negotiationProposalData.total} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, total: Number(e.target.value) })} />
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Condiciones de pago</span>
-                  <input className={s.quotationInput} type="text" value={negotiationProposalData.condicionesPago} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, condicionesPago: e.target.value })} />
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Condiciones de pago</span>
+                  <input className={s.summaryInput} type="text" value={negotiationProposalData.condicionesPago} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, condicionesPago: e.target.value })} style={{ width: '140px', textAlign: 'left' }} />
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>% Anticipo</span>
-                  <input className={s.quotationInput} type="number" min="0" max="100" value={negotiationProposalData.porcentajeAnticipo} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, porcentajeAnticipo: Number(e.target.value) })} />
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>% Anticipo</span>
+                  <input className={s.summaryInput} type="number" min="0" max="100" value={negotiationProposalData.porcentajeAnticipo} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, porcentajeAnticipo: Number(e.target.value) })} />
                 </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Tiempo estimado (días)</span>
-                  <input className={s.quotationInput} type="number" min="1" value={negotiationProposalData.tiempoEstimadoDias} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, tiempoEstimadoDias: Number(e.target.value) })} />
+                <div className={s.summaryRow}>
+                  <span className={s.summaryRowLabel}>Tiempo estimado (días)</span>
+                  <input className={s.summaryInput} type="number" min="1" value={negotiationProposalData.tiempoEstimadoDias} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, tiempoEstimadoDias: Number(e.target.value) })} />
                 </div>
               </div>
             </div>
 
             <div className={s.sectionBlock}>
               <div className={s.sectionHeader}>
-                <FileText size={18} />
+                <FileText size={16} />
                 <div className={s.sectionTitle}>Mensaje</div>
               </div>
               <textarea
@@ -1393,74 +1511,85 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
               <div className={s.negotiationCounter} data-testid="negotiation-counter-admin">
-                Ronda {(getAdminNegotiationCounts().adminRounds) + 1}/3 (te quedan {getAdminNegotiationCounts().adminRemaining} respuestas)
+                <span className={s.negotiationDots}>
+                  {[1, 2, 3].map(i => (
+                    <span key={i} className={`${s.negotiationDot} ${i <= getAdminNegotiationCounts().adminRounds + 1 ? s.negotiationDotActive : ''}`} />
+                  ))}
+                </span>
+                Ronda {getAdminNegotiationCounts().adminRounds + 1}/3
               </div>
               <div className={s.negotiationCounter}>
-                Cliente: ronda {(getAdminNegotiationCounts().clientRounds) + 1}/3 (quedan {getAdminNegotiationCounts().clientRemaining} para el cliente)
+                Cliente: ronda {getAdminNegotiationCounts().clientRounds + 1}/3
               </div>
             </div>
 
-            <div className={s.quotationEditorActions}>
-              <Button variant="secondary" onClick={closeNegotiation}>← Volver</Button>
-              <Button
-                onClick={handleStartNegotiation}
-                disabled={negotiationSending || !negotiationMessage.trim() || getAdminNegotiationCounts().adminRemaining <= 0}
-                data-testid="negotiation-send-btn"
-              >
-                {negotiationSending ? 'Enviando...' : 'Enviar propuesta'}
-              </Button>
+            <div className={s.actionsBar}>
+              <div className={s.actionsBarLeft}>
+                <button className={s.btnSecondary} onClick={closeNegotiation}>
+                  ← Volver
+                </button>
+              </div>
+              <div className={s.actionsBarRight}>
+                <button
+                  className={s.btnPrimary}
+                  onClick={handleStartNegotiation}
+                  disabled={negotiationSending || !negotiationMessage.trim() || getAdminNegotiationCounts().adminRemaining <= 0}
+                  data-testid="negotiation-send-btn"
+                >
+                  {negotiationSending ? 'Enviando...' : 'Enviar propuesta'}
+                </button>
+              </div>
             </div>
           </div>
         ) : detailView === 'quotation' && selectedOrder ? (
-          <div className={s.quotationEditor} data-testid="quotation-editor">
-            <div className={s.quotationEditorMain}>
-              {selectedOrder.cotizacion && (
-                <div className={s.sectionBlock}>
-                  <div className={s.sectionHeader}>
-                    <FileText size={18} />
-                    <div className={s.sectionTitle}>Estado de la cotización</div>
-                  </div>
-                   <div className={s.quotationStatusRow}>
+           <div className={s.quotationEditor} data-testid="quotation-editor">
+             <div className={s.quotationEditorMain}>
+               {selectedOrder.cotizacion && (
+                 <div className={s.sectionBlock}>
+                   <div className={s.sectionHeader}>
+                     <FileText size={16} />
+                     <div className={s.sectionTitle}>Estado de la cotización</div>
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                      {selectedOrder.cotizacion && (() => {
                        const status = getQuotationAdminStatus(selectedOrder.cotizacion.estado);
                        return (
                          <>
                            <Badge variant={status.variant} data-testid="quotation-status-badge">{status.label}</Badge>
-                           <span className={s.quotationNegotiation} data-testid="quotation-negotiation-count">
+                           <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-secondary)' }} data-testid="quotation-negotiation-count">
                              Negociaciones: {selectedOrder.cotizacion.negotiationCount ?? 0}/3
                            </span>
                          </>
                        );
                      })()}
-                     {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && selectedOrder.cotizacion.motivoRechazo && (
-                       <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(220, 38, 38, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.85rem', color: 'var(--color-danger)' }} data-testid="rejection-reason">
-                         <strong>Motivo del rechazo:</strong> {selectedOrder.cotizacion.motivoRechazo}
-                       </div>
-                     )}
-                     {selectedOrder?.cotizacion?.estado === 'CANCELADA' && (
-                       <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(100, 116, 122, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(100, 116, 122, 0.2)', fontSize: '0.85rem', color: 'var(--color-text-muted)' }} data-testid="cancelled-notice">
-                         <strong>Cotización cancelada por agotamiento de negociaciones.</strong>
-                       </div>
-                     )}
                    </div>
+                   {selectedOrder?.cotizacion?.estado === 'RECHAZADA' && selectedOrder.cotizacion.motivoRechazo && (
+                     <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(220, 38, 38, 0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.15)', fontSize: '0.82rem', color: 'var(--color-danger)' }} data-testid="rejection-reason">
+                       <strong>Motivo del rechazo:</strong> {selectedOrder.cotizacion.motivoRechazo}
+                     </div>
+                   )}
+                   {selectedOrder?.cotizacion?.estado === 'CANCELADA' && (
+                     <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(100, 116, 122, 0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(100, 116, 122, 0.15)', fontSize: '0.82rem', color: 'var(--color-text-muted)' }} data-testid="cancelled-notice">
+                       <strong>Cotización cancelada por agotamiento de negociaciones.</strong>
+                     </div>
+                   )}
                    {negotiationLoading ? (
                      <div className={s.negotiationHistory}>
-                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Cargando negociaciones...</span>
+                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>Cargando negociaciones...</span>
                      </div>
                    ) : negotiationHistory.length > 0 && (
-                     <div className={s.negotiationHistory} data-testid="negotiation-history">
-                       <div className={s.sectionTitle}>Historial de negociaciones</div>
+                     <div className={s.negotiationHistory} data-testid="negotiation-history" style={{ marginTop: '12px' }}>
                        {negotiationHistory.map((entry) => (
                          <div key={entry.id} className={s.negotiationEntry} data-testid={`negotiation-entry-${entry.round}`}>
-                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                             <strong>Negociación {entry.round}</strong>
-                             <span className={s.negotiationDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
+                           <div className={s.negotiationEntryHeader}>
+                             <span className={s.negotiationEntryTitle}>Negociación {entry.round}</span>
+                             <span className={s.negotiationEntryDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
                            </div>
-                           <span>{entry.message}</span>
+                           <div className={s.negotiationEntryMessage}>{entry.message}</div>
                            {entry.proposalData && (
-                             <div style={{ marginTop: '6px', fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                             <div className={s.negotiationEntryProposal}>
                                Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
                              </div>
                            )}
@@ -1468,166 +1597,183 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                        ))}
                      </div>
                    )}
-                </div>
-              )}
+                 </div>
+               )}
 
-              <div className={s.sectionBlock}>
-                <div className={s.sectionHeader}>
-                  <FileText size={18} />
-                  <div className={s.sectionTitle}>Productos y conceptos</div>
-                </div>
-                <p className={s.sectionDescription}>Organiza la cotización por producto. Cada producto puede tener múltiples conceptos.</p>
+               <div className={s.sectionBlock}>
+                 <div className={s.sectionHeader}>
+                   <FileText size={16} />
+                   <div className={s.sectionTitle}>Productos</div>
+                 </div>
+                 <p className={s.sectionDescription}>Organiza la cotización por producto. Cada producto puede tener múltiples conceptos.</p>
 
-                {quotationProducts.map((product) => (
-                  <div key={product.id} className={s.productCard}>
-                    <div className={s.productHeader} onClick={() => toggleProductExpanded(product.id)}>
-                      <div className={s.productInfo}>
-                        <div>
-                          <div className={s.productTitle}>{product.nombre}</div>
-                          <div className={s.productMeta}>
-                            <span>Cantidad: {product.cantidad}</span>
-                            {product.talla && <span>Talla: {product.talla}</span>}
-                            {product.color && <span>Color: {product.color}</span>}
-                            {product.material && <span>Material: {product.material}</span>}
-                          </div>
-                        </div>
-                      </div>
-                      <div className={s.productSubtotal}>
-                        {formatCurrency(product.conceptos.reduce((sum, line) => sum + calcLineSubtotal(line), 0))}
-                      </div>
+                 {quotationProducts.map((product) => (
+                   <div key={product.id} className={s.productCard}>
+                     <div className={s.productHeader} onClick={() => toggleProductExpanded(product.id)}>
+                       <div className={s.productInfo}>
+                         <div>
+                           <div className={s.productTitle}>{product.nombre}</div>
+                           <div className={s.productMeta}>
+                             <span>Cantidad: {product.cantidad}</span>
+                             {product.talla && <span>Talla: {product.talla}</span>}
+                             {product.color && <span>Color: {product.color}</span>}
+                             {product.material && <span>Material: {product.material}</span>}
+                           </div>
+                         </div>
+                       </div>
+                       <div className={s.productSubtotal}>
+                         {formatCurrency(product.conceptos.reduce((sum, line) => sum + calcLineSubtotal(line), 0))}
+                       </div>
+                     </div>
+
+                     {product.expanded && (
+                       <div className={s.productBody}>
+                         <div className={s.conceptsTable}>
+                           <div className={s.conceptsHeader}>
+                             <span>Tipo</span>
+                             <span>Descripción</span>
+                             <span>Cant.</span>
+                             <span>P. unitario</span>
+                             <span>Subtotal</span>
+                             <span></span>
+                           </div>
+                           {product.conceptos.map((line) => (
+                             <div key={line.id} className={s.conceptRow} data-testid="concept-row">
+                               <div>
+                                 <select className={s.select} value={line.tipo} onChange={(e) => updateQuotationLine(product.id, line.id, 'tipo', e.target.value)}>
+                                   <option value="PRODUCTO_BASE">Producto base</option>
+                                   <option value="MATERIA_PRIMA">Materia prima</option>
+                                   <option value="MANO_OBRA">Mano de obra</option>
+                                   <option value="DISENO">Diseño</option>
+                                   <option value="LOGISTICA">Logística</option>
+                                   <option value="OTRO">Otro</option>
+                                 </select>
+                               </div>
+                               <div>
+                                 <input className={s.input} placeholder="Descripción del concepto" value={line.descripcion} onChange={(e) => updateQuotationLine(product.id, line.id, 'descripcion', e.target.value)} />
+                               </div>
+                               <div>
+                                 <input className={s.input} type="number" min="1" value={line.cantidad} onChange={(e) => updateQuotationLine(product.id, line.id, 'cantidad', Number(e.target.value))} />
+                               </div>
+                               <div>
+                                 <input className={s.input} type="number" min="0" step="1" value={line.precioUnitario} onChange={(e) => updateQuotationLine(product.id, line.id, 'precioUnitario', Number(e.target.value))} />
+                               </div>
+                               <div>
+                                 <span className={s.conceptSubtotal}>{formatCurrency(calcLineSubtotal(line))}</span>
+                               </div>
+                               <div className={s.conceptActions}>
+                                 <button type="button" className={s.rowActionDanger} onClick={() => removeQuotationLine(product.id, line.id)} style={{ height: '32px', width: '32px', padding: 0 }}>
+                                   <Trash2 size={14} />
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                           <button type="button" className={s.addLineBtn} onClick={() => addQuotationLine(product.id)}>
+                             <PlusCircle size={14} />
+                             <span>Agregar concepto</span>
+                           </button>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 ))}
+
+                 <button type="button" className={s.addLineBtn} onClick={() => addQuotationLine()} style={{ marginTop: '8px' }}>
+                   <PlusCircle size={14} />
+                   <span>Agregar producto</span>
+                 </button>
+               </div>
+
+               <div className={s.sectionBlock}>
+                 <div className={s.sectionHeader}>
+                   <FileText size={16} />
+                   <div className={s.sectionTitle}>Condiciones</div>
+                 </div>
+                 <div className={s.formRow}>
+                   <div className={s.field}>
+                     <label className={s.label}>Tiempo estimado (días)</label>
+                     <input className={s.input} type="number" min="1" value={quotationDeliveryDays} onChange={(e) => { setQuotationDeliveryDays(Number(e.target.value)); setHasQuotationChanges(true); }} />
+                   </div>
+                   <div className={s.field}>
+                     <label className={s.label}>Condiciones de pago</label>
+                     <input className={s.input} value={quotationPaymentTerms} onChange={(e) => { setQuotationPaymentTerms(e.target.value); setHasQuotationChanges(true); }} />
+                   </div>
+                 </div>
+                 <div className={s.field}>
+                   <label className={s.label}>Observaciones</label>
+                   <textarea className={s.textarea} rows={2} value={quotationNotes} onChange={(e) => { setQuotationNotes(e.target.value); setHasQuotationChanges(true); }} />
+                 </div>
+               </div>
+             </div>
+
+             <div className={s.quotationEditorSummary}>
+               <div className={s.sectionBlock}>
+                 <div className={s.sectionHeader}>
+                   <FileText size={16} />
+                   <div className={s.sectionTitle}>Resumen</div>
+                 </div>
+                 <div className={s.summaryPanel}>
+                   <div className={s.summaryRow}>
+                     <span className={s.summaryRowLabel}>Subtotal</span>
+                     <span className={s.summaryRowValue}>{formatCurrency(calcQuotation.subtotal)}</span>
+                   </div>
+                    <div className={s.summaryRow}>
+                      <span className={s.summaryRowLabel}>Descuento (%)</span>
+                      <input className={s.summaryInput} type="number" min="0" max="100" value={quotationDiscount} onChange={(e) => { const val = Math.min(Math.max(Number(e.target.value) || 0, 0), 100); setQuotationDiscount(val); setHasQuotationChanges(true); }} />
                     </div>
+                   <div className={s.summaryRow}>
+                     <span className={s.summaryRowLabel}>Base gravable</span>
+                     <span className={s.summaryRowValue}>{formatCurrency(calcQuotation.base)}</span>
+                   </div>
+                   <div className={s.summaryRow}>
+                     <span className={s.summaryRowLabel}>Impuestos ({quotationTaxRate}%)</span>
+                     <input className={s.summaryInput} type="number" min="0" max="100" value={quotationTaxRate} onChange={(e) => { setQuotationTaxRate(Number(e.target.value)); setHasQuotationChanges(true); }} />
+                   </div>
+                   <div className={`${s.summaryRow} ${s.summaryTotal}`}>
+                     <span className={s.summaryRowLabel}>TOTAL</span>
+                     <span className={s.summaryRowValue} style={{ fontSize: '1rem', fontWeight: 700 }}>{formatCurrency(calcQuotation.total)}</span>
+                   </div>
+                   <div className={s.summaryRow}>
+                     <span className={s.summaryRowLabel}>Anticipo ({quotationAdvanceRate}%)</span>
+                     <input className={s.summaryInput} type="number" min="0" max="100" value={quotationAdvanceRate} onChange={(e) => { setQuotationAdvanceRate(Number(e.target.value)); setHasQuotationChanges(true); }} />
+                   </div>
+                   <div className={`${s.summaryRow} ${s.summaryBalance}`}>
+                     <span className={s.summaryRowLabel}>Saldo</span>
+                     <span className={s.summaryRowValue}>{formatCurrency(calcQuotation.balance)}</span>
+                   </div>
+                 </div>
+               </div>
+             </div>
 
-                    {product.expanded && (
-                      <div className={s.productBody}>
-                        <div className={s.productConceptsTable}>
-                          <div className={s.productConceptsHeader}>
-                            <span>Concepto</span>
-                            <span>Cant.</span>
-                            <span>P. unitario</span>
-                            <span>Subtotal</span>
-                          </div>
-                          {product.conceptos.map((line) => (
-                            <div key={line.id} className={s.productConceptRow} data-testid="concept-row">
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <select className={s.select} value={line.tipo} onChange={(e) => updateQuotationLine(product.id, line.id, 'tipo', e.target.value)}>
-                                  <option value="PRODUCTO_BASE">Producto base</option>
-                                  <option value="MATERIA_PRIMA">Materia prima</option>
-                                  <option value="MANO_OBRA">Mano de obra</option>
-                                  <option value="DISENO">Diseño</option>
-                                  <option value="LOGISTICA">Logística</option>
-                                  <option value="OTRO">Otro</option>
-                                </select>
-                                <input className={s.input} placeholder="Descripción del concepto" value={line.descripcion} onChange={(e) => updateQuotationLine(product.id, line.id, 'descripcion', e.target.value)} />
-                              </div>
-                              <div>
-                                <input className={s.input} type="number" min="1" value={line.cantidad} onChange={(e) => updateQuotationLine(product.id, line.id, 'cantidad', Number(e.target.value))} />
-                              </div>
-                              <div>
-                                <input className={s.input} type="number" min="0" step="1" value={line.precioUnitario} onChange={(e) => updateQuotationLine(product.id, line.id, 'precioUnitario', Number(e.target.value))} />
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                                <span className={s.quotationSubtotal}>{formatCurrency(calcLineSubtotal(line))}</span>
-                                <div className={s.productConceptActions}>
-                                  <button type="button" className={s.removeFileBtn} onClick={() => removeQuotationLine(product.id, line.id)}>
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine(product.id)}>
-                            <PlusCircle size={16} />
-                            <span>Agregar concepto</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <button type="button" className={s.quotationAddLine} onClick={() => addQuotationLine()} style={{ marginTop: '8px' }}>
-                  <PlusCircle size={16} />
-                  <span>Agregar producto</span>
-                </button>
-              </div>
-
-              <div className={s.sectionBlock}>
-                <div className={s.sectionHeader}>
-                  <FileText size={18} />
-                  <div className={s.sectionTitle}>Condiciones</div>
-                </div>
-                <div className={s.formRow}>
-                  <div className={s.field}>
-                    <label className={s.label}>Tiempo estimado (días)</label>
-                    <input className={s.input} type="number" min="1" value={quotationDeliveryDays} onChange={(e) => { setQuotationDeliveryDays(Number(e.target.value)); setHasQuotationChanges(true); }} />
-                  </div>
-                  <div className={`${s.field} ${s.colSpan2}`}>
-                    <label className={s.label}>Condiciones de pago</label>
-                    <input className={s.input} value={quotationPaymentTerms} onChange={(e) => { setQuotationPaymentTerms(e.target.value); setHasQuotationChanges(true); }} />
-                  </div>
-                </div>
-                <div className={s.field}>
-                  <label className={s.label}>Observaciones</label>
-                  <textarea className={s.textarea} rows={2} value={quotationNotes} onChange={(e) => { setQuotationNotes(e.target.value); setHasQuotationChanges(true); }} />
-                </div>
-              </div>
-            </div>
-
-            <div className={s.quotationEditorSummary}>
-              <div className={s.quotationSummary}>
-                <div className={s.quotationSummaryRow}>
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(calcQuotation.subtotal)}</span>
-                </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Descuento</span>
-                  <input className={s.quotationInput} type="number" min="0" value={quotationDiscount} onChange={(e) => { setQuotationDiscount(Number(e.target.value)); setHasQuotationChanges(true); }} />
-                </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Base gravable</span>
-                  <span>{formatCurrency(calcQuotation.base)}</span>
-                </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Impuestos ({quotationTaxRate}%)</span>
-                  <input className={s.quotationInput} type="number" min="0" max="100" value={quotationTaxRate} onChange={(e) => { setQuotationTaxRate(Number(e.target.value)); setHasQuotationChanges(true); }} />
-                </div>
-                <div className={`${s.quotationSummaryRow} ${s.quotationSummaryTotal}`}>
-                  <span>Total</span>
-                  <span>{formatCurrency(calcQuotation.total)}</span>
-                </div>
-                <div className={s.quotationSummaryRow}>
-                  <span>Anticipo ({quotationAdvanceRate}%)</span>
-                  <input className={s.quotationInput} type="number" min="0" max="100" value={quotationAdvanceRate} onChange={(e) => { setQuotationAdvanceRate(Number(e.target.value)); setHasQuotationChanges(true); }} />
-                </div>
-                <div className={`${s.quotationSummaryRow} ${s.quotationSummaryBalance}`}>
-                  <span>Saldo</span>
-                  <span>{formatCurrency(calcQuotation.balance)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className={s.quotationEditorActions}>
-              <Button variant="secondary" onClick={handleBackFromQuotation}>← Volver</Button>
-              {selectedOrder?.cotizacion?.estado === 'PENDIENTE' && (
-                <Button variant="outline" onClick={handleResendQuotation} disabled={quotationSaving || hasQuotationChanges} data-testid="btn-reenviar">
-                  {quotationSaving ? 'Reenviando...' : 'Reenviar cotización'}
-                </Button>
-              )}
-              <Button variant="secondary" onClick={handleSaveDraftQuotation}
-                disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
-                data-testid="btn-guardar-cotizacion"
-              >
-                {quotationSaving ? 'Guardando...' : 'Guardar cotización'}
-              </Button>
-              <Button
-                onClick={handleSendQuotation}
-                disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
-                data-testid="btn-enviar-cotizacion"
-              >
-                {quotationSaving ? 'Enviando...' : 'Enviar cotización'}
-              </Button>
-            </div>
-          </div>
+             <div className={s.actionsBar}>
+               <div className={s.actionsBarLeft}>
+                 <button className={s.btnSecondary} onClick={handleBackFromQuotation}>
+                   ← Volver
+                 </button>
+               </div>
+               <div className={s.actionsBarRight}>
+                 {selectedOrder?.cotizacion?.estado === 'PENDIENTE' && (
+                   <button className={s.btnOutline} onClick={handleResendQuotation} disabled={quotationSaving || hasQuotationChanges} data-testid="btn-reenviar">
+                     {quotationSaving ? 'Reenviando...' : 'Reenviar'}
+                   </button>
+                 )}
+                 <button className={s.btnSecondary} onClick={handleSaveDraftQuotation}
+                   disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
+                   data-testid="btn-guardar-cotizacion"
+                 >
+                   {quotationSaving ? 'Guardando...' : 'Guardar borrador'}
+                 </button>
+                 <button
+                   className={s.btnPrimary}
+                   onClick={handleSendQuotation}
+                   disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
+                   data-testid="btn-enviar-cotizacion"
+                 >
+                   {quotationSaving ? 'Enviando...' : 'Enviar cotización'}
+                 </button>
+               </div>
+             </div>
+           </div>
         ) : (
           summaryData && (
             <CustomOrderSummary
@@ -2017,10 +2163,50 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             </div>
             {paymentConfirm.paymentProofUrl && (
               <div className={s.field}>
-                <span className={s.label}>Comprobante</span>
-                <a href={customOrdersApi.getPaymentProofUrl(paymentConfirm.id)} target="_blank" rel="noreferrer" className={s.fileLink}>
-                  Ver comprobante adjunto
-                </a>
+                <span className={s.label}>Comprobante de pago</span>
+                <div className={s.paymentProofContainer}>
+                  {paymentProofLoading && (
+                    <div className={s.paymentProofLoading}>Cargando comprobante...</div>
+                  )}
+                  {paymentProofError && (
+                    <div className={s.paymentProofError}>
+                      <span>{paymentProofError}</span>
+                      <button
+                        className={s.fileLink}
+                        onClick={() => setPaymentProofViewer({ orderId: paymentConfirm.id, url: customOrdersApi.getPaymentProofUrl(paymentConfirm.id) })}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        Ver comprobante de pago
+                      </button>
+                    </div>
+                  )}
+                  {paymentProofBlobUrl && !paymentProofLoading && (
+                    <div className={s.paymentProofImageContainer}>
+                      <img
+                        src={paymentProofBlobUrl}
+                        alt="Comprobante de pago"
+                        className={s.paymentProofImage}
+                        onError={() => setPaymentProofError('No se pudo cargar la imagen del comprobante')}
+                      />
+                      <button
+                        className={s.fileLink}
+                        onClick={() => window.open(paymentProofBlobUrl, '_blank')}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: '8px' }}
+                      >
+                        Ver comprobante completo
+                      </button>
+                    </div>
+                  )}
+                  {!paymentProofBlobUrl && !paymentProofLoading && !paymentProofError && (
+                    <button
+                      className={s.fileLink}
+                      onClick={() => setPaymentProofViewer({ orderId: paymentConfirm.id, url: customOrdersApi.getPaymentProofUrl(paymentConfirm.id) })}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      Ver comprobante de pago
+                    </button>
+                  )}
+                </div>
               </div>
             )}
             <ModalFooter
@@ -2076,9 +2262,34 @@ export const AdminPedidosPersonalizados: React.FC = () => {
              ]}
            />
          }
-       >
-         <div />
-       </Modal>
-     </div>
-   );
+        >
+          <div />
+        </Modal>
+
+        {paymentProofViewer && (
+          <Modal
+            open={!!paymentProofViewer}
+            onClose={() => setPaymentProofViewer(null)}
+            title="Comprobante de pago"
+            description="Comprobante adjunto por el cliente."
+            size="lg"
+            footer={
+              <ModalFooter
+                align="end"
+                actions={[
+                  { label: 'Cerrar', variant: 'secondary', onClick: () => setPaymentProofViewer(null) },
+                ]}
+              />
+            }
+          >
+            <div className={s.paymentProofViewer}>
+              <PaymentProofImage
+                src={paymentProofViewer.url}
+                onError={() => toast.error('No se pudo cargar el comprobante.')}
+              />
+            </div>
+          </Modal>
+        )}
+      </div>
+    );
  };

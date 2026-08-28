@@ -62,6 +62,7 @@ customOrderRouter.patch('/:id/status', loadCustomOrder, authorizeCustomOrderAcce
 customOrderRouter.patch('/:id', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.updateCustomOrder));
 customOrderRouter.patch('/:id/submit', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.submitForReview));
 customOrderRouter.patch('/:id/accept-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.acceptQuotation));
+customOrderRouter.patch('/:id/accept-quotation-decisions', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.acceptQuotationWithDecisions));
 customOrderRouter.patch('/:id/reject-quotation', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.rejectQuotation));
 customOrderRouter.post('/:id/negotiation/start', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.startNegotiation));
 customOrderRouter.post('/:id/negotiation/respond', loadCustomOrder, authorizeCustomOrderAccess, wrap(controller.respondToNegotiation));

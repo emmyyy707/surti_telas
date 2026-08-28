@@ -320,7 +320,7 @@ export const AdminPedidos: React.FC = () => {
               { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => setDetailId(p.id) },
               { label: 'Editar', icon: <Save size={14} />, onClick: () => openEdit(p) },
               { label: 'Cambiar estado', onClick: () => { setStatusConfirm({ id: p.id, estado: p.estado }); setSelectedStatus(null); } },
-              { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(p), danger: true },
+              { label: 'Anular', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(p), danger: true },
             ]}
             detailPanel={{
               title: (p) => `Pedido ${p.numero ?? p.id}`,

@@ -299,16 +299,18 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String   @map("order_id")
-  productId String?  @map("product_id")
-  nombre    String
-  precio    Decimal  @db.Decimal(12, 2)
-  cantidad  Int
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product? @relation(fields: [productId], references: [id])
+  id                String    @id @default(cuid())
+  orderId           String    @map("order_id")
+  productId         String?   @map("product_id")
+  customOrderItemId String?   @map("custom_order_item_id")
+  nombre            String
+  precio            Decimal   @db.Decimal(12, 2)
+  cantidad          Int
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product           Product?  @relation(fields: [productId], references: [id])
 
   @@index([orderId])
+  @@index([customOrderItemId])
   @@map("order_items")
 }
 
@@ -1095,6 +1097,7 @@ model message_templates {
 model quote_items {
   id              String   @id
   quote_id        String
+  custom_order_item_id String?
   concepto        String
   descripcion     String?
   cantidad        Int
@@ -1108,6 +1111,7 @@ model quote_items {
   quotes          quotes   @relation(fields: [quote_id], references: [id], onDelete: Cascade)
 
   @@index([quote_id])
+  @@index([custom_order_item_id])
 }
 
 model custom_order_items {
@@ -1199,6 +1203,7 @@ model quotes {
   respondida_en        DateTime?
   quote_items          quote_items[]
   quote_negotiations   quote_negotiations[]
+  quote_item_decisions quote_item_decisions[]
   custom_orders        custom_orders        @relation(fields: [custom_order_id], references: [id])
 
   @@index([custom_order_id])
@@ -1223,6 +1228,23 @@ model quote_negotiations {
   @@index([quote_id])
   @@index([author_id])
   @@index([created_at])
+}
+
+model quote_item_decisions {
+  id              String    @id @default(cuid())
+  quote_item_id   String    @unique @map("quote_item_id")
+  quote_id        String    @map("quote_id")
+  decision        String    @default("PENDIENTE")
+  reject_reason   String?   @map("reject_reason")
+  reject_comment  String?   @map("reject_comment")
+  decided_at      DateTime? @map("decided_at")
+  created_at      DateTime  @default(now()) @map("created_at")
+  updated_at      DateTime  @updatedAt @map("updated_at")
+  quotes          quotes    @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+
+  @@index([quote_id])
+  @@index([decision])
+  @@map("quote_item_decisions")
 }
 
 model survey_responses {

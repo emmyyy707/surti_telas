@@ -77,9 +77,9 @@ export const OrderTracking: React.FC = () => {
     const loadProduction = async () => {
       if (!pedido?.id) return;
       try {
-        const result = await productionApi.list();
+        const result = await productionApi.list({ pedidoId: pedido.id });
         if (!active) return;
-        const po = result.find((p) => p.pedidoNumero === pedido.id || p.pedidoId === pedido.id);
+        const po = result.find((p) => p.pedidoId === pedido.id);
         setProductionOrder(po ?? null);
       } catch {
         setProductionOrder(null);

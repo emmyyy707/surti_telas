@@ -53,6 +53,7 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
         ubicacion: item.ubicacion,
         distribucionTallas: item.distribucion_tallas ?? null,
         imagenesReferencia: item.imagenes_referencia ?? null,
+        customOrderItemId: item.id,
         orden: item.orden,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -90,6 +91,12 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
         }),
       };
     }),
+    productoNombres: (row.custom_order_items ?? []).reduce((acc: Record<string, string>, item: any) => {
+      if (item.id && item.producto_nombre) {
+        acc[item.id] = item.producto_nombre;
+      }
+      return acc;
+    }, {}),
     personalizaciones: row.custom_order_notes ?? [],
     cotizacion: row.quotes ? toCotizacionData(row.quotes) : undefined,
     createdAt: row.createdAt,
@@ -194,6 +201,7 @@ export function toCotizacionData(row: any): any {
     negotiationHistory: row.negotiation_history ?? [],
     detalles: (row.quote_items ?? []).map((item: any) => ({
       id: item.id,
+      customOrderItemId: item.custom_order_item_id ?? null,
       tipo: item.tipo,
       concepto: item.concepto,
       descripcion: item.descripcion,

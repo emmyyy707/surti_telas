@@ -30,6 +30,7 @@ export interface PedidoPersonalizadoData {
   items?: any[];
   personalizaciones?: any[];
   cotizacion?: any;
+  productoNombres?: Record<string, string>;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -67,6 +68,7 @@ export class PedidoPersonalizado {
   items: any[];
   personalizaciones: any[];
   cotizacion?: any;
+  productoNombres?: Record<string, string>;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
   readonly deletedAt?: Date;
@@ -103,6 +105,7 @@ export class PedidoPersonalizado {
     this.items = data.items ?? [];
     this.personalizaciones = data.personalizaciones ?? [];
     this.cotizacion = data.cotizacion;
+    this.productoNombres = data.productoNombres;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
     this.deletedAt = data.deletedAt;
@@ -141,6 +144,7 @@ export class PedidoPersonalizado {
       items: this.items,
       personalizaciones: this.personalizaciones,
       cotizacion: this.cotizacion,
+      productoNombres: this.productoNombres,
       createdAt: this.createdAt ? new Date(this.createdAt).toISOString() : null,
       updatedAt: this.updatedAt ? new Date(this.updatedAt).toISOString() : null,
     };

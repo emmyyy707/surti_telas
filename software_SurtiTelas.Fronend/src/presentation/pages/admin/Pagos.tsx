@@ -617,9 +617,9 @@ export const AdminPagos: React.FC = () => {
               ...(f.estado !== 'Pagado' ? [{ label: 'Aprobar', icon: <CheckCircle size={14} />, onClick: async () => { await paymentsApi.updateStatus(f.id, 'Aprobado'); await loadPayments(); toast.success(`Pago ${f.numeroFactura} aprobado`); } }] : []),
               ...(f.estado === 'Pendiente' || f.estado === 'Parcial' ? [{ label: 'Rechazar', icon: <X size={14} />, onClick: async () => { await paymentsApi.updateStatus(f.id, 'Rechazado'); await loadPayments(); toast.success(`Pago ${f.numeroFactura} rechazado`); } }] : []),
               ...(f.estado === 'Pagado' ? [{ label: 'Reembolsar', icon: <Download size={14} />, onClick: async () => { await paymentsApi.updateStatus(f.id, 'Reembolsado'); await loadPayments(); toast.success(`Pago ${f.numeroFactura} reembolsado`); } }] : []),
-              { label: 'Editar', icon: <Edit size={14} />, onClick: () => handleEditPayment(payments.find(p => p.id === f.id)!) },
-              { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(payments.find(p => p.id === f.id)!), danger: true },
-              { label: 'PDF', icon: <FileText size={14} />, onClick: () => handleExportPdf(payments.find(p => p.id === f.id)!) },
+               { label: 'Editar', icon: <Edit size={14} />, onClick: () => handleEditPayment(payments.find(p => p.id === f.id)!) },
+               { label: 'Anular', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(payments.find(p => p.id === f.id)!), danger: true },
+               { label: 'PDF', icon: <FileText size={14} />, onClick: () => handleExportPdf(payments.find(p => p.id === f.id)!) },
             ]}
             columns={[
               { key: 'numeroFactura', header: 'N° Factura', width: '120px', sortable: true, filterable: true, filterPlaceholder: 'Filtrar factura...', render: (f) => <span className={s.tdPrimary}>{f.numeroFactura}</span> },
@@ -767,9 +767,9 @@ export const AdminPagos: React.FC = () => {
         open={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={handleDeletePayment}
-        title="Eliminar pago"
-        description={`¿Estás seguro de que deseas eliminar el pago "${deleteConfirm?.id}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
+        title="Anular pago"
+        description={`¿Estás seguro de que deseas anular el pago "${deleteConfirm?.id}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Anular"
         variant="danger"
       />
     </div>

@@ -1,6 +1,7 @@
 export interface CotizacionDetalleData {
   id?: string;
   cotizacionId?: string;
+  customOrderItemId?: string | null;
   tipo: string;
   descripcion: string;
   cantidad: number;
@@ -15,6 +16,7 @@ export interface CotizacionDetalleData {
 export class CotizacionDetalle {
   readonly id?: string;
   cotizacionId?: string;
+  customOrderItemId?: string | null;
   tipo: string;
   descripcion: string;
   cantidad: number;
@@ -28,6 +30,7 @@ export class CotizacionDetalle {
   constructor(data: CotizacionDetalleData) {
     this.id = data.id;
     this.cotizacionId = data.cotizacionId;
+    this.customOrderItemId = data.customOrderItemId ?? null;
     this.tipo = data.tipo;
     this.descripcion = data.descripcion;
     this.cantidad = data.cantidad;
@@ -43,6 +46,7 @@ export class CotizacionDetalle {
     return {
       id: this.id,
       cotizacionId: this.cotizacionId,
+      customOrderItemId: this.customOrderItemId,
       tipo: this.tipo,
       descripcion: this.descripcion,
       cantidad: this.cantidad,

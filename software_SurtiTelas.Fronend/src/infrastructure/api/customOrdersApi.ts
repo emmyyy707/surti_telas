@@ -31,6 +31,7 @@ export interface CustomOrderItem {
   ubicacion?: string[] | null;
   distribucionTallas?: Record<string, number> | null;
   imagenesReferencia?: string[] | null;
+  customOrderItemId?: string | null;
   referenciaImagen?: string | null;
   archivosReferencia?: string[];
   imagenesAdjuntas?: string[];
@@ -55,6 +56,7 @@ export interface CustomOrderItem {
 export interface CotizacionDetalle {
   id: string;
   cotizacionId: string;
+  customOrderItemId?: string | null;
   tipo: string;
   descripcion: string;
   cantidad: number;
@@ -134,6 +136,7 @@ export interface CustomOrder {
   items: CustomOrderItem[];
   personalizaciones: unknown[];
   cotizacion?: Cotizacion;
+  productoNombres?: Record<string, string> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -270,6 +273,15 @@ export interface CustomOrderMetrics {
   promedioHorasPorEstado: Record<string, number>;
 }
 
+export interface QuotationDecisionResponse {
+  customOrderId: string;
+  quotationStatus: string;
+  acceptedItems: Array<{ id: string; descripcion: string; subtotal: number }>;
+  rejectedItems: Array<{ id: string; descripcion: string; reason: string; comment?: string }>;
+  totalAccepted: number;
+  orderId?: string;
+}
+
 export const customOrdersApi = {
   async list(filters: CustomOrderFilters = {}): Promise<CustomOrderListResponse> {
     const params = new URLSearchParams();
@@ -299,6 +311,16 @@ export const customOrdersApi = {
 
   async acceptQuotation(id: string): Promise<CustomOrder> {
     return api.patch<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/accept-quotation`, {});
+  },
+
+  async acceptQuotationWithDecisions(
+    id: string,
+    decisions: {
+      acceptedIds: string[];
+      rejectedItems: Array<{ detalleId: string; reason: string; comment?: string }>;
+    }
+  ): Promise<QuotationDecisionResponse> {
+    return api.patch<QuotationDecisionResponse>(`/custom-orders/${encodeURIComponent(id)}/accept-quotation-decisions`, decisions);
   },
 
   async rejectQuotation(id: string, motivoRechazo: string): Promise<CustomOrder> {
@@ -341,6 +363,15 @@ export const customOrdersApi = {
 
   getPaymentProofUrl(id: string): string {
     return `/api/v1/custom-orders/${encodeURIComponent(id)}/payment-proof`;
+  },
+
+  /**
+   * Obtiene el comprobante de pago como una URL temporal (blob) para mostrar en el navegador.
+   * Resuelve el problema de autenticación con <img src=""> que no envía headers.
+   */
+  async getPaymentProofBlobUrl(id: string): Promise<string> {
+    const blob = await api.getBlob(`/custom-orders/${encodeURIComponent(id)}/payment-proof`);
+    return URL.createObjectURL(blob);
   },
 
   async uploadReferenceImage(id: string, file: File): Promise<{ url: string }> {

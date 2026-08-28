@@ -198,7 +198,18 @@ export class PrismaOrderRepository implements OrderRepository {
       const asesor = await tx.user.findUnique({ where: { id: asesorId! } });
       if (!asesor) throw new NotFoundError('Asesor no encontrado');
 
-      const itemsCount = items.reduce((sum, i) => sum + i.cantidad, 0);
+      const persistedItems = await Promise.all(
+        items.map(async (i) => {
+          if (!i.productId) {
+            return { ...i, productId: null };
+          }
+          const product = await tx.product.findUnique({ where: { id: i.productId } });
+          if (!product) return null;
+          return { ...i, productId: product.id };
+        }),
+      ).then((arr) => arr.filter((x): x is NonNullable<typeof x> => Boolean(x)));
+
+      const itemsCount = persistedItems.reduce((sum, i) => sum + i.cantidad, 0);
 
       const row = await tx.order.create({
       data: {
@@ -227,20 +238,12 @@ export class PrismaOrderRepository implements OrderRepository {
         include,
       });
 
-      const validItems = await Promise.all(
-        items.map(async (i) => {
-          if (!i.productId) return null;
-          const product = await tx.product.findUnique({ where: { id: i.productId } });
-          if (!product) return null;
-          return { ...i, productId: product.id };
-        }),
-      ).then((arr) => arr.filter((x): x is NonNullable<typeof x> => Boolean(x)));
-
-      for (const item of validItems) {
+      for (const item of persistedItems) {
         await tx.orderItem.create({
           data: {
             orderId: row.id,
             productId: item.productId,
+            customOrderItemId: item.customOrderItemId ?? null,
             nombre: item.nombre,
             precio: item.precio,
             cantidad: item.cantidad,
@@ -477,7 +480,19 @@ export class PrismaOrderRepository implements OrderRepository {
     if (changes.itemsList) {
       await this.prisma.orderItem.deleteMany({ where: { orderId: id } });
       const total = changes.itemsList.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
-      const itemsCount = changes.itemsList.reduce((sum, i) => sum + i.cantidad, 0);
+
+      const persistedItems = await Promise.all(
+        changes.itemsList.map(async (i) => {
+          if (!i.productId) {
+            return { ...i, productId: null };
+          }
+          const product = await this.prisma.product.findUnique({ where: { id: i.productId } });
+          if (!product) return null;
+          return { ...i, productId: product.id };
+        }),
+      ).then((arr) => arr.filter((x): x is NonNullable<typeof x> => Boolean(x)));
+
+      const itemsCount = persistedItems.reduce((sum, i) => sum + i.cantidad, 0);
       await this.prisma.order.update({
         where: { id },
         data: {
@@ -487,20 +502,12 @@ export class PrismaOrderRepository implements OrderRepository {
         include,
       });
 
-      const validItems = await Promise.all(
-        changes.itemsList.map(async (i) => {
-          if (!i.productId) return null;
-          const product = await this.prisma.product.findUnique({ where: { id: i.productId } });
-          if (!product) return null;
-          return { ...i, productId: product.id };
-        }),
-      ).then((arr) => arr.filter((x): x is NonNullable<typeof x> => Boolean(x)));
-
-      for (const item of validItems) {
+      for (const item of persistedItems) {
         await this.prisma.orderItem.create({
           data: {
             orderId: id,
             productId: item.productId,
+            customOrderItemId: item.customOrderItemId ?? null,
             nombre: item.nombre,
             precio: item.precio,
             cantidad: item.cantidad,

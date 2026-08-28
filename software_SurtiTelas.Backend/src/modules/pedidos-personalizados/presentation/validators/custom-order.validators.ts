@@ -163,6 +163,7 @@ export const CreateCustomOrderSchema = CreateCustomOrderSchemaBase.superRefine((
 });
 
 export const QuotationDetalleSchema = z.object({
+  customOrderItemId: z.string().optional(),
   tipo: QuotationItemTypeEnum,
   descripcion: z.string().min(1, 'La descripción del detalle es obligatoria'),
   cantidad: z.number().int().positive('La cantidad debe ser mayor a 0'),
@@ -206,6 +207,37 @@ export const QuotationSchema = z.object({
 export const AcceptQuotationSchema = z.object({
   confirmacion: z.string().optional(),
 });
+
+export const AcceptQuotationDecisionsSchema = z.object({
+  acceptedIds: z.array(z.string().min(1)).min(0),
+  rejectedItems: z.array(
+    z.object({
+      detalleId: z.string().min(1, 'El ID del detalle es obligatorio'),
+      reason: z.string().min(1, 'El motivo de rechazo es obligatorio'),
+      comment: z.string().optional(),
+    })
+  ).min(0),
+}).refine(
+  (data) => {
+    const acceptedSet = new Set(data.acceptedIds);
+    const rejectedSet = new Set(data.rejectedItems.map(r => r.detalleId));
+    for (const id of acceptedSet) {
+      if (rejectedSet.has(id)) return false;
+    }
+    return true;
+  },
+  { message: 'Un producto no puede estar aceptado y rechazado simultáneamente' }
+).refine(
+  (data) => {
+    return new Set(data.acceptedIds).size === data.acceptedIds.length;
+  },
+  { message: 'No se permiten IDs duplicados en productos aceptados' }
+).refine(
+  (data) => {
+    return new Set(data.rejectedItems.map(r => r.detalleId)).size === data.rejectedItems.length;
+  },
+  { message: 'No se permiten IDs duplicados en productos rechazados' }
+);
 
 export const RejectQuotationSchema = z.object({
   motivoRechazo: z.string().min(1, 'El motivo de rechazo es obligatorio'),

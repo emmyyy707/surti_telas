@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../../../shared/presentation/http/asyncHandler';
 import { authenticate } from '../../../auth/presentation/middlewares/authenticate';
-import { requirePermission } from '../../../auth/presentation/middlewares/authorize';
+import { requirePermission, requireRole } from '../../../auth/presentation/middlewares/authorize';
 import { sensitiveUserRateLimiter } from '../../../../modules/shared/presentation/middlewares/sensitiveUserRateLimiter';
 import * as controller from '../controllers/production.controller';
 
@@ -14,7 +14,7 @@ productionRouter.post('/workshops', requirePermission('production:create'), sens
 productionRouter.patch('/workshops/:id', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.updateWorkshop));
 productionRouter.delete('/workshops/:id', requirePermission('production:delete'), sensitiveUserRateLimiter, asyncHandler(controller.deleteWorkshop));
 
-productionRouter.get('/orders', requirePermission('production:read'), asyncHandler(controller.listProductionOrders));
+productionRouter.get('/orders', requireRole('ADMIN', 'ASESOR', 'PRODUCCION', 'CLIENTE'), asyncHandler(controller.listProductionOrders));
 productionRouter.post('/orders', requirePermission('production:create'), sensitiveUserRateLimiter, asyncHandler(controller.createProductionOrder));
 productionRouter.post('/orders/:id/workshop', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.assignToWorkshop));
 productionRouter.patch('/orders/:id/progress', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.updateProgress));
