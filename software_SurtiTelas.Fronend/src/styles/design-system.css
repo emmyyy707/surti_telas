@@ -274,7 +274,7 @@
 }
 
 .btn--md {
-  height: 36px;
+  height: 40px;
   padding: 0 var(--sp-md);
   border-radius: var(--radius-md);
   font-size: 0.875rem; /* 14px */
@@ -508,7 +508,6 @@
 
 /* Tamaño táctil mínimo: 44×44px */
 /* Los botones .btn--sm son 32×32 → usar .btn--md o .btn--lg para touch targets */
-.btn--md,
 .btn--lg,
 .btn--xl {
   min-height: 44px;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   Loader2,
@@ -120,7 +120,7 @@ export const AdminDevoluciones: React.FC = () => {
           <Search size={16} className={s.searchIcon} />
           <input
             className={s.searchInput}
-            placeholder="Buscar por número, cliente, prenda..."
+            placeholder="Buscar por nÓºmero, cliente, prenda..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -302,3 +302,4 @@ export const AdminDevoluciones: React.FC = () => {
 };
 
 export default AdminDevoluciones;
+

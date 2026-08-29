@@ -654,9 +654,9 @@ export const AdminRecibos: React.FC = () => {
                   })}
                 </tbody>
               </table>
-              <button type="button" className={f.addRowBtn} onClick={addItem}>
-                <Plus size={14} /> Agregar artículo
-              </button>
+              <Button type="button" variant="secondary" size="sm" leftIcon={<Plus size={14} />} onClick={addItem}>
+                Agregar artículo
+              </Button>
             </div>
             <div className={f.totalsBox}>
               <div className={f.totalRow}><span>Subtotal:</span><span>{formatCurrency(subtotal)}</span></div>

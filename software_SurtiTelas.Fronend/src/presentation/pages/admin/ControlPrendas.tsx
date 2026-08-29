@@ -264,7 +264,7 @@ export const AdminControlPrendas: React.FC = () => {
       {error && (
         <div className={s.errorBox}>
           <span>{error}</span>
-          <button className={s.retryBtn} onClick={() => void fetchRegistros()}>Reintentar</button>
+          <Button className={s.retryBtn} onClick={() => void fetchRegistros()}>Reintentar</Button>
         </div>
       )}
 

@@ -237,7 +237,7 @@ export const AdminDomicilios: React.FC = () => {
         </div>
         <div className={s.statCard} style={{ textAlign: 'center', color: 'var(--color-danger)' }}>
           <p>{error}</p>
-          <button className={s.actionBtn} style={{ marginTop: 12 }} onClick={fetchDomiciliarios}>Reintentar</button>
+          <Button size="sm" onClick={fetchDomiciliarios} style={{ marginTop: 12 }}>Reintentar</Button>
         </div>
       </div>
     );

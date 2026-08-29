@@ -101,7 +101,7 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <Suspense fallback={<ProtectedLoader />}>
         <Routes>
-          {/* PUBLIC */}
+{/* PUBLIC */}
           <Route path="/" element={<Layout><HomePage /></Layout>} />
           <Route path="/catalogo" element={<Layout><CatalogPage /></Layout>} />
           <Route path="/carrito" element={<Layout><CartPage /></Layout>} />
@@ -156,7 +156,7 @@ const App: React.FC = () => {
             <Route path="gestion-ventas" element={<AdminGestionVentas />} />
             <Route path="gestion-roles-permisos" element={<AdminGestionRolesPermisos />} />
             <Route path="seguridad" element={<AdminSeguridadUsuarios />} />
-            <Route path="productos" element={<AdminProductosTerminados />} />
+            <Route path="productos" element={<AdminCatalogo />} />
             <Route path="insumos" element={<AdminInsumos />} />
             <Route path="proveedores" element={<AdminProveedores />} />
             <Route path="compras" element={<AdminCompras />} />

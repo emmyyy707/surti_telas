@@ -4,6 +4,7 @@ import { Save, Building } from 'lucide-react';
 import s from './AdminConfiguracion.module.css';
 import { companyApi } from '@/infrastructure/api/companyApi';
 import { adminContent } from '@/shared/config/adminContent';
+import { Button } from '@/shared/ui/Button';
 
 interface ConfigSection {
   id: string;
@@ -119,25 +120,29 @@ export const AdminConfiguracion: React.FC = () => {
       </div>
 
       <div className={s.actionsBar}>
-        <button className={s.saveBtn} onClick={async () => {
-          try {
-            await companyApi.update({
-              nombre: formValues['nombre'] || undefined,
-              email: formValues['email'] || undefined,
-              telefono: formValues['teléfono'] || formValues['telefono'] || undefined,
-              direccion: formValues['dirección'] || formValues['direccion'] || undefined,
-              ciudad: formValues['ciudad'] || undefined,
-              nit: formValues['nit'] || undefined,
-              moneda: formValues['moneda'] || undefined,
-            });
-            toast.success(configContent.success);
-          } catch {
-            toast.error(configContent.error);
-          }
-        }}>
-          <Save size={16} />
+        <Button
+          variant="primary"
+          size="md"
+          onClick={async () => {
+            try {
+              await companyApi.update({
+                nombre: formValues['nombre'] || undefined,
+                email: formValues['email'] || undefined,
+                telefono: formValues['teléfono'] || formValues['telefono'] || undefined,
+                direccion: formValues['dirección'] || formValues['direccion'] || undefined,
+                ciudad: formValues['ciudad'] || undefined,
+                nit: formValues['nit'] || undefined,
+                moneda: formValues['moneda'] || undefined,
+              });
+              toast.success(configContent.success);
+            } catch {
+              toast.error(configContent.error);
+            }
+          }}
+          leftIcon={<Save size={16} />}
+        >
           {configContent.save}
-        </button>
+        </Button>
       </div>
     </div>
   );

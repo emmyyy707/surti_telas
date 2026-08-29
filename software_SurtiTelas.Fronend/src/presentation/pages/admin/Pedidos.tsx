@@ -512,9 +512,9 @@ export const AdminPedidos: React.FC = () => {
                   })}
                 </tbody>
               </table>
-              <button type="button" className={f.addRowBtn} onClick={addItem}>
-                <Plus size={14} /> Agregar producto
-              </button>
+              <Button type="button" variant="secondary" size="sm" leftIcon={<Plus size={14} />} onClick={addItem}>
+                Agregar producto
+              </Button>
             </div>
             <div className={f.totalsBox}>
               <div className={f.totalRow}><span>Total de items:</span><span>{totalItems}</span></div>

@@ -116,8 +116,6 @@ export class Order {
   readonly updatedAt?: string;
 
   constructor(data: OrderData) {
-    Order.validate(data);
-
     this.id = data.id;
     this.numero = data.numero;
     this.cliente = data.cliente;

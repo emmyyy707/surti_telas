@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Shield, AlertTriangle, Clock, User, Globe } from 'lucide-react';
 import s from './SeguridadUsuarios.module.css';
 import { Badge } from '@/shared/ui/Badge';
+import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableDetailPanel } from '@/shared/ui/DataTable';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { auditApi, type AuditLog } from '@/infrastructure/api/auditApi';
@@ -168,7 +169,7 @@ export const AdminSeguridadUsuarios: React.FC = () => {
       {error && (
         <div className={s.errorBox}>
           <span>{error}</span>
-          <button className={s.retryBtn} onClick={() => void fetchAuditorias()}>Reintentar</button>
+          <Button className={s.retryBtn} onClick={() => void fetchAuditorias()}>Reintentar</Button>
         </div>
       )}
 

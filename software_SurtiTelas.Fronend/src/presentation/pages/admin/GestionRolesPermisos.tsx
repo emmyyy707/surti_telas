@@ -838,7 +838,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                           </div>
                         );
                       })
-                    )}
+      )}
                   </div>
                 </div>
               </form>
@@ -848,7 +848,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                 Cancelar
               </Button>
               <Button type="submit" onClick={handleSubmitRol}>
-                {editingRol ? 'Guardar cambios' : 'Crear rol'}
+                {editingRol ? 'Guardar cambios' : ' Crear rol '}
               </Button>
             </div>
           </div>

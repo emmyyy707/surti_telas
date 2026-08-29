@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, ToggleLeft, Barcode, Package, CreditCard, Calendar, User, Loader2, AlertCircle, Upload } from 'lucide-react';
 import s from './ProductosTerminados.module.css';
@@ -292,19 +292,19 @@ export const AdminProductosTerminados: React.FC = () => {
       icon: <Package size={18} />,
       title: 'Producto terminado',
       code: item.codigo,
-      subtitle: `${item.nombre} · ${item.categoria}`,
+      subtitle: `${item.nombre} Â· ${item.categoria}`,
       status: item.estado,
       badgeVariant: item.estado === 'Activo' ? 'success' : 'default',
     }),
     kpis: item => [
       { label: 'Stock', value: `${item.cantidadStock} uds`, icon: <Package size={16} />, tone: item.cantidadStock > 0 ? 'success' : 'danger' },
       { label: 'Precio', value: `$${item.precio.toLocaleString()}`, icon: <CreditCard size={16} />, tone: 'info' },
-      { label: 'Talla', value: item.tallas?.[0] || 'Única', icon: <User size={16} />, tone: 'primary' },
+      { label: 'Talla', value: item.tallas?.[0] || 'Ášnica', icon: <User size={16} />, tone: 'primary' },
       { label: 'Estado', value: item.estado || 'Activo', icon: <Calendar size={16} />, tone: 'default' },
     ],
     render: (item) => (
       <div className={s.detailPanel}>
-        <div className={s.detailRow}><span>Tallas:</span> {item.tallas?.join(', ') || 'Única'}</div>
+        <div className={s.detailRow}><span>Tallas:</span> {item.tallas?.join(', ') || 'Ášnica'}</div>
         <div className={s.detailRow}><span>Colores:</span> {item.colores?.join(', ') || 'Sin especificar'}</div>
         <div className={s.detailRow}><span>Precio:</span> ${item.precio.toLocaleString()}</div>
         <div className={s.detailRow}><span>Stock:</span> {item.cantidadStock} uds</div>
@@ -545,10 +545,10 @@ export const AdminProductosTerminados: React.FC = () => {
                             }}
                             title="Establecer como principal"
                           >
-                            ★
+                            â˜…
                           </button>
                           <button type="button" onClick={() => handleRemoveImage(index)} className={s.removeImgBtn}>
-                            <span style={{ fontSize: '14px' }}>×</span>
+                            <span style={{ fontSize: '14px' }}>Á—</span>
                           </button>
                         </div>
                         {imagenPrincipal === url && (
@@ -615,9 +615,10 @@ export const AdminProductosTerminados: React.FC = () => {
           }
         }}
         title="Eliminar producto"
-        description={`¿Estás seguro de que deseas eliminar "${deleteConfirm?.nombre}"? Esta acción no se puede deshacer.`}
+        description={`Â¿Estás seguro de que deseas eliminar "${deleteConfirm?.nombre}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger" />
     </div>
   );
 };
+

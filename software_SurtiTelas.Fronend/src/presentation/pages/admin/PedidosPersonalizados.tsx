@@ -1527,19 +1527,20 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
             <div className={s.actionsBar}>
               <div className={s.actionsBarLeft}>
-                <button className={s.btnSecondary} onClick={closeNegotiation}>
+                <Button variant="secondary" size="sm" onClick={closeNegotiation}>
                   ← Volver
-                </button>
+                </Button>
               </div>
               <div className={s.actionsBarRight}>
-                <button
-                  className={s.btnPrimary}
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={handleStartNegotiation}
                   disabled={negotiationSending || !negotiationMessage.trim() || getAdminNegotiationCounts().adminRemaining <= 0}
                   data-testid="negotiation-send-btn"
                 >
                   {negotiationSending ? 'Enviando...' : 'Enviar propuesta'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1747,30 +1748,34 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
              <div className={s.actionsBar}>
                <div className={s.actionsBarLeft}>
-                 <button className={s.btnSecondary} onClick={handleBackFromQuotation}>
-                   ← Volver
-                 </button>
+                  <Button variant="secondary" size="sm" onClick={handleBackFromQuotation}>
+                    ← Volver
+                  </Button>
                </div>
                <div className={s.actionsBarRight}>
-                 {selectedOrder?.cotizacion?.estado === 'PENDIENTE' && (
-                   <button className={s.btnOutline} onClick={handleResendQuotation} disabled={quotationSaving || hasQuotationChanges} data-testid="btn-reenviar">
-                     {quotationSaving ? 'Reenviando...' : 'Reenviar'}
-                   </button>
-                 )}
-                 <button className={s.btnSecondary} onClick={handleSaveDraftQuotation}
-                   disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
-                   data-testid="btn-guardar-cotizacion"
-                 >
-                   {quotationSaving ? 'Guardando...' : 'Guardar borrador'}
-                 </button>
-                 <button
-                   className={s.btnPrimary}
-                   onClick={handleSendQuotation}
-                   disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
-                   data-testid="btn-enviar-cotizacion"
-                 >
-                   {quotationSaving ? 'Enviando...' : 'Enviar cotización'}
-                 </button>
+                  {selectedOrder?.cotizacion?.estado === 'PENDIENTE' && (
+                    <Button variant="outline" size="sm" onClick={handleResendQuotation} disabled={quotationSaving || hasQuotationChanges} data-testid="btn-reenviar">
+                      {quotationSaving ? 'Reenviando...' : 'Reenviar'}
+                    </Button>
+                  )}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleSaveDraftQuotation}
+                    disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
+                    data-testid="btn-guardar-cotizacion"
+                  >
+                    {quotationSaving ? 'Guardando...' : 'Guardar borrador'}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSendQuotation}
+                    disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
+                    data-testid="btn-enviar-cotizacion"
+                  >
+                    {quotationSaving ? 'Enviando...' : 'Enviar cotización'}
+                  </Button>
                </div>
              </div>
            </div>
@@ -1909,7 +1914,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             </div>
             <div className={s.formRow}>
               <div className={`${s.field} ${s.colSpan2}`}>
-                <button type="button" className={s.quotationAddLine} onClick={() => {
+                <Button type="button" variant="outline" size="sm" leftIcon={<PlusCircle size={16} />} onClick={() => {
                   if (!(form.items[activeItemIndex]?.descripcion || '').trim()) {
                     toast.error('Ingresa el nombre del producto');
                     return;
@@ -1935,9 +1940,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                   setActiveItemIndex(updatedItems.length - 1);
                   setCurrentProduct('');
                 }}>
-                  <PlusCircle size={16} />
-                  <span>Agregar otro producto</span>
-                </button>
+                  Agregar otro producto
+                </Button>
               </div>
             </div>
             <div className={s.formRowAttr4}>
@@ -2009,7 +2013,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               <div key={persIndex} className={s.registroInfo} style={{ marginBottom: '16px', padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div style={{ fontWeight: 600 }}>Personalización #{persIndex + 1}</div>
-                  <button type="button" className={s.removeFileBtn} onClick={() => eliminarPersonalizacion(persIndex)}>Eliminar</button>
+                  <Button variant="danger" size="sm" onClick={() => eliminarPersonalizacion(persIndex)}>Eliminar</Button>
                 </div>
                 <div className={s.formRow}>
                   <div className={s.field}>
@@ -2087,10 +2091,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                  <button type="button" className={s.quotationAddLine} onClick={() => agregarVariante(persIndex)}>
-                    <PlusCircle size={16} />
-                    <span>Agregar variante</span>
-                  </button>
+                  <Button type="button" variant="outline" size="sm" leftIcon={<PlusCircle size={16} />} onClick={() => agregarVariante(persIndex)}>
+                    Agregar variante
+                  </Button>
                   <div style={{ marginTop: '8px', fontWeight: 600 }}>
                     Total personalización: {(pers.variantes || []).reduce((sum: number, v: Record<string, unknown>) => sum + (Number(v.cantidad) || 0), 0)}
                   </div>
@@ -2098,10 +2101,9 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               </div>
             ))}
 
-            <button type="button" className={s.quotationAddLine} onClick={agregarPersonalizacion} style={{ marginTop: '8px' }}>
-              <PlusCircle size={16} />
-              <span>Agregar personalización</span>
-            </button>
+            <Button type="button" variant="outline" size="sm" leftIcon={<PlusCircle size={16} />} onClick={agregarPersonalizacion} style={{ marginTop: '8px' }}>
+              Agregar personalización
+            </Button>
           </div>
 
           {/* Archivos y Entrega */}

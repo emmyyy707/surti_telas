@@ -414,9 +414,9 @@ const resetForm = () => {
                   ))}
                 </tbody>
               </table>
-              <button type="button" className={f.addRowBtn} onClick={addItem}>
-                <Plus size={14} /> Agregar item
-              </button>
+              <Button type="button" variant="secondary" size="sm" leftIcon={<Plus size={14} />} onClick={addItem}>
+                Agregar item
+              </Button>
             </div>
           </div>
 

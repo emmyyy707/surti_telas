@@ -173,7 +173,7 @@ export const AdminAlertasSeguimientoProduccion: React.FC = () => {
       {error && (
         <div className={s.errorBox}>
           <span>{error}</span>
-          <button className={s.retryBtn} onClick={loadAlertas}>Reintentar</button>
+          <Button className={s.retryBtn} onClick={loadAlertas}>Reintentar</Button>
         </div>
       )}
 

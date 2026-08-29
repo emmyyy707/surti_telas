@@ -4,6 +4,7 @@ import { StatCard } from './StatCard';
 import { BarChart, LineChart, PieChart, TopProducts } from './Chart';
 import s from './Dashboard.module.css';
 import { Badge } from '../../../shared/ui/Badge';
+import { Button } from '@/shared/ui/Button';
 import { Users, ShoppingBag, DollarSign, TrendingUp, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
 import { ordersApi, type OrdersListResult, type DashboardMetrics } from '@/infrastructure/api/ordersApi';
@@ -112,10 +113,9 @@ export const AdminDashboard: React.FC = () => {
         <div className={s.errorRow}>
           <AlertCircle size={18} />
           <span>{error}</span>
-          <button className={s.retryBtn} onClick={() => void loadDashboard()}>
-            <RefreshCw size={14} />
+          <Button className={s.retryBtn} onClick={() => void loadDashboard()} leftIcon={<RefreshCw size={14} />}>
             Reintentar
-          </button>
+          </Button>
         </div>
       )}
 

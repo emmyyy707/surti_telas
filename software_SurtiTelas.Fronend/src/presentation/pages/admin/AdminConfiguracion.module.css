@@ -140,23 +140,3 @@
   justify-content: flex-end;
   padding: 20px 0;
 }
-
-.saveBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 24px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--color-accent);
-  color: var(--text-inverse);
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.saveBtn:hover {
-  opacity: 0.9;
-}
