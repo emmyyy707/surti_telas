@@ -783,11 +783,12 @@ export const MisPedidosPersonalizados: React.FC = () => {
       setSaving(true);
       try {
         let orderId = editingId;
+        const safePaymentProofUrl = (paymentProofUrl && !paymentProofUrl.startsWith('blob:')) ? paymentProofUrl : undefined;
         if (editingId) {
-          await customOrdersApi.clientUpdate(editingId, { ...basePayload, paymentProofUrl: paymentProofUrl || undefined });
+          await customOrdersApi.clientUpdate(editingId, { ...basePayload, paymentProofUrl: safePaymentProofUrl });
           toast.success('Solicitud actualizada');
         } else {
-          const created = await customOrdersApi.create(basePayload);
+          const created = await customOrdersApi.create({ ...basePayload, paymentProofUrl: safePaymentProofUrl });
           orderId = created.id;
           toast.success('Solicitud creada');
         }
@@ -1800,7 +1801,11 @@ export const MisPedidosPersonalizados: React.FC = () => {
                         <FileText size={16} />
                       )}
                       <span className={s.paymentFileName}>{paymentProofFile?.name ?? 'comprobante'}</span>
-                      <button type="button" className={s.paymentRemoveBtn} onClick={() => { setPaymentProofFile(null); setPaymentProofUrl(''); }}>Eliminar</button>
+                      <button type="button" className={s.paymentRemoveBtn} onClick={() => {
+                        if (paymentProofUrl.startsWith('blob:')) URL.revokeObjectURL(paymentProofUrl);
+                        setPaymentProofFile(null);
+                        setPaymentProofUrl('');
+                      }}>Eliminar</button>
                     </div>
                   </div>
                 )}

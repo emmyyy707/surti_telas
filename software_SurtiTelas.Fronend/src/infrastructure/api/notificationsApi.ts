@@ -67,7 +67,7 @@ export const notificationsApi = {
       const data = response?.items ?? [];
       return data.map(toNotification);
     } catch (error) {
-      if (error instanceof ApiError && error.status === 403) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         return [];
       }
       throw error;
@@ -79,7 +79,7 @@ export const notificationsApi = {
       const response = await api.get<{ count: number }>('/notifications/unread-count');
       return response?.count ?? 0;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 403) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         return 0;
       }
       throw error;

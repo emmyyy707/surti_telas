@@ -18,6 +18,10 @@ import { useCart } from '@/app/providers/AppProviders'
 import type { Producto } from '@/core/types'
 import { resolveColor } from '@/shared/utils/colorUtils'
 
+const MIN_QUANTITY = 1
+
+const variantKey = (colorId: string, sizeId: string) => `${colorId}|${sizeId}`
+
 type Props = {
   product: Producto | null
   isOpen: boolean
@@ -63,23 +67,7 @@ const productColors = useMemo(() => {
 
   const [selectedColors, setSelectedColors] = useState<string[]>([])
 
-  const toggleSelectedColor = (id: string) => {
-    setSelectedColors(prev => {
-      const exists = prev.includes(id)
-      const next = exists ? prev.filter(x => x !== id) : [...prev, id]
-      return next
-    })
-  }
-
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
-
-  const toggleSelectedSize = (id: string) => {
-    setSelectedSizes(prev => {
-      const exists = prev.includes(id)
-      const next = exists ? prev.filter(x => x !== id) : [...prev, id]
-      return next
-    })
-  }
 
   const [_selectedSize, setSelectedSize] =
     useState<string>(productSizes[0] || 'M')
@@ -87,6 +75,55 @@ const productColors = useMemo(() => {
   const [variantQuantities, setVariantQuantities] = useState<Record<string, number>>({})
 
   const [variantQuantityTexts, setVariantQuantityTexts] = useState<Record<string, string>>({})
+
+  const stock = product?.cantidadStock ?? 0
+
+  const seedQuantitiesForNewCombos = (colors: string[], sizes: string[]) => {
+    if (stock <= 0) return
+    setVariantQuantities(prev => {
+      const next = { ...prev }
+      let changed = false
+      for (const colorId of colors) {
+        for (const sizeId of sizes) {
+          const key = variantKey(colorId, sizeId)
+          if (next[key] === undefined) {
+            next[key] = MIN_QUANTITY
+            changed = true
+          }
+        }
+      }
+      if (!changed) return prev
+      setVariantQuantityTexts(prevTexts => {
+        const nextTexts = { ...prevTexts }
+        for (const colorId of colors) {
+          for (const sizeId of sizes) {
+            const key = variantKey(colorId, sizeId)
+            if (nextTexts[key] === undefined) nextTexts[key] = String(MIN_QUANTITY)
+          }
+        }
+        return nextTexts
+      })
+      return next
+    })
+  }
+
+  const toggleSelectedColor = (id: string) => {
+    setSelectedColors(prev => {
+      const exists = prev.includes(id)
+      const next = exists ? prev.filter(x => x !== id) : [...prev, id]
+      seedQuantitiesForNewCombos(next, selectedSizes)
+      return next
+    })
+  }
+
+  const toggleSelectedSize = (id: string) => {
+    setSelectedSizes(prev => {
+      const exists = prev.includes(id)
+      const next = exists ? prev.filter(x => x !== id) : [...prev, id]
+      seedQuantitiesForNewCombos(selectedColors, next)
+      return next
+    })
+  }
 
   const [isWishlisted, setIsWishlisted] =
     useState<boolean>(false)
@@ -120,49 +157,41 @@ const productColors = useMemo(() => {
   }
 
   const updateVariantQuantity = (colorId: string, sizeId: string, delta: number) => {
-    const key = `${colorId}|${sizeId}`
+    const key = variantKey(colorId, sizeId)
     setVariantQuantities(prev => {
-      const current = prev[key] || 0
-      const next = Math.max(0, Math.min(product?.cantidadStock ?? 0, current + delta))
-      if (next === 0) {
-        const nextState = { ...prev }
-        delete nextState[key]
-        setVariantQuantityTexts(prevTexts => {
-          const nextTexts = { ...prevTexts }
-          delete nextTexts[key]
-          return nextTexts
-        })
-        return nextState
-      }
+      const current = prev[key] ?? MIN_QUANTITY
+      const next = Math.max(MIN_QUANTITY, Math.min(stock, current + delta))
       setVariantQuantityTexts(prevTexts => ({ ...prevTexts, [key]: String(next) }))
       return { ...prev, [key]: next }
     })
   }
 
   const setVariantQuantityInput = (colorId: string, sizeId: string, value: string) => {
-    const key = `${colorId}|${sizeId}`
+    const key = variantKey(colorId, sizeId)
     setVariantQuantityTexts(prev => ({ ...prev, [key]: value }))
     const parsed = Number(value)
-    if (Number.isNaN(parsed) || parsed < 0) return
-    setVariantQuantities(prev => ({ ...prev, [key]: parsed }))
+    if (Number.isNaN(parsed) || parsed < MIN_QUANTITY) return
+    setVariantQuantities(prev => ({ ...prev, [key]: Math.min(parsed, stock) }))
   }
 
   const handleVariantQuantityBlur = (colorId: string, sizeId: string) => {
-    const key = `${colorId}|${sizeId}`
+    const key = variantKey(colorId, sizeId)
     const text = variantQuantityTexts[key] ?? ''
     const parsed = Number(text)
-    const current = variantQuantities[key] || 0
-    const next = Number.isNaN(parsed) || !Number.isFinite(parsed) ? current : Math.min(Math.max(parsed, 0), product?.cantidadStock ?? 0)
-    setVariantQuantities(prev => ({ ...prev, [key]: next }))
-    setVariantQuantityTexts(prev => ({ ...prev, [key]: String(next) }))
+    const current = variantQuantities[key] ?? MIN_QUANTITY
+    const clamped = Number.isNaN(parsed) || !Number.isFinite(parsed)
+      ? current
+      : Math.min(Math.max(parsed, MIN_QUANTITY), stock)
+    setVariantQuantities(prev => ({ ...prev, [key]: clamped }))
+    setVariantQuantityTexts(prev => ({ ...prev, [key]: String(clamped) }))
   }
 
   const selectedVariants = useMemo(() => {
     return selectedColors.flatMap(colorId =>
       selectedSizes.map(sizeId => {
-        const key = `${colorId}|${sizeId}`
-        const quantity = variantQuantities[key] || 0
-        if (quantity <= 0) return null
+        const key = variantKey(colorId, sizeId)
+        const quantity = variantQuantities[key] ?? MIN_QUANTITY
+        if (quantity < MIN_QUANTITY) return null
         const color = productColors.find(c => c.id === colorId)
         return {
           colorId,
@@ -187,6 +216,9 @@ const productColors = useMemo(() => {
   const handleAddToCart = () => {
     if (!product || selectedVariants.length === 0) return
 
+    const validVariants = selectedVariants.filter(v => v.quantity >= MIN_QUANTITY)
+    if (validVariants.length === 0) return
+
     const imagen =
       product.imagenPrincipal && product.imagenPrincipal.trim() !== ''
         ? product.imagenPrincipal
@@ -194,7 +226,7 @@ const productColors = useMemo(() => {
           ? product.imagenes[0]
           : '/assets/images/placeholders/product.svg'
 
-    selectedVariants.forEach(variant => {
+    validVariants.forEach(variant => {
       addToCart({
         productId: product.id,
         cartId: `${product.id}-${variant.sizeId}-${variant.colorId}`,
@@ -443,9 +475,11 @@ const productColors = useMemo(() => {
                       const color = productColors.find(c => c.id === colorId)
                       if (!color) return null
                       return selectedSizes.map(sizeId => {
-                        const key = `${colorId}|${sizeId}`
-                        const qty = variantQuantities[key] || 0
+                        const key = variantKey(colorId, sizeId)
+                        const qty = variantQuantities[key] ?? MIN_QUANTITY
                         const text = variantQuantityTexts[key] ?? String(qty)
+                        const isMin = qty <= MIN_QUANTITY
+                        const isMax = qty >= stock
                         return (
                           <div key={key} className="pd-variant-row">
                             <div className="pd-variant-info">
@@ -454,18 +488,35 @@ const productColors = useMemo(() => {
                               <span className="pd-variant-size">{sizeId}</span>
                             </div>
                             <div className="pd-variant-controls">
-                              <button className="pd-quantity-btn" onClick={() => updateVariantQuantity(colorId, sizeId, -1)} type="button"><Minus size={14} /></button>
+                              <button
+                                className="pd-quantity-btn"
+                                onClick={() => updateVariantQuantity(colorId, sizeId, -1)}
+                                type="button"
+                                disabled={isMin}
+                                aria-label="Disminuir cantidad"
+                              >
+                                <Minus size={14} />
+                              </button>
                               <input
                                 type="number"
                                 className="pd-quantity-input"
-                                min={0}
-                                max={product.cantidadStock}
+                                min={MIN_QUANTITY}
+                                max={stock}
                                 value={text}
                                 onChange={(e) => setVariantQuantityInput(colorId, sizeId, e.target.value)}
                                 onBlur={() => handleVariantQuantityBlur(colorId, sizeId)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                aria-label="Cantidad"
                               />
-                              <button className="pd-quantity-btn" onClick={() => updateVariantQuantity(colorId, sizeId, 1)} type="button"><Plus size={14} /></button>
+                              <button
+                                className="pd-quantity-btn"
+                                onClick={() => updateVariantQuantity(colorId, sizeId, 1)}
+                                type="button"
+                                disabled={isMax}
+                                aria-label="Aumentar cantidad"
+                              >
+                                <Plus size={14} />
+                              </button>
                             </div>
                           </div>
                         )

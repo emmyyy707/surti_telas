@@ -13,12 +13,30 @@ const USER_TOOLTIP: Record<string, string> = {
   cliente: "Mi Cuenta",
 };
 
+const CLIENTE_HINT_STORAGE_KEY = "cliente_profile_hint_seen";
+
+const readClienteHintSeen = (): boolean => {
+  try {
+    return window.localStorage.getItem(CLIENTE_HINT_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeClienteHintSeen = (): void => {
+  try {
+    window.localStorage.setItem(CLIENTE_HINT_STORAGE_KEY, "1");
+  } catch {
+    /* almacenamiento no disponible: ignorar */
+  }
+};
+
 const Navbar: React.FC = () => {
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Estado para detectar si el usuario ha hecho scroll hacia abajo
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -43,6 +61,11 @@ const Navbar: React.FC = () => {
 
   const role = user?.role;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showClienteHint, setShowClienteHint] = useState(false);
+
+  useEffect(() => {
+    setShowClienteHint(role === "cliente" && !readClienteHintSeen());
+  }, [role]);
 
   const goToCart = () => navigate("/carrito");
   const goToLogin = () => navigate("/login");
@@ -59,6 +82,11 @@ const Navbar: React.FC = () => {
     if (!user) {
       goToLogin();
       return;
+    }
+
+    if (role === "cliente" && showClienteHint) {
+      writeClienteHintSeen();
+      setShowClienteHint(false);
     }
 
     switch (role) {
@@ -78,6 +106,13 @@ const Navbar: React.FC = () => {
         navigate("/");
     }
   };
+
+  const userTooltipTitle =
+    role === "cliente"
+      ? "Mi cuenta · Ver mi perfil y pedidos"
+      : role
+        ? USER_TOOLTIP[role] ?? "Mi Cuenta"
+        : "Iniciar sesión";
 
   return (
     /* Agregamos dinámicamente la clase 'is-scrolled' según el estado */
@@ -122,11 +157,16 @@ const Navbar: React.FC = () => {
         {/* ACTIONS */}
         <div className="header-actions">
           {/* USER */}
-          <Tooltip title={role ? USER_TOOLTIP[role] ?? "Mi Cuenta" : "Iniciar sesión"}>
-            <button className="icon-btn" onClick={handleUserClick}>
-              <User size={22} />
-            </button>
-          </Tooltip>
+          <div className="user-btn-wrapper">
+            <Tooltip title={userTooltipTitle}>
+              <button className="icon-btn" onClick={handleUserClick} aria-label={role === "cliente" ? "Mi cuenta" : (role ? USER_TOOLTIP[role] ?? "Mi Cuenta" : "Iniciar sesión")}>
+                <User size={22} />
+              </button>
+            </Tooltip>
+            {showClienteHint && (
+              <span className="profile-hint-badge" aria-hidden="true">!</span>
+            )}
+          </div>
 
           {/* LOGOUT */}
           {user && (

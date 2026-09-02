@@ -4,6 +4,17 @@ import { PersonalizacionItem } from '../../domain/entities/PedidoPersonalizadoIt
 import { Variante } from '../../domain/entities/PedidoPersonalizadoItemData';
 import { Cotizacion } from '../../domain/entities/Cotizacion';
 
+const isBlobUrl = (value: unknown): value is string => typeof value === 'string' && value.startsWith('blob:');
+export const sanitizeUrlList = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((u) => !isBlobUrl(u)) as string[];
+};
+export const sanitizeStoredUrl = (value: unknown): string | null => {
+  if (typeof value !== 'string' || value.length === 0) return null;
+  if (isBlobUrl(value)) return null;
+  return value;
+};
+
 export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
   const customer = row.customers ?? {};
   const clienteNombre = (row.cliente_nombre || '').trim() || [customer.nombre, customer.apellidos].filter(Boolean).join(' ').trim() || '';
@@ -34,7 +45,7 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
     orderId: row.orden_id,
     conversacionId: row.conversacion_id,
     paymentKey: row.payment_key ?? null,
-    paymentProofUrl: row.payment_proof_url ?? null,
+    paymentProofUrl: sanitizeStoredUrl(row.payment_proof_url),
     paymentStatus: row.payment_status ?? null,
     anticipoPagado: row.anticipo_pagado ?? null,
     items: (row.custom_order_items ?? []).map((item: any) => {
@@ -52,7 +63,7 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
         material: item.material,
         ubicacion: item.ubicacion,
         distribucionTallas: item.distribucion_tallas ?? null,
-        imagenesReferencia: item.imagenes_referencia ?? null,
+        imagenesReferencia: sanitizeUrlList(item.imagenes_referencia),
         customOrderItemId: item.id,
         orden: item.orden,
         createdAt: item.createdAt,
@@ -68,7 +79,7 @@ export function toPedidoPersonalizado(row: any): PedidoPersonalizado {
             tecnica: p.tecnica,
             ubicacion: p.ubicacion,
             descripcion: p.descripcion,
-            archivos: p.archivos,
+            archivos: sanitizeUrlList(p.archivos),
             orden: p.orden,
             createdAt: p.createdAt,
             updatedAt: p.updatedAt,
@@ -137,7 +148,7 @@ export function toCreatePedidoInput(d: any) {
     motivo_rechazo: d.motivoRechazo ?? null,
     fecha_aceptacion: d.fechaAceptacion ? new Date(d.fechaAceptacion) : null,
     payment_key: d.paymentKey ?? null,
-    payment_proof_url: d.paymentProofUrl ?? null,
+    payment_proof_url: sanitizeStoredUrl(d.paymentProofUrl),
     payment_status: d.paymentStatus ?? null,
     anticipo_pagado: d.anticipoPagado ?? null,
     deleted_at: null,
@@ -171,7 +182,7 @@ export function toUpdatePedidoInput(changes: any) {
   if (changes.motivoRechazo !== undefined) data.motivo_rechazo = changes.motivoRechazo;
   if (changes.fechaAceptacion !== undefined) data.fecha_aceptacion = changes.fechaAceptacion ? new Date(changes.fechaAceptacion) : null;
   if (changes.paymentKey !== undefined) data.payment_key = changes.paymentKey;
-  if (changes.paymentProofUrl !== undefined) data.payment_proof_url = changes.paymentProofUrl;
+  if (changes.paymentProofUrl !== undefined) data.payment_proof_url = sanitizeStoredUrl(changes.paymentProofUrl);
   if (changes.paymentStatus !== undefined) data.payment_status = changes.paymentStatus;
   if (changes.anticipoPagado !== undefined) data.anticipo_pagado = changes.anticipoPagado;
   return data;

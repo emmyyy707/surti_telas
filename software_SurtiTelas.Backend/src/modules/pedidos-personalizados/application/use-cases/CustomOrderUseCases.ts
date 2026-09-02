@@ -3,6 +3,7 @@ import type { CustomOrderFilters, CustomOrderRepository, QuotationRepository, Cu
 import { PedidoPersonalizado } from '../../domain/entities/PedidoPersonalizado';
 import { CustomOrderStatus, QuotationStatus } from '../../domain/value-objects/CustomOrderStatus';
 import { PrismaClient } from '@prisma/client';
+import { toUpdatePedidoInput, sanitizeUrlList } from '../../infrastructure/mappers/CustomOrderMapper';
 import type { EventBus } from '../../../../shared/application/events';
 import { CustomOrderCreatedEvent, CustomOrderSubmittedEvent, QuotationGeneratedEvent, QuotationAcceptedEvent, QuotationRejectedEvent, CustomOrderConvertedEvent, CustomOrderStatusUpdatedEvent, CustomOrderUpdatedEvent, CustomOrderDeletedEvent, CustomOrderPaymentUpdatedEvent } from '../../../../shared/application/events';
 
@@ -85,7 +86,7 @@ export class CreateCustomOrder {
           material: item.material ?? null,
           ubicacion: this.normalizeUbicacion(item.ubicacion),
           distribucion_tallas: item.distribucionTallas ?? null,
-          imagenes_referencia: item.imagenesReferencia ?? [],
+          imagenes_referencia: sanitizeUrlList(item.imagenesReferencia),
           orden: item.orden ?? index,
         } as any,
       });
@@ -100,7 +101,7 @@ export class CreateCustomOrder {
                   tecnica: pers.tecnica ?? null,
                   ubicacion: this.normalizeUbicacion(pers.ubicacion),
                   descripcion: pers.descripcion,
-                  archivos: pers.archivos ?? [],
+                  archivos: sanitizeUrlList(pers.archivos),
                   orden: pers.orden ?? 0,
                 } as any,
               });
@@ -193,7 +194,7 @@ export class UpdateCustomOrder {
               material: item.material ?? null,
               ubicacion: this.normalizeUbicacion(item.ubicacion),
               distribucion_tallas: item.distribucionTallas ?? null,
-              imagenes_referencia: item.imagenesReferencia ?? [],
+              imagenes_referencia: sanitizeUrlList(item.imagenesReferencia),
               orden: item.orden ?? index,
             } as any,
           });
@@ -207,7 +208,7 @@ export class UpdateCustomOrder {
                   tecnica: pers.tecnica ?? null,
                   ubicacion: this.normalizeUbicacion(pers.ubicacion),
                   descripcion: pers.descripcion,
-                  archivos: pers.archivos ?? [],
+                  archivos: sanitizeUrlList(pers.archivos),
                   orden: pers.orden ?? 0,
                 } as any,
               });
@@ -1187,11 +1188,7 @@ export class ConfirmPaymentAndConvertToOrder {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      const updateData: Record<string, unknown> = {};
-      if (changes.paymentStatus !== undefined) updateData.paymentStatus = changes.paymentStatus;
-      if (changes.anticipoPagado !== undefined) updateData.anticipoPagado = changes.anticipoPagado;
-      if (changes.paymentProofUrl !== undefined) updateData.paymentProofUrl = changes.paymentProofUrl || null;
-      if (changes.paymentKey !== undefined) updateData.paymentKey = changes.paymentKey;
+      const updateData = toUpdatePedidoInput(changes) as Record<string, unknown>;
 
       await tx.custom_orders.update({
         where: { id },

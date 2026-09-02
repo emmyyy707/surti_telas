@@ -150,3 +150,30 @@ Historial de pagos
 Mis Recibos
 
 hay un problema es que de la unica manera que pueda ver el usuario el recibo es si lo descarga por ende no puede ver el resibo si le da click 
+
+e
+
+
+
+Arreglar orden del modulo de ventas para mallor coerencia.
+mejora el diceño del modal de antes de comprar iniciar sesion
+hacer que el stok inicie en 1
+Pagos por abonos por balidacion para que el cliente pueda decir si abonar ya o  abonar despus si dice que si  el usuario escribe cunato desea abonar tambien el saldo restante separa por abonos de cuota 
+Si el cliente te pago algo aparece en ventas, tiene que decir fecha de la venta y total pagado, cada abono que se haga es una venta y se hace de manera individual.
+
+logica de vetas una venta se refleja cunado se realiza un pago como asi cuando el pago de un abono o el pago todal de un pedido o cotizacion aparesca en ventas 
+
+crar un  md de todo el todo lo que hace el panel del admin 
+
+quitar modulo de recibos 
+
+Redundancia en domicilio cuando cree un empleado hacer que cualdo el selecione el rol de domiciliario me aparesca este formulario Información del domiciliario
+Usuario *
+
+Selecciona un usuario...
+Zona
+Ej: Norte
+Vehículo
+Ej: Moto, Camioneta
+Capacidad
+ ose el mismo formulario que hay  en la pagina de http://localhost:5173/admin/domicilios el modal de  Nuevo domiciliario y quitar ese mismo modal de

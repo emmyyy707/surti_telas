@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LogIn, UserPlus, X, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, LogIn, X } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/app/providers/AppProviders';
@@ -50,59 +50,56 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
           />
         </Dialog.Overlay>
 
         <Dialog.Content asChild>
           <motion.div
             className="auth-modal-card"
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
             aria-describedby="auth-modal-description"
           >
             <Dialog.Close className="auth-modal-close" aria-label="Cerrar modal">
               <X size={18} />
             </Dialog.Close>
 
-            <div className="auth-modal-icon">
-              <ShieldCheck size={28} />
-            </div>
-
-            <Dialog.Title className="auth-modal-title">
-              Debes iniciar sesión para continuar con tu compra
-            </Dialog.Title>
+            <header className="auth-modal-header">
+              <Dialog.Title className="auth-modal-title">
+                Iniciar sesión
+              </Dialog.Title>
+              <p className="auth-modal-subtitle">
+                Para continuar con tu compra
+              </p>
+            </header>
 
             <Dialog.Description id="auth-modal-description" className="auth-modal-description">
-              Debes iniciar sesión para continuar con tu compra. Tu carrito se mantendrá intacto mientras completas el acceso.
+              Ingresa a tu cuenta para continuar con el proceso de compra. Tu carrito se conservará mientras completas el acceso.
             </Dialog.Description>
 
-            <div className="auth-modal-benefits">
-              <div className="auth-modal-benefit">
-                <ShoppingBag size={18} />
-                <span>Carrito preservado</span>
-              </div>
-              <div className="auth-modal-benefit">
-                <ShieldCheck size={18} />
-                <span>Checkout protegido</span>
-              </div>
+            <div className="auth-modal-actions">
+              <button type="button" className="auth-modal-action primary" onClick={handleLogin}>
+                <LogIn size={18} aria-hidden="true" />
+                <span>Iniciar sesión</span>
+              </button>
+
+              <p className="auth-modal-register">
+                ¿Aún no tienes una cuenta?
+                <button type="button" className="auth-modal-link" onClick={handleRegister}>
+                  Crear cuenta
+                </button>
+              </p>
             </div>
 
-            <div className="auth-modal-actions">
-              <button type="button" className="auth-modal-action secondary" onClick={onContinueShopping}>
-                Continuar comprando
-              </button>
-              <button type="button" className="auth-modal-action ghost" onClick={handleRegister}>
-                <UserPlus size={18} />
-                Registrarme
-              </button>
-              <button type="button" className="auth-modal-action primary" onClick={handleLogin}>
-                <LogIn size={18} />
-                Iniciar Sesión
-              </button>
-            </div>
+            <div className="auth-modal-divider" role="separator" />
+
+            <button type="button" className="auth-modal-continue" onClick={onContinueShopping}>
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>Seguir comprando</span>
+            </button>
           </motion.div>
         </Dialog.Content>
       </Dialog.Portal>
@@ -111,4 +108,3 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
 };
 
 export default AuthRequiredModal;
-

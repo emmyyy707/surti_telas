@@ -285,30 +285,30 @@ export const GestionEmpleados: React.FC = () => {
             <div className={f.formRow}>
               <div className={f.field}>
                 <label className={f.label}>Nombre</label>
-                <input type="text" className={`${f.input} ${errors.nombre ? f.inputError : ''}`} name="nombre" defaultValue={selectedEmpleado?.nombre} minLength={3} />
+                <input type="text" className={`${f.input} ${errors.nombre ? f.inputError : ''}`} name="nombre" defaultValue={selectedEmpleado?.nombre} minLength={3} autoComplete="given-name" />
                 {errors.nombre && <span className={f.errorText}>{errors.nombre}</span>}
               </div>
               <div className={f.field}>
                 <label className={f.label}>Apellidos</label>
-                <input type="text" className={`${f.input} ${errors.apellidos ? f.inputError : ''}`} name="apellidos" defaultValue={selectedEmpleado?.apellidos ?? ''} minLength={3} />
+                <input type="text" className={`${f.input} ${errors.apellidos ? f.inputError : ''}`} name="apellidos" defaultValue={selectedEmpleado?.apellidos ?? ''} minLength={3} autoComplete="family-name" />
                 {errors.apellidos && <span className={f.errorText}>{errors.apellidos}</span>}
               </div>
             </div>
             <div className={f.formRow}>
               <div className={f.field}>
                 <label className={f.label}>Correo electrónico</label>
-                <input type="email" className={`${f.input} ${errors.email ? f.inputError : ''}`} name="email" defaultValue={selectedEmpleado?.email} />
+                <input type="email" className={`${f.input} ${errors.email ? f.inputError : ''}`} name="email" defaultValue={selectedEmpleado?.email} autoComplete="email" />
                 {errors.email && <span className={f.errorText}>{errors.email}</span>}
               </div>
               <div className={f.field}>
                 <label className={f.label}>Teléfono</label>
-                <input type="tel" className={`${f.input} ${errors.telefono ? f.inputError : ''}`} name="telefono" defaultValue={selectedEmpleado?.telefono ?? ''} maxLength={11} inputMode="numeric" />
+                <input type="tel" className={`${f.input} ${errors.telefono ? f.inputError : ''}`} name="telefono" defaultValue={selectedEmpleado?.telefono ?? ''} maxLength={11} inputMode="numeric" autoComplete="tel" />
                 {errors.telefono && <span className={f.errorText}>{errors.telefono}</span>}
               </div>
             </div>
             <div className={f.field}>
               <label className={f.label}>Dirección</label>
-              <input type="text" className={`${f.input} ${errors.direccion ? f.inputError : ''}`} name="direccion" defaultValue={selectedEmpleado?.direccion ?? ''} placeholder="Calle, ciudad, código postal" minLength={5} />
+              <input type="text" className={`${f.input} ${errors.direccion ? f.inputError : ''}`} name="direccion" defaultValue={selectedEmpleado?.direccion ?? ''} placeholder="Calle, ciudad, código postal" minLength={5} autoComplete="street-address" />
               {errors.direccion && <span className={f.errorText}>{errors.direccion}</span>}
             </div>
             <div className={f.formRow}>
@@ -327,7 +327,7 @@ export const GestionEmpleados: React.FC = () => {
               </div>
               <div className={f.field}>
                 <label className={f.label}>Número de documento</label>
-                <input type="text" className={`${f.input} ${errors.numeroDocumento ? f.inputError : ''}`} name="numeroDocumento" defaultValue={selectedEmpleado?.numeroDocumento ?? ''} maxLength={15} />
+                <input type="text" className={`${f.input} ${errors.numeroDocumento ? f.inputError : ''}`} name="numeroDocumento" defaultValue={selectedEmpleado?.numeroDocumento ?? ''} maxLength={15} autoComplete="off" />
                 {errors.numeroDocumento && <span className={f.errorText}>{errors.numeroDocumento}</span>}
               </div>
             </div>
@@ -358,16 +358,16 @@ export const GestionEmpleados: React.FC = () => {
             <div className={f.formRow}>
               <div className={f.field}>
                 <label className={f.label}>Cargo</label>
-                <input type="text" className={f.input} name="cargo" defaultValue={selectedEmpleado?.profile?.cargo ?? ''} placeholder="Ej: Asesor Senior" />
+                <input type="text" className={f.input} name="cargo" defaultValue={selectedEmpleado?.profile?.cargo ?? ''} placeholder="Ej: Asesor Senior" autoComplete="organization-title" />
               </div>
               <div className={f.field}>
                 <label className={f.label}>Salario</label>
-                <input type="number" className={f.input} name="salario" defaultValue={selectedEmpleado?.profile?.salario != null ? String(selectedEmpleado.profile.salario) : ''} min="0" step="0.01" />
+                <input type="number" className={f.input} name="salario" defaultValue={selectedEmpleado?.profile?.salario != null ? String(selectedEmpleado.profile.salario) : ''} min="0" step="0.01" autoComplete="off" />
               </div>
             </div>
             <div className={f.field}>
               <label className={f.label}>Fecha de contratación</label>
-              <input type="date" className={f.input} name="fechaContratacion" defaultValue={selectedEmpleado?.profile?.fechaContratacion?.split('T')[0] ?? ''} />
+              <input type="date" className={f.input} name="fechaContratacion" defaultValue={selectedEmpleado?.profile?.fechaContratacion?.split('T')[0] ?? ''} autoComplete="off" />
             </div>
           </div>
 

@@ -868,6 +868,15 @@
   background: rgba(0,0,0,.05);
 }
 
+.pd-quantity-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pd-quantity-btn:disabled:hover {
+  background: transparent;
+}
+
 .pd-quantity-value {
   min-width: 34px;
 

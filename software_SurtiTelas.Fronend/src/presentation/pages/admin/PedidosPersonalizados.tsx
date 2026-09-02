@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, X, PlusCircle, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ApiError } from '@/infrastructure/api/httpClient';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { DataTable } from '@/shared/ui/DataTable';
@@ -160,6 +161,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -300,7 +302,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setErrors({});
     setTouched({});
     setSelectedFiles([]);
-    setFileUrls([]);
+    setFileUrls(prev => { prev.forEach((u) => URL.revokeObjectURL(u)); return []; });
     setWizardStep(1);
     setWizardData({});
     setActiveItemIndex(0);
@@ -348,7 +350,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
     setErrors({});
     setTouched({});
     setSelectedFiles([]);
-    setFileUrls([]);
+    setFileUrls(prev => { prev.forEach((u) => URL.revokeObjectURL(u)); return []; });
     setWizardStep(1);
     setWizardData({});
     setActiveItemIndex(0);
@@ -526,13 +528,20 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
+    setFileUrls(prev => {
+      prev.forEach((u) => URL.revokeObjectURL(u));
+      return files.map(f => URL.createObjectURL(f));
+    });
     setSelectedFiles(files);
-    setFileUrls(files.map(f => URL.createObjectURL(f)));
   };
 
   const removeFile = (index: number) => {
+    setFileUrls(prev => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed);
+      return prev.filter((_, i) => i !== index);
+    });
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setFileUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleBlur = (field: string) => {
@@ -2141,7 +2150,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         </div>
       </CustomOrderFormModal>
 
-      <Modal open={!!paymentConfirm} onClose={() => setPaymentConfirm(null)} title="Confirmar pago de anticipo" description="Marca el anticipo como recibido para permitir el paso a producción." size="md" variant="form">
+      <Modal open={!!paymentConfirm} onClose={() => { if (!confirmingPayment) { setPaymentConfirm(null); setConfirmingPayment(false); } }} title="Confirmar pago de anticipo" description="Marca el anticipo como recibido para permitir el paso a producción." size="md" variant="form">
         {paymentConfirm && (
           <div className={s.form}>
             <div className={s.registroInfo}>
@@ -2206,15 +2215,22 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             )}
             <ModalFooter
               actions={[
-                { label: 'Cancelar', variant: 'secondary', onClick: () => setPaymentConfirm(null) },
-                { label: 'Confirmar anticipo', onClick: async () => {
+                { label: 'Cancelar', variant: 'secondary', onClick: () => setPaymentConfirm(null), disabled: confirmingPayment },
+                { label: confirmingPayment ? 'Registrando pago...' : 'Confirmar anticipo', variant: 'primary', disabled: confirmingPayment, onClick: async () => {
+                  if (confirmingPayment) return;
+                  setConfirmingPayment(true);
                   try {
                     await customOrdersApi.adminUpdatePayment(paymentConfirm.id, { anticipoPagado: true, paymentStatus: 'APPROVED' });
                     toast.success('Anticipo confirmado. Ahora puede pasar a producción.');
                     setPaymentConfirm(null);
                     void loadOrders();
-                  } catch {
-                    toast.error('Error al confirmar pago');
+                  } catch (err) {
+                    const message = err instanceof ApiError
+                      ? (err.status === 0 ? 'No se pudo conectar con el servidor. Verifica tu conexión.' : err.message)
+                      : 'Error al confirmar pago';
+                    toast.error('No se pudo confirmar el pago', { description: message });
+                  } finally {
+                    setConfirmingPayment(false);
                   }
                 } },
               ]}

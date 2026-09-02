@@ -427,10 +427,13 @@ export const updatePaymentStatus = async (req: Request, res: Response) => {
     paymentProofUrl: z.string().optional().or(z.literal('')),
     paymentKey: z.string().optional(),
   }), req.body);
+  const isBlobUrl = (value: unknown): boolean => typeof value === 'string' && value.startsWith('blob:');
   const changes: Record<string, unknown> = {};
   if (input.paymentStatus !== undefined) changes.paymentStatus = input.paymentStatus;
   if (input.anticipoPagado !== undefined) changes.anticipoPagado = input.anticipoPagado;
-  if (input.paymentProofUrl !== undefined) changes.paymentProofUrl = input.paymentProofUrl || null;
+  if (input.paymentProofUrl !== undefined) {
+    changes.paymentProofUrl = isBlobUrl(input.paymentProofUrl) ? null : (input.paymentProofUrl || null);
+  }
   if (input.paymentKey !== undefined) changes.paymentKey = input.paymentKey;
 
   const isConfirmingPayment = input.anticipoPagado === true || input.paymentStatus === 'APPROVED';
@@ -440,7 +443,7 @@ export const updatePaymentStatus = async (req: Request, res: Response) => {
     pedido = await customOrderUseCases.confirmPaymentAndConvertToOrder.execute(req.params.id, {
       paymentStatus: input.paymentStatus,
       anticipoPagado: input.anticipoPagado,
-      paymentProofUrl: input.paymentProofUrl,
+      paymentProofUrl: (changes.paymentProofUrl as string | null | undefined) ?? undefined,
       paymentKey: input.paymentKey,
     });
   } else {
