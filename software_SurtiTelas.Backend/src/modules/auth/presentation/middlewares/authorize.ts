@@ -15,7 +15,8 @@ export const requirePermission =
     try {
       if (!req.user) throw new UnauthorizedError();
       if (req.user.role === 'ADMIN') return next();
-      if (!req.user.permissions.includes(code)) {
+      const permissions = Array.isArray(req.user.permissions) ? req.user.permissions : [];
+      if (!permissions.includes(code)) {
         throw new ForbiddenError(`Requiere el permiso "${code}"`);
       }
       next();

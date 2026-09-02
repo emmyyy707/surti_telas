@@ -110,6 +110,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
           telefono: input.tel,
           asesorId: input.asesorId,
           nit: input.nit,
+          direccion: input.direccion,
           cupoTotal: input.cupoTotal ?? 0,
           cupoUsado: input.cupoUsado ?? 0,
           deudaVencida: input.deudaVencida ?? 0,
@@ -151,6 +152,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
       ciudad: changes.ciudad,
       telefono: changes.tel,
       nit: changes.nit,
+      direccion: changes.direccion,
       cupoTotal: changes.cupoTotal,
       cupoUsado: changes.cupoUsado,
       deudaVencida: changes.deudaVencida,
@@ -164,23 +166,6 @@ export class PrismaCustomerRepository implements CustomerRepository {
       data: updateData,
       include,
     });
-
-    const responsePayload = {
-      id: row.id,
-      nombre: row.nombre,
-      apellidos: row.apellidos,
-      email: row.email,
-      ciudad: row.ciudad,
-      telefono: row.telefono,
-      nit: row.nit,
-      cupoTotal: row.cupoTotal,
-      cupoUsado: row.cupoUsado,
-      deudaVencida: row.deudaVencida,
-      isTrustedCustomer: row.isTrustedCustomer,
-      estado: row.estado,
-      asesorId: row.asesorId,
-    };
-    console.log('UPDATE_CUSTOMER_RESPONSE', JSON.stringify(responsePayload));
 
     const userUpdates: Record<string, unknown> = {};
     if (changes.nombre !== undefined) userUpdates.nombre = changes.nombre;

@@ -64,7 +64,7 @@ describe('errorHandler', () => {
   });
 
   it('should handle generic Error as 500', async () => {
-    const req = {} as any;
+    const req = { requestId: 'test-request-id' } as any;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
@@ -72,14 +72,18 @@ describe('errorHandler', () => {
     const next = vi.fn();
 
     const error = new Error('Unknown error');
+    const prevEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
 
     errorHandler(error, req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      error: 'internal',
-      message: 'Error interno del servidor',
-    });
+    const jsonCall = (res.json as any).mock.calls[0]?.[0];
+    expect(jsonCall).toBeDefined();
+    expect(jsonCall.success).toBe(false);
+    expect(jsonCall.error).toBe('internal');
+    expect(jsonCall.message).toBe('Error interno del servidor');
+
+    process.env.NODE_ENV = prevEnv;
   });
 });

@@ -69,6 +69,8 @@ export interface PedidoItem {
   nombre: string;
   precio: number;
   cantidad: number;
+  referencia?: string;
+  productId?: string;
 }
 
 export interface Pedido {
@@ -81,7 +83,7 @@ export interface Pedido {
   fecha: string;
   items: number;
   total: string;
-  estado: 'Pendiente' | 'Aceptado' | 'En proceso' | 'Enviado' | 'Entregado' | 'Rechazado';
+  estado: 'Pendiente' | 'Aceptado' | 'Listo' | 'Enviado' | 'Entregado' | 'Rechazado' | 'En validación' | 'Recibo generado' | 'Recibo enviado' | 'Cancelado';
   prioridad?: 'Estándar' | 'Prioritario';
   observaciones?: string;
   itemsList?: PedidoItem[];

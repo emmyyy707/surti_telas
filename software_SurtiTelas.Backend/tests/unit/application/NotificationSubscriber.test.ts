@@ -23,7 +23,8 @@ describe('NotificationSubscriber', () => {
       subscribe: vi.fn(),
     } as any;
 
-    const subscriber = new NotificationSubscriber(repo);
+    const mockPrisma = { user: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn() }, custom_orders: { findUnique: vi.fn() }, order: { findUnique: vi.fn() }, customer: { findUnique: vi.fn() } } as any;
+    const subscriber = new NotificationSubscriber(repo, mockPrisma);
     subscriber.register(eventBus);
 
     const handler = eventBus.subscribe.mock.calls.find((call) => call[0] === 'order.created')?.[1];

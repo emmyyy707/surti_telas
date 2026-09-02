@@ -119,6 +119,14 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return result.count;
   }
 
+  async deleteAllByUserId(usuarioId: string): Promise<number> {
+    const result = await this.prisma.notification.updateMany({
+      where: { usuarioId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+    return result.count;
+  }
+
   async update(id: string, usuarioId: string, changes: { titulo?: string; mensaje?: string; leida?: boolean; readAt?: Date }): Promise<Notification> {
     const existing = await this.getById(id, usuarioId);
     if (!existing) throw new NotFoundError('Notificación no encontrada');
@@ -134,5 +142,36 @@ export class PrismaNotificationRepository implements NotificationRepository {
     const existing = await this.getById(id, usuarioId);
     if (!existing) throw new NotFoundError('Notificación no encontrada');
     await this.prisma.notification.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  async getSidebarSummary(usuarioId: string): Promise<Record<string, number>> {
+    const rows = await this.prisma.notification.findMany({
+      where: { usuarioId, leida: false, deletedAt: null, modulo: { not: null } },
+      select: { modulo: true },
+    });
+
+    const moduloToModule: Record<string, string> = {
+      ORDERS: 'pedidos',
+      PEDIDOS_PERSONALIZADOS: 'cotizaciones',
+      PRODUCTION: 'produccion',
+      STOCK: 'existencias',
+      CUSTOMERS: 'clientes',
+      DELIVERIES: 'domicilios',
+      PAYMENTS: 'pagos',
+      RECEIPTS: 'facturacion',
+      RETURNS: 'devoluciones',
+      USERS: 'usuarios',
+      RAW_MATERIAL: 'existencias',
+      SUPPLIER: 'existencias',
+      CATALOG: 'catalogo',
+    };
+
+    const summary: Record<string, number> = {};
+    for (const row of rows) {
+      if (!row.modulo) continue;
+      const module = moduloToModule[row.modulo] ?? row.modulo.toLowerCase();
+      summary[module] = (summary[module] ?? 0) + 1;
+    }
+    return summary;
   }
 }

@@ -40,11 +40,13 @@ notificationRouter.use(authenticate);
  *                       mensaje: { type: string, example: Pedido PED-000001 ... }
  *                       leida: { type: boolean, example: false }
  */
-notificationRouter.get('/', requirePermission('notifications:read'), asyncHandler(controller.getNotifications));
-notificationRouter.get('/unread-count', requirePermission('notifications:read'), asyncHandler(controller.getUnreadCount));
+notificationRouter.get('/', asyncHandler(controller.getNotifications));
+notificationRouter.get('/unread-count', asyncHandler(controller.getUnreadCount));
+notificationRouter.get('/sidebar-summary', asyncHandler(controller.getSidebarSummary));
 notificationRouter.post('/', requirePermission('notifications:update'), asyncHandler(controller.createNotification));
-notificationRouter.get('/:id', requirePermission('notifications:read'), asyncHandler(controller.getNotificationById));
-notificationRouter.patch('/:id/read', requirePermission('notifications:update'), asyncHandler(controller.markAsRead));
-notificationRouter.patch('/read-all', requirePermission('notifications:update'), asyncHandler(controller.markAllAsRead));
-notificationRouter.patch('/:id', requirePermission('notifications:update'), asyncHandler(controller.updateNotification));
-notificationRouter.delete('/:id', requirePermission('notifications:update'), asyncHandler(controller.deleteNotification));
+notificationRouter.get('/:id', asyncHandler(controller.getNotificationById));
+notificationRouter.patch('/:id/read', asyncHandler(controller.markAsRead));
+notificationRouter.patch('/read-all', asyncHandler(controller.markAllAsRead));
+notificationRouter.delete('/', asyncHandler(controller.deleteAllNotifications));
+notificationRouter.patch('/:id', asyncHandler(controller.updateNotification));
+notificationRouter.delete('/:id', asyncHandler(controller.deleteNotification));

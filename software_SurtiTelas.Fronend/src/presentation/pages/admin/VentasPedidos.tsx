@@ -19,10 +19,14 @@ import { OrderStatusSelector } from '@/shared/ui/OrderStatusSelector';
 const ESTADOS_ORDEN = [
   'Pendiente',
   'Aceptado',
-  'En proceso',
+  'Listo',
   'Enviado',
   'Entregado',
   'Rechazado',
+  'En validación',
+  'Recibo generado',
+  'Recibo enviado',
+  'Cancelado',
 ] as const;
 
 export const AdminVentasPedidos: React.FC = () => {

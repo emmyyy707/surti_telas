@@ -10,6 +10,7 @@ export interface CreateUserInput {
   direccion?: string;
   tipoDocumento?: string;
   numeroDocumento?: string;
+  permisos?: string[];
 }
 
 export interface PermissionData {
@@ -70,6 +71,11 @@ export interface AuthRepository {
   updateRoleStatus(name: string, estado: 'Activo' | 'Inactivo'): Promise<RoleData>;
   deleteRole(name: string): Promise<void>;
   delete(id: string): Promise<void>;
+
+  createUserPermission(userId: string, permissionId: string): Promise<void>;
+  removeUserPermission(userId: string, permissionId: string): Promise<void>;
+  setUserPermissions(userId: string, permissionCodes: string[]): Promise<void>;
+  findPermissionsByUser(userId: string): Promise<string[]>;
 
   updateTwoFactorSecret(id: string, secret: string | null): Promise<void>;
   enableTwoFactor(id: string, enabled: boolean): Promise<void>;

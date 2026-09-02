@@ -24,6 +24,7 @@ describe('RefreshToken', () => {
       findByEmail: vi.fn(),
       create: vi.fn(),
       findPermissionsByRole: vi.fn().mockResolvedValue([]),
+      findPermissionsByUser: vi.fn().mockResolvedValue([]),
       listUsers: vi.fn(),
       findAllPermissions: vi.fn(),
       createPermission: vi.fn(),

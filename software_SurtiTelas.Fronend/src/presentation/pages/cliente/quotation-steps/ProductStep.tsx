@@ -1,9 +1,24 @@
 import React from 'react';
 import { PlusCircle, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control, useWatch } from 'react-hook-form';
+import { type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control, type FieldArrayWithId, useWatch } from 'react-hook-form';
 import { type FormValues } from '../MisPedidosPersonalizados';
 import { Skeleton } from './Skeleton';
+
+type ItemField = FieldArrayWithId<FormValues, 'items', 'id'>;
+interface Personalizacion {
+  tipo?: string;
+  tecnica?: string;
+  ubicacion?: string[];
+  descripcion?: string;
+  archivos?: string[];
+  variantes?: Variante[];
+}
+interface Variante {
+  talla?: string;
+  color?: string;
+  cantidad?: number | string;
+}
 
 export interface ProductStepProps {
   register: UseFormRegister<FormValues>;
@@ -12,7 +27,7 @@ export interface ProductStepProps {
   setValue: UseFormSetValue<FormValues>;
   styles: Record<string, string>;
   control: Control<FormValues>;
-  itemFields: any[];
+  itemFields: ItemField[];
   activeItemIndex: number;
   setActiveItemIndex: (index: number) => void;
   editingPersonalizacionIndex: number | null;
@@ -23,10 +38,10 @@ export interface ProductStepProps {
   loadingCatalog: boolean;
   agregarProducto: () => void;
   agregarPersonalizacion: () => void;
-  actualizarPersonalizacion: (persIndex: number, field: string, value: any) => void;
+  actualizarPersonalizacion: (persIndex: number, field: string, value: string | string[]) => void;
   agregarVariante: (persIndex: number) => void;
   eliminarVariante: (persIndex: number, varIndex: number) => void;
-  actualizarVariante: (persIndex: number, varIndex: number, field: string, value: any) => void;
+  actualizarVariante: (persIndex: number, varIndex: number, field: string, value: string | number) => void;
   eliminarPersonalizacion: (persIndex: number) => void;
   eliminarProducto: (idx: number) => void;
   imagenesReferencia: string[];
@@ -36,12 +51,11 @@ export interface ProductStepProps {
   setPersonalizacionFiles: React.Dispatch<React.SetStateAction<Record<string, { file: File; blobUrl: string }[]>>>;
 }
 
-export const ProductStep = ({ register, errors, watch, setValue, styles, control, itemFields, activeItemIndex, setActiveItemIndex, editingPersonalizacionIndex, setEditingPersonalizacionIndex, showPersonalizacionForm, setShowPersonalizacionForm, productos, agregarProducto, agregarPersonalizacion, actualizarPersonalizacion, agregarVariante, eliminarVariante, actualizarVariante, eliminarPersonalizacion, eliminarProducto, imagenesReferencia, handleReferenceImageChange, removeReferenceImage, personalizacionFiles, setPersonalizacionFiles }: ProductStepProps) => {
-  const _control = control || null;
-  const watchedItems = _control ? useWatch({ control: _control, name: 'items' }) || [] : [];
+export const ProductStep = ({ register, errors, watch, setValue, styles, control, itemFields, activeItemIndex, setActiveItemIndex, editingPersonalizacionIndex, setEditingPersonalizacionIndex, showPersonalizacionForm, setShowPersonalizacionForm, productos, agregarProducto, agregarPersonalizacion, actualizarPersonalizacion, agregarVariante, eliminarVariante, actualizarVariante, eliminarPersonalizacion, eliminarProducto, setPersonalizacionFiles }: ProductStepProps) => {
+  const watchedItems = useWatch({ control, name: 'items' }) || [];
   const activeItem = watchedItems[activeItemIndex] || {};
-  const distribucionTallas = _control ? useWatch({ control: _control, name: `items.${activeItemIndex}.distribucionTallas` }) || {} : {};
-  const editingPersonalizacion: any = (editingPersonalizacionIndex !== null && activeItem?.personalizaciones?.[editingPersonalizacionIndex]) ? activeItem.personalizaciones[editingPersonalizacionIndex] : {};
+  const _distribucionTallas = useWatch({ control, name: `items.${activeItemIndex}.distribucionTallas` }) || {};
+  const editingPersonalizacion: Personalizacion = (editingPersonalizacionIndex !== null && activeItem?.personalizaciones?.[editingPersonalizacionIndex]) ? activeItem.personalizaciones[editingPersonalizacionIndex] : {} as Personalizacion;
 
   return (
     <div className={styles.sectionBlock}>
@@ -73,7 +87,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                     </button>
                   </div>
                   <div className={styles.productCardMeta}>
-                    <span>{Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)} unidades</span>
+                    <span>{Object.values(item.distribucionTallas || {}).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0)} unidades</span>
                   <span>·</span>
                   <span>{persCount} personalización{persCount !== 1 ? 'es' : ''}</span>
                 </div>
@@ -140,10 +154,10 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                     min="0"
                     placeholder="0"
                     value={watch(`items.${activeItemIndex}.distribucionTallas.${talla}`) || ''}
-                    onChange={(e) => {
-                      const val = e.target.value ? Number(e.target.value) : null;
-                      setValue(`items.${activeItemIndex}.distribucionTallas.${talla}`, val as any);
-                    }}
+                      onChange={(e) => {
+                        const val = e.target.value ? Number(e.target.value) : null;
+                        setValue(`items.${activeItemIndex}.distribucionTallas.${talla}`, val);
+                      }}
                   />
                 </div>
               ))}
@@ -151,7 +165,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
             <div className={styles.distributionTotal}>
               <span>Total</span>
               <span className={styles.distributionTotalValueSuccess}>
-                {Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)}
+                {Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0)}
               </span>
             </div>
           </div>
@@ -287,7 +301,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                    </div>
                     <div className={styles.field}>
                       <label className={styles.label}>Cantidades por Talla y Color</label>
-                      {(editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []).map((variante: any, varIndex: number) => (
+                      {(editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as Variante[] || []).map((variante: Variante, varIndex: number) => (
                         <div key={varIndex} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '8px' }}>
                           <div className={styles.field} style={{ flex: '1 1 0' }}>
                             <select
@@ -320,7 +334,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                      </button>
                      <div className={styles.personalizationTotal}>
                        {(() => {
-                         const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as any[] || []);
+                          const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0)}.variantes`) as Variante[] || []);
                          const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
                          const resumenPorTalla: Record<string, { usado: number; total: number }> = {};
                          for (const variante of variantes) {
@@ -342,7 +356,7 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                       <button type="button" className={styles.btnPrimary} onClick={() => {
                         const persIndex = editingPersonalizacionIndex ?? (activeItem?.personalizaciones?.length ?? 0);
                         const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
-                        const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as any[] || []);
+                         const variantes = (editingPersonalizacion.variantes || watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as Variante[] || []);
                         const sumaPorTalla: Record<string, number> = {};
                         for (const variante of variantes) {
                           const talla = variante.talla;
@@ -388,14 +402,14 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                    </div>
                  ) : (
                    (activeItem?.personalizaciones || [])
-                     .filter((pers: any) => {
+                      .filter((pers: Personalizacion) => {
                        const hasTipo = !!pers.tipo;
                        const hasDescripcion = !!pers.descripcion && pers.descripcion.trim() !== '';
                        const hasUbicacion = Array.isArray(pers.ubicacion) && pers.ubicacion.length > 0;
-                       const hasVariantes = (pers.variantes || []).some((v: any) => Number(v.cantidad) > 0);
+                        const hasVariantes = (pers.variantes || []).some((v: Variante) => Number(v.cantidad) > 0);
                        return hasTipo && (hasDescripcion || hasUbicacion || hasVariantes);
                      })
-                     .map((pers: any, persIndex: number) => (
+                      .map((pers: Personalizacion, persIndex: number) => (
                      <div key={persIndex} className={styles.personalizationCard}>
                        <div className={styles.personalizationCardHeader}>
                          <div>
@@ -406,8 +420,8 @@ export const ProductStep = ({ register, errors, watch, setValue, styles, control
                            <div className={styles.personalizationCardDescription}>{pers.descripcion}</div>
                             <div className={styles.personalizationCardMeta}>
                               {(() => {
-                                const total = (pers.variantes || []).reduce((sum: number, v: any) => sum + (Number(v.cantidad) || 0), 0);
-                                const cantidad = Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+                                 const total = (pers.variantes || []).reduce((sum: number, v: Variante) => sum + (Number(v.cantidad) || 0), 0);
+                                 const cantidad = Object.values(watch(`items.${activeItemIndex}.distribucionTallas`) || {}).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0);
                                 const exceeds = cantidad > 0 && total > cantidad;
                                 return <span style={{ color: exceeds ? '#dc2626' : 'inherit' }}>{total} unidades{exceeds ? ` (supera las ${cantidad} disponibles)` : ''}</span>;
                               })()}

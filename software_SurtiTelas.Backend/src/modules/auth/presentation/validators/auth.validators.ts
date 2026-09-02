@@ -59,10 +59,20 @@ export const CreateUserSchema = z.object({
   direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
   tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
   numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
+  permisos: z.array(z.string()).optional(),
+});
+
+export const UpdateUserSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio').optional(),
+  apellidos: z.string().optional(),
+  email: z.string().email('Correo inválido').optional(),
+  telefono: OptionalPhoneSchema,
+  direccion: z.string().max(150, 'Máximo 150 caracteres').optional(),
+  permisos: z.array(z.string()).optional(),
 });
 
 export const UpdateUserStatusSchema = z.object({
-  estado: z.enum(['ACTIVO', 'INACTIVO']),
+  estado: z.enum(['ACTIVO', 'INACTIVO', 'Activo', 'Inactivo']).transform((val) => val.toUpperCase() as 'ACTIVO' | 'INACTIVO'),
 });
 
 export const UpdateRoleStatusSchema = z.object({

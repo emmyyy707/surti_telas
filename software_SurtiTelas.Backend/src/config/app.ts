@@ -55,6 +55,7 @@ import { customOrderRouter } from '../modules/pedidos-personalizados/presentatio
 import { adminCustomOrderRouter } from '../modules/pedidos-personalizados/presentation/routes/admin-custom-order.routes';
 import { purchasesRouter } from '../modules/purchases/presentation/routes/purchases.routes';
 import { rawMaterialCategoriesRouter } from '../modules/raw-material-categories/presentation/routes/raw-material-categories.routes';
+import { chatRouter } from '../modules/chat/presentation/routes/chat.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -249,6 +250,7 @@ app.use('/api/v1/favorites', favoriteRouter);
   app.use('/api/v1/admin/custom-orders', adminCustomOrderRouter);
   app.use('/api/v1/purchases', purchasesRouter);
   app.use('/api/v1/raw-material-categories', rawMaterialCategoriesRouter);
+  app.use('/api/v1/chat', chatRouter);
   app.use('/api/v1/domiciliarios', domiciliarioRouter);
   app.use('/api/v1/employees', employeeRouter);
   app.use('/api/v1/catalog', catalogRouter);

@@ -135,4 +135,14 @@ export class PrismaPurchaseRepository implements PurchaseRepository {
     const newTotal = totalItems.reduce((sum, i) => sum + Number(i.subtotal), 0);
     await this.prisma.purchase.update({ where: { id: item.purchaseId }, data: { total: newTotal } });
   }
+
+  async getProveedorNombre(proveedorId: string): Promise<string> {
+    const supplier = await this.prisma.supplier.findFirst({ where: { id: proveedorId }, select: { nombre: true } });
+    return supplier?.nombre ?? proveedorId;
+  }
+
+  async getUsuarioNombre(usuarioId: string): Promise<string> {
+    const user = await this.prisma.user.findFirst({ where: { id: usuarioId }, select: { nombre: true } });
+    return user?.nombre ?? usuarioId;
+  }
 }

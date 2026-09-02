@@ -19,6 +19,7 @@ export interface CustomerData {
   estado: CustomerStatus;
   pedidos: number;
   rol: 'CLIENTE';
+  direccion?: string;
 }
 
 export class Customer {
@@ -38,6 +39,7 @@ export class Customer {
   readonly estado: CustomerStatus;
   readonly pedidos: number;
   readonly rol: 'CLIENTE';
+  readonly direccion?: string;
 
   constructor(data: CustomerData) {
     Customer.validate(data);
@@ -57,6 +59,7 @@ export class Customer {
     this.estado = data.estado;
     this.pedidos = data.pedidos;
     this.rol = data.rol;
+    this.direccion = data.direccion;
   }
 
   static validate(data: CustomerData): void {

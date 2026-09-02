@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, Clock, Package, FileText, Ban } from 'lucide-rea
 import { Badge } from '@/shared/ui/Badge';
 import { CUSTOM_ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import type { CustomOrderEstado } from '@/infrastructure/api/customOrdersApi';
+import { CUSTOM_ORDER_STATUS_TRANSITIONS } from './customOrderStatusTransitions';
 import styles from './CustomOrderStatusSelector.module.css';
 
 interface CustomOrderStatusSelectorProps {
@@ -90,40 +91,19 @@ const STATUS_CONFIG: Record<CustomOrderEstado, { icon: React.ReactNode; label: s
   },
 };
 
-export const CUSTOM_ORDER_STATUS_TRANSITIONS: Record<CustomOrderEstado, CustomOrderEstado[]> = {
-  PENDIENTE: ['ACEPTADO', 'CANCELADO'],
-  ACEPTADO: ['CANCELADO'],
-  CANCELADO: [],
-  SOLICITUD_RECIBIDA: ['ACEPTADO', 'CANCELADO'],
-  EN_REVISION: ['CANCELADO'],
-  COTIZADO: ['COTIZACION_ACEPTADA', 'COTIZACION_RECHAZADA', 'CANCELADO'],
-  COTIZACION_ACEPTADA: ['PAGO_PENDIENTE', 'CANCELADO'],
-  COTIZACION_RECHAZADA: ['SOLICITUD_RECIBIDA', 'CANCELADO'],
-  PAGO_PENDIENTE: ['PAGO_EN_VERIFICACION', 'CANCELADO'],
-  PAGO_EN_VERIFICACION: ['PAGO_APROBADO', 'CANCELADO'],
-  PAGO_APROBADO: ['CONVERTIDO_A_PEDIDO', 'EN_PRODUCCION', 'CANCELADO'],
-  EN_PRODUCCION: ['COMPLETADO', 'CANCELADO'],
-  COMPLETADO: [],
-  CONVERTIDO_A_PEDIDO: [],
-  VENCIDO: [],
-};
-
 export const CustomOrderStatusSelector: React.FC<CustomOrderStatusSelectorProps> = ({
   currentStatus,
   selectedStatus,
   onSelectedStatusChange,
   disabled = false
 }) => {
-  const allowedTransitions = CUSTOM_ORDER_STATUS_TRANSITIONS[currentStatus] || [];
+  const allowedTransitions = React.useMemo(() => CUSTOM_ORDER_STATUS_TRANSITIONS[currentStatus] || [], [currentStatus]);
   const currentConfig = STATUS_CONFIG[currentStatus];
 
   const noTransitionsRef = React.useRef(false);
   React.useEffect(() => {
     if (allowedTransitions.length === 0 && !noTransitionsRef.current) {
       noTransitionsRef.current = true;
-      if (import.meta.env.DEV) {
-        console.warn('[CustomOrderStatusSelector] No transitions allowed', { currentStatus, allowedTransitions });
-      }
     }
   }, [currentStatus, allowedTransitions]);
 

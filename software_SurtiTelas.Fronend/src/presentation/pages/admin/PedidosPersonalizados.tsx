@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Eye, Edit3, FileText, CheckCircle, RefreshCcw, Trash2, User, Package, Paintbrush, Image, X, PlusCircle, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/shared/ui/Badge';
@@ -7,7 +7,7 @@ import { DataTable } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { CustomOrderStatusSelector } from '@/shared/ui/CustomOrderStatusSelector';
-import { customOrdersApi, type CustomOrder, type NegotiationMessage } from '@/infrastructure/api/customOrdersApi';
+import { customOrdersApi, type CustomOrder, type NegotiationMessage, type ProposalData } from '@/infrastructure/api/customOrdersApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
 import { catalogApi } from '@/infrastructure/api/catalogApi';
 import { useAuthStore } from '@/core/stores/authStore';
@@ -172,6 +172,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
   const [paymentConfirm, setPaymentConfirm] = useState<CustomOrder | null>(null);
   const [paymentProofViewer, setPaymentProofViewer] = useState<{ orderId: string; url: string } | null>(null);
   const [paymentProofBlobUrl, setPaymentProofBlobUrl] = useState<string | null>(null);
+  const paymentProofBlobUrlRef = useRef(paymentProofBlobUrl);
+  paymentProofBlobUrlRef.current = paymentProofBlobUrl;
   const [paymentProofLoading, setPaymentProofLoading] = useState(false);
   const [paymentProofError, setPaymentProofError] = useState<string | null>(null);
 
@@ -286,8 +288,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       setPaymentProofError(null);
     }
     return () => {
-      if (paymentProofBlobUrl) {
-        URL.revokeObjectURL(paymentProofBlobUrl);
+      if (paymentProofBlobUrlRef.current) {
+        URL.revokeObjectURL(paymentProofBlobUrlRef.current);
       }
     };
   }, [paymentConfirm?.id, paymentConfirm?.paymentProofUrl]);
@@ -330,14 +332,12 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         material: item.material ?? '',
         ubicacion: toUbicacionArray(item.ubicacion),
         personalizaciones: (item.personalizaciones || []).map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (pers: any) => ({
-          tipo: pers.tipo,
-          tecnica: pers.tecnica ?? '',
-          ubicacion: toUbicacionArray(pers.ubicacion),
-          descripcion: pers.descripcion,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          variantes: (pers.variantes || []).map((v: any) => ({
+          (pers) => ({
+            tipo: pers.tipo,
+            tecnica: pers.tecnica ?? '',
+            ubicacion: toUbicacionArray(pers.ubicacion),
+            descripcion: pers.descripcion,
+            variantes: (pers.variantes || []).map((v) => ({
             talla: v.talla,
             color: v.color,
             cantidad: Number(v.cantidad),
@@ -552,13 +552,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       if (wizardData.distribucionTallas && Object.keys(wizardData.distribucionTallas).length > 0) {
         const suma = Object.values(wizardData.distribucionTallas).reduce((acc: number, val) => acc + Number(val || 0), 0);
         if (suma !== Number(item?.cantidad || 0)) {
-          next['distribucionTallas'] = `La distribución de tallas (${suma}) no coincide con la cantidad total (${item?.cantidad || 0})`;
+          next['distribucionTallas'] = `La distribucián de tallas (${suma}) no coincide con la cantidad total (${item?.cantidad || 0})`;
         }
       }
       if (wizardData.distribucionColores && Object.keys(wizardData.distribucionColores).length > 0) {
         const suma = Object.values(wizardData.distribucionColores).reduce((acc: number, val) => acc + Number(val || 0), 0);
         if (suma !== Number(item?.cantidad || 0)) {
-          next['distribucionColores'] = `La distribución de colores (${suma}) no coincide con la cantidad total (${item?.cantidad || 0})`;
+          next['distribucionColores'] = `La distribucián de colores (${suma}) no coincide con la cantidad total (${item?.cantidad || 0})`;
         }
       }
     }
@@ -645,12 +645,12 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
     const handleStartNegotiation = async () => {
       if (!selectedOrder || !negotiationMessage.trim()) {
-        toast.error('Ingresa un mensaje para la negociación');
+        toast.error('Ingresa un mensaje para la negociacián');
         return;
       }
       const counts = getAdminNegotiationCounts();
       if (counts.adminRemaining <= 0) {
-        toast.error('Has alcanzado el límite de negociaciones (3)');
+        toast.error('Has alcanzado el lámite de negociaciones (3)');
         return;
       }
       setNegotiationSending(true);
@@ -674,13 +674,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         setNegotiationMessage('');
         await loadNegotiationHistory();
       } catch {
-        toast.error('Error al enviar propuesta de negociación');
+        toast.error('Error al enviar propuesta de negociacián');
       } finally {
         setNegotiationSending(false);
       }
     };
 
-    const _handleRespondToNegotiation = async (negotiationId: string, message: string, proposalData?: Record<string, unknown>) => {
+    const _handleRespondToNegotiation = async (negotiationId: string, message: string, proposalData?: ProposalData) => {
       if (!selectedOrder) return;
       setNegotiationSending(true);
       try {
@@ -690,7 +690,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         await loadNegotiationHistory();
         await loadOrders();
       } catch {
-        toast.error('Error al responder negociación');
+        toast.error('Error al responder negociacián');
       } finally {
         setNegotiationSending(false);
       }
@@ -858,7 +858,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
   const handleCloseDetail = () => {
     if (detailView === 'quotation' && hasQuotationChanges) {
-      if (!window.confirm('Hay cambios sin guardar. ¿Deseas salir sin guardar?')) {
+      if (!window.confirm('Hay cambios sin guardar. áDeseas salir sin guardar?')) {
         return;
       }
     }
@@ -869,7 +869,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
 
   const handleBackFromQuotation = () => {
     if (hasQuotationChanges) {
-      if (!window.confirm('Hay cambios sin guardar. ¿Deseas volver sin guardar?')) {
+      if (!window.confirm('Hay cambios sin guardar. áDeseas volver sin guardar?')) {
         return;
       }
     }
@@ -991,11 +991,11 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         void loadOrders();
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al guardar cotización';
-      if (message.includes('Ya existe una cotización') || message.includes('409')) {
-        toast.error('Este pedido ya tiene una cotización. Consulta o edita la cotización existente.');
+      const message = err instanceof Error ? err.message : 'Error al guardar cotizacián';
+      if (message.includes('Ya existe una cotizacián') || message.includes('409')) {
+        toast.error('Este pedido ya tiene una cotizacián. Consulta o edita la cotizacián existente.');
       } else {
-        toast.error(message || 'Error al guardar cotización');
+        toast.error(message || 'Error al guardar cotizacián');
       }
     } finally {
       setQuotationSaving(false);
@@ -1045,11 +1045,11 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       setDetailView('detail');
       setDetailOpen(false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al enviar cotización';
-      if (message.includes('Ya existe una cotización') || message.includes('409')) {
-        toast.error('Este pedido ya tiene una cotización. Consulta o edita la cotización existente.');
+      const message = err instanceof Error ? err.message : 'Error al enviar cotizacián';
+      if (message.includes('Ya existe una cotizacián') || message.includes('409')) {
+        toast.error('Este pedido ya tiene una cotizacián. Consulta o edita la cotizacián existente.');
       } else {
-        toast.error(message || 'Error al enviar cotización');
+        toast.error(message || 'Error al enviar cotizacián');
       }
     } finally {
       setQuotationSaving(false);
@@ -1076,8 +1076,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       setDetailView('detail');
       setDetailOpen(false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al reenviar cotización';
-      toast.error(message || 'Error al reenviar cotización');
+      const message = err instanceof Error ? err.message : 'Error al reenviar cotizacián';
+      toast.error(message || 'Error al reenviar cotizacián');
     } finally {
       setQuotationSaving(false);
     }
@@ -1089,13 +1089,6 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       header: 'Solicitud',
       render: (row: CustomOrder) => (
         <span className={s.requestNumberCell}>{row.numeroSolicitud}</span>
-      )
-    },
-    {
-      key: 'clienteNombre',
-      header: 'Cliente',
-      render: (row: CustomOrder) => (
-        <span className={s.clientNameCell} title={row.clienteNombre}>{row.clienteNombre}</span>
       )
     },
     {
@@ -1281,7 +1274,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       <div className={s.header}>
         <div>
            <h1 className={s.pageTitle}>Cotizaciones</h1>
-          <p className={s.pageSubtitle}>Gestiona solicitudes, cotizaciones y conversión a pedidos</p>
+          <p className={s.pageSubtitle}>Gestiona solicitudes, cotizaciones y conversián a pedidos</p>
         </div>
         <Button onClick={openCreate} className="inline-flex items-center gap-2">
           <Plus size={18} />
@@ -1372,16 +1365,16 @@ export const AdminPedidosPersonalizados: React.FC = () => {
         onClose={handleCloseDetail}
         title={
           detailView === 'quotation'
-            ? 'Gestionar cotización'
+            ? 'Gestionar cotizacián'
             : detailView === 'negotiation'
-            ? 'Negociar cotización'
+            ? 'Negociar cotizacián'
             : `Solicitud ${selectedOrder?.numeroSolicitud ?? ''}`
         }
         description={
           detailView === 'quotation'
-            ? 'Construye la cotización con conceptos, precios y condiciones.'
+            ? 'Construye la cotizacián con conceptos, precios y condiciones.'
             : detailView === 'negotiation'
-            ? 'Envía una propuesta de negociación al cliente.'
+            ? 'Enváa una propuesta de negociacián al cliente.'
             : undefined
         }
         size={detailView === 'quotation' ? '2xl' : 'xl'}
@@ -1417,7 +1410,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                 </div>
                 <div className={s.summaryRow}>
                   <span className={s.summaryRowLabel}>Tiempo estimado</span>
-                  <span className={s.summaryRowValue}>{selectedOrder.cotizacion.tiempoEstimadoDias ?? '-'} días</span>
+                  <span className={s.summaryRowValue}>{selectedOrder.cotizacion.tiempoEstimadoDias ?? '-'} dáas</span>
                 </div>
               </div>
             </div>
@@ -1444,13 +1437,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                   {negotiationHistory.map((entry) => (
                     <div key={entry.id} className={s.negotiationEntry} data-testid={`negotiation-entry-${entry.round}`}>
                       <div className={s.negotiationEntryHeader}>
-                        <span className={s.negotiationEntryTitle}>Negociación {entry.round}</span>
+                        <span className={s.negotiationEntryTitle}>Negociacián {entry.round}</span>
                         <span className={s.negotiationEntryDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
                       </div>
                       <div className={s.negotiationEntryMessage}>{entry.message}</div>
                       {entry.proposalData && (
                         <div className={s.negotiationEntryProposal}>
-                          Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
+                          Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} dáas
                         </div>
                       )}
                     </div>
@@ -1490,7 +1483,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                   <input className={s.summaryInput} type="number" min="0" max="100" value={negotiationProposalData.porcentajeAnticipo} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, porcentajeAnticipo: Number(e.target.value) })} />
                 </div>
                 <div className={s.summaryRow}>
-                  <span className={s.summaryRowLabel}>Tiempo estimado (días)</span>
+                  <span className={s.summaryRowLabel}>Tiempo estimado (dáas)</span>
                   <input className={s.summaryInput} type="number" min="1" value={negotiationProposalData.tiempoEstimadoDias} onChange={(e) => setNegotiationProposalData({ ...negotiationProposalData, tiempoEstimadoDias: Number(e.target.value) })} />
                 </div>
               </div>
@@ -1528,7 +1521,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
             <div className={s.actionsBar}>
               <div className={s.actionsBarLeft}>
                 <Button variant="secondary" size="sm" onClick={closeNegotiation}>
-                  ← Volver
+                  ? Volver
                 </Button>
               </div>
               <div className={s.actionsBarRight}>
@@ -1551,7 +1544,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                  <div className={s.sectionBlock}>
                    <div className={s.sectionHeader}>
                      <FileText size={16} />
-                     <div className={s.sectionTitle}>Estado de la cotización</div>
+                     <div className={s.sectionTitle}>Estado de la cotizacián</div>
                    </div>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                      {selectedOrder.cotizacion && (() => {
@@ -1585,13 +1578,13 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                        {negotiationHistory.map((entry) => (
                          <div key={entry.id} className={s.negotiationEntry} data-testid={`negotiation-entry-${entry.round}`}>
                            <div className={s.negotiationEntryHeader}>
-                             <span className={s.negotiationEntryTitle}>Negociación {entry.round}</span>
+                             <span className={s.negotiationEntryTitle}>Negociacián {entry.round}</span>
                              <span className={s.negotiationEntryDate}>{new Date(entry.created_at).toLocaleString('es-CO')}</span>
                            </div>
                            <div className={s.negotiationEntryMessage}>{entry.message}</div>
                            {entry.proposalData && (
                              <div className={s.negotiationEntryProposal}>
-                               Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} días
+                               Propuesta: Total {formatCurrency(Number(entry.proposalData.total))} | Anticipo {entry.proposalData.porcentajeAnticipo ?? 50}% | Tiempo {entry.proposalData.tiempoEstimadoDias ?? '-'} dáas
                              </div>
                            )}
                          </div>
@@ -1606,7 +1599,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                    <FileText size={16} />
                    <div className={s.sectionTitle}>Productos</div>
                  </div>
-                 <p className={s.sectionDescription}>Organiza la cotización por producto. Cada producto puede tener múltiples conceptos.</p>
+                 <p className={s.sectionDescription}>Organiza la cotizacián por producto. Cada producto puede tener múltiples conceptos.</p>
 
                  {quotationProducts.map((product) => (
                    <div key={product.id} className={s.productCard}>
@@ -1645,8 +1638,8 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                                    <option value="PRODUCTO_BASE">Producto base</option>
                                    <option value="MATERIA_PRIMA">Materia prima</option>
                                    <option value="MANO_OBRA">Mano de obra</option>
-                                   <option value="DISENO">Diseño</option>
-                                   <option value="LOGISTICA">Logística</option>
+                                   <option value="DISENO">Diseáo</option>
+                                   <option value="LOGISTICA">Logástica</option>
                                    <option value="OTRO">Otro</option>
                                  </select>
                                </div>
@@ -1692,7 +1685,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                  </div>
                  <div className={s.formRow}>
                    <div className={s.field}>
-                     <label className={s.label}>Tiempo estimado (días)</label>
+                     <label className={s.label}>Tiempo estimado (dáas)</label>
                      <input className={s.input} type="number" min="1" value={quotationDeliveryDays} onChange={(e) => { setQuotationDeliveryDays(Number(e.target.value)); setHasQuotationChanges(true); }} />
                    </div>
                    <div className={s.field}>
@@ -1749,7 +1742,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
              <div className={s.actionsBar}>
                <div className={s.actionsBarLeft}>
                   <Button variant="secondary" size="sm" onClick={handleBackFromQuotation}>
-                    ← Volver
+                    ? Volver
                   </Button>
                </div>
                <div className={s.actionsBarRight}>
@@ -1774,7 +1767,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                     disabled={quotationSaving || quotationProducts.length === 0 || quotationProducts.every(p => p.conceptos.length === 0)}
                     data-testid="btn-enviar-cotizacion"
                   >
-                    {quotationSaving ? 'Enviando...' : 'Enviar cotización'}
+                    {quotationSaving ? 'Enviando...' : 'Enviar cotizacián'}
                   </Button>
                </div>
              </div>
@@ -1795,12 +1788,12 @@ export const AdminPedidosPersonalizados: React.FC = () => {
                       ? [{ label: 'Negociar', onClick: () => openNegotiation(), variant: 'secondary' as const }]
                       : []),
                     ...(selectedOrder && selectedOrder.cotizacion?.estado === 'PENDIENTE' && selectedOrder.cotizacion.negotiationCount !== 3
-                      ? [{ label: 'Reenviar cotización', onClick: () => handleResendQuotation(), variant: 'primary' as const }]
+                      ? [{ label: 'Reenviar cotizacián', onClick: () => handleResendQuotation(), variant: 'primary' as const }]
                       : []),
                     ...(selectedOrder && !['CONVERTIDO_A_PEDIDO', 'COMPLETADO', 'CANCELADO', 'VENCIDO', 'EN_PRODUCCION'].includes(selectedOrder.estado)
                       && (!selectedOrder.cotizacion || ['PENDIENTE', 'BORRADOR', 'RECHAZADA', 'VENCIDA'].includes(selectedOrder.cotizacion.estado))
                       && selectedOrder.cotizacion?.estado !== 'CANCELADA' && (selectedOrder.cotizacion?.negotiationCount ?? 0) < 3
-                      ? [{ label: selectedOrder.cotizacion ? 'Editar cotización' : 'Gestionar cotización', onClick: () => openQuotationEditor(selectedOrder), variant: 'primary' as const }]
+                      ? [{ label: selectedOrder.cotizacion ? 'Editar cotizacián' : 'Gestionar cotizacián', onClick: () => openQuotationEditor(selectedOrder), variant: 'primary' as const }]
                       : []),
                     ...(selectedOrder && selectedOrder.estado === 'PAGO_PENDIENTE' && !selectedOrder.anticipoPagado
                       ? [{ label: 'Confirmar anticipo', onClick: () => { setPaymentConfirm(selectedOrder); setDetailOpen(false); } }]
@@ -1872,7 +1865,7 @@ export const AdminPedidosPersonalizados: React.FC = () => {
               <Package size={18} />
               <div className={s.sectionTitle}>Producto solicitado</div>
             </div>
-            <p className={s.sectionDescription}>Define el producto base y sus atributos físicos para la personalización. Puedes agregar varios productos.</p>
+            <p className={s.sectionDescription}>Define el producto base y sus atributos fásicos para la personalización. Puedes agregar varios productos.</p>
             
             {/* Lista de productos agregados */}
             {form.items.length > 1 && (
@@ -2295,3 +2288,5 @@ export const AdminPedidosPersonalizados: React.FC = () => {
       </div>
     );
  };
+
+

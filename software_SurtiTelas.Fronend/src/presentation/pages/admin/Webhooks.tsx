@@ -99,7 +99,7 @@ export const AdminWebhooks: React.FC = () => {
 
   const [testingId, setTestingId] = useState<string | null>(null);
 
-  const handleTest = async (id: string) => {
+  const _handleTest = async (id: string) => {
     setTestingId(id);
     try {
       const result = await webhooksApi.test(id);

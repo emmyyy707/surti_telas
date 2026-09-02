@@ -186,9 +186,7 @@ export const productsApi = {
       colores: p.colores,
       tallas: p.tallas,
     } as Record<string, unknown>);
-    console.log('[productsApi] create body', body);
     const dto = await api.post<ProductDTO>('/catalog/products', body);
-    console.log('[productsApi] create response', dto);
     return toProductTerminado(dto);
   },
 
@@ -216,9 +214,7 @@ export const productsApi = {
       colores: changes.colores,
       tallas: changes.tallas,
     } as Record<string, unknown>);
-    console.log('[productsApi] update body', ref, body);
     const dto = await api.patch<ProductDTO>(`/catalog/products/${encodeURIComponent(ref)}`, body);
-    console.log('[productsApi] update response', dto);
     return toProductTerminado(dto);
   },
 

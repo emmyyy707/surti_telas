@@ -1,4 +1,4 @@
-﻿import { ReactNode, useEffect, useRef } from 'react';
+﻿import { ReactNode, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/shared/utils';
@@ -47,6 +47,8 @@ export const BaseModal = ({
   closeOnOverlay = false,
 }: BaseModalProps) => {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const descId = useId();
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -103,18 +105,19 @@ export const BaseModal = ({
         )}
         role="dialog"
         aria-modal="true"
-        aria-label={title || 'Modal'}
+        aria-labelledby={titleId}
+        aria-describedby={description ? descId : undefined}
       >
         <header className={styles.modalHeader}>
           <div className={styles.headerContent}>
             {icon && <div className={styles.headerIcon}>{icon}</div>}
             <div className={styles.headerText}>
               <div className={styles.titleRow}>
-                <h2 className={styles.modalTitle}>{title}</h2>
+                <h2 id={titleId} className={styles.modalTitle}>{title}</h2>
                 {badge && <div className={styles.headerBadge}>{badge}</div>}
               </div>
               {(description || meta) && (
-                <p className={styles.modalDescription}>
+                <p id={descId} className={styles.modalDescription}>
                   {description}
                   {description && meta && <span className={styles.metaSeparator}>•</span>}
                   {meta}

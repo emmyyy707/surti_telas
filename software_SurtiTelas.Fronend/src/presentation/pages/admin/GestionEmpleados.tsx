@@ -9,7 +9,7 @@ import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } fro
 import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
-import { ESTADOS_GENERALES } from '@/shared/constants/options';
+import { EMPLEADO_ESTADOS } from '@/shared/constants/options';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { employeesApi, type Empleado, type EmployeeRole } from '@/infrastructure/api/employeesApi';
 
@@ -124,7 +124,7 @@ export const GestionEmpleados: React.FC = () => {
     const tipoDocumento = String(fd.get('tipoDocumento') ?? '').trim();
     const numeroDocumento = String(fd.get('numeroDocumento') ?? '').trim();
     const role = String(fd.get('role') ?? 'ASESOR').toUpperCase() as EmployeeRole;
-    const estado = (String(fd.get('estado') ?? 'ACTIVO') || 'ACTIVO') as 'ACTIVO' | 'INACTIVO';
+    const estado = (String(fd.get('estado') ?? 'ACTIVO').toUpperCase() || 'ACTIVO') as 'ACTIVO' | 'INACTIVO';
     const cargo = String(fd.get('cargo') ?? '').trim() || null;
     const fechaContratacion = String(fd.get('fechaContratacion') ?? '') || null;
     const salario = String(fd.get('salario') ?? '');
@@ -225,7 +225,7 @@ export const GestionEmpleados: React.FC = () => {
       label: (item: Empleado) => item.estado === 'ACTIVO' ? 'Desactivar' : 'Activar',
       icon: <ToggleLeft size={14} aria-hidden="true" focusable="false" />,
       onClick: async (item: Empleado) => {
-        const nuevoEstado = item.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+        const nuevoEstado = (item.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO').toUpperCase() as 'ACTIVO' | 'INACTIVO';
         const actualizado = await employeesApi.changeStatus(item.id, nuevoEstado);
         setItems(prev => prev.map(it => it.id === item.id ? actualizado : it));
         toast.success(actualizado.estado === 'ACTIVO' ? 'Empleado activado' : 'Empleado desactivado');
@@ -395,8 +395,8 @@ export const GestionEmpleados: React.FC = () => {
             <div className={f.field} style={{ maxWidth: '200px' }}>
               <label className={f.label}>Estado del empleado</label>
               <select className={f.select} name="estado" defaultValue={selectedEmpleado?.estado ?? 'ACTIVO'}>
-                {ESTADOS_GENERALES.map(es => (
-                  <option key={es} value={es}>{es}</option>
+                {EMPLEADO_ESTADOS.map(es => (
+                  <option key={es.value} value={es.value}>{es.label}</option>
                 ))}
               </select>
             </div>

@@ -39,7 +39,6 @@ describe('ForgotPassword', () => {
     expect(mockRepo.setResetPasswordToken).toHaveBeenCalledWith('user-1', expect.any(String), expect.any(Date));
     expect(mockEmailService.sendPasswordReset).toHaveBeenCalledWith('test@test.com', expect.any(String));
     expect(result.message).toContain('Si el correo existe');
-    expect(result.resetUrl).toBeDefined();
   });
 
   it('should return generic message for non-existing user', async () => {

@@ -231,3 +231,14 @@
     border-radius: 14px;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal,
+  .modalHeader,
+  .modalBody,
+  .modalFooter {
+    animation: none !important;
+    transition: none !important;
+  }
+}

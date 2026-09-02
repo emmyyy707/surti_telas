@@ -10,6 +10,7 @@ import { Modal } from '@/shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { usersApi, type Usuario } from '@/infrastructure/api/usersApi';
+import { rolesApi } from '@/infrastructure/api/rolesApi';
 import { authApi, type PermissionDTO } from '@/infrastructure/api/authApi';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
@@ -30,10 +31,28 @@ export const AdminGestionUsuarios: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingPermissions, setSavingPermissions] = useState(false);
+
+  const handleSaveUserPermissions = async () => {
+    if (!selectedUsuarioPermisos) return;
+    setSavingPermissions(true);
+    try {
+      const updated = await usersApi.update(selectedUsuarioPermisos.id, { permisos: userPermissions });
+      setItems(prev => prev.map(it => it.id === selectedUsuarioPermisos.id ? { ...it, permisos: updated.permisos ?? userPermissions } : it));
+      toast.success('Permisos del usuario actualizados');
+      setPermisosModalOpen(false);
+    } catch {
+      toast.error('No se pudieron actualizar los permisos del usuario');
+    } finally {
+      setSavingPermissions(false);
+    }
+  };
   const [deleteConfirm, setDeleteConfirm] = useState<UsuarioConDatos | null>(null);
   const [permisosModalOpen, setPermisosModalOpen] = useState(false);
   const [selectedUsuarioPermisos, setSelectedUsuarioPermisos] = useState<UsuarioConDatos | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [rolePermisos, setRolePermisos] = useState<string[]>([]);
+  const [rolSeleccionado, setRolSeleccionado] = useState('CLIENTE');
   const [permissions, setPermissions] = useState<PermissionDTO[]>([]);
   const [loadingPermissions, setLoadingPermissions] = useState(false);
 
@@ -92,14 +111,23 @@ export const AdminGestionUsuarios: React.FC = () => {
     void fetchUsuarios();
   }, []);
 
-  useEffect(() => {
+   useEffect(() => {
     let active = true;
     const loadPermissions = async () => {
       setLoadingPermissions(true);
       try {
-        const result = await authApi.listPermissions();
+        let allItems: PermissionDTO[] = [];
+        let page = 1;
+        const limit = 200;
+        let total = 0;
+        do {
+          const result = await authApi.listPermissions({ page, limit });
+          allItems = allItems.concat(result.data);
+          total = result.meta?.totalRecords ?? 0;
+          page++;
+        } while (allItems.length < total);
         if (!active) return;
-        setPermissions(result.data);
+        setPermissions(allItems);
       } catch {
         toast.error('No se pudieron cargar los permisos');
       } finally {
@@ -223,10 +251,21 @@ export const AdminGestionUsuarios: React.FC = () => {
     {
       label: 'Permisos',
       icon: <ShieldCheck size={14} />,
-      onClick: (item: UsuarioConDatos) => {
+      onClick: async (item: UsuarioConDatos) => {
         setSelectedUsuarioPermisos(item);
-        setUserPermissions(item.permisos ?? []);
-        setPermisosModalOpen(true);
+        // Se editan los permisos ESPECÍFICOS del usuario (no los heredados del rol).
+        setUserPermissions(item.permisosEspecificos ?? []);
+        setLoadingPermissions(true);
+        try {
+          const rol = (item.rol || 'CLIENTE').toUpperCase();
+                  const rolData = await rolesApi.getById(`R-${rol}`);
+                  setRolePermisos(rolData?.permisos ?? []);
+        } catch {
+          setRolePermisos([]);
+        } finally {
+          setLoadingPermissions(false);
+          setPermisosModalOpen(true);
+        }
       },
     },
     {
@@ -366,7 +405,21 @@ export const AdminGestionUsuarios: React.FC = () => {
               <h3 className={f.sectionTitle}>Acceso y permisos</h3>
               <div className={f.field}>
                 <label className={f.label}>Rol</label>
-                <select className={f.select} name="role" defaultValue="CLIENTE">
+                <select
+                  className={f.select}
+                  name="role"
+                  value={rolSeleccionado}
+                  onChange={async (e) => {
+                    const rol = e.target.value;
+                    setRolSeleccionado(rol);
+                    try {
+                      const rd = await rolesApi.getById(`R-${rol}`);
+                      setRolePermisos(rd?.permisos ?? []);
+                    } catch {
+                      setRolePermisos([]);
+                    }
+                  }}
+                >
                   <option value="ADMIN">Administrador</option>
                   <option value="ASESOR">Asesor</option>
                   <option value="DOMICILIARIO">Domiciliario</option>
@@ -375,6 +428,23 @@ export const AdminGestionUsuarios: React.FC = () => {
                   <option value="PRODUCCION">Producción</option>
                   <option value="REPORTES">Reportes</option>
                 </select>
+                {!selectedUsuario && rolePermisos.length > 0 && (
+                  <div style={{ marginTop: '8px' }}>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--color-text-secondary)', margin: '0 0 4px' }}>
+                      Permisos que otorga el rol ({rolSeleccionado}):
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {rolePermisos.map((code) => (
+                        <span
+                          key={code}
+                          style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+                        >
+                          {code}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className={f.field}>
                 <label className={f.label}>Módulos</label>
@@ -386,19 +456,22 @@ export const AdminGestionUsuarios: React.FC = () => {
                       acc[module].push(perm);
                       return acc;
                     }, {})
-                  ).map(([module, modPermissions]) => (
-                    <div key={module} style={{ marginBottom: '8px' }}>
-                      <strong style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{module}</strong>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
-                        {modPermissions.map(perm => (
-                          <label key={perm.id} className={s.permisoCheckbox}>
-                            <input type="checkbox" name="permisos" value={perm.code} />
-                            <span>{perm.code}</span>
-                          </label>
-                        ))}
+                  ).map(([module, modPermissions]) => {
+                    const usuario = selectedUsuario as UsuarioConDatos | null;
+                    return (
+                      <div key={module} style={{ marginBottom: '8px' }}>
+                        <strong style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{module}</strong>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                          {modPermissions.map(perm => (
+                            <label key={perm.id} className={s.permisoCheckbox}>
+                              <input type="checkbox" name="permisos" value={perm.code} defaultChecked={usuario?.permisos?.includes(perm.code)} />
+                              <span>{perm.code}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -446,7 +519,55 @@ export const AdminGestionUsuarios: React.FC = () => {
         size="lg"
       >
         <div className={s.form}>
-          <p className={s.permissionHint}>Asigna permisos específicos a este usuario organizados por módulo.</p>
+          <p className={s.permissionHint}>
+            Asigna permisos <strong>específicos</strong> a este usuario. Los permisos marcados como
+            "(rol)" ya están activos por herencia y no es necesario duplicarlos.
+          </p>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-secondary)' }}>
+              Permisos heredados del rol ({selectedUsuarioPermisos?.rol ?? '—'})
+            </h3>
+            {loadingPermissions ? (
+              <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', margin: 0 }}>Cargando…</p>
+            ) : rolePermisos.length === 0 ? (
+              <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', margin: 0 }}>El rol no otorga permisos.</p>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {rolePermisos.map((code) => (
+                  <span
+                    key={code}
+                    style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+                  >
+                    {code}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              Permisos específicos del usuario ({userPermissions.length})
+            </h3>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontSize: '0.78rem', textDecoration: 'underline' }}
+                onClick={() => setUserPermissions(permissions.map((p) => p.code))}
+              >
+                Seleccionar todos
+              </button>
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontSize: '0.78rem', textDecoration: 'underline' }}
+                onClick={() => setUserPermissions([])}
+              >
+                Deseleccionar todos
+              </button>
+            </div>
+          </div>
+
           {loadingPermissions ? (
             <p>Cargando permisos...</p>
           ) : (
@@ -460,26 +581,34 @@ export const AdminGestionUsuarios: React.FC = () => {
                 }, {})
               ).map(([module, modPermissions]) => (
                 <div key={module} style={{ marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-primary)' }}>{module}</h3>
+                  <h4 style={{ fontSize: '0.78rem', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>{module}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '6px' }}>
-                    {modPermissions.map(perm => (
-                      <label key={perm.id} className={s.permisoCheckbox}>
-                        <input
-                          type="checkbox"
-                          checked={userPermissions.includes(perm.code)}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setUserPermissions(prev =>
-                              checked ? [...prev, perm.code] : prev.filter(p => p !== perm.code)
-                            );
-                          }}
-                        />
-                        <div>
-                          <strong style={{ fontSize: '0.8rem' }}>{perm.code}</strong>
-                          <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', margin: 0 }}>{perm.description}</p>
-                        </div>
-                      </label>
-                    ))}
+                    {modPermissions.map((perm) => {
+                      const inherited = rolePermisos.includes(perm.code);
+                      return (
+                        <label key={perm.id} className={s.permisoCheckbox}>
+                          <input
+                            type="checkbox"
+                            checked={userPermissions.includes(perm.code)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setUserPermissions((prev) =>
+                                checked
+                                  ? Array.from(new Set([...prev, perm.code]))
+                                  : prev.filter((p) => p !== perm.code)
+                              );
+                            }}
+                          />
+                          <div>
+                            <strong style={{ fontSize: '0.8rem' }}>{perm.code}</strong>
+                            {inherited && (
+                              <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)' }}> (rol)</span>
+                            )}
+                            <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', margin: 0 }}>{perm.description}</p>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -487,7 +616,10 @@ export const AdminGestionUsuarios: React.FC = () => {
           )}
 
           <ModalFooter
-            actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setPermisosModalOpen(false) }]}
+            actions={[
+              { label: 'Cancelar', variant: 'secondary', onClick: () => setPermisosModalOpen(false) },
+              { label: savingPermissions ? 'Guardando...' : 'Guardar permisos', onClick: handleSaveUserPermissions, loading: savingPermissions },
+            ]}
           />
         </div>
       </Modal>

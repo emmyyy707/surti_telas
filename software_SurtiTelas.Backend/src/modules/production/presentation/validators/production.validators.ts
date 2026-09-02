@@ -20,8 +20,9 @@ export const CreateProductionOrderSchema = z.object({
   referencia: z.string().min(1, 'La referencia es obligatoria'),
   cantidad: z.number().int().positive('La cantidad debe ser mayor a cero'),
   fechaEstimada: z.string().min(1, 'La fecha estimada es obligatoria'),
+  fechaInicio: z.string().optional(),
   avance: z.number().int().min(0).max(100).optional(),
-  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO']).optional(),
+  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO', 'Pendiente', 'Asignada', 'En produccion', 'Completada']).optional(),
   tela: z.string().optional(),
   colores: z.array(z.string()).optional(),
   curvaTallas: z.record(z.string(), z.number()).optional(),
@@ -34,8 +35,9 @@ export const UpdateProductionOrderSchema = z.object({
   referencia: z.string().min(1).optional(),
   cantidad: z.number().int().positive().optional(),
   fechaEstimada: z.string().min(1).optional(),
+  fechaInicio: z.string().optional(),
   avance: z.number().int().min(0).max(100).optional(),
-  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO']).optional(),
+  estado: z.enum(['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'TERMINADO', 'Pendiente', 'Asignada', 'En produccion', 'Completada']).optional(),
   tela: z.string().optional(),
   colores: z.array(z.string()).optional(),
   curvaTallas: z.record(z.string(), z.number()).optional(),
@@ -91,4 +93,30 @@ export const UpdateControlPrendaSchema = z.object({
   etapa: z.enum(['CORTE', 'CONFECCION', 'ACABADO', 'CONTROL_CALIDAD', 'EMPAQUE']).optional(),
   cantidadTotal: z.number().int().positive().optional(),
   observaciones: z.string().optional(),
+});
+
+export const CreateProductionItemSchema = z.object({
+  produccionId: z.string().min(1, 'La producción es obligatoria'),
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  descripcion: z.string().optional(),
+  cantidad: z.number().int().positive('La cantidad debe ser mayor a cero'),
+  unidad: z.string().optional(),
+  precioUnitario: z.number().nonnegative().optional(),
+});
+
+export const UpdateProductionItemSchema = z.object({
+  nombre: z.string().min(1).optional(),
+  descripcion: z.string().optional(),
+  cantidad: z.number().int().positive().optional(),
+  unidad: z.string().optional(),
+  precioUnitario: z.number().nonnegative().optional(),
+});
+
+export const ProductionItemFiltersSchema = z.object({
+  produccionId: z.string().optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  cursor: z.string().optional(),
+  sort: z.enum(['nombre', 'cantidad', 'createdAt']).optional(),
+  order: z.enum(['asc', 'desc']).optional(),
 });

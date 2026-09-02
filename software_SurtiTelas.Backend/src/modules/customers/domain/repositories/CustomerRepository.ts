@@ -13,6 +13,7 @@ export interface CreateCustomerInput {
   deudaVencida?: number;
   isTrustedCustomer?: boolean;
   estado?: CustomerStatus;
+  direccion?: string;
 }
 
 export interface UpdateCustomerInput {
@@ -28,6 +29,7 @@ export interface UpdateCustomerInput {
   isTrustedCustomer?: boolean;
   estado?: CustomerStatus;
   asesorId?: string;
+  direccion?: string;
 }
 
 export interface CustomerFilters {

@@ -5,6 +5,14 @@ import { prisma } from './config/database';
 import { redisClient, connectRedis } from './config/redis';
 import { startTracing, shutdownTracing } from './config/tracing';
 
+process.on('unhandledRejection', (reason) => {
+  console.error('unhandledRejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('uncaughtException:', error);
+});
+
 const app = createApp();
 
 import { eventBus } from './shared/infrastructure/eventBus';

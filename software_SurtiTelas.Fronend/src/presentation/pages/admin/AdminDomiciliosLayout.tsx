@@ -23,7 +23,7 @@ export const AdminDomiciliosLayout: React.FC = () => {
       <div className={s.tabs}>
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = tab.end
+          const _isActive = tab.end
             ? location.pathname === tab.path
             : location.pathname.startsWith(tab.path);
           return (

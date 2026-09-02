@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { NotFoundError } from '../../../../shared/domain/errors';
-import { ok, created } from '../../../../shared/presentation/http/HttpResponse';
+import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import {
@@ -70,6 +70,11 @@ export const removeSaleItem = async (req: Request, res: Response) => {
   const { itemId } = req.params;
   await salesOrderUseCases.removeSaleItem.execute(req.params.id, itemId);
   return ok(res, { success: true }, 'Producto eliminado de la venta');
+};
+
+export const deleteSale = async (req: Request, res: Response) => {
+  await salesOrderUseCases.deleteSale.execute(req.params.id);
+  return noContent(res);
 };
 
 export const generateSalePdf = async (req: Request, res: Response) => {

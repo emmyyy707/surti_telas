@@ -16,12 +16,14 @@ import {
   UpdateProgressSchema,
   UpdateWorkshopSchema,
   WorkshopFiltersSchema,
+  CreateProductionItemSchema,
+  UpdateProductionItemSchema,
+  ProductionItemFiltersSchema,
 } from '../validators/production.validators';
 
 export const listWorkshops = async (req: Request, res: Response) => {
   const filters = parseDto(WorkshopFiltersSchema, req.query);
   const result = await productionUseCases.getWorkshops.execute(filters);
-  console.log('[Workshops] list result sample', JSON.stringify(result.data.slice(0, 2)));
   const response = buildApiPaginatedResponse(
     result.data,
     result.meta.total,
@@ -49,6 +51,12 @@ export const deleteWorkshop = async (req: Request, res: Response) => {
   return noContent(res);
 };
 
+export const getProductionOrderById = async (req: Request, res: Response) => {
+  const order = await productionUseCases.getProductionOrderById.execute(req.params.id);
+  if (!order) return res.status(404).json({ success: false, error: 'not_found', message: 'Orden de producción no encontrada' });
+  return ok(res, order);
+};
+
 export const listProductionOrders = async (req: Request, res: Response) => {
   const filters = parseDto(ProductionOrderFiltersSchema, req.query);
   if (req.user?.role === 'CLIENTE' && !filters.pedidoId) {
@@ -67,9 +75,17 @@ export const listProductionOrders = async (req: Request, res: Response) => {
 
 export const createProductionOrder = async (req: Request, res: Response) => {
   const input = parseDto(CreateProductionOrderSchema, req.body);
+  const estadoMap: Record<string, 'PENDIENTE' | 'ASIGNADA' | 'EN_PROCESO' | 'TERMINADO'> = {
+    'Pendiente': 'PENDIENTE',
+    'Asignada': 'ASIGNADA',
+    'En produccion': 'EN_PROCESO',
+    'Completada': 'TERMINADO',
+  };
   const order = await productionUseCases.createProductionOrder.execute({
     ...input,
     fechaEstimada: new Date(input.fechaEstimada),
+    fechaInicio: input.fechaInicio ? new Date(input.fechaInicio) : undefined,
+    estado: input.estado ? estadoMap[input.estado] ?? input.estado : undefined,
     usuarioId: req.user!.id,
   });
   return created(res, order, 'Orden de producción creada');
@@ -89,7 +105,18 @@ export const updateProgress = async (req: Request, res: Response) => {
 
 export const updateProductionOrder = async (req: Request, res: Response) => {
   const changes = parseDto(UpdateProductionOrderSchema, req.body);
-  const order = await productionUseCases.updateProductionOrder.execute(req.params.id, { ...changes, usuarioId: req.user!.id });
+  const estadoMap: Record<string, 'PENDIENTE' | 'ASIGNADA' | 'EN_PROCESO' | 'TERMINADO'> = {
+    'Pendiente': 'PENDIENTE',
+    'Asignada': 'ASIGNADA',
+    'En produccion': 'EN_PROCESO',
+    'Completada': 'TERMINADO',
+  };
+  const order = await productionUseCases.updateProductionOrder.execute(req.params.id, {
+    ...changes,
+    fechaInicio: changes.fechaInicio ? new Date(changes.fechaInicio) : undefined,
+    estado: changes.estado ? estadoMap[changes.estado] ?? changes.estado : undefined,
+    usuarioId: req.user!.id,
+  });
   return ok(res, order, 'Orden de producción actualizada');
 };
 
@@ -160,5 +187,44 @@ export const updateControlPrenda = async (req: Request, res: Response) => {
 
 export const deleteControlPrenda = async (req: Request, res: Response) => {
   await productionUseCases.deleteControlPrenda.execute(req.params.id, req.user!.id);
+  return noContent(res);
+};
+
+export const listProductionItems = async (req: Request, res: Response) => {
+  const filters = parseDto(ProductionItemFiltersSchema, req.query);
+  const result = await productionUseCases.getProductionItems.execute(filters);
+  const response = buildApiPaginatedResponse(
+    result.data,
+    result.meta.total,
+    result.meta.page || 1,
+    result.meta.limit,
+    result.meta.nextCursor
+  );
+  return ok(res, response);
+};
+
+export const getProductionItemById = async (req: Request, res: Response) => {
+  const item = await productionUseCases.getProductionItemById.execute(req.params.id);
+  if (!item) return res.status(404).json({ success: false, error: 'not_found', message: 'Item de producción no encontrado' });
+  return ok(res, item);
+};
+
+export const createProductionItem = async (req: Request, res: Response) => {
+  const input = parseDto(CreateProductionItemSchema, req.body);
+  const item = await productionUseCases.createProductionItem.execute({
+    ...input,
+    produccionId: req.params.id,
+  });
+  return created(res, item, 'Item de producción creado');
+};
+
+export const updateProductionItem = async (req: Request, res: Response) => {
+  const changes = parseDto(UpdateProductionItemSchema, req.body);
+  const item = await productionUseCases.updateProductionItem.execute(req.params.id, changes);
+  return ok(res, item, 'Item de producción actualizado');
+};
+
+export const deleteProductionItem = async (req: Request, res: Response) => {
+  await productionUseCases.deleteProductionItem.execute(req.params.id);
   return noContent(res);
 };

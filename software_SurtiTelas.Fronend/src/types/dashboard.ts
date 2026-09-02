@@ -1,7 +1,7 @@
 ﻿export type StatusState =
   | 'Pendiente'
   | 'Aceptado'
-  | 'En proceso'
+  | 'Listo'
   | 'Enviado'
   | 'Entregado'
   | 'Rechazado'

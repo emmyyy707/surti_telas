@@ -55,14 +55,14 @@ describe('Order entity', () => {
   });
 
   describe('canTransitionTo', () => {
-    it('should allow Pendiente -> Aceptado', () => {
+    it('should allow Pendiente -> Enviado', () => {
       const order = makeOrder({ estado: 'Pendiente' });
-      expect(order.canTransitionTo('Aceptado')).toBe(true);
+      expect(order.canTransitionTo('Enviado')).toBe(true);
     });
 
-    it('should allow Pendiente -> Rechazado', () => {
+    it('should allow Pendiente -> Cancelado', () => {
       const order = makeOrder({ estado: 'Pendiente' });
-      expect(order.canTransitionTo('Rechazado')).toBe(true);
+      expect(order.canTransitionTo('Cancelado')).toBe(true);
     });
 
     it('should reject Pendiente -> Entregado', () => {
@@ -70,49 +70,19 @@ describe('Order entity', () => {
       expect(order.canTransitionTo('Entregado')).toBe(false);
     });
 
-    it('should allow Aceptado -> En proceso', () => {
-      const order = makeOrder({ estado: 'Aceptado' });
-      expect(order.canTransitionTo('En proceso')).toBe(true);
-    });
-
-    it('should allow Aceptado -> Enviado', () => {
-      const order = makeOrder({ estado: 'Aceptado' });
-      expect(order.canTransitionTo('Enviado')).toBe(true);
-    });
-
-    it('should allow Aceptado -> Entregado', () => {
-      const order = makeOrder({ estado: 'Aceptado' });
-      expect(order.canTransitionTo('Entregado')).toBe(true);
-    });
-
-    it('should reject Aceptado -> Rechazado', () => {
-      const order = makeOrder({ estado: 'Aceptado' });
-      expect(order.canTransitionTo('Rechazado')).toBe(false);
-    });
-
-    it('should allow En proceso -> Enviado', () => {
-      const order = makeOrder({ estado: 'En proceso' });
-      expect(order.canTransitionTo('Enviado')).toBe(true);
-    });
-
-    it('should allow En proceso -> Entregado', () => {
-      const order = makeOrder({ estado: 'En proceso' });
-      expect(order.canTransitionTo('Entregado')).toBe(true);
-    });
-
-    it('should reject En proceso -> Rechazado', () => {
-      const order = makeOrder({ estado: 'En proceso' });
-      expect(order.canTransitionTo('Rechazado')).toBe(false);
-    });
-
     it('should allow Enviado -> Entregado', () => {
       const order = makeOrder({ estado: 'Enviado' });
       expect(order.canTransitionTo('Entregado')).toBe(true);
     });
 
-    it('should reject Enviado -> Rechazado', () => {
+    it('should allow Enviado -> Cancelado', () => {
       const order = makeOrder({ estado: 'Enviado' });
-      expect(order.canTransitionTo('Rechazado')).toBe(false);
+      expect(order.canTransitionTo('Cancelado')).toBe(true);
+    });
+
+    it('should reject Enviado -> Pendiente', () => {
+      const order = makeOrder({ estado: 'Enviado' });
+      expect(order.canTransitionTo('Pendiente')).toBe(false);
     });
 
     it('should allow same status transition', () => {
@@ -123,15 +93,36 @@ describe('Order entity', () => {
     it('should not allow transitions from Entregado', () => {
       const order = makeOrder({ estado: 'Entregado' });
       expect(order.canTransitionTo('Pendiente')).toBe(false);
-      expect(order.canTransitionTo('Aceptado')).toBe(false);
+      expect(order.canTransitionTo('Enviado')).toBe(false);
       expect(order.canTransitionTo('Cancelado')).toBe(false);
     });
 
-    it('should not allow transitions from Rechazado', () => {
+    it('should not allow transitions from Cancelado', () => {
+      const order = makeOrder({ estado: 'Cancelado' });
+      expect(order.canTransitionTo('Pendiente')).toBe(false);
+      expect(order.canTransitionTo('Enviado')).toBe(false);
+      expect(order.canTransitionTo('Entregado')).toBe(false);
+    });
+
+    it('should not allow transitions from non-flow states like Aceptado', () => {
+      const order = makeOrder({ estado: 'Aceptado' });
+      expect(order.canTransitionTo('Enviado')).toBe(false);
+      expect(order.canTransitionTo('Cancelado')).toBe(false);
+      expect(order.canTransitionTo('Entregado')).toBe(false);
+    });
+
+    it('should not allow transitions from non-flow states like Listo', () => {
+      const order = makeOrder({ estado: 'Listo' });
+      expect(order.canTransitionTo('Enviado')).toBe(false);
+      expect(order.canTransitionTo('Cancelado')).toBe(false);
+      expect(order.canTransitionTo('Entregado')).toBe(false);
+    });
+
+    it('should not allow transitions from non-flow states like Rechazado', () => {
       const order = makeOrder({ estado: 'Rechazado' });
       expect(order.canTransitionTo('Pendiente')).toBe(false);
-      expect(order.canTransitionTo('Aceptado')).toBe(false);
-      expect(order.canTransitionTo('Entregado')).toBe(false);
+      expect(order.canTransitionTo('Enviado')).toBe(false);
+      expect(order.canTransitionTo('Cancelado')).toBe(false);
     });
   });
 

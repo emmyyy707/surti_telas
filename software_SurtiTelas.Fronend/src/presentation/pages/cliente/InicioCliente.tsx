@@ -13,8 +13,8 @@ import { useAuthStore } from '@/core/stores/authStore';
 
 const statusVariant = (estado: Pedido['estado']) => {
   if (estado === 'Entregado') return 'success';
-  if (estado === 'En proceso' || estado === 'Enviado') return 'info';
-  if (estado === 'Rechazado') return 'danger';
+  if (estado === 'Listo' || estado === 'Enviado') return 'info';
+  if (estado === 'Rechazado' || estado === 'Cancelado') return 'danger';
   return 'default';
 };
 
@@ -42,9 +42,9 @@ export const InicioCliente: React.FC = () => {
     void load();
   }, []);
 
-  const pedidoActivo = pedidos.find(p => p.estado !== 'Entregado' && p.estado !== 'Rechazado') || pedidos[0] || null;
+  const pedidoActivo = pedidos.find(p => p.estado !== 'Entregado' && p.estado !== 'Rechazado' && p.estado !== 'Cancelado') || pedidos[0] || null;
   const totalPedidos = pedidos.length;
-  const pedidosEnProceso = pedidos.filter(p => p.estado === 'En proceso' || p.estado === 'Enviado' || p.estado === 'Entregado').length;
+  const pedidosEnProceso = pedidos.filter(p => p.estado === 'Listo' || p.estado === 'Enviado' || p.estado === 'Entregado').length;
   const pedidosEntregados = pedidos.filter(p => p.estado === 'Entregado').length;
 
   const totalComprado = pedidos.reduce((sum, p) => {
@@ -155,14 +155,14 @@ export const InicioCliente: React.FC = () => {
               </div>
               <div className={s.trackingStep}>
                 <div className={s.trackingLeft}>
-                  <div className={`${s.trackingDot} ${pedidoActivo?.estado === 'En proceso' ? s['trackingDot--active'] : s['trackingDot--done']}`}>
-                    {pedidoActivo?.estado === 'En proceso' ? '●' : '✓'}
+                  <div className={`${s.trackingDot} ${pedidoActivo && ['Aceptado', 'En validación', 'Recibo generado', 'Listo'].includes(pedidoActivo.estado) ? s['trackingDot--active'] : s['trackingDot--done']}`}>
+                    {pedidoActivo && ['Aceptado', 'En validación', 'Recibo generado', 'Listo'].includes(pedidoActivo.estado) ? '●' : '✓'}
                   </div>
-                  <div className={`${s.trackingLine} ${pedidoActivo && ['En proceso', 'Enviado', 'Enviado', 'Entregado', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
+                  <div className={`${s.trackingLine} ${pedidoActivo && ['Aceptado', 'En validación', 'Recibo generado', 'Listo', 'Enviado', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
                 </div>
                 <div className={s.trackingContent}>
-                  <div className={s.trackingLabel}>En producción</div>
-                  <div className={s.trackingDesc}>Estamos confeccionando</div>
+                  <div className={s.trackingLabel}>En proceso</div>
+                  <div className={s.trackingDesc}>Estamos preparando tu pedido</div>
                 </div>
               </div>
               <div className={s.trackingStep}>
@@ -170,11 +170,11 @@ export const InicioCliente: React.FC = () => {
                   <div className={`${s.trackingDot} ${pedidoActivo?.estado === 'Enviado' ? s['trackingDot--done'] : s['trackingDot--pending']}`}>
                     {pedidoActivo?.estado === 'Enviado' ? '✓' : ''}
                   </div>
-                  <div className={`${s.trackingLine} ${pedidoActivo && ['Enviado', 'Enviado', 'Entregado', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
+                  <div className={`${s.trackingLine} ${pedidoActivo && ['Enviado', 'Entregado'].includes(pedidoActivo.estado) ? s['trackingLine--done'] : s['trackingLine--pending']}`} />
                 </div>
                 <div className={s.trackingContent}>
-                  <div className={s.trackingLabel}>Listo para envío</div>
-                  <div className={s.trackingDesc}>Empacado y listo</div>
+                  <div className={s.trackingLabel}>Enviado</div>
+                  <div className={s.trackingDesc}>En camino a tu dirección</div>
                 </div>
               </div>
             </div>

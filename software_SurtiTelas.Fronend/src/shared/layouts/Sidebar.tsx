@@ -52,6 +52,7 @@ export interface SidebarProps {
   className?: string;
   onToggleCollapse?: (collapsed: boolean) => void;
   isActive?: (key: string) => boolean;
+  badgeCounts?: Record<string, number>;
 }
 
 interface NavItemProps {
@@ -62,6 +63,7 @@ interface NavItemProps {
   openGroup: string | null;
   toggleGroup: (key: string) => void;
   isActive: (key: string) => boolean;
+  badgeCounts: Record<string, number>;
 }
 
 const SidebarNavItem = ({
@@ -72,6 +74,7 @@ const SidebarNavItem = ({
   openGroup,
   toggleGroup,
   isActive,
+  badgeCounts = {},
 }: NavItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const itemKey = String(item.key ?? item.label ?? item.section ?? `item-${index}`);
@@ -81,40 +84,49 @@ const SidebarNavItem = ({
 
   const Icon = item.icon ?? LayoutDashboard;
 
-  if (hasSub) {
-    if (effectiveCollapsed) {
+    if (hasSub) {
+      if (effectiveCollapsed) {
+        return (
+          <div
+            className={s.navItem}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <button
+              type="button"
+              className={cn(s.navLink, active && s.navLinkActive)}
+              aria-label={item.label ?? item.section}
+            >
+              <Icon size={20} className={s.icon} />
+            </button>
+            {isHovered && (
+              <div className={s.tooltip}>{item.label ?? item.section}</div>
+            )}
+          </div>
+        );
+      }
+
+      const groupBadge = item.subItems?.reduce((acc, sub) => {
+        const key = String(sub.key ?? sub.label ?? '');
+        const count = badgeCounts[key] ?? 0;
+        return acc + count;
+      }, 0) || undefined;
+
       return (
-        <div
-          className={s.navItem}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+        <div className={s.navGroup}>
           <button
             type="button"
-            className={cn(s.navLink, active && s.navLinkActive)}
-            aria-label={item.label ?? item.section}
+            className={cn(s.navButton, active && s.navLinkActive)}
+            onClick={() => toggleGroup(itemKey)}
+            aria-expanded={isOpen}
           >
             <Icon size={20} className={s.icon} />
+            <span className={s.navLabel}>{item.section ?? item.label}</span>
+            {groupBadge && groupBadge > 0 && (
+              <span className={s.badge}>{groupBadge > 99 ? '99+' : groupBadge}</span>
+            )}
+            <ChevronDown size={16} className={cn(s.chevron, isOpen && s.chevronOpen)} />
           </button>
-          {isHovered && (
-            <div className={s.tooltip}>{item.label ?? item.section}</div>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className={s.navGroup}>
-        <button
-          type="button"
-          className={cn(s.navButton, active && s.navLinkActive)}
-          onClick={() => toggleGroup(itemKey)}
-          aria-expanded={isOpen}
-        >
-          <Icon size={20} className={s.icon} />
-          <span className={s.navLabel}>{item.section ?? item.label}</span>
-          <ChevronDown size={16} className={cn(s.chevron, isOpen && s.chevronOpen)} />
-        </button>
         <div className={cn(s.submenu, isOpen && s.submenuOpen)}>
           <div className={s.submenuInner}>
             {item.subItems?.map((sub, subIdx) => {
@@ -183,8 +195,8 @@ const SidebarNavItem = ({
       >
         <Icon size={20} className={s.icon} />
         {!effectiveCollapsed && <span className={s.navLabel}>{item.label}</span>}
-        {!effectiveCollapsed && item.badge && (
-          <span className={s.badge}>{item.badge}</span>
+        {!effectiveCollapsed && (item.badge || badgeCounts[String(item.key)] > 0) && (
+          <span className={s.badge}>{item.badge ?? (badgeCounts[String(item.key)] > 99 ? '99+' : badgeCounts[String(item.key)])}</span>
         )}
       </NavLink>
       {effectiveCollapsed && isHovered && (
@@ -210,7 +222,8 @@ export const Sidebar = ({
    className,
    onToggleCollapse,
    isActive: activeMatcher,
-  }: SidebarProps) => {
+   badgeCounts = {},
+}: SidebarProps) => {
    void roleBadge;
   const location = useLocation();
 
@@ -343,7 +356,7 @@ export const Sidebar = ({
           )}
         </div>
 
-        <nav className={s.navigation} aria-label="Navegación principal">
+         <nav className={s.navigation} aria-label="Navegación principal">
           {menu.map((item, idx) => (
             <SidebarNavItem
               key={item.key ?? `nav-item-${idx}`}
@@ -353,7 +366,8 @@ export const Sidebar = ({
               effectiveCollapsed={effectiveCollapsed}
               openGroup={openGroup}
               toggleGroup={toggleGroup}
-               isActive={resolveIsActive}
+              isActive={resolveIsActive}
+              badgeCounts={badgeCounts}
             />
           ))}
         </nav>

@@ -171,16 +171,24 @@ export class PrismaCustomOrderRepository implements CustomOrderRepository {
     }
   }
 
-  async nextNumero(): Promise<string> {
-    const last = await this.prisma.custom_orders.findFirst({
+  async nextNumero(tx?: any): Promise<string> {
+    const prisma = tx ?? this.prisma;
+    await prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('custom_order_number'))`;
+
+    const rows = await prisma.custom_orders.findMany({
       where: { numero: { startsWith: 'SOL-' } },
-      orderBy: { createdAt: 'desc' },
       select: { numero: true },
+      orderBy: { numero: 'desc' },
+      take: 100,
     });
+
     let seq = 1;
-    if (last?.numero) {
-      const match = /SOL-(\d+)/.exec(last.numero);
-      if (match) seq = parseInt(match[1], 10) + 1;
+    for (const row of rows) {
+      const match = /^SOL-(\d+)$/.exec(row.numero);
+      if (match) {
+        seq = parseInt(match[1], 10) + 1;
+        break;
+      }
     }
     return `SOL-${String(seq).padStart(4, '0')}`;
   }

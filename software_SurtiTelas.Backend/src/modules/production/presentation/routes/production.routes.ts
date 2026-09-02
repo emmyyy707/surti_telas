@@ -15,12 +15,19 @@ productionRouter.patch('/workshops/:id', requirePermission('production:update'),
 productionRouter.delete('/workshops/:id', requirePermission('production:delete'), sensitiveUserRateLimiter, asyncHandler(controller.deleteWorkshop));
 
 productionRouter.get('/orders', requireRole('ADMIN', 'ASESOR', 'PRODUCCION', 'CLIENTE'), asyncHandler(controller.listProductionOrders));
+productionRouter.get('/orders/:id', requireRole('ADMIN', 'ASESOR', 'PRODUCCION', 'CLIENTE'), asyncHandler(controller.getProductionOrderById));
 productionRouter.post('/orders', requirePermission('production:create'), sensitiveUserRateLimiter, asyncHandler(controller.createProductionOrder));
 productionRouter.post('/orders/:id/workshop', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.assignToWorkshop));
 productionRouter.patch('/orders/:id/progress', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.updateProgress));
 productionRouter.patch('/orders/:id', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.updateProductionOrder));
 productionRouter.delete('/orders/:id', requirePermission('production:delete'), sensitiveUserRateLimiter, asyncHandler(controller.deleteProductionOrder));
 productionRouter.post('/orders/:id/complete', requirePermission('production:update'), asyncHandler(controller.completeProduction));
+
+productionRouter.get('/orders/:id/items', requireRole('ADMIN', 'ASESOR', 'PRODUCCION', 'CLIENTE'), asyncHandler(controller.listProductionItems));
+productionRouter.get('/orders/:id/items/:itemId', requireRole('ADMIN', 'ASESOR', 'PRODUCCION', 'CLIENTE'), asyncHandler(controller.getProductionItemById));
+productionRouter.post('/orders/:id/items', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.createProductionItem));
+productionRouter.patch('/orders/:id/items/:itemId', requirePermission('production:update'), sensitiveUserRateLimiter, asyncHandler(controller.updateProductionItem));
+productionRouter.delete('/orders/:id/items/:itemId', requirePermission('production:delete'), sensitiveUserRateLimiter, asyncHandler(controller.deleteProductionItem));
 
 productionRouter.get('/alerts', requirePermission('production:read'), asyncHandler(controller.getProductionAlerts));
 

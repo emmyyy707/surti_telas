@@ -24,4 +24,26 @@ describe('Notifications Integration', () => {
     expect(Array.isArray(response.body.data.items)).toBe(true);
     expect(response.body.data.totalRecords).toBeDefined();
   });
+
+  it('should mark all notifications as read', async () => {
+    const response = await request(app)
+      .patch('/api/v1/notifications/read-all')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.count).toBeDefined();
+    expect(typeof response.body.data.count).toBe('number');
+  });
+
+  it('should delete all notifications for current user', async () => {
+    const response = await request(app)
+      .delete('/api/v1/notifications')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.count).toBeDefined();
+    expect(typeof response.body.data.count).toBe('number');
+  });
 });

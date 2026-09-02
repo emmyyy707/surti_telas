@@ -9,9 +9,8 @@ import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
 import s from './Clientes.module.css';
 import f from '@/styles/Form.module.css';
-import { authApi, type BackendAuthUser, type CreateUserRequest } from '@/infrastructure/api/authApi';
+import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
-import type { Cliente } from '@/core/types';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
@@ -51,7 +50,6 @@ export const AdminClientes: React.FC = () => {
   const [isTrustedCustomer, setIsTrustedCustomer] = useState(false);
   const [showTrustedOnly, setShowTrustedOnly] = useState(false);
   const [estado, setEstado] = useState<'Activo' | 'Inactivo'>('Activo');
-  const [password, setPassword] = useState('');
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -85,6 +83,7 @@ export const AdminClientes: React.FC = () => {
           cupoUsado: c.cupoUsado,
           deudaVencida: c.deudaVencida,
           pedidosCount: c.pedidos,
+          id: c.id,
         } as ClienteUI;
       });
       setItems(clientesConDatos);
@@ -139,7 +138,6 @@ export const AdminClientes: React.FC = () => {
   const closeModal = () => {
     setModalOpen(false);
     setSelectedCliente(null);
-    setPassword('');
   };
 
   const handleDelete = async () => {
@@ -155,6 +153,9 @@ export const AdminClientes: React.FC = () => {
     }
   };
 
+  const validTipoDocumento = (value: string): value is 'CC' | 'NIE' | 'PASSPORT' | 'CE' | 'OTHER' =>
+    ['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER'].includes(value);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!nombre) {
@@ -163,6 +164,10 @@ export const AdminClientes: React.FC = () => {
     }
     if (!apellidos) {
       toast.error('El apellido es obligatorio');
+      return;
+    }
+    if (!validTipoDocumento(tipoDocumento)) {
+      toast.error('Selecciona un tipo de documento válido');
       return;
     }
 
@@ -177,7 +182,7 @@ export const AdminClientes: React.FC = () => {
             tel: telefono,
             nit: numeroDocumento,
             direccion,
-            tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
+            tipoDocumento: tipoDocumento || undefined,
             isTrustedCustomer,
             estado,
           });
@@ -204,7 +209,7 @@ export const AdminClientes: React.FC = () => {
             tel: telefono,
             nit: numeroDocumento,
             direccion,
-            tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
+            tipoDocumento: tipoDocumento || undefined,
             isTrustedCustomer,
             estado,
           });
@@ -223,25 +228,8 @@ export const AdminClientes: React.FC = () => {
       toast.error('Correo es obligatorio');
       return;
     }
-    if (!password) {
-      toast.error('Contraseña es obligatoria');
-      return;
-    }
 
     try {
-      const userPayload: CreateUserRequest = {
-        nombre,
-        apellidos,
-        email,
-        password,
-        role: 'CLIENTE',
-        telefono,
-        direccion,
-        tipoDocumento,
-        numeroDocumento,
-      };
-      const _userResult = await authApi.createUser(userPayload);
-
       await customersApi.create({
         nombre,
         apellidos,
@@ -249,23 +237,15 @@ export const AdminClientes: React.FC = () => {
         tel: telefono,
         nit: numeroDocumento,
         direccion,
-        tipoDocumento: tipoDocumento as Cliente['tipoDocumento'],
+        tipoDocumento: tipoDocumento || undefined,
         isTrustedCustomer,
         estado,
       });
-
       await reload();
-      toast.success('Cliente creado con usuario de acceso');
+      toast.success('Cliente creado');
       closeModal();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo crear la cuenta';
-      if (message.toLowerCase().includes('ya está registrado') || message.toLowerCase().includes('ya existe') || message.toLowerCase().includes('duplicado')) {
-        toast.error(`No se puede crear la cuenta: ${message}`);
-      } else if (message.includes('422')) {
-        toast.error(`No se puede crear la cuenta: datos inválidos - ${message}`);
-      } else {
-        toast.error(`No se puede crear la cuenta: ${message}`);
-      }
+    } catch {
+      toast.error('No se pudo crear el cliente');
     }
   };
 
@@ -441,22 +421,6 @@ export const AdminClientes: React.FC = () => {
               <input id="direccion" type="text" className={f.input} name="direccion" value={direccion} onChange={(e) => setDireccion(e.target.value)} maxLength={200} autoComplete="street-address" />
             </div>
           </div>
-
-          {!selectedCliente && (
-            <div className={f.formSection}>
-              <h3 className={f.sectionTitle}>Seguridad</h3>
-              <div className={f.formRow}>
-                <div className={f.field}>
-                  <label className={f.label} htmlFor="password">Contraseña *</label>
-                  <input id="password" type="password" className={f.input} name="password" required minLength={8} placeholder="Mínimo 8 caracteres" autoComplete="new-password" />
-                </div>
-                <div className={f.field}>
-                  <label className={f.label} htmlFor="confirmPassword">Confirmar contraseña *</label>
-                  <input id="confirmPassword" type="password" className={f.input} name="confirmPassword" required minLength={8} placeholder="Repite la contraseña" autoComplete="new-password" />
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className={f.formSection}>
             <h3 className={f.sectionTitle}>Estado</h3>

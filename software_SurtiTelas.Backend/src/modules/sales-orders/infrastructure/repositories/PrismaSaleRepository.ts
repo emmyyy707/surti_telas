@@ -78,6 +78,10 @@ export class PrismaSaleRepository implements SaleRepository {
     return toSale(row);
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.sale.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
   async findByIdWithOrder(id: string): Promise<SaleWithOrder | null> {
     const row = await this.prisma.sale.findFirst({
       where: { id, deletedAt: null },
@@ -170,7 +174,7 @@ export class PrismaSaleRepository implements SaleRepository {
     const map: Record<string, DbOrderStatus> = {
       Pendiente: 'PENDIENTE',
       Aceptado: 'ACEPTADO',
-      'En proceso': 'EN_PRODUCCION',
+      Listo: 'LISTO',
       Enviado: 'DESPACHADO',
       Entregado: 'ENTREGADO',
       Rechazado: 'RECHAZADO',
@@ -185,10 +189,10 @@ export class PrismaSaleRepository implements SaleRepository {
   dbToOrderStatus(db: DbOrderStatus): string {
     const map: Record<DbOrderStatus, string> = {
       NUEVO: 'Pendiente',
-      EN_PRODUCCION: 'En proceso',
-      LISTO: 'En proceso',
+      EN_PRODUCCION: 'Listo',
+      LISTO: 'Listo',
       DESPACHADO: 'Enviado',
-      EN_CAMINO: 'En proceso',
+      EN_CAMINO: 'Enviado',
       ENTREGADO: 'Entregado',
       CANCELADO: 'Cancelado',
       PENDIENTE: 'Pendiente',

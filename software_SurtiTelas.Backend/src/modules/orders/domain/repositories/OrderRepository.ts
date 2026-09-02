@@ -35,6 +35,7 @@ export interface OrderFilters {
   order?: 'asc' | 'desc';
   tieneComprobante?: boolean;
   numero?: string;
+  search?: string;
 }
 
 export interface OrderRepository {
@@ -43,6 +44,7 @@ export interface OrderRepository {
   getByNumero(numero: string): Promise<Order | null>;
   create(input: CreateOrderInput): Promise<Order>;
   updateStatus(id: string, estado: OrderStatus): Promise<Order>;
+  cancelOrder(id: string, motivoAnulacion: string): Promise<Order>;
   updateFull(id: string, changes: { clienteId?: string; asesorId?: string; prioridad?: OrderPriority; observaciones?: string; itemsList?: OrderItem[] }): Promise<Order>;
   assignDomiciliario(id: string, domiciliarioId: string): Promise<Order>;
   softDelete(id: string): Promise<void>;

@@ -39,11 +39,11 @@ export class OrderDeliverySubscriber {
         const customer = existing?.order?.clienteId
           ? await prisma.customer.findUnique({
               where: { id: existing.order.clienteId },
-              select: { ciudad: true, telefono: true },
+              select: { ciudad: true, telefono: true, direccion: true },
             })
           : null;
 
-        const direccion = payload.direccion || existing?.direccion || '';
+        const direccion = payload.direccion || customer?.direccion || existing?.direccion || '';
         const ciudad = payload.ciudad || customer?.ciudad || existing?.ciudad || '';
         const telefono = payload.telefono || customer?.telefono || existing?.telefono || '';
 

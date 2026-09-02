@@ -30,5 +30,7 @@ export interface NotificationRepository {
   update(id: string, usuarioId: string, changes: { titulo?: string; mensaje?: string; leida?: boolean; readAt?: Date }): Promise<Notification>;
   markAsRead(id: string, usuarioId: string): Promise<Notification>;
   markAllAsRead(usuarioId: string): Promise<number>;
+  deleteAllByUserId(usuarioId: string): Promise<number>;
   delete(id: string, usuarioId: string): Promise<void>;
+  getSidebarSummary(usuarioId: string): Promise<Record<string, number>>;
 }

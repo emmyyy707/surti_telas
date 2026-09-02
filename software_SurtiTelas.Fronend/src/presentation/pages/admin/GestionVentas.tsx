@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, FileText, Package, Search } from 'lucide-react';
+import { Plus, FileText, Package, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import s from './GestionVentas.module.css';
 import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
-import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '@/shared/ui/DataTable';
+import { DataTable, DataTableColumn, DataTableDetailPanel } from '@/shared/ui/DataTable';
 import { Modal } from '@/shared/ui/Modal';
+import { ConfirmWithReasonModal } from '@/shared/ui/ConfirmWithReasonModal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
@@ -28,6 +29,8 @@ const MEDIOS_PAGO: { value: string; label: string }[] = [
   { value: 'INSTALLMENTS', label: 'Cuotas' },
 ];
 
+const CANCELABLE_ORDER_STATES = ['NUEVO', 'PENDIENTE', 'EN_VALIDACION', 'ACEPTADO', 'EN_PRODUCCION', 'LISTO', 'DESPACHADO', 'EN_CAMINO', 'RECIBO_GENERADO', 'RECIBO_ENVIADO', 'ENTREGADO', 'RECHAZADO'] as const;
+
 export const AdminGestionVentas: React.FC = () => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -38,7 +41,9 @@ export const AdminGestionVentas: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState<Venta | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Venta | null>(null);
   const [saving, setSaving] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const [availableOrders, setAvailableOrders] = useState<Pedido[]>([]);
   const [orderSearch, setOrderSearch] = useState('');
@@ -160,14 +165,9 @@ export const AdminGestionVentas: React.FC = () => {
     }
   };
 
-  const handleCancelVenta = async () => {
+  const handleConfirmCancel = async (motivo: string) => {
     if (!cancelConfirm) return;
-    const motivo = prompt('Ingresa el motivo de la anulación:');
-    if (!motivo || motivo.trim().length < 3) {
-      toast.error('El motivo de anulación es obligatorio (mínimo 3 caracteres)');
-      return;
-    }
-
+    setCancelling(true);
     try {
       await salesApi.cancel(cancelConfirm.id, motivo);
       toast.success('Venta anulada correctamente');
@@ -175,7 +175,20 @@ export const AdminGestionVentas: React.FC = () => {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al anular la venta');
     } finally {
+      setCancelling(false);
       setCancelConfirm(null);
+    }
+  };
+
+  const handleDeleteSale = async () => {
+    if (!deleteConfirm) return;
+    try {
+      await salesApi.remove(deleteConfirm.id);
+      void fetchVentas();
+      toast.success('Venta eliminada');
+      setDeleteConfirm(null);
+    } catch {
+      toast.error('No se pudo eliminar la venta');
     }
   };
 
@@ -209,18 +222,18 @@ export const AdminGestionVentas: React.FC = () => {
     },
   ];
 
-  const actions: DataTableAction<Venta>[] = [
+  const actions = (v: Venta) => [
     {
       label: 'Ver detalle',
       icon: <FileText size={14} aria-hidden="true" focusable="false" />,
-      onClick: (v) => { setSelectedVenta(v); setDetailModalOpen(true); },
+      onClick: (vv: Venta) => { setSelectedVenta(vv); setDetailModalOpen(true); },
     },
     {
       label: 'Generar PDF',
       icon: <FileText size={14} aria-hidden="true" focusable="false" />,
-      onClick: async (v) => {
+      onClick: async (vv: Venta) => {
         try {
-          const html = await salesApi.getPdf(v.id);
+          const html = await salesApi.getPdf(vv.id);
           const printWindow = window.open('', '_blank');
           if (printWindow) {
             printWindow.document.write(html);
@@ -233,18 +246,24 @@ export const AdminGestionVentas: React.FC = () => {
         }
       },
     },
-    {
+    ...(v.estado !== 'ANULADA' && CANCELABLE_ORDER_STATES.includes((v.orderEstado ?? '') as typeof CANCELABLE_ORDER_STATES[number]) ? [{
       label: 'Anular',
       icon: <FileText size={14} aria-hidden="true" focusable="false" />,
       danger: true,
-      onClick: (v) => {
-        if (v.estado === 'ANULADA') {
+      onClick: (vv: Venta) => {
+        if (vv.estado === 'ANULADA') {
           toast.error('La venta ya está anulada');
           return;
         }
-        setCancelConfirm(v);
+        setCancelConfirm(vv);
       },
-    },
+    }] : []),
+    ...(v.estado === 'ANULADA' ? [{
+      label: 'Eliminar',
+      icon: <Trash2 size={14} aria-hidden="true" focusable="false" />,
+      danger: true,
+      onClick: (vv: Venta) => setDeleteConfirm(vv),
+    }] : []),
   ];
 
   const detailPanel: DataTableDetailPanel<Venta> = {
@@ -470,13 +489,21 @@ export const AdminGestionVentas: React.FC = () => {
         </form>
       </Modal>
 
-      <ConfirmationModal
+      <ConfirmWithReasonModal
         open={!!cancelConfirm}
         onClose={() => setCancelConfirm(null)}
-        onConfirm={handleCancelVenta}
-        title="Anular venta"
-        description={`¿Estás seguro de que deseas anular la venta ${cancelConfirm?.numero ?? ''}?`}
-        confirmLabel="Anular"
+        onConfirm={handleConfirmCancel}
+        referenceLabel={cancelConfirm ? `Venta ${cancelConfirm.numero}` : undefined}
+        loading={cancelling}
+      />
+
+      <ConfirmationModal
+        open={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleDeleteSale}
+        title="Eliminar venta"
+        description={`¿Estás seguro de que deseas eliminar la venta "${deleteConfirm?.id}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
         variant="danger"
       />
     </div>

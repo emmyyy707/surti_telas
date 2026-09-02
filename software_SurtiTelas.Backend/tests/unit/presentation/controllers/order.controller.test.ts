@@ -118,10 +118,12 @@ describe('order.controller', () => {
     const res = mockRes();
     const { orderUseCases } = await import('@/modules/orders/infrastructure/container/orderContainer');
     (orderUseCases.assignDomiciliario.execute as any).mockResolvedValue({ id: '1' });
+    const { prisma } = await import('@/config/database');
+    (prisma.user.findFirst as any).mockResolvedValue({ nombre: 'Domiciliario Test' });
 
     await assignDomiciliario(req, res);
 
-    expect(orderUseCases.assignDomiciliario.execute).toHaveBeenCalledWith('1', 'dom-1');
+    expect(orderUseCases.assignDomiciliario.execute).toHaveBeenCalledWith('1', 'dom-1', 'Domiciliario Test', expect.any(String));
     expect(res.json).toHaveBeenCalled();
   });
 });

@@ -33,15 +33,9 @@ export async function authorizeCustomOrderAccess(req: any, _res: any, next: any)
     if (req.user?.role === 'ADMIN') return next();
 
     const userEmail = (req.user?.email || '').trim();
-    const userName = (req.user?.nombre || '').trim();
 
     const customer = await prisma.customer.findFirst({
-      where: {
-        OR: [
-          { email: userEmail || undefined },
-          { nombre: userName || undefined },
-        ].filter((condition: any) => condition !== undefined) as any,
-      },
+      where: { email: userEmail || undefined, deletedAt: null },
       select: { id: true },
     });
 

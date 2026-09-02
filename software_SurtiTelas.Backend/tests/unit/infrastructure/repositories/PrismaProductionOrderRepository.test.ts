@@ -10,6 +10,8 @@ const mockPrisma = {
     count: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    aggregate: vi.fn(),
+    groupBy: vi.fn(),
   },
   workshop: {
     findMany: vi.fn(),
@@ -23,6 +25,9 @@ const mockPrisma = {
 
 const prodRepo = new PrismaProductionOrderRepository(mockPrisma as any);
 const workshopRepo = new PrismaWorkshopRepository(mockPrisma as any);
+
+mockPrisma.productionOrder.aggregate.mockResolvedValue({ _sum: { cantidad: null } });
+mockPrisma.productionOrder.groupBy.mockResolvedValue([]);
 
 const makeOrderRow = (overrides = {}) => ({
   id: 'po-1',
@@ -173,14 +178,14 @@ describe('PrismaProductionOrderRepository', () => {
 
 describe('PrismaWorkshopRepository', () => {
   it('lists workshops with pagination', async () => {
-    mockPrisma.$transaction.mockResolvedValue([[makeWorkshopRow()], 1]);
+    mockPrisma.$transaction.mockResolvedValue([[makeWorkshopRow()], 1, []]);
     const result = await workshopRepo.list({ page: 1, limit: 10 });
     expect(result.data).toHaveLength(1);
     expect(result.meta).toEqual({ total: 1, page: 1, limit: 10 });
   });
 
   it('applies search and estado filters', async () => {
-    mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    mockPrisma.$transaction.mockResolvedValue([[], 0, []]);
     await workshopRepo.list({ search: 'Norte', estado: 'ACTIVO' });
     const where = mockPrisma.workshop.findMany.mock.calls.at(-1)![0].where;
     expect(where.estado).toBe('ACTIVO');

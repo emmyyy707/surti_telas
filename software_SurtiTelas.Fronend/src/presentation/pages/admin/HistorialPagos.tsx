@@ -41,7 +41,7 @@ export const AdminHistorialPagos: React.FC = () => {
         const mapped: PaymentRow[] = data.map(p => ({
           id: p.id,
           fecha: formatDate(p.createdAt),
-          cliente: p.customerId,
+          cliente: p.customerNombre ?? p.customerId,
           asesor: p.asesorId ?? 'Sin asesor',
           monto: Number(p.amount) || 0,
           metodo: p.method,

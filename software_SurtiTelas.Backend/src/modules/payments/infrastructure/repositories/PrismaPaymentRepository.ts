@@ -3,19 +3,38 @@ import type { PaymentMethod, PaymentRepository, PaymentStatus } from '../../doma
 import { Prisma, PrismaClient } from '@prisma/client';
 
 export class PrismaPaymentRepository implements PaymentRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient) {}
 
-  async list(filters: { customerId?: string; asesorId?: string; status?: string }): Promise<{ data: Payment[]; total: number }> {
-    const where: Record<string, unknown> = { deletedAt: null };
+  async list(filters: { customerId?: string; asesorId?: string; status?: string; search?: string }): Promise<{ data: Payment[]; total: number }> {
+    const where: Prisma.PaymentWhereInput = { deletedAt: null };
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.asesorId) where.asesorId = filters.asesorId;
-    if (filters.status) where.status = filters.status;
+    if (filters.status) where.status = filters.status as PaymentStatus;
+
+    if (filters.search) {
+      const s = filters.search;
+      where.OR = [
+        { order: { numero: { contains: s, mode: 'insensitive' } } },
+        { customer: { nombre: { contains: s, mode: 'insensitive' } } },
+        { customer: { apellidos: { contains: s, mode: 'insensitive' } } },
+        { customer: { nit: { contains: s, mode: 'insensitive' } } },
+        { customer: { email: { contains: s, mode: 'insensitive' } } },
+      ];
+    }
 
     const [rows, total] = await this.prisma.$transaction([
-      this.prisma.payment.findMany({ where, orderBy: { createdAt: 'desc' } }),
+      this.prisma.payment.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          order: { select: { id: true, numero: true, total: true, estado: true } },
+          customer: { select: { id: true, nombre: true, apellidos: true, nit: true, email: true } },
+          asesor: { select: { id: true, nombre: true } },
+        },
+      }),
       this.prisma.payment.count({ where }),
     ]);
-    return { data: rows.map(PaymentMapper.toDomain), total };
+    return { data: rows.map((row) => PaymentMapper.toDomainWithRelations(row as any)), total };
   }
 
   async getById(id: string): Promise<Payment | null> {
@@ -63,6 +82,18 @@ export class PrismaPaymentRepository implements PaymentRepository {
     await this.prisma.payment.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 
+  async cancel(id: string, motivoAnulacion: string): Promise<Payment> {
+    const row = await this.prisma.payment.update({
+      where: { id },
+      data: {
+        status: 'ANULADO',
+        motivoAnulacion,
+        fechaAnulacion: new Date(),
+      },
+    });
+    return PaymentMapper.toDomain(row);
+  }
+
   async getCustomerBalance(customerId: string): Promise<{ totalPaid: number; pending: number; customerId: string }> {
     const [approvedResult, pendingResult] = await this.prisma.$transaction([
       this.prisma.payment.aggregate({
@@ -92,12 +123,37 @@ export const PaymentMapper = {
       asesorId: row.asesorId ?? undefined,
       amount: Number(row.amount.toNumber()),
       method: row.method,
+    status: row.status,
+    reference: row.reference ?? undefined,
+    notes: row.notes ?? undefined,
+    paidAt: row.paidAt?.toISOString(),
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    motivoAnulacion: row.motivoAnulacion ?? undefined,
+    fechaAnulacion: row.fechaAnulacion?.toISOString(),
+  });
+  },
+  toDomainWithRelations(row: any): Payment {
+    return new Payment({
+      id: row.id,
+      orderId: row.orderId,
+      customerId: row.customerId,
+      asesorId: row.asesorId ?? undefined,
+      amount: Number(row.amount.toNumber()),
+      method: row.method,
       status: row.status,
       reference: row.reference ?? undefined,
       notes: row.notes ?? undefined,
       paidAt: row.paidAt?.toISOString(),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
+      orderNumero: row.order?.numero,
+      customerNombre: row.customer ? `${row.customer.nombre} ${row.customer.apellidos ?? ''}`.trim() : undefined,
+      asesorNombre: row.asesor?.nombre,
+      orderTotal: row.order ? Number(row.order.total) : undefined,
+      orderEstado: row.order?.estado,
+      motivoAnulacion: row.motivoAnulacion ?? undefined,
+      fechaAnulacion: row.fechaAnulacion?.toISOString(),
     });
   },
 };

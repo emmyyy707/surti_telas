@@ -195,6 +195,13 @@ export class GetProductionOrders {
   }
 }
 
+export class GetProductionOrderById {
+  constructor(private readonly repo: ProductionOrderRepository) {}
+  execute(id: string) {
+    return this.repo.getById(id);
+  }
+}
+
 export class GetProductionAlerts {
   constructor(private readonly repo: ProductionOrderRepository) {}
   execute(filters?: ProductionOrderFilters) {

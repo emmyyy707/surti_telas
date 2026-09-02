@@ -37,20 +37,21 @@ describe('Customer', () => {
     }).toThrow('El cliente debe tener un nombre');
   });
 
-  it('should throw error if cupoUsado > cupoTotal', () => {
-    expect(() => {
-      new Customer({
-        nombre: 'Test',
-        ciudad: 'Bogotá',
-        tel: '3001234567',
-        cupoTotal: 100000,
-        cupoUsado: 150000,
-        deudaVencida: 0,
-        isTrustedCustomer: false,
-        estado: 'Activo',
-        pedidos: 0,
-      });
-    }).toThrow('El cupo usado no puede superar el cupo total');
+  it('should create customer even if cupoUsado > cupoTotal', () => {
+    const customer = new Customer({
+      nombre: 'Test',
+      ciudad: 'Bogotá',
+      tel: '3001234567',
+      cupoTotal: 100000,
+      cupoUsado: 150000,
+      deudaVencida: 0,
+      isTrustedCustomer: false,
+      estado: 'Activo',
+      pedidos: 0,
+    });
+
+    expect(customer.cupoUsado).toBe(150000);
+    expect(customer.cupoTotal).toBe(100000);
   });
 
   it('should return true when cupo is available', () => {

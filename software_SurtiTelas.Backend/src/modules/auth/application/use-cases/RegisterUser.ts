@@ -24,6 +24,7 @@ export class RegisterUser {
     direccion?: string;
     tipoDocumento?: string;
     numeroDocumento?: string;
+    permisos?: string[];
   }): Promise<AuthResult> {
     const existing = await this.repo.findByEmail(input.email);
     if (existing) {
@@ -41,15 +42,18 @@ export class RegisterUser {
       direccion: input.direccion,
       tipoDocumento: input.tipoDocumento,
       numeroDocumento: input.numeroDocumento,
+      permisos: input.permisos,
     });
 
     const permissions = await this.repo.findPermissionsByRole(user.role);
+    const userPermissions = input.permisos ?? [];
+    const allPermissions = Array.from(new Set([...permissions, ...userPermissions]));
     const authUser: AuthUser = {
       id: user.id,
       email: user.email,
       nombre: user.nombre,
       role: user.role,
-      permissions,
+      permissions: allPermissions,
     };
 
     const accessToken = this.tokens.signAccessToken(authUser);

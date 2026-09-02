@@ -63,7 +63,7 @@ export function toNotification(dto: NotificationDTO): Notification {
 export const notificationsApi = {
   async list(): Promise<Notification[]> {
     try {
-      const response = await api.get<{ items: NotificationDTO[]; meta: Record<string, unknown> }>('/notifications');
+      const response = await api.get<{ items: NotificationDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/notifications');
       const data = response?.items ?? [];
       return data.map(toNotification);
     } catch (error) {
@@ -124,6 +124,24 @@ export const notificationsApi = {
       return true;
     } catch {
       return false;
+    }
+  },
+
+  async deleteAll(): Promise<boolean> {
+    try {
+      await api.delete<void>('/notifications');
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  async getSidebarSummary(): Promise<Record<string, number>> {
+    try {
+      const response = await api.get<Record<string, number>>('/notifications/sidebar-summary');
+      return response ?? {};
+    } catch {
+      return {};
     }
   },
 };

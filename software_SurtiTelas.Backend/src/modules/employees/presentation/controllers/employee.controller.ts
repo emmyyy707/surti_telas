@@ -48,8 +48,9 @@ export const updateEmployee = async (req: Request, res: Response) => {
 export const changeEmployeeStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { estado } = parseDto(ChangeEmployeeStatusSchema, req.body);
-  const employee = await employeeUseCases.changeEmployeeStatus.execute(id, estado);
-  return ok(res, employee, estado === 'ACTIVO' ? 'Empleado activado' : 'Empleado desactivado');
+  const normalizedEstado = estado.toUpperCase() as 'ACTIVO' | 'INACTIVO';
+  const employee = await employeeUseCases.changeEmployeeStatus.execute(id, normalizedEstado);
+  return ok(res, employee, normalizedEstado === 'ACTIVO' ? 'Empleado activado' : 'Empleado desactivado');
 };
 
 export const deleteEmployee = async (req: Request, res: Response) => {

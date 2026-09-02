@@ -52,6 +52,13 @@ saleRouter.post(
 );
 
 saleRouter.delete(
+  '/:id',
+  requirePermission('sales:delete'),
+  sensitiveUserRateLimiter,
+  asyncHandler(controller.deleteSale),
+);
+
+saleRouter.delete(
   '/:id/items/:itemId',
   requirePermission('sales:update'),
   sensitiveUserRateLimiter,

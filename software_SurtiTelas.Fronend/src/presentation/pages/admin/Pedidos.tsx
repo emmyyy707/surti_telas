@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Save, Trash2, Eye } from 'lucide-react';
+import { Plus, Save, Trash2, Eye, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Pedidos.module.css';
@@ -9,6 +9,7 @@ import { Button } from '../../../shared/ui/Button';
 import { DataTable } from '../../../shared/ui/DataTable';
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal';
+import { ConfirmWithReasonModal } from '@/shared/ui/ConfirmWithReasonModal';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
@@ -39,7 +40,6 @@ export const AdminPedidos: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [showEntregados, setShowEntregados] = useState(false);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
@@ -56,6 +56,9 @@ export const AdminPedidos: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [deleteConfirm, setDeleteConfirm] = useState<Pedido | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<Pedido | null>(null);
+  const [_cancelMotivo, setCancelMotivo] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   const [statusConfirm, setStatusConfirm] = useState<{ id: string; estado: Pedido['estado'] } | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<Pedido['estado'] | null>(null);
 
@@ -86,12 +89,12 @@ export const AdminPedidos: React.FC = () => {
           setClientes(clientesResult.data ?? []);
           setAsesores(asesoresResult.data ?? []);
 
-          const ESTADO_ENTREGADO = ESTADOS_PEDIDO[4];
-          const ESTADO_RECHAZADO = ESTADOS_PEDIDO[5];
-          const ESTADOS_OCULTOS = new Set(showEntregados ? [] : [ESTADO_ENTREGADO, ESTADO_RECHAZADO] as [EstadoPedido, EstadoPedido]);
+          const ESTADO_ENTREGADO: EstadoPedido = 'Entregado';
+          const ESTADO_RECHAZADO: EstadoPedido = 'Rechazado';
+          const ESTADOS_OCULTOS = new Set([ESTADO_ENTREGADO, ESTADO_RECHAZADO] as [EstadoPedido, EstadoPedido]);
           const pedidos = (ordersResult.pedidos ?? []).filter((p) => !ESTADOS_OCULTOS.has(p.estado));
           setPageData(pedidos);
-          pagination.setTotalRecords(ordersResult.meta.totalRecords);
+          pagination.setTotalRecords(pedidos.length);
           pagination.setPage(1);
 
           if (!asesorId && asesoresResult.data?.length) {
@@ -107,7 +110,7 @@ export const AdminPedidos: React.FC = () => {
     }
     void load();
     return () => { cancelled = true; };
-  }, [asesorId, pagination, debouncedSearch, reloadToken, showEntregados]);
+  }, [asesorId, pagination, debouncedSearch, reloadToken]);
 
   const handlePageChange = useCallback((newPage: number) => {
     pagination.setPage(newPage);
@@ -254,6 +257,21 @@ export const AdminPedidos: React.FC = () => {
     }
   };
 
+  const handleCancel = async (motivo: string) => {
+    if (!cancelConfirm) return;
+    setCancelling(true);
+    try {
+      await ordersApi.cancelOrder(cancelConfirm.id, motivo);
+      toast.success('Pedido anulado correctamente');
+      setCancelConfirm(null);
+      await reload();
+    } catch {
+      toast.error('No se pudo anular el pedido');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const detailPedido = detailId ? pageData.find(p => p.id === detailId) : null;
 
   return (
@@ -278,10 +296,6 @@ export const AdminPedidos: React.FC = () => {
           debounceMs={100}
           minChars={0}
         />
-        <label className={s.toggleLabel}>
-          <input type="checkbox" checked={showEntregados} onChange={(e) => setShowEntregados(e.target.checked)} />
-          <span>Ver entregados</span>
-        </label>
       </div>
 
       <div className={s.tableWrapper}>
@@ -312,7 +326,7 @@ export const AdminPedidos: React.FC = () => {
               { key: 'asesor', header: 'Asesor', render: (p) => p.asesor },
               { key: 'fecha', header: 'Fecha', width: '110px', render: (p) => p.fecha },
               { key: 'total', header: 'Total', width: '120px', render: (p) => p.total },
-              { key: 'estado', header: 'Estado', width: '130px', sortable: true, filterable: true, filterType: 'select', filterOptions: ESTADOS_PEDIDO.map(es => ({ value: es, label: es })), render: (p) => (
+              { key: 'estado', header: 'Estado', width: '130px', sortable: true, filterable: true, filterType: 'select', filterOptions: ['Pendiente', 'Enviado', 'Entregado', 'Cancelado'].map(es => ({ value: es, label: es })), render: (p) => (
                 <Badge variant={orderStatuses[p.estado]}>{p.estado}</Badge>
               )},
             ]}
@@ -320,7 +334,8 @@ export const AdminPedidos: React.FC = () => {
               { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => setDetailId(p.id) },
               { label: 'Editar', icon: <Save size={14} />, onClick: () => openEdit(p) },
               { label: 'Cambiar estado', onClick: () => { setStatusConfirm({ id: p.id, estado: p.estado }); setSelectedStatus(null); } },
-              { label: 'Anular', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(p), danger: true },
+               ...(p.estado !== 'Cancelado' ? [{ label: 'Anular', icon: <Ban size={14} />, onClick: () => setCancelConfirm(p), danger: true }] : []),
+              ...(p.estado === 'Cancelado' ? [{ label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(p), danger: true }] : []),
             ]}
             detailPanel={{
               title: (p) => `Pedido ${p.numero ?? p.id}`,
@@ -440,7 +455,7 @@ export const AdminPedidos: React.FC = () => {
               <div className={f.field}>
                 <label className={f.label}>Estado *</label>
                 <select className={f.select} value={estado} onChange={(e) => setEstado(e.target.value as Pedido['estado'])}>
-                  {ESTADOS_PEDIDO.map(es => (
+                  {['Pendiente', 'Enviado', 'Entregado', 'Cancelado'].map(es => (
                     <option key={es} value={es}>{es}</option>
                   ))}
                 </select>
@@ -542,6 +557,17 @@ export const AdminPedidos: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmWithReasonModal
+        open={!!cancelConfirm}
+        onClose={() => { setCancelConfirm(null); setCancelMotivo(''); }}
+        onConfirm={handleCancel}
+        title="Anular pedido"
+        description={`¿Estás seguro de que deseas anular el pedido "${cancelConfirm?.numero ?? cancelConfirm?.id}"? Esta acción no se puede deshacer.`}
+        referenceLabel={cancelConfirm ? `Pedido: ${cancelConfirm.numero ?? cancelConfirm.id}` : undefined}
+        confirmLabel="Anular pedido"
+        loading={cancelling}
+      />
 
       <ConfirmationModal
         open={!!deleteConfirm}

@@ -21,6 +21,7 @@ export interface UserRecord {
   createdAt: Date;
   updatedAt: Date;
   permissions?: string[];
+  specificPermissions?: string[];
   avatar?: string | null;
 }
 

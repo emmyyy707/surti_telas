@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { AcceptOrder } from '@/modules/sales-orders/application/use-cases/AcceptOrder';
 import { StartValidation } from '@/modules/sales-orders/application/use-cases/StartValidation';
 import { RejectOrder } from '@/modules/sales-orders/application/use-cases/RejectOrder';
@@ -287,7 +287,7 @@ describe('RetryReceiptDelivery', () => {
     mockOrderRepo.updateReceiptSent.mockResolvedValue(orderMismoEstado);
 
     const useCase = new RetryReceiptDelivery(mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus);
-    const result = await useCase.execute('order-1', 'user-1');
+    await useCase.execute('order-1', 'user-1');
 
     expect(mockReceiptRepo.findByOrderId).toHaveBeenCalledWith('order-1');
     expect(mockOrderRepo.updateReceiptSent).toHaveBeenCalledWith('order-1', 'PENDIENTE', expect.any(Date), 1);

@@ -285,7 +285,20 @@ describe('CancelSale', () => {
     await expect(useCase.execute('sale-1', 'Motivo válido')).rejects.toThrow(NotFoundError);
   });
 
-  it('should throw BadRequestError when order state is not cancelable', async () => {
+  it('should throw BadRequestError when order state is CANCELADO', async () => {
+    const mockRepo = createMockSaleRepo();
+    (mockRepo.findById as any).mockResolvedValue({
+      id: 'sale-1',
+      orderId: 'order-1',
+      estado: 'COMPLETADA',
+    });
+    (prisma.order.findFirst as any).mockResolvedValue({ estado: 'CANCELADO' });
+
+    const useCase = new CancelSale(mockRepo);
+    await expect(useCase.execute('sale-1', 'Motivo válido')).rejects.toThrow(BadRequestError);
+  });
+
+  it('should cancel sale when order state is ENTREGADO', async () => {
     const mockRepo = createMockSaleRepo();
     (mockRepo.findById as any).mockResolvedValue({
       id: 'sale-1',
@@ -293,9 +306,30 @@ describe('CancelSale', () => {
       estado: 'COMPLETADA',
     });
     (prisma.order.findFirst as any).mockResolvedValue({ estado: 'ENTREGADO' });
+    (prisma.payment.findMany as any).mockResolvedValue([]);
+    (prisma.$transaction as any).mockResolvedValue(true);
 
     const useCase = new CancelSale(mockRepo);
-    await expect(useCase.execute('sale-1', 'Motivo válido')).rejects.toThrow(BadRequestError);
+    await expect(useCase.execute('sale-1', 'Motivo válido')).resolves.toBeUndefined();
+
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('should cancel sale when order state is RECHAZADO', async () => {
+    const mockRepo = createMockSaleRepo();
+    (mockRepo.findById as any).mockResolvedValue({
+      id: 'sale-1',
+      orderId: 'order-1',
+      estado: 'COMPLETADA',
+    });
+    (prisma.order.findFirst as any).mockResolvedValue({ estado: 'RECHAZADO' });
+    (prisma.payment.findMany as any).mockResolvedValue([]);
+    (prisma.$transaction as any).mockResolvedValue(true);
+
+    const useCase = new CancelSale(mockRepo);
+    await expect(useCase.execute('sale-1', 'Motivo válido')).resolves.toBeUndefined();
+
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 
   it('should execute transaction when cancellation is valid', async () => {

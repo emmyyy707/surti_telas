@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CreateOrder } from '@/modules/orders/application/use-cases/OrderUseCases';
-import { NotFoundError } from '@/shared/domain/errors';
 
 const mockRepo = {
   create: vi.fn(),
@@ -113,7 +112,7 @@ describe('CreateOrder', () => {
     mockCustomerRepo.getById.mockResolvedValue({
       id: 'cli1',
       nombre: 'Juan',
-      tieneCupoDisponible: () => false,
+      isTrustedCustomer: false,
     });
 
     await expect(
@@ -121,7 +120,8 @@ describe('CreateOrder', () => {
         clienteId: 'cli1',
         asesorId: 'asesor1',
         itemsList: [{ nombre: 'Camiseta', precio: 25000, cantidad: 2 }],
+        paymentMethod: 'INSTALLMENTS',
       }),
-    ).rejects.toThrow('cupo');
+    ).rejects.toThrow('Solo los clientes de confianza pueden seleccionar pago a cuotas');
   });
 });

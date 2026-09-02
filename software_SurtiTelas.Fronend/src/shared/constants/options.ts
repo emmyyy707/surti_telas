@@ -73,8 +73,16 @@ export const PERMISOS_SISTEMA = [...ALL_PERMISSION_CODES] as readonly string[];
 
 export const MODULOS_SISTEMA = [...ALL_MODULE_KEYS] as readonly string[];
 
-// Estados generales
+// Estados generales (valor visual utilizado por algunos módulos como Asesores)
 export const ESTADOS_GENERALES = ['Activo', 'Inactivo'] as const;
+
+// Estados de empleado: el VALOR debe ser siempre el enum canónico del backend
+// (ACTIVO | INACTIVO). La etiqueta es solo para la interfaz. Nunca enviar la
+// etiqueta como valor de API.
+export const EMPLEADO_ESTADOS: ReadonlyArray<{ value: 'ACTIVO' | 'INACTIVO'; label: string }> = [
+  { value: 'ACTIVO', label: 'Activo' },
+  { value: 'INACTIVO', label: 'Inactivo' },
+];
 
 // Regla de negocio: los pedidos en estado Entregado o Rechazado no deben aparecer
 // en las listas de pedidos activos de admin y asesor. Siempre que se cargue la lista
@@ -82,25 +90,33 @@ export const ESTADOS_GENERALES = ['Activo', 'Inactivo'] as const;
 // Ver: AdminPedidos, AsesorPedidos, AdminVentasPedidos
 
 // Pedidos (frontend) -> se mapean desde/hacia el backend OrderStatus
-export const ESTADOS_PEDIDO = ['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado'] as const;
+export const ESTADOS_PEDIDO = ['Pendiente', 'Aceptado', 'Listo', 'Enviado', 'Entregado', 'Rechazado', 'En validación', 'Recibo generado', 'Recibo enviado', 'Cancelado'] as const;
 export type EstadoPedido = (typeof ESTADOS_PEDIDO)[number];
 
 export const ESTADOS_PEDIDO_PERMITIDOS: Record<EstadoPedido, EstadoPedido[]> = {
-  Pendiente: ['Aceptado', 'Rechazado'],
-  Aceptado: ['En proceso', 'Enviado', 'Entregado'],
-  'En proceso': ['Enviado', 'Entregado'],
-  Enviado: ['Entregado'],
+  Pendiente: ['Enviado', 'Cancelado'],
+  Enviado: ['Entregado', 'Cancelado'],
   Entregado: [],
+  Cancelado: [],
+  Aceptado: [],
+  Listo: [],
   Rechazado: [],
+  'En validación': [],
+  'Recibo generado': [],
+  'Recibo enviado': [],
 };
 
 export const ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default' | null> = {
   Pendiente: 'warning',
   Aceptado: 'info',
-  'En proceso': 'info',
+  'En validación': 'warning',
+  'Recibo generado': 'info',
+  'Recibo enviado': 'info',
+  Listo: 'success',
   Enviado: 'default',
   Entregado: 'success',
   Rechazado: 'danger',
+  Cancelado: 'danger',
 };
 
 export const CUSTOM_ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default'> = {
@@ -118,28 +134,31 @@ export const CUSTOM_ORDER_STATUS_COLORS: Record<string, 'success' | 'warning' | 
 export const ORDER_STATUS_BACKEND_MAP: Record<string, string> = {
   Pendiente: 'PENDIENTE',
   Aceptado: 'ACEPTADO',
-  'En proceso': 'EN_PROCESO',
-  Enviado: 'ENVIADO',
+  Listo: 'LISTO',
+  'En validación': 'EN_VALIDACION',
+  'Recibo generado': 'RECIBO_GENERADO',
+  'Recibo enviado': 'RECIBO_ENVIADO',
+  Enviado: 'DESPACHADO',
   Entregado: 'ENTREGADO',
   Rechazado: 'RECHAZADO',
+  Cancelado: 'CANCELADO',
 };
 
 export const ORDER_STATUS_FRONTEND_MAP: Record<string, EstadoPedido> = {
   PENDIENTE: 'Pendiente',
   ACEPTADO: 'Aceptado',
-  EN_PROCESO: 'En proceso',
-  ENVIADO: 'Enviado',
-  ENTREGADO: 'Entregado',
-  RECHAZADO: 'Rechazado',
-  NUEVO: 'Pendiente',
-  EN_PRODUCCION: 'En proceso',
-  LISTO: 'Enviado',
+  LISTO: 'Listo',
+  EN_PRODUCCION: 'Listo',
+  EN_VALIDACION: 'En validación',
+  RECIBO_GENERADO: 'Recibo generado',
+  RECIBO_ENVIADO: 'Recibo enviado',
   DESPACHADO: 'Enviado',
   EN_CAMINO: 'Enviado',
-  CANCELADO: 'Rechazado',
-  EN_VALIDACION: 'Pendiente',
-  RECIBO_GENERADO: 'Entregado',
-  RECIBO_ENVIADO: 'Entregado',
+  ENVIADO: 'Enviado',
+  ENTREGADO: 'Entregado',
+  CANCELADO: 'Cancelado',
+  RECHAZADO: 'Rechazado',
+  NUEVO: 'Pendiente',
 } as const;
 
 // Mapeos específicos de producción (backend enum -> frontend)

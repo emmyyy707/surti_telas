@@ -139,14 +139,8 @@ export const deliveriesApi = {
   },
 
   async rutaDelDia(query?: Record<string, string | number | boolean | undefined | null>): Promise<DeliveryRutaItem[]> {
-    try {
-      const items = await api.get<DeliveryRutaItem[]>('/deliveries/ruta-del-dia', { query });
-      console.log('[deliveriesApi] rutaDelDia response', items);
-      return items ?? [];
-    } catch (error) {
-      console.error('[deliveriesApi] rutaDelDia error', error);
-      return [];
-    }
+    const items = await api.get<DeliveryRutaItem[]>('/deliveries/ruta-del-dia', { query });
+    return items ?? [];
   },
 
   async updateStatus(id: string, estado: DeliveryDTO['estado']): Promise<DeliveryDTO> {

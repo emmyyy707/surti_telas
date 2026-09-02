@@ -122,6 +122,10 @@ export const salesApi = {
     return result;
   },
 
+  async remove(id: string): Promise<void> {
+    await api.delete<void>(`/sales/${encodeURIComponent(id)}`);
+  },
+
   async getPdf(id: string): Promise<string> {
     const token = tokenStorage.getAccessToken();
     const headers: Record<string, string> = { Accept: 'text/html' };

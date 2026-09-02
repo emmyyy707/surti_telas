@@ -1,0 +1,153 @@
+/* ================================================================
+   ConfirmWithReasonModal · Confirmación + motivo reutilizable
+   Usa los tokens de tema globales para adaptarse a claro/oscuro
+   sin colores fijos. Reutiliza el shell de Modal (Modal.module.css).
+   ================================================================ */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Referencia de la entidad afectada (p.ej. "Venta PED-523284") */
+.referenceRow {
+  display: flex;
+}
+
+.referenceLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.required {
+  color: var(--color-error);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  outline: none;
+  transition: border-color 140ms var(--ease-out), box-shadow 140ms var(--ease-out),
+    background-color 140ms var(--ease-out);
+}
+
+.textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+
+.textarea:hover {
+  border-color: var(--border-strong);
+}
+
+.textarea:focus {
+  border-color: var(--color-accent);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 3px var(--color-accent-dim);
+}
+
+.textareaError,
+.textareaError:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-dim);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.helpText {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.errorText {
+  font-size: 0.78rem;
+  color: var(--color-error);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.counter {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Icono de advertencia: usa los tokens de "error/danger" del tema */
+.iconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  color: var(--color-error);
+  background: var(--color-error-dim);
+  border: 1px solid var(--color-error-border);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .footer {
+    flex-direction: column-reverse;
+  }
+
+  .footer > * {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .textarea {
+    transition: none;
+  }
+}

@@ -214,8 +214,8 @@ export const ordersApi = {
     return toPedido(dto);
   },
 
-  async cancelOrder(id: string): Promise<Pedido> {
-    const dto = await api.patch<OrderDTO>(`/orders/${encodeURIComponent(id)}/cancel`, {});
+  async cancelOrder(id: string, motivoAnulacion?: string): Promise<Pedido> {
+    const dto = await api.patch<OrderDTO>(`/orders/${encodeURIComponent(id)}/cancel`, { motivoAnulacion });
     return toPedido(dto);
   },
 

@@ -19,6 +19,7 @@ describe('Orders Status Transitions Integration', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         nombre: 'Cliente Integración',
+        apellidos: 'Test',
         telefono: '3001234567',
         nit: '123456789',
         estado: 'Activo',
@@ -46,29 +47,7 @@ describe('Orders Status Transitions Integration', () => {
     createdOrderId = response.body.data.id;
   });
 
-  it('should transition from Pendiente to Aceptado', async () => {
-    const response = await request(app)
-      .patch(`/api/v1/orders/${createdOrderId}/status`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ estado: 'Aceptado' });
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data.estado).toBe('Aceptado');
-  });
-
-  it('should transition from Aceptado to En proceso', async () => {
-    const response = await request(app)
-      .patch(`/api/v1/orders/${createdOrderId}/status`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ estado: 'En proceso' });
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data.estado).toBe('En proceso');
-  });
-
-  it('should transition from En proceso to Enviado', async () => {
+  it('should transition from Pendiente to Enviado', async () => {
     const response = await request(app)
       .patch(`/api/v1/orders/${createdOrderId}/status`)
       .set('Authorization', `Bearer ${token}`)

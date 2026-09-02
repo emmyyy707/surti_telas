@@ -33,6 +33,13 @@ export class MarkAllNotificationsAsRead {
   }
 }
 
+export class DeleteAllNotifications {
+  constructor(private readonly repo: NotificationRepository) {}
+  execute(usuarioId: string) {
+    return this.repo.deleteAllByUserId(usuarioId);
+  }
+}
+
 export class CreateNotification {
   constructor(private readonly repo: NotificationRepository) {}
   execute(input: {
@@ -64,6 +71,13 @@ export class DeleteNotification {
   constructor(private readonly repo: NotificationRepository) {}
   execute(id: string, usuarioId: string) {
     return this.repo.delete(id, usuarioId);
+  }
+}
+
+export class GetSidebarSummary {
+  constructor(private readonly repo: NotificationRepository) {}
+  execute(usuarioId: string) {
+    return this.repo.getSidebarSummary(usuarioId);
   }
 }
 
@@ -209,7 +223,6 @@ export class NotificationSubscriber {
         'En producción': 'WARNING',
         'Pendiente': 'INFO',
         'Aceptado': 'SUCCESS',
-        'En proceso': 'INFO',
         'Rechazado': 'DANGER',
       };
 
@@ -1784,164 +1797,6 @@ export class NotificationSubscriber {
             clienteId: payload.clienteId,
             clienteNombre: payload.clienteNombre,
             motivoRechazo: payload.motivoRechazo,
-          },
-        },
-        [asesorId, ...adminIds].filter(Boolean) as string[],
-      );
-    });
-
-    eventBus.subscribe('quotation.negotiation.started', async (event) => {
-      const payload = event.payload as {
-        customOrderId: string;
-        quoteId: string;
-        authorId: string;
-        authorRole: string;
-        message: string;
-        round: number;
-      };
-
-      const pedido = await this.prisma.custom_orders.findUnique({ where: { id: payload.customOrderId, deleted_at: null } }).catch(() => null);
-      if (!pedido) return;
-
-      const clienteUserId = await this.findUserIdForCustomer(pedido.cliente_id);
-      const asesorId = await this.findAsesorForCustomOrder(payload.customOrderId);
-      const adminIds = await this.findAdmins();
-
-      const targetUser = payload.authorRole === 'CLIENTE' ? (asesorId ?? undefined) : (clienteUserId ?? undefined);
-      const recipients = payload.authorRole === 'CLIENTE' ? [asesorId, ...adminIds].filter(Boolean) as string[] : [clienteUserId].filter(Boolean) as string[];
-
-      await this.notify(
-        {
-          tipo: 'INFO',
-          titulo: 'Nueva propuesta de negociación',
-          mensaje: `Se ha enviado una nueva propuesta para la cotización ${payload.round}/3`,
-          modulo: 'PEDIDOS_PERSONALIZADOS',
-          entityType: 'QUOTE',
-          entityId: payload.customOrderId,
-          action: 'STATUS_CHANGED',
-          actorId: payload.authorId,
-          targetUserId: targetUser,
-          metadata: {
-            customOrderId: payload.customOrderId,
-            quoteId: payload.quoteId,
-            round: payload.round,
-            message: payload.message,
-          },
-        },
-        recipients,
-      );
-    });
-
-    eventBus.subscribe('quotation.negotiation.responded', async (event) => {
-      const payload = event.payload as {
-        customOrderId: string;
-        quoteId: string;
-        authorId: string;
-        authorRole: string;
-        message: string;
-        round: number;
-        proposalData?: any;
-      };
-
-      const pedido = await this.prisma.custom_orders.findUnique({ where: { id: payload.customOrderId, deleted_at: null } }).catch(() => null);
-      if (!pedido) return;
-
-      const clienteUserId = await this.findUserIdForCustomer(pedido.cliente_id);
-      const asesorId = await this.findAsesorForCustomOrder(payload.customOrderId);
-      const adminIds = await this.findAdmins();
-
-      const targetUser = payload.authorRole === 'CLIENTE' ? (asesorId ?? undefined) : (clienteUserId ?? undefined);
-      const recipients = payload.authorRole === 'CLIENTE' ? [asesorId, ...adminIds].filter(Boolean) as string[] : [clienteUserId].filter(Boolean) as string[];
-
-      await this.notify(
-        {
-          tipo: 'INFO',
-          titulo: 'Respuesta en negociación',
-          mensaje: `Nueva respuesta en la negociación de la cotización (ronda ${payload.round}/3)`,
-          modulo: 'PEDIDOS_PERSONALIZADOS',
-          entityType: 'QUOTE',
-          entityId: payload.customOrderId,
-          action: 'STATUS_CHANGED',
-          actorId: payload.authorId,
-          targetUserId: targetUser,
-          metadata: {
-            customOrderId: payload.customOrderId,
-            quoteId: payload.quoteId,
-            round: payload.round,
-            message: payload.message,
-            proposalData: payload.proposalData,
-          },
-        },
-        recipients,
-      );
-    });
-
-    eventBus.subscribe('quotation.negotiation.accepted', async (event) => {
-      const payload = event.payload as {
-        customOrderId: string;
-        quoteId: string;
-        negotiationId: string;
-        acceptedBy: string;
-      };
-
-      const pedido = await this.prisma.custom_orders.findUnique({ where: { id: payload.customOrderId, deleted_at: null } }).catch(() => null);
-      if (!pedido) return;
-
-      const asesorId = await this.findAsesorForCustomOrder(payload.customOrderId);
-      const adminIds = await this.findAdmins();
-
-      await this.notify(
-        {
-          tipo: 'SUCCESS',
-          titulo: 'Propuesta aceptada',
-          mensaje: `El cliente aceptó la propuesta de negociación de la cotización`,
-          modulo: 'PEDIDOS_PERSONALIZADOS',
-          entityType: 'QUOTE',
-          entityId: payload.customOrderId,
-          action: 'STATUS_CHANGED',
-          actorId: payload.acceptedBy,
-          targetUserId: asesorId ?? undefined,
-          metadata: {
-            customOrderId: payload.customOrderId,
-            quoteId: payload.quoteId,
-            negotiationId: payload.negotiationId,
-          },
-        },
-        [asesorId, ...adminIds].filter(Boolean) as string[],
-      );
-    });
-
-    eventBus.subscribe('quotation.negotiation.rejected', async (event) => {
-      const payload = event.payload as {
-        customOrderId: string;
-        quoteId: string;
-        negotiationId: string;
-        rejectedBy: string;
-        reason?: string;
-      };
-
-      const pedido = await this.prisma.custom_orders.findUnique({ where: { id: payload.customOrderId, deleted_at: null } }).catch(() => null);
-      if (!pedido) return;
-
-      const asesorId = await this.findAsesorForCustomOrder(payload.customOrderId);
-      const adminIds = await this.findAdmins();
-
-      await this.notify(
-        {
-          tipo: 'WARNING',
-          titulo: 'Propuesta rechazada',
-          mensaje: payload.reason ? `El cliente rechazó la propuesta: ${payload.reason}` : 'El cliente rechazó la propuesta de negociación',
-          modulo: 'PEDIDOS_PERSONALIZADOS',
-          entityType: 'QUOTE',
-          entityId: payload.customOrderId,
-          action: 'STATUS_CHANGED',
-          actorId: payload.rejectedBy,
-          targetUserId: asesorId ?? undefined,
-          metadata: {
-            customOrderId: payload.customOrderId,
-            quoteId: payload.quoteId,
-            negotiationId: payload.negotiationId,
-            reason: payload.reason,
           },
         },
         [asesorId, ...adminIds].filter(Boolean) as string[],

@@ -21,18 +21,22 @@ import { ordersApi } from "@/infrastructure/api/ordersApi";
 import { ESTADOS_PEDIDO_PERMITIDOS } from "@/shared/constants/options";
 import { useAuthStore } from "@/core/stores/authStore";
 import { useClientes } from "@/core/stores";
-import type { Pedido, PedidoItem } from "@/core/types";
+import type { Pedido } from "@/core/types";
 
 const orderStatuses: Record<string, "success" | "warning" | "danger" | "info" | "default" | null> = {
   Pendiente: "warning",
   Aceptado: "info",
-  "En proceso": "info",
+  "En validación": "warning",
+  "Recibo generado": "info",
+  "Recibo enviado": "info",
+  Listo: "success",
   Enviado: "default",
   Entregado: "success",
   Rechazado: "danger",
+  Cancelado: "danger",
 };
 
-const emptyPedidoForm: Omit<Pedido, "id"> = {
+const _emptyPedidoForm: Omit<Pedido, "id"> = {
   cliente: "",
   asesor: "",
   fecha: new Date().toISOString().slice(0, 10),
@@ -44,7 +48,7 @@ const emptyPedidoForm: Omit<Pedido, "id"> = {
   itemsList: [],
 };
 
-import { parseCurrency } from "@/shared/utils/number";
+// import { parseCurrency } from "@/shared/utils/number";
 
 export const AsesorPedidos: React.FC = () => {
   const user = useAuthStore((s) => s.user);
@@ -86,7 +90,7 @@ export const AsesorPedidos: React.FC = () => {
             asesorInicialRef.current = true;
           }
         }
-      } catch (error) {
+} catch (error) {
         console.error("ERROR_LOADING_ASESOR_PEDIDOS", error);
         const apiError = error as { status?: number; code?: string } | undefined;
         if (apiError?.status === 401 || apiError?.status === 403) {
@@ -223,7 +227,7 @@ export const AsesorPedidos: React.FC = () => {
       }
       setIsFormOpen(false);
       resetForm();
-    } catch (error) {
+    } catch (_error) {
       toast.error("No fue posible guardar el pedido.");
     } finally {
       setSaving(false);
@@ -591,8 +595,8 @@ export const AsesorPedidos: React.FC = () => {
                   </div>
                   <div className={f.field}>
                     <label className={f.label}>Estado *</label>
-                    <select className={f.select} value={estado} onChange={(e) => setEstado(e.target.value as Pedido["estado"])}>
-                      {(["Pendiente", "Aceptado", "En proceso", "Enviado", "Entregado", "Rechazado"] as Pedido["estado"][]).map((es) => (
+                     <select className={f.select} value={estado} onChange={(e) => setEstado(e.target.value as Pedido["estado"])}>
+                       {(["Pendiente", "Aceptado", "Listo", "Enviado", "Entregado", "Rechazado", "En validación", "Recibo generado", "Recibo enviado", "Cancelado"] as Pedido["estado"][]).map((es) => (
                         <option key={es} value={es}>
                           {es}
                         </option>

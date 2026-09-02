@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { GetNotifications, GetNotificationById, MarkNotificationAsRead, NotificationSubscriber } from '@/modules/notifications/application/use-cases/NotificationUseCases';
+import { GetNotifications, GetNotificationById, MarkNotificationAsRead, MarkAllNotificationsAsRead, DeleteAllNotifications, NotificationSubscriber } from '@/modules/notifications/application/use-cases/NotificationUseCases';
 import type { NotificationRepository, NotificationFilters } from '@/modules/notifications/domain/repositories/NotificationRepository';
 import type { EventBus } from '@/modules/shared/application/EventBus';
 
@@ -8,6 +8,11 @@ const mockRepo: jest.Mocked<NotificationRepository> = {
   getById: vi.fn(),
   create: vi.fn(),
   markAsRead: vi.fn(),
+  markAllAsRead: vi.fn(),
+  deleteAllByUserId: vi.fn(),
+  delete: vi.fn(),
+  update: vi.fn(),
+  getSidebarSummary: vi.fn(),
 };
 
 const mockEventBus: jest.Mocked<EventBus> = {
@@ -48,9 +53,41 @@ describe('MarkNotificationAsRead', () => {
   });
 });
 
+describe('MarkAllNotificationsAsRead', () => {
+  it('should mark all as read', async () => {
+    mockRepo.markAllAsRead.mockResolvedValue(5);
+    const useCase = new MarkAllNotificationsAsRead(mockRepo);
+    const result = await useCase.execute('u-1');
+    expect(result).toBe(5);
+    expect(mockRepo.markAllAsRead).toHaveBeenCalledWith('u-1');
+  });
+});
+
+describe('DeleteAllNotifications', () => {
+  it('should delete all notifications for user', async () => {
+    mockRepo.deleteAllByUserId.mockResolvedValue(3);
+    const useCase = new DeleteAllNotifications(mockRepo);
+    const result = await useCase.execute('u-1');
+    expect(result).toBe(3);
+    expect(mockRepo.deleteAllByUserId).toHaveBeenCalledWith('u-1');
+  });
+});
+
 describe('NotificationSubscriber', () => {
+  const mockPrisma = {
+    user: { findMany: vi.fn().mockResolvedValue([]) },
+    customer: { findUnique: vi.fn().mockResolvedValue(null) },
+    custom_orders: { findUnique: vi.fn().mockResolvedValue(null) },
+    permission: { findMany: vi.fn().mockResolvedValue([]) },
+    rolePermission: { findMany: vi.fn().mockResolvedValue([]) },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should register handlers for events', () => {
-    const subscriber = new NotificationSubscriber(mockRepo);
+    const subscriber = new NotificationSubscriber(mockRepo, mockPrisma as any);
     subscriber.register(mockEventBus);
 
     expect(mockEventBus.subscribe).toHaveBeenCalledWith('order.created', expect.any(Function));
@@ -71,7 +108,7 @@ describe('NotificationSubscriber', () => {
   });
 
   it('should create notification on order.created', async () => {
-    const subscriber = new NotificationSubscriber(mockRepo);
+    const subscriber = new NotificationSubscriber(mockRepo, mockPrisma as any);
     subscriber.register(mockEventBus);
 
     const handler = mockEventBus.subscribe.mock.calls.find(([type]) => type === 'order.created')?.[1];
@@ -108,7 +145,7 @@ describe('NotificationSubscriber', () => {
   });
 
   it('should create notification on order.status.updated', async () => {
-    const subscriber = new NotificationSubscriber(mockRepo);
+    const subscriber = new NotificationSubscriber(mockRepo, mockPrisma as any);
     subscriber.register(mockEventBus);
 
     const handler = mockEventBus.subscribe.mock.calls.find(([type]) => type === 'order.status.updated')?.[1];
@@ -132,13 +169,12 @@ describe('NotificationSubscriber', () => {
           tipo: 'SUCCESS',
           titulo: 'Pedido PED-000001 actualizado',
           mensaje: expect.stringContaining('Entregado'),
-          usuarioId: 'asesor1',
           modulo: 'ORDERS',
           entityType: 'ORDER',
           entityId: '1',
           action: 'STATUS_CHANGED',
           actorId: 'asesor1',
-          targetUserId: 'asesor1',
+          usuarioId: 'asesor1',
         })
       );
     }

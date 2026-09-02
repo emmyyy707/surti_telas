@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Download, X, Package, DollarSign, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, X, Eye } from 'lucide-react';
 import s from './AdminCompras.module.css';
 import f from '@/styles/Form.module.css';
 import { SearchInput } from '@/shared/ui/SearchInput';
@@ -12,8 +12,20 @@ import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { purchasesApi, type PurchaseDTO, type PurchaseItemDTO } from '@/infrastructure/api/purchasesApi';
 import { suppliersApi } from '@/infrastructure/api/suppliersApi';
+import { insumosApi, type InsumoDTO } from '@/infrastructure/api/insumosApi';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+
+interface FormItem {
+  rawMaterialId?: string;
+  nombre: string;
+  unidadMedida?: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(Number.isFinite(value) ? value : 0);
 
 export const AdminCompras: React.FC = () => {
   const [compras, setCompras] = useState<PurchaseDTO[]>([]);
@@ -24,7 +36,6 @@ export const AdminCompras: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<PurchaseDTO | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<PurchaseDTO | null>(null);
-  const [items, setItems] = useState<PurchaseItemDTO[]>([]);
   const [saving, setSaving] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelMotivo, setCancelMotivo] = useState('');
@@ -36,8 +47,12 @@ export const AdminCompras: React.FC = () => {
   const [formNumero, setFormNumero] = useState('');
   const [formProveedorId, setFormProveedorId] = useState('');
   const [formObservaciones, setFormObservaciones] = useState('');
-  const [formItems, setFormItems] = useState<{ rawMaterialId?: string; nombre: string; cantidad: number; precioUnitario: number }[]>([]);
+  const [formItems, setFormItems] = useState<FormItem[]>([]);
+  const [errors, setErrors] = useState<{ numero?: string; items?: string }>({});
   const [suppliers, setSuppliers] = useState<{ id: string; nombre: string }[]>([]);
+  const [insumos, setInsumos] = useState<InsumoDTO[]>([]);
+  const [insumoSearch, setInsumoSearch] = useState('');
+  const [selectedInsumoId, setSelectedInsumoId] = useState('');
 
   const pagination = useServerPagination(10);
 
@@ -68,24 +83,32 @@ export const AdminCompras: React.FC = () => {
   }, [fetchCompras]);
 
   useEffect(() => {
-    const loadSuppliers = async () => {
+    const loadAux = async () => {
       try {
         const result = await suppliersApi.list({ limit: 100 });
-        setSuppliers(result.data.map(s => ({ id: s.id, nombre: s.nombre })));
+        setSuppliers(result.data.map((sp) => ({ id: sp.id, nombre: sp.nombre })));
       } catch {
-        // ignore
+        /* ignore */
+      }
+      try {
+        const result = await insumosApi.list({ limit: 100 });
+        setInsumos(result.items);
+      } catch {
+        /* ignore */
       }
     };
-    void loadSuppliers();
+    void loadAux();
   }, []);
 
   const resetForm = () => {
     setFormNumero('');
     setFormProveedorId('');
     setFormObservaciones('');
-    setFormItems([{ nombre: '', cantidad: 1, precioUnitario: 0 }]);
+    setFormItems([]);
+    setErrors({});
+    setInsumoSearch('');
+    setSelectedInsumoId('');
     setEditing(null);
-    setItems([]);
     setSaving(false);
   };
 
@@ -100,8 +123,16 @@ export const AdminCompras: React.FC = () => {
     setFormProveedorId(compra.proveedorId);
     setFormObservaciones(compra.observaciones ?? '');
     const compraItems = await purchasesApi.getItems(compra.id);
-    setItems(compraItems);
-    setFormItems(compraItems.length ? compraItems.map(i => ({ rawMaterialId: i.rawMaterialId, nombre: i.nombre, cantidad: i.cantidad, precioUnitario: i.precioUnitario })) : [{ nombre: '', cantidad: 1, precioUnitario: 0 }]);
+    setFormItems(
+      compraItems.length
+        ? compraItems.map((i) => ({
+            rawMaterialId: i.rawMaterialId,
+            nombre: i.nombre,
+            cantidad: i.cantidad,
+            precioUnitario: i.precioUnitario,
+          }))
+        : [],
+    );
     setModalOpen(true);
   };
 
@@ -112,41 +143,69 @@ export const AdminCompras: React.FC = () => {
     setDetailModalOpen(true);
   };
 
+  const isItemValid = (item: FormItem): boolean => {
+    const nombreOk = item.rawMaterialId ? Boolean(item.nombre) : item.nombre.trim().length > 0;
+    const cantidadOk = Number.isFinite(item.cantidad) && Number.isInteger(item.cantidad) && item.cantidad >= 1;
+    const precioOk = Number.isFinite(item.precioUnitario) && item.precioUnitario > 0;
+    return nombreOk && cantidadOk && precioOk;
+  };
+
   const handleSave = async () => {
-    if (!formNumero.trim() || !formProveedorId) {
-      toast.error('Número y proveedor son obligatorios');
+    const numeroTrim = formNumero.trim();
+    const nextErrors: { numero?: string; items?: string } = {};
+    if (!numeroTrim) nextErrors.numero = 'El número de la compra es obligatorio';
+    else if (numeroTrim.length > 50) nextErrors.numero = 'El número no puede exceder 50 caracteres';
+    if (!formProveedorId) {
+      toast.error('El proveedor es obligatorio');
+      return;
+    }
+    const validItems = formItems.filter(isItemValid);
+    if (validItems.length === 0) {
+      nextErrors.items = 'Agrega al menos una partida válida (cantidad entera ≥ 1 y precio unitario > 0)';
+    }
+    setErrors(nextErrors);
+    if (nextErrors.numero) {
+      toast.error(nextErrors.numero);
+      return;
+    }
+    if (nextErrors.items) {
+      toast.error(nextErrors.items);
       return;
     }
     setSaving(true);
     try {
-      const itemsPayload = formItems.filter(i => i.nombre.trim());
-      if (itemsPayload.length === 0) {
-        toast.error('Agrega al menos un ítem');
-        setSaving(false);
-        return;
-      }
-      const total = itemsPayload.reduce((sum, i) => sum + i.cantidad * i.precioUnitario, 0);
+      const total = validItems.reduce((sum, i) => sum + i.cantidad * i.precioUnitario, 0);
       if (editing) {
         const updated = await purchasesApi.update(editing.id, { observaciones: formObservaciones });
-        setCompras(prev => prev.map(c => (c.id === updated.id ? updated : c)));
+        setCompras((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
         toast.success('Compra actualizada');
       } else {
         const created = await purchasesApi.create({
-          numero: formNumero,
+          numero: numeroTrim,
           proveedorId: formProveedorId,
           usuarioId: 'system',
           total,
           observaciones: formObservaciones,
-          items: itemsPayload,
+          items: validItems.map((i) => ({
+            rawMaterialId: i.rawMaterialId,
+            nombre: i.nombre.trim(),
+            cantidad: i.cantidad,
+            precioUnitario: i.precioUnitario,
+          })),
         });
-        setCompras(prev => [created, ...prev]);
+        setCompras((prev) => [created, ...prev]);
         toast.success('Compra creada');
       }
       setModalOpen(false);
       resetForm();
       void fetchCompras();
-    } catch {
-      toast.error('No se pudo guardar la compra');
+    } catch (err: unknown) {
+      const message = (err as { response?: { body?: { message?: string } } }).response?.body?.message ?? 'No se pudo guardar la compra';
+      if (message.toLowerCase().includes('duplicado') || message.toLowerCase().includes('unique') || message.includes('P2002')) {
+        toast.error('El número de compra ya existe');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setSaving(false);
     }
@@ -156,7 +215,7 @@ export const AdminCompras: React.FC = () => {
     if (!deleteConfirm) return;
     try {
       await purchasesApi.remove(deleteConfirm.id);
-      setCompras(prev => prev.filter(c => c.id !== deleteConfirm.id));
+      setCompras((prev) => prev.filter((c) => c.id !== deleteConfirm.id));
       toast.success('Compra eliminada');
       setDeleteConfirm(null);
     } catch {
@@ -168,7 +227,7 @@ export const AdminCompras: React.FC = () => {
     if (!cancelling || !cancelMotivo.trim()) return;
     try {
       const updated = await purchasesApi.cancel(cancelling.id, cancelMotivo);
-      setCompras(prev => prev.map(c => (c.id === updated.id ? updated : c)));
+      setCompras((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
       toast.success('Compra anulada');
       setCancelModalOpen(false);
       setCancelling(null);
@@ -193,17 +252,52 @@ export const AdminCompras: React.FC = () => {
     }
   };
 
-  const addItem = () => {
-    setFormItems(prev => [...prev, { nombre: '', cantidad: 1, precioUnitario: 0 }]);
+  const addItemFromSelector = () => {
+    if (!selectedInsumoId) {
+      toast.error('Seleccione un insumo para agregar');
+      return;
+    }
+    if (formItems.some((i) => i.rawMaterialId === selectedInsumoId)) {
+      toast.error('Ese insumo ya fue agregado a la compra');
+      return;
+    }
+    const ins = insumos.find((i) => i.id === selectedInsumoId);
+    if (!ins) return;
+    setFormItems((prev) => [
+      ...prev,
+      {
+        rawMaterialId: ins.id,
+        nombre: ins.nombre,
+        unidadMedida: ins.unidadMedida,
+        cantidad: 1,
+        precioUnitario: ins.precioUnitario,
+      },
+    ]);
+    setSelectedInsumoId('');
+    setInsumoSearch('');
   };
 
-  const updateItem = (index: number, field: string, value: string | number) => {
-    setFormItems(prev => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+  const updateItem = (index: number, field: keyof FormItem, value: string | number) => {
+    setFormItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
 
   const removeItem = (index: number) => {
-    setFormItems(prev => prev.filter((_, i) => i !== index));
+    setFormItems((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const unidadPara = (item: FormItem): string =>
+    item.unidadMedida || (item.rawMaterialId ? insumos.find((i) => i.id === item.rawMaterialId)?.unidadMedida : '') || '—';
+
+  const filteredInsumos = useMemo(() => {
+    const q = insumoSearch.trim().toLowerCase();
+    if (!q) return insumos;
+    return insumos.filter((i) => i.nombre.toLowerCase().includes(q));
+  }, [insumos, insumoSearch]);
+
+  const totalCompra = useMemo(
+    () => formItems.filter(isItemValid).reduce((sum, i) => sum + i.cantidad * i.precioUnitario, 0),
+    [formItems],
+  );
 
   const columns: DataTableColumn<PurchaseDTO>[] = [
     {
@@ -215,7 +309,7 @@ export const AdminCompras: React.FC = () => {
     {
       key: 'proveedorId',
       header: 'Proveedor',
-      render: (c) => suppliers.find(s => s.id === c.proveedorId)?.nombre ?? c.proveedorId,
+      render: (c) => suppliers.find((sp) => sp.id === c.proveedorId)?.nombre ?? c.proveedorId,
     },
     {
       key: 'total',
@@ -223,14 +317,15 @@ export const AdminCompras: React.FC = () => {
       width: '120px',
       align: 'right',
       sortable: true,
-      render: (c) => <span className={s.tdRight}>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(c.total)}</span>,
+      render: (c) => <span className={s.tdRight}>{formatCurrency(c.total)}</span>,
     },
     {
       key: 'estado',
       header: 'Estado',
       width: '120px',
       render: (c) => {
-        const variant = c.estado === 'PENDIENTE' ? 'default' : c.estado === 'RECIBIDA' ? 'success' : c.estado === 'CANCELADA' ? 'warning' : 'danger';
+        const variant =
+          c.estado === 'PENDIENTE' ? 'default' : c.estado === 'RECIBIDA' ? 'success' : c.estado === 'CANCELADA' ? 'warning' : 'danger';
         return <Badge variant={variant}>{c.estado}</Badge>;
       },
     },
@@ -246,7 +341,15 @@ export const AdminCompras: React.FC = () => {
   const actions = (c: PurchaseDTO) => [
     { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => openDetail(c) },
     { label: 'Editar', icon: <Edit size={14} />, onClick: () => openEdit(c) },
-    { label: 'Anular', icon: <X size={14} />, onClick: () => { setCancelling(c); setCancelModalOpen(true); }, disabled: c.estado === 'ANULADA' || c.estado === 'CANCELADA' },
+    {
+      label: 'Anular',
+      icon: <X size={14} />,
+      onClick: () => {
+        setCancelling(c);
+        setCancelModalOpen(true);
+      },
+      disabled: c.estado === 'ANULADA' || c.estado === 'CANCELADA',
+    },
     { label: 'PDF', icon: <Download size={14} />, onClick: () => handleExportPdf(c) },
     { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(c), danger: true },
   ];
@@ -286,41 +389,181 @@ export const AdminCompras: React.FC = () => {
         onPageChange={(newPage) => pagination.setPage(newPage)}
       />
 
-      <Modal open={modalOpen} onClose={() => { setModalOpen(false); resetForm(); }} title={editing ? 'Editar compra' : 'Nueva compra'} size="lg">
-        <form className={f.form} onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-          <div className={s.formRow}>
+      <Modal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          resetForm();
+        }}
+        title={editing ? 'Editar compra' : 'Nueva compra'}
+        size="lg"
+      >
+        <form
+          className={f.form}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+        >
+          {editing ? (
             <div className={f.field}>
-              <label className={f.label}>Número *</label>
-              <input className={f.input} value={formNumero} onChange={(e) => setFormNumero(e.target.value)} />
+              <label className={f.label}>Observaciones</label>
+              <textarea
+                className={f.textarea}
+                value={formObservaciones}
+                onChange={(e) => setFormObservaciones(e.target.value)}
+                rows={3}
+              />
             </div>
-            <div className={f.field}>
-              <label className={f.label}>Proveedor *</label>
-              <select className={f.select} value={formProveedorId} onChange={(e) => setFormProveedorId(e.target.value)}>
-                <option value="">Seleccione...</option>
-                {suppliers.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className={f.field}>
-            <label className={f.label}>Observaciones</label>
-            <textarea className={f.textarea} value={formObservaciones} onChange={(e) => setFormObservaciones(e.target.value)} rows={3} />
-          </div>
-
-          <div className={s.itemsSection}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <label className={f.label}>Partidas</label>
-              <Button type="button" variant="secondary" leftIcon={<Plus size={14} />} onClick={addItem}>Agregar ítem</Button>
-            </div>
-            {formItems.map((item, idx) => (
-              <div key={idx} className={s.itemRow}>
-                <input className={f.input} placeholder="Nombre insumo" value={item.nombre} onChange={(e) => updateItem(idx, 'nombre', e.target.value)} />
-                <input className={f.input} type="number" placeholder="Cant." value={item.cantidad} onChange={(e) => updateItem(idx, 'cantidad', Number(e.target.value))} />
-                <input className={f.input} type="number" placeholder="Precio" value={item.precioUnitario} onChange={(e) => updateItem(idx, 'precioUnitario', Number(e.target.value))} />
-                <Button type="button" variant="danger" onClick={() => removeItem(idx)}><Trash2 size={14} /></Button>
+          ) : (
+            <>
+              <div className={s.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Número de compra *</label>
+                  <input
+                    className={f.input}
+                    value={formNumero}
+                    placeholder="Ej: COMP-0001"
+                    onChange={(e) => {
+                      setFormNumero(e.target.value);
+                      if (errors.numero) setErrors((p) => ({ ...p, numero: undefined }));
+                    }}
+                    aria-invalid={Boolean(errors.numero)}
+                  />
+                  <small style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem' }}>
+                    Número de factura o referencia única de la compra.
+                  </small>
+                  {errors.numero && (
+                    <span style={{ color: 'var(--color-danger)', fontSize: '0.78rem' }}>{errors.numero}</span>
+                  )}
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Proveedor *</label>
+                  <select
+                    className={f.select}
+                    value={formProveedorId}
+                    onChange={(e) => setFormProveedorId(e.target.value)}
+                  >
+                    <option value="">Seleccione...</option>
+                    {suppliers.map((sp) => (
+                      <option key={sp.id} value={sp.id}>
+                        {sp.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            ))}
-          </div>
+
+              <div className={f.field}>
+                <label className={f.label}>Observaciones</label>
+                <textarea
+                  className={f.textarea}
+                  value={formObservaciones}
+                  onChange={(e) => setFormObservaciones(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className={s.itemsSection}>
+                <label className={f.label}>Partidas</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <input
+                    className={f.input}
+                    style={{ flex: '1 1 200px' }}
+                    placeholder="Buscar insumo..."
+                    value={insumoSearch}
+                    onChange={(e) => setInsumoSearch(e.target.value)}
+                  />
+                  <select
+                    className={f.select}
+                    style={{ flex: '1 1 240px' }}
+                    value={selectedInsumoId}
+                    onChange={(e) => setSelectedInsumoId(e.target.value)}
+                  >
+                    <option value="">Seleccione un insumo...</option>
+                    {filteredInsumos.map((ins) => (
+                      <option key={ins.id} value={ins.id}>
+                        {ins.nombre} ({ins.unidadMedida})
+                      </option>
+                    ))}
+                  </select>
+                  <Button type="button" variant="secondary" leftIcon={<Plus size={14} />} onClick={addItemFromSelector}>
+                    Agregar insumo
+                  </Button>
+                  <Button type="button" variant="secondary" leftIcon={<Plus size={14} />} onClick={() => {
+                    setFormItems((prev) => [...prev, { nombre: '', cantidad: 1, precioUnitario: 0 }]);
+                  }}>
+                    Partida manual
+                  </Button>
+                </div>
+
+            {formItems.length === 0 ? (
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No hay partidas. Seleccione un insumo y presione “Agregar”.
+              </p>
+            ) : (
+              formItems.map((item, idx) => {
+                const invalid = !isItemValid(item);
+                return (
+                  <div key={idx} className={s.itemRow} style={invalid ? { borderColor: 'var(--color-danger)' } : undefined}>
+                    <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                      {item.rawMaterialId ? (
+                        <>
+                          <div style={{ fontWeight: 600 }}>{item.nombre}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{unidadPara(item)}</div>
+                        </>
+                      ) : (
+                        <input
+                          className={f.input}
+                          value={item.nombre}
+                          onChange={(e) => updateItem(idx, 'nombre', e.target.value)}
+                          placeholder="Nombre del producto/materia prima"
+                          style={{ width: '100%' }}
+                        />
+                      )}
+                    </div>
+                    <input
+                      className={f.input}
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={Number.isFinite(item.cantidad) ? item.cantidad : ''}
+                      onChange={(e) => updateItem(idx, 'cantidad', Number(e.target.value))}
+                      style={{ width: 90 }}
+                      aria-label="Cantidad"
+                    />
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem' }}>{unidadPara(item)}</span>
+                    <input
+                      className={f.input}
+                      type="number"
+                      min={0.01}
+                      step={0.01}
+                      value={Number.isFinite(item.precioUnitario) ? item.precioUnitario : ''}
+                      onChange={(e) => updateItem(idx, 'precioUnitario', Number(e.target.value))}
+                      style={{ width: 120 }}
+                      aria-label="Precio unitario"
+                    />
+                    <span style={{ fontSize: '0.8rem', minWidth: 90, textAlign: 'right' }}>
+                      {formatCurrency(item.cantidad * item.precioUnitario)}
+                    </span>
+                    <Button type="button" variant="danger" onClick={() => removeItem(idx)} aria-label="Eliminar partida">
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                );
+              })
+            )}
+
+             {errors.items && (
+               <p style={{ color: 'var(--color-danger)', fontSize: '0.78rem', marginTop: 6 }}>{errors.items}</p>
+             )}
+
+             <div style={{ textAlign: 'right', marginTop: 8, fontWeight: 600 }}>
+               Total de la compra: {formatCurrency(totalCompra)}
+             </div>
+           </div>
+         </>
+           )}
 
           <ModalFooter
             secondary={{ label: 'Cancelar', onClick: () => { setModalOpen(false); resetForm(); } }}
@@ -339,11 +582,25 @@ export const AdminCompras: React.FC = () => {
         variant="danger"
       />
 
-      <Modal open={cancelModalOpen} onClose={() => { setCancelModalOpen(false); setCancelling(null); setCancelMotivo(''); }} title="Anular compra" size="sm">
+      <Modal
+        open={cancelModalOpen}
+        onClose={() => {
+          setCancelModalOpen(false);
+          setCancelling(null);
+          setCancelMotivo('');
+        }}
+        title="Anular compra"
+        size="sm"
+      >
         <div className={f.form}>
           <div className={f.field}>
             <label className={f.label}>Motivo de anulación *</label>
-            <textarea className={f.textarea} value={cancelMotivo} onChange={(e) => setCancelMotivo(e.target.value)} rows={3} />
+            <textarea
+              className={f.textarea}
+              value={cancelMotivo}
+              onChange={(e) => setCancelMotivo(e.target.value)}
+              rows={3}
+            />
           </div>
           <ModalFooter
             secondary={{ label: 'Cancelar', onClick: () => { setCancelModalOpen(false); setCancelling(null); setCancelMotivo(''); } }}
@@ -352,7 +609,16 @@ export const AdminCompras: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal open={detailModalOpen} onClose={() => { setDetailModalOpen(false); setDetailCompra(null); setDetailItems([]); }} title={`Detalle de compra ${detailCompra?.numero ?? ''}`} size="lg">
+      <Modal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setDetailCompra(null);
+          setDetailItems([]);
+        }}
+        title={`Detalle de compra ${detailCompra?.numero ?? ''}`}
+        size="lg"
+      >
         <div className={f.form}>
           {detailCompra && (
             <>
@@ -363,17 +629,33 @@ export const AdminCompras: React.FC = () => {
                 </div>
                 <div className={f.field}>
                   <label className={f.label}>Proveedor</label>
-                  <input className={f.input} value={suppliers.find(s => s.id === detailCompra.proveedorId)?.nombre ?? detailCompra.proveedorId} readOnly />
+                  <input
+                    className={f.input}
+                    value={suppliers.find((sp) => sp.id === detailCompra.proveedorId)?.nombre ?? detailCompra.proveedorId}
+                    readOnly
+                  />
                 </div>
               </div>
               <div className={s.formRow}>
                 <div className={f.field}>
                   <label className={f.label}>Estado</label>
-                  <Badge variant={detailCompra.estado === 'PENDIENTE' ? 'default' : detailCompra.estado === 'RECIBIDA' ? 'success' : detailCompra.estado === 'CANCELADA' ? 'warning' : 'danger'}>{detailCompra.estado}</Badge>
+                  <Badge
+                    variant={
+                      detailCompra.estado === 'PENDIENTE'
+                        ? 'default'
+                        : detailCompra.estado === 'RECIBIDA'
+                          ? 'success'
+                          : detailCompra.estado === 'CANCELADA'
+                            ? 'warning'
+                            : 'danger'
+                    }
+                  >
+                    {detailCompra.estado}
+                  </Badge>
                 </div>
                 <div className={f.field}>
                   <label className={f.label}>Total</label>
-                  <input className={f.input} value={new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(detailCompra.total)} readOnly />
+                  <input className={f.input} value={formatCurrency(detailCompra.total)} readOnly />
                 </div>
               </div>
               <div className={f.field}>
@@ -399,8 +681,8 @@ export const AdminCompras: React.FC = () => {
                         <tr key={idx}>
                           <td>{item.nombre}</td>
                           <td>{item.cantidad}</td>
-                          <td>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(item.precioUnitario)}</td>
-                          <td>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(item.cantidad * item.precioUnitario)}</td>
+                          <td>{formatCurrency(item.precioUnitario)}</td>
+                          <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -410,7 +692,14 @@ export const AdminCompras: React.FC = () => {
             </>
           )}
           <ModalFooter
-            secondary={{ label: 'Cerrar', onClick: () => { setDetailModalOpen(false); setDetailCompra(null); setDetailItems([]); } }}
+            secondary={{
+              label: 'Cerrar',
+              onClick: () => {
+                setDetailModalOpen(false);
+                setDetailCompra(null);
+                setDetailItems([]);
+              },
+            }}
           />
         </div>
       </Modal>

@@ -7,7 +7,7 @@ const repository = new PrismaPaymentRepository(prisma);
 
 export class ListPayments {
   constructor(private repo: PaymentRepository) {}
-  async execute(filters: { customerId?: string; asesorId?: string; status?: PaymentStatus }) {
+  async execute(filters: { customerId?: string; asesorId?: string; status?: PaymentStatus; search?: string }) {
     return this.repo.list(filters);
   }
 }
@@ -47,6 +47,13 @@ export class DeletePayment {
   }
 }
 
+export class CancelPayment {
+  constructor(private repo: PaymentRepository) {}
+  async execute(id: string, motivoAnulacion: string) {
+    return this.repo.cancel(id, motivoAnulacion);
+  }
+}
+
 export class GetCustomerBalance {
   constructor(private repo: PaymentRepository) {}
   async execute(customerId: string) {
@@ -62,9 +69,12 @@ export class GetQuoteBalance {
       throw new Error('Cotización no encontrada');
     }
 
-    const payments = await this.prisma.payment.findMany({
-      where: { orderId: quote.custom_order_id ?? undefined, deletedAt: null, status: 'APPROVED' },
-    });
+    const where: Record<string, unknown> = { deletedAt: null, status: 'APPROVED' };
+    if (quote.custom_order_id) {
+      where.orderId = quote.custom_order_id;
+    }
+
+    const payments = await this.prisma.payment.findMany({ where });
 
     const totalPaid = payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
     const total = Number(quote.total);
@@ -81,6 +91,51 @@ export class GetQuoteBalance {
   }
 }
 
+export class GetQuoteBalanceByCustomer {
+  constructor(private prisma: any) {}
+  async execute(customerId: string) {
+    const quotes = await this.prisma.quotes.findMany({
+      where: {
+        deleted_at: null,
+        custom_orders: {
+          cliente_id: customerId,
+          deleted_at: null,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!quotes.length) {
+      return [];
+    }
+
+    const payments = await this.prisma.payment.findMany({
+      where: { deletedAt: null, status: 'APPROVED', orderId: { in: quotes.map((q: any) => q.custom_order_id).filter(Boolean) } },
+    });
+
+    const paymentsByOrder = new Map<string, number>();
+    for (const p of payments) {
+      const current = paymentsByOrder.get(p.orderId) || 0;
+      paymentsByOrder.set(p.orderId, current + Number(p.amount));
+    }
+
+    return quotes.map((quote: any) => {
+      const totalPaid = paymentsByOrder.get(quote.custom_order_id) || 0;
+      const total = Number(quote.total);
+      const saldo = total - totalPaid;
+      return {
+        quoteId: quote.id,
+        numero: quote.numero,
+        total,
+        totalPaid,
+        saldo,
+        porcentajeAnticipo: quote.porcentaje_anticipo ?? 50,
+        valorAnticipo: Number(quote.valor_anticipo) || 0,
+      };
+    });
+  }
+}
+
 export const paymentUseCases = {
   listPayments: new ListPayments(repository),
   getPaymentById: new GetPaymentById(repository),
@@ -88,6 +143,8 @@ export const paymentUseCases = {
   updatePaymentStatus: new UpdatePaymentStatus(repository),
   updatePayment: new UpdatePayment(repository),
   deletePayment: new DeletePayment(repository),
+  cancelPayment: new CancelPayment(repository),
   getCustomerBalance: new GetCustomerBalance(repository),
   getQuoteBalance: new GetQuoteBalance(prisma),
+  getQuoteBalanceByCustomer: new GetQuoteBalanceByCustomer(prisma),
 };

@@ -36,8 +36,6 @@ export class CreateCustomOrder {
   }
 
   async execute(input: any) {
-    const numero = await this.repo.nextNumero();
-
     if (input.items && input.items.length > 0) {
       for (const item of input.items) {
         const cantidad = Number(item.cantidad) || 0;
@@ -56,16 +54,18 @@ export class CreateCustomOrder {
       }
     }
 
-    const pedido = new PedidoPersonalizado({
-      ...input,
-      numeroSolicitud: numero,
-      estado: CustomOrderStatus.PENDIENTE,
-      items: [],
-      personalizaciones: [],
-    });
-
     let created: any = null;
     await this.prisma.$transaction(async (tx) => {
+      const numero = await this.repo.nextNumero(tx);
+
+      const pedido = new PedidoPersonalizado({
+        ...input,
+        numeroSolicitud: numero,
+        estado: CustomOrderStatus.PENDIENTE,
+        items: [],
+        personalizaciones: [],
+      });
+
       created = await this.repo.create(pedido, tx);
 
       if (input.items && input.items.length > 0) {

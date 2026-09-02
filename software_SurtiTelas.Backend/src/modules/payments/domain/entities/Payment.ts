@@ -1,4 +1,4 @@
-export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED';
+export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED' | 'ANULADO';
 export type PaymentMethod = 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER';
 
 export interface PaymentData {
@@ -14,6 +14,13 @@ export interface PaymentData {
   paidAt?: string;
   createdAt: string;
   updatedAt: string;
+  orderNumero?: string;
+  customerNombre?: string;
+  asesorNombre?: string;
+  orderTotal?: number;
+  orderEstado?: string;
+  motivoAnulacion?: string;
+  fechaAnulacion?: string;
 }
 
 export class Payment {
@@ -29,6 +36,13 @@ export class Payment {
   readonly paidAt?: string;
   readonly createdAt: string;
   readonly updatedAt: string;
+  readonly orderNumero?: string;
+  readonly customerNombre?: string;
+  readonly asesorNombre?: string;
+  readonly orderTotal?: number;
+  readonly orderEstado?: string;
+  readonly motivoAnulacion?: string;
+  readonly fechaAnulacion?: string;
 
   constructor(data: PaymentData) {
     this.id = data.id;
@@ -43,6 +57,13 @@ export class Payment {
     this.paidAt = data.paidAt;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
+    this.orderNumero = data.orderNumero;
+    this.customerNombre = data.customerNombre;
+    this.asesorNombre = data.asesorNombre;
+    this.orderTotal = data.orderTotal;
+    this.orderEstado = data.orderEstado;
+    this.motivoAnulacion = data.motivoAnulacion;
+    this.fechaAnulacion = data.fechaAnulacion;
   }
 }
 

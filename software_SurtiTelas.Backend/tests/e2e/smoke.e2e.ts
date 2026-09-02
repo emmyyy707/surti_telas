@@ -36,6 +36,5 @@ test('E2E smoke - list orders with token', async ({ request }) => {
   expect(body.data).toBeDefined();
   expect(body.data.items).toBeDefined();
   expect(Array.isArray(body.data.items)).toBe(true);
-  expect(body.data.meta).toBeDefined();
-  expect(body.data.meta.totalRecords).toBeDefined();
+  expect(body.data.totalRecords).toBeDefined();
 });

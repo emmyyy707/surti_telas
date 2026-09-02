@@ -1,11 +1,15 @@
 import { ProductionStatus as DbStatus } from '@prisma/client';
 import type { ProductionOrderData, ProductionStatus } from '../../domain/entities/ProductionOrder';
 
-const STATUS_TO_DB: Record<ProductionStatus, DbStatus> = {
+const STATUS_TO_DB: Record<string, DbStatus> = {
   PENDIENTE: 'PENDIENTE',
   ASIGNADA: 'ASIGNADA',
   EN_PROCESO: 'EN_PROCESO',
   TERMINADO: 'TERMINADO',
+  Pendiente: 'PENDIENTE',
+  Asignada: 'ASIGNADA',
+  'En produccion': 'EN_PROCESO',
+  Completada: 'TERMINADO',
 };
 
 const DB_TO_STATUS: Record<DbStatus, ProductionStatus> = {

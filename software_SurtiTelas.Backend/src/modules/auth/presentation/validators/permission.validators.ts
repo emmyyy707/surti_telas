@@ -26,3 +26,15 @@ export const RolePermissionFiltersSchema = z.object({
 export const RoleFiltersSchema = z.object({
   ...PaginationSchema.shape,
 });
+
+export const CreateRoleSchema = z.object({
+  nombre: z.string().min(1, 'El nombre del rol es obligatorio'),
+  descripcion: z.string().optional(),
+  permisos: z.array(z.string()).optional(),
+});
+
+export const UpdateRoleSchema = z.object({
+  nombre: z.string().min(1, 'El nombre del rol es obligatorio').optional(),
+  descripcion: z.string().optional(),
+  permisos: z.array(z.string()).optional(),
+});

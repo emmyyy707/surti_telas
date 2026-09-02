@@ -18,6 +18,7 @@ describe('Customers Integration', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         nombre: 'Cliente Test Integración',
+        apellidos: 'Test',
         ciudad: 'Medellín',
         tel: '3009876543',
         nit: '900987654-3',

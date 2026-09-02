@@ -37,10 +37,10 @@ export const getAdminOrders = async (req: Request, res: Response) => {
     where.estado = filters.estado;
   }
   if (filters.cliente) {
-    where.cliente = { contains: filters.cliente, mode: 'insensitive' as const };
+    where.clienteNombre = { contains: filters.cliente, mode: 'insensitive' as const };
   }
   if (filters.asesor) {
-    where.asesor = { contains: filters.asesor, mode: 'insensitive' as const };
+    where.asesorNombre = { contains: filters.asesor, mode: 'insensitive' as const };
   }
   if (filters.fechaDesde || filters.fechaHasta) {
     where.createdAt = {};
@@ -49,9 +49,9 @@ export const getAdminOrders = async (req: Request, res: Response) => {
   }
   if (filters.search) {
     where.OR = [
-      { numero: { contains: filters.search } },
-      { cliente: { contains: filters.search } },
-      { asesor: { contains: filters.search } },
+      { numero: { contains: filters.search, mode: 'insensitive' as const } },
+      { clienteNombre: { contains: filters.search, mode: 'insensitive' as const } },
+      { asesor: { nombre: { contains: filters.search, mode: 'insensitive' as const } } },
     ];
   }
 

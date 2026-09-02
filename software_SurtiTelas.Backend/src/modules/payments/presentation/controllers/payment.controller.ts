@@ -2,12 +2,13 @@ import { Request, Response } from 'express';
 import { ok, created, noContent } from '../../../../shared/presentation/http/HttpResponse';
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
-import { PaymentFiltersSchema, CreatePaymentSchema, UpdatePaymentStatusSchema, UpdatePaymentSchema } from '../validators/payment.validators';
+import { PaymentFiltersSchema, CreatePaymentSchema, UpdatePaymentStatusSchema, UpdatePaymentSchema, CancelPaymentSchema } from '../validators/payment.validators';
 import { paymentUseCases } from '../../infrastructure/container/paymentContainer';
 import type { PaymentStatus } from '../../domain/entities/Payment';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
 import { PaymentCreatedEvent, PaymentStatusUpdatedEvent, PaymentUpdatedEvent, PaymentDeletedEvent } from '../../../../shared/application/events';
+import { Prisma } from '@prisma/client';
 
 export const listPayments = async (req: Request, res: Response) => {
   const filters = parseDto(PaymentFiltersSchema, req.query);
@@ -16,12 +17,14 @@ export const listPayments = async (req: Request, res: Response) => {
   } else if (req.user?.role === 'CLIENTE') {
     filters.customerId = req.user.id;
   }
-  const result = await paymentUseCases.listPayments.execute(filters as { customerId?: string; asesorId?: string; status?: PaymentStatus });
+  const result = await paymentUseCases.listPayments.execute(filters as { customerId?: string; asesorId?: string; status?: PaymentStatus; search?: string });
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 50;
   const response = buildApiPaginatedResponse(
     result.data,
     result.total,
-    1,
-    result.data.length,
+    page,
+    limit,
     null
   );
   return ok(res, response);
@@ -106,6 +109,24 @@ export const deletePayment = async (req: Request, res: Response) => {
   return noContent(res);
 };
 
+export const cancelPayment = async (req: Request, res: Response) => {
+  const { motivoAnulacion } = parseDto(CancelPaymentSchema, req.body);
+  const payment = await paymentUseCases.cancelPayment.execute(req.params.id, motivoAnulacion);
+  eventBus.publish(
+    new PaymentStatusUpdatedEvent({
+      paymentId: payment.id,
+      orderId: payment.orderId,
+      customerId: payment.customerId,
+      previousStatus: payment.status === 'ANULADO' ? 'PENDING' : payment.status,
+      newStatus: 'ANULADO',
+      amount: payment.amount,
+      asesorId: payment.asesorId,
+    }),
+    req.requestId
+  );
+  return ok(res, payment, 'Pago anulado correctamente');
+};
+
 export const getCustomerBalance = async (req: Request, res: Response) => {
   const customerId = req.params.customerId;
   const balance = await paymentUseCases.getCustomerBalance.execute(customerId);
@@ -113,9 +134,26 @@ export const getCustomerBalance = async (req: Request, res: Response) => {
 };
 
 export const getQuoteBalance = async (req: Request, res: Response) => {
-  const quoteId = req.params.quoteId;
-  const balance = await paymentUseCases.getQuoteBalance.execute(quoteId);
-  return ok(res, balance, 'Saldo de cotización calculado');
+  try {
+    const quoteId = req.params.quoteId;
+    const customerId = typeof req.query.customerId === 'string' ? req.query.customerId : undefined;
+
+    if (customerId) {
+      const balances = await paymentUseCases.getQuoteBalanceByCustomer.execute(customerId);
+      return ok(res, balances, 'Saldos de cotización calculados');
+    }
+
+    const balance = await paymentUseCases.getQuoteBalance.execute(quoteId);
+    return ok(res, balance, 'Saldo de cotización calculado');
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Cotización no encontrada') {
+      return res.status(404).json({ success: false, error: 'not_found', message: 'Cotización no encontrada' });
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return res.status(400).json({ success: false, error: 'bad_request', message: 'Datos inválidos para calcular el saldo' });
+    }
+    throw error;
+  }
 };
 
 export const exportPaymentPdf = async (req: Request, res: Response) => {

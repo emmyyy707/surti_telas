@@ -49,4 +49,5 @@ export interface SaleRepository {
   cancel(id: string, motivoAnulacion: string): Promise<Sale>;
   updateTotals(id: string, totals: { subtotal: number; impuestos: number; descuentos: number; total: number }): Promise<Sale>;
   findByIdWithOrder(id: string): Promise<SaleWithOrder | null>;
+  delete(id: string): Promise<void>;
 }

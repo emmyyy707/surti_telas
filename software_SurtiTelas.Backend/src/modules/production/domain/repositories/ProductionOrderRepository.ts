@@ -6,7 +6,7 @@ export interface CreateProductionOrderInput {
   tallerId?: string;
   referencia: string;
   cantidad: number;
-  fechaInicio?: Date;
+  fechaInicio?: Date | string;
   fechaEstimada: Date;
   avance?: number;
   estado?: ProductionStatus;
@@ -28,6 +28,7 @@ export interface UpdateProductionOrderInput {
   colores?: string[];
   curvaTallas?: Record<string, number>;
   notasTecnicas?: string;
+  fechaInicio?: Date | string;
 }
 
 export interface ProductionOrderFilters {

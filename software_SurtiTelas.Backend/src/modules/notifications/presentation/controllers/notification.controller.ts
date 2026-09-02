@@ -34,6 +34,11 @@ export const markAllAsRead = async (req: Request, res: Response) => {
   return ok(res, { count }, `${count} notificaciones marcadas como leídas`);
 };
 
+export const deleteAllNotifications = async (req: Request, res: Response) => {
+  const count = await notificationUseCases.deleteAllNotifications.execute(req.user!.id);
+  return ok(res, { count }, `${count} notificaciones eliminadas`);
+};
+
 export const getNotificationById = async (req: Request, res: Response) => {
   const notification = await notificationUseCases.getNotificationById.execute(req.params.id, req.user!.id);
   return ok(res, notification);
@@ -54,4 +59,9 @@ export const updateNotification = async (req: Request, res: Response) => {
 export const deleteNotification = async (req: Request, res: Response) => {
   await notificationUseCases.deleteNotification.execute(req.params.id, req.user!.id);
   return noContent(res);
+};
+
+export const getSidebarSummary = async (req: Request, res: Response) => {
+  const summary = await notificationUseCases.getSidebarSummary.execute(req.user!.id);
+  return ok(res, summary);
 };

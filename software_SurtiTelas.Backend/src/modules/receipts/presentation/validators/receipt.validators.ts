@@ -1,10 +1,11 @@
 import { z } from 'zod';
-import { PositiveNumberSchema } from '../../../../shared/presentation/validators';
+import { PositiveNumberSchema, PaginationSchema } from '../../../../shared/presentation/validators';
 
 export const ReceiptFiltersSchema = z.object({
   customerId: z.string().optional(),
   orderId: z.string().optional(),
   estado: z.enum(['BORRADOR', 'EMITIDO', 'ENVIADO', 'PAGADO', 'VENCIDO', 'CANCELADO']).optional(),
+  ...PaginationSchema.shape,
 });
 
 export const CreateReceiptSchema = z.object({

@@ -31,7 +31,7 @@ export class CancelSale {
       throw new NotFoundError('Pedido asociado no encontrado');
     }
 
-    const cancelableOrderStates = ['NUEVO', 'PENDIENTE', 'EN_VALIDACION', 'ACEPTADO', 'EN_PRODUCCION', 'LISTO', 'DESPACHADO', 'EN_CAMINO', 'RECIBO_GENERADO', 'RECIBO_ENVIADO'];
+    const cancelableOrderStates = ['NUEVO', 'PENDIENTE', 'EN_VALIDACION', 'ACEPTADO', 'EN_PRODUCCION', 'LISTO', 'DESPACHADO', 'EN_CAMINO', 'RECIBO_GENERADO', 'RECIBO_ENVIADO', 'ENTREGADO', 'RECHAZADO'];
     if (!cancelableOrderStates.includes(order.estado)) {
       throw new BadRequestError(`No se puede anular la venta: el pedido está en estado "${order.estado}"`);
     }

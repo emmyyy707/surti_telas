@@ -70,7 +70,7 @@ describe('production.controller', () => {
 
     await updateWorkshop(req, res);
 
-    expect(productionUseCases.updateWorkshop.execute).toHaveBeenCalledWith('1', { nombre: 'Updated' });
+    expect(productionUseCases.updateWorkshop.execute).toHaveBeenCalledWith('1', expect.objectContaining({ nombre: 'Updated', usuarioId: 'user-1' }));
   });
 
   it('listProductionOrders should return paginated production orders', async () => {
@@ -115,7 +115,7 @@ describe('production.controller', () => {
 
     await assignToWorkshop(req, res);
 
-    expect(productionUseCases.assignToWorkshop.execute).toHaveBeenCalledWith('1', 'taller-1');
+    expect(productionUseCases.assignToWorkshop.execute).toHaveBeenCalledWith('1', 'taller-1', 'user-1');
   });
 
   it('updateProgress should update progress', async () => {
@@ -126,7 +126,7 @@ describe('production.controller', () => {
 
     await updateProgress(req, res);
 
-    expect(productionUseCases.updateProgress.execute).toHaveBeenCalledWith('1', 50);
+    expect(productionUseCases.updateProgress.execute).toHaveBeenCalledWith('1', 50, 'user-1');
   });
 
   it('completeProduction should complete production', async () => {

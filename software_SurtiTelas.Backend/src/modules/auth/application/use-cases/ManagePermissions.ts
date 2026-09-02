@@ -90,7 +90,14 @@ export class UpdateRole {
   execute(currentId: string, data: { nombre?: string; descripcion?: string; permisos?: string[] }) {
     const currentName = currentId.startsWith('R-') ? currentId.slice(2) : currentId;
     const newName = (data.nombre ?? currentName).startsWith('R-') ? (data.nombre ?? currentName).slice(2) : (data.nombre ?? currentName);
-    return this.repo.updateRole(currentName, newName, data.descripcion, data.permisos);
+    const result = this.repo.updateRole(currentName, newName, data.descripcion, data.permisos);
+    if (data.permisos === undefined) {
+      return this.repo.listRolePermissions(newName).then((res) => ({
+        ...result,
+        permisos: res.data.map((rp) => rp.permission.code),
+      }));
+    }
+    return result;
   }
 }
 

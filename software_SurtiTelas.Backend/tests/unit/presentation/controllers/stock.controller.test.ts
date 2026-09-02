@@ -70,7 +70,7 @@ describe('stock.controller', () => {
 
     await updateSupplier(req, res);
 
-    expect(stockUseCases.updateSupplier.execute).toHaveBeenCalledWith('1', { nombre: 'Updated' });
+    expect(stockUseCases.updateSupplier.execute).toHaveBeenCalledWith('1', expect.objectContaining({ nombre: 'Updated', usuarioId: 'user-1' }));
   });
 
   it('listRawMaterials should return paginated raw materials', async () => {
@@ -115,7 +115,7 @@ describe('stock.controller', () => {
 
     await updateRawMaterial(req, res);
 
-    expect(stockUseCases.updateRawMaterial.execute).toHaveBeenCalledWith('1', { nombre: 'Updated' });
+    expect(stockUseCases.updateRawMaterial.execute).toHaveBeenCalledWith('1', expect.objectContaining({ nombre: 'Updated', usuarioId: 'user-1' }));
   });
 
   it('registerMovement should register movement with usuarioId from user', async () => {

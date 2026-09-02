@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { CreateOrder, GetOrders, GetOrderById, UpdateOrderStatus, AssignDomiciliario } from '@/modules/orders/application/use-cases/OrderUseCases';
+import { CreateOrder, GetOrders, GetOrderById, UpdateOrderStatus, AssignDomiciliario, CancelOrder } from '@/modules/orders/application/use-cases/OrderUseCases';
 import type { OrderRepository, CreateOrderInput } from '@/modules/orders/domain/repositories/OrderRepository';
 import type { CustomerRepository } from '@/modules/customers/domain/repositories/CustomerRepository';
 import type { ProductRepository } from '@/modules/catalog/domain/repositories/ProductRepository';
@@ -39,6 +39,16 @@ const mockRepo: jest.Mocked<OrderRepository> = {
   assignDomiciliario: vi.fn(),
   findReceiptByOrderId: vi.fn(),
   createReceipt: vi.fn(),
+  cancelOrder: vi.fn(),
+  softDelete: vi.fn(),
+  updateFull: vi.fn(),
+  updatePaymentProof: vi.fn(),
+  updateValidation: vi.fn(),
+  getWithPaymentProof: vi.fn(),
+  updateToAccepted: vi.fn(),
+  updateToRejected: vi.fn(),
+  updateReceiptSent: vi.fn(),
+  getByNumero: vi.fn(),
 };
 
 const mockCustomerRepo: jest.Mocked<CustomerRepository> = {
@@ -129,11 +139,19 @@ describe('CreateOrder', () => {
   });
 
   it('should throw if no cupo disponible', async () => {
-    mockCustomerRepo.getById.mockResolvedValue({ ...mockCustomer, tieneCupoDisponible: () => false } as any);
-    const mockPrisma = { $transaction: vi.fn() } as any;
+    mockCustomerRepo.getById.mockResolvedValue({ ...mockCustomer, isTrustedCustomer: false } as any);
+    const mockPrisma = {
+      $transaction: vi.fn().mockResolvedValue({
+        id: '1', numero: 'PED-000001', cliente: 'Juan Pérez', asesor: 'Asesor Test',
+        clienteId: '1', asesorId: 'asesor1', total: 50000, items: 2, estado: 'Pendiente',
+      }),
+      customer: { update: vi.fn() },
+      product: { update: vi.fn(), findUnique: vi.fn() },
+      inventoryMovement: { create: vi.fn() },
+    } as any;
     const useCase = new CreateOrder(mockRepo, mockCustomerRepo, mockProductRepo, mockPrisma, mockEventBus);
 
-    await expect(useCase.execute({ clienteId: '1', asesorId: 'a', itemsList: [{ nombre: 'x', precio: 1, cantidad: 1 }] })).rejects.toThrow('cupo disponible');
+    await expect(useCase.execute({ clienteId: '1', asesorId: 'a', itemsList: [{ nombre: 'x', precio: 1, cantidad: 1 }], paymentMethod: 'INSTALLMENTS' })).rejects.toThrow('Solo los clientes de confianza pueden seleccionar pago a cuotas');
   });
 });
 
@@ -165,12 +183,12 @@ describe('UpdateOrderStatus', () => {
   it('should update status and publish events', async () => {
     const order = mockOrder({ estado: 'Pendiente' });
     mockRepo.getById.mockResolvedValue(order);
-    mockRepo.updateStatus.mockResolvedValue(mockOrder({ estado: 'Aceptado' }));
+    mockRepo.updateStatus.mockResolvedValue(mockOrder({ estado: 'Enviado' }));
 
     const useCase = new UpdateOrderStatus(mockRepo, mockEventBus);
-    const result = await useCase.execute('1', 'Aceptado');
+    const result = await useCase.execute('1', 'Enviado');
 
-    expect(result.estado).toBe('Aceptado');
+    expect(result.estado).toBe('Enviado');
     expect(mockEventBus.publish).toHaveBeenCalled();
   });
 
@@ -188,30 +206,69 @@ describe('UpdateOrderStatus', () => {
     expect(deliveredEvent).toBeDefined();
   });
 
-  it('should publish OrderCanceledEvent when estado is Rechazado', async () => {
+  it('should publish OrderStatusUpdatedEvent when estado is Cancelado', async () => {
     const order = mockOrder({ estado: 'Pendiente' });
     mockRepo.getById.mockResolvedValue(order);
-    mockRepo.updateStatus.mockResolvedValue(mockOrder({ estado: 'Rechazado' }));
+    mockRepo.updateStatus.mockResolvedValue(mockOrder({ estado: 'Cancelado' }));
 
     const useCase = new UpdateOrderStatus(mockRepo, mockEventBus);
-    await useCase.execute('1', 'Rechazado');
+    await useCase.execute('1', 'Cancelado');
 
-    const rejectedEvent = mockEventBus.publish.mock.calls.find(([e]) => (e as any).type === 'order.rejected');
-    expect(rejectedEvent).toBeDefined();
+    const statusUpdatedEvent = mockEventBus.publish.mock.calls.find(([e]) => (e as any).type === 'order.status.updated');
+    expect(statusUpdatedEvent).toBeDefined();
   });
 });
 
 describe('AssignDomiciliario', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should assign domiciliario', async () => {
     mockRepo.assignDomiciliario.mockResolvedValue(mockOrder());
+    mockRepo.getById.mockResolvedValue(mockOrder());
     const useCase = new AssignDomiciliario(mockRepo, mockEventBus);
     const result = await useCase.execute('1', 'dom1', 'Domiciliario Test');
     expect(result.id).toBe('1');
   });
 
   it('should throw if order not found', async () => {
-    mockRepo.assignDomiciliario.mockResolvedValue(null as any);
+    mockRepo.getById.mockResolvedValue(null as any);
     const useCase = new AssignDomiciliario(mockRepo, mockEventBus);
     await expect(useCase.execute('1', 'dom1', 'Domiciliario Test')).rejects.toThrow('Pedido no encontrado');
+  });
+});
+
+describe('CancelOrder', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should cancel order and publish event when getById returns Order entity', async () => {
+    const order = mockOrder({ estado: 'Pendiente' });
+    mockRepo.getById.mockResolvedValue(order);
+    mockRepo.cancelOrder.mockResolvedValue(mockOrder({ estado: 'Cancelado', motivoAnulacion: 'Motivo test' }));
+
+    const useCase = new CancelOrder(mockRepo, mockEventBus);
+    const result = await useCase.execute('1', 'Motivo test');
+
+    expect(result.estado).toBe('Cancelado');
+    expect(mockRepo.cancelOrder).toHaveBeenCalledWith('1', 'Motivo test');
+    expect(mockEventBus.publish).toHaveBeenCalled();
+  });
+
+  it('should throw NotFoundError when order does not exist', async () => {
+    mockRepo.getById.mockResolvedValue(null as any);
+    const useCase = new CancelOrder(mockRepo, mockEventBus);
+
+    await expect(useCase.execute('nonexistent', 'Motivo válido')).rejects.toThrow('Pedido no encontrado');
+  });
+
+  it('should throw BadRequestError when order cannot be canceled', async () => {
+    const order = mockOrder({ estado: 'Entregado' });
+    mockRepo.getById.mockResolvedValue(order);
+    const useCase = new CancelOrder(mockRepo, mockEventBus);
+
+    await expect(useCase.execute('1', 'Motivo válido')).rejects.toThrow('El pedido no puede ser cancelado en su estado actual');
   });
 });

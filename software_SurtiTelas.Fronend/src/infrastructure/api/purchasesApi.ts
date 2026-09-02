@@ -82,13 +82,8 @@ export const purchasesApi = {
   },
 
   async exportPdf(id: string): Promise<Blob> {
-    const response = await fetch(`${(import.meta.env.VITE_API_URL || '/api/v1').replace(/\/$/, '')}/purchases/${encodeURIComponent(id)}/pdf`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}`,
-      },
-    });
-    if (!response.ok) throw new Error('No se pudo generar el PDF');
-    return response.blob();
+    // Usa el cliente central `api` para adjuntar el Bearer token (tokenStorage),
+    // manejar el refresco ante 401 y procesar el envelope del backend.
+    return api.getBlob(`/purchases/${encodeURIComponent(id)}/pdf`);
   },
 };

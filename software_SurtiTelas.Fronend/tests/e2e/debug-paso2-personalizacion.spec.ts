@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('debug paso 2 personalization button html', async ({ page }) => {
   await page.goto('/login');

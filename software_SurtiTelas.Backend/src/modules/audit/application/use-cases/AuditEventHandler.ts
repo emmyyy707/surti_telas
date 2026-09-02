@@ -41,7 +41,7 @@ export function registerAuditEventHandlers(): void {
 
         await prisma.auditLog.create({
           data: {
-            usuarioId: (payload.userId as string | undefined) ?? 'system',
+            usuarioId: (payload.userId as string | undefined) ?? null,
             accion: (payload.action as string | undefined) ?? eventType,
             modulo: 'auth',
             referenciaId: (payload.resourceId as string | undefined) ?? (payload.email as string | undefined) ?? '',

@@ -1,11 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Request, Response } from 'express';
-import { getNotifications, markAsRead } from '@/modules/notifications/presentation/controllers/notification.controller';
+import { getNotifications, markAsRead, markAllAsRead, deleteAllNotifications } from '@/modules/notifications/presentation/controllers/notification.controller';
 
 vi.mock('@/modules/notifications/infrastructure/container/notificationContainer', () => ({
   notificationUseCases: {
     getNotifications: { execute: vi.fn() },
     markAsRead: { execute: vi.fn() },
+    markAllAsRead: { execute: vi.fn() },
+    deleteAllNotifications: { execute: vi.fn() },
   },
 }));
 
@@ -40,6 +42,30 @@ describe('notification.controller', () => {
     await markAsRead(req, res);
 
     expect(notificationUseCases.markAsRead.execute).toHaveBeenCalledWith('notif-1', 'user-1');
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  it('should mark all notifications as read', async () => {
+    const req = mockReq();
+    const res = mockRes();
+    const { notificationUseCases } = await import('@/modules/notifications/infrastructure/container/notificationContainer');
+    (notificationUseCases.markAllAsRead.execute as any).mockResolvedValue(2);
+
+    await markAllAsRead(req, res);
+
+    expect(notificationUseCases.markAllAsRead.execute).toHaveBeenCalledWith('user-1');
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  it('should delete all notifications for user', async () => {
+    const req = mockReq();
+    const res = mockRes();
+    const { notificationUseCases } = await import('@/modules/notifications/infrastructure/container/notificationContainer');
+    (notificationUseCases.deleteAllNotifications.execute as any).mockResolvedValue(4);
+
+    await deleteAllNotifications(req, res);
+
+    expect(notificationUseCases.deleteAllNotifications.execute).toHaveBeenCalledWith('user-1');
     expect(res.json).toHaveBeenCalled();
   });
 });

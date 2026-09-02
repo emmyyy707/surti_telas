@@ -216,7 +216,7 @@ export class CreateOrder {
                 productId: product.id,
                 cantidad: item.cantidad,
                 motivo: `Pedido ${order.numero || order.id}`,
-                usuarioId: asesorId || user?.id!,
+                usuarioId: asesorId ?? user?.id,
               },
             });
           }
@@ -311,6 +311,18 @@ export class UpdateOrderStatus {
 
     if (estado === 'Enviado') {
       if (this.eventBus) {
+        let direccion = '';
+        let ciudad = '';
+        let telefono = '';
+        if (this.prisma) {
+          const customer = await this.prisma.customer.findFirst({
+            where: { id: updated.clienteId, deletedAt: null },
+            select: { direccion: true, ciudad: true, telefono: true },
+          });
+          direccion = customer?.direccion ?? '';
+          ciudad = customer?.ciudad ?? '';
+          telefono = customer?.telefono ?? '';
+        }
         this.eventBus.publish(
           new OrderDispatchedEvent({
             orderId: updated.id,
@@ -319,9 +331,9 @@ export class UpdateOrderStatus {
             clienteNombre: updated.cliente,
             domiciliarioId: undefined,
             domiciliarioNombre: undefined,
-            direccion: '',
-            ciudad: '',
-            telefono: '',
+            direccion,
+            ciudad,
+            telefono,
             total: Number(updated.total),
           }, requestId)
         );
@@ -388,7 +400,7 @@ export class UpdateOrderStatus {
         );
       }
       logger.info(`[UpdateOrderStatus] Publicando evento order.delivered para pedido ${updated.id}`);
-      this.eventBus?.publish(
+      await this.eventBus?.publish(
         new OrderDeliveredEvent({
           orderId: updated.id,
           orderNumero: updated.numero || updated.id,
@@ -621,15 +633,15 @@ export class UploadPaymentProof {
 
 export class CancelOrder {
   constructor(private readonly repo: OrderRepository, private readonly eventBus?: EventBus) {}
-  async execute(id: string, requestId?: string) {
+  async execute(id: string, motivoAnulacion: string, requestId?: string) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Pedido no encontrado');
-    const order = new Order(toOrderData(existing as unknown as OrderRow));
+    const order = existing;
     if (!order.canBeCanceled()) {
       throw new BadRequestError('El pedido no puede ser cancelado en su estado actual');
     }
 
-    const updated = await this.repo.updateStatus(id, 'Rechazado');
+    const updated = await this.repo.cancelOrder(id, motivoAnulacion);
 
     if (this.eventBus) {
       const items = (updated.itemsList ?? []).map((i) => ({

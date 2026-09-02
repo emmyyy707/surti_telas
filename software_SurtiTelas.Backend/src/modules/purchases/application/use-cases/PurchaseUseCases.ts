@@ -67,3 +67,17 @@ export class RemovePurchaseItem {
     return this.repo.removeItem(itemId);
   }
 }
+
+export class GetProveedorNombre {
+  constructor(private readonly repo: PurchaseRepository) {}
+  execute(proveedorId: string) {
+    return this.repo.getProveedorNombre(proveedorId);
+  }
+}
+
+export class GetUsuarioNombre {
+  constructor(private readonly repo: PurchaseRepository) {}
+  execute(usuarioId: string) {
+    return this.repo.getUsuarioNombre(usuarioId);
+  }
+}

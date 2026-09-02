@@ -5,11 +5,8 @@ import { BarChart, LineChart, PieChart, TopProducts } from './Chart';
 import s from './Dashboard.module.css';
 import { Badge } from '../../../shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
-import { Users, ShoppingBag, DollarSign, TrendingUp, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { authApi, type BackendAuthUser } from '@/infrastructure/api/authApi';
-import { ordersApi, type OrdersListResult, type DashboardMetrics } from '@/infrastructure/api/ordersApi';
-import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
-import { productsApi, type ProductTerminado } from '@/infrastructure/api/productsApi';
+import { Users, ShoppingBag, DollarSign, TrendingUp, Loader2, AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { ordersApi, type DashboardMetrics } from '@/infrastructure/api/ordersApi';
 import { adminContent } from '@/shared/config/adminContent';
 import { ORDER_STATUS_COLORS } from '@/shared/constants/options';
 import { tokenStorage } from '@/infrastructure/api/tokenStorage';
@@ -91,7 +88,7 @@ export const AdminDashboard: React.FC = () => {
     return [
       { label: dashboardContent.stats.totalCustomers, value: metrics.totalCustomers.toLocaleString('es-CO'), trend: '', trendUp: true, Icon: Users, color: 'accent' as const },
       { label: dashboardContent.stats.totalOrders, value: metrics.totalOrders.toLocaleString('es-CO'), trend: '', trendUp: true, Icon: ShoppingBag, color: 'success' as const },
-      { label: dashboardContent.stats.activeProduction, value: ((metrics.ordersByStatus ?? []).find(o => o.estado === 'En proceso')?.cantidad ?? 0).toLocaleString('es-CO'), trend: '', trendUp: true, Icon: TrendingUp, color: 'info' as const },
+      { label: dashboardContent.stats.activeProduction, value: ((metrics.ordersByStatus ?? []).find(o => o.estado === 'Listo')?.cantidad ?? 0).toLocaleString('es-CO'), trend: '', trendUp: true, Icon: TrendingUp, color: 'info' as const },
       { label: dashboardContent.stats.totalSales, value: formatoCOP(metrics.totalSales ?? 0), trend: '', trendUp: true, Icon: DollarSign, color: 'warning' as const },
     ];
   }, [metrics, dashboardContent]);
@@ -110,12 +107,22 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
       {error && !loading && (
-        <div className={s.errorRow}>
-          <AlertCircle size={18} />
-          <span>{error}</span>
-          <Button className={s.retryBtn} onClick={() => void loadDashboard()} leftIcon={<RefreshCw size={14} />}>
-            Reintentar
-          </Button>
+        <div className={s.errorState}>
+          <div className={s.errorCard}>
+            <div className={s.errorIconWrap}>
+              <AlertCircle size={28} className={s.errorIcon} />
+            </div>
+            <h2 className={s.errorTitle}>No pudimos cargar el dashboard</h2>
+            <p className={s.errorText}>Ocurrió un problema al cargar la información. Puedes intentar nuevamente.</p>
+            <div className={s.errorActions}>
+              <Button onClick={() => void loadDashboard()} leftIcon={<RefreshCw size={16} />}>
+                Reintentar
+              </Button>
+              <Button variant="secondary" onClick={() => { window.location.href = '/'; }} leftIcon={<Home size={16} />}>
+                Volver al inicio
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 

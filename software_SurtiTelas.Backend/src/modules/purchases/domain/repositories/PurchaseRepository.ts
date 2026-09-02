@@ -34,4 +34,6 @@ export interface PurchaseRepository {
   getItems(purchaseId: string): Promise<PurchaseItem[]>;
   addItem(purchaseId: string, item: { rawMaterialId?: string; nombre: string; cantidad: number; precioUnitario: number }): Promise<PurchaseItem>;
   removeItem(itemId: string): Promise<void>;
+  getProveedorNombre(proveedorId: string): Promise<string>;
+  getUsuarioNombre(usuarioId: string): Promise<string>;
 }

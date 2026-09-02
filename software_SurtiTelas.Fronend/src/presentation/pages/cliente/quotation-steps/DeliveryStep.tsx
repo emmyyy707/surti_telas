@@ -10,7 +10,6 @@ export interface DeliveryStepProps {
 export const DeliveryStep = ({
   register,
   styles,
-  direccionEntrega,
 }: DeliveryStepProps) => {
   return (
     <div className={styles.sectionBlock}>

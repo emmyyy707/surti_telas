@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, AlertTriangle, Package, PackageOpen, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import s from './AdminCategorias.module.css';
@@ -23,7 +23,7 @@ const initialForm: FormState = { nombre: '', slug: '', parentId: '' };
 export const AdminCategorias: React.FC = () => {
   const [items, setItems] = useState<CategoryDTO[]>([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<CategoryDTO | null>(null);
@@ -31,7 +31,7 @@ export const AdminCategorias: React.FC = () => {
   const [form, setForm] = useState<FormState>(initialForm);
 
   const [stockStatus, setStockStatus] = useState<CategoryWithStockDTO[]>([]);
-  const [stockLoading, setStockLoading] = useState(false);
+  const [_stockLoading, setStockLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -125,7 +125,7 @@ export const AdminCategorias: React.FC = () => {
   const handleToggleStatus = async (item: CategoryDTO) => {
     const newStatus = item.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
     try {
-      const updated = await categoryService.update(item.id, { estado: newStatus } as any);
+      const updated = await categoryService.update(item.id, { estado: newStatus });
       setItems((prev) => prev.map((it) => (it.id === updated.id ? { ...it, estado: newStatus } : it)));
       toast.success(`Categoría ${newStatus === 'ACTIVO' ? 'activada' : 'desactivada'}`);
     } catch {

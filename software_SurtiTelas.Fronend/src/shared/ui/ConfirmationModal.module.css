@@ -1,0 +1,211 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: overlay-in 180ms cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-xl);
+  color: var(--color-text-primary);
+  animation: modal-in 220ms cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal {
+    animation: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 20px 6px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+
+.iconWrapper--danger {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+.iconWrapper--success {
+  background: rgba(34, 197, 94, 0.10);
+  color: var(--color-success);
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.iconWrapper--default {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.description {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.nameHighlight {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px 20px;
+}
+
+.cancelButton {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  transition: background 140ms var(--ease-out), border-color 140ms var(--ease-out), color 140ms var(--ease-out), transform 100ms var(--ease-out);
+}
+
+.cancelButton:hover {
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+}
+
+.cancelButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--btn-primary-focus-ring, rgba(75, 85, 99, 0.4));
+}
+
+.confirmButton {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: #ffffff;
+  background: var(--color-error);
+  transition: background 140ms var(--ease-out), border-color 140ms var(--ease-out), transform 100ms var(--ease-out), box-shadow 140ms var(--ease-out);
+}
+
+.confirmButton:hover {
+  background: var(--color-error-hover);
+  border-color: var(--color-error-hover);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.confirmButton:active {
+  transform: translateY(0);
+}
+
+.confirmButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.35);
+}
+
+.confirmButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .cancelButton,
+  .confirmButton {
+    width: 100%;
+  }
+}

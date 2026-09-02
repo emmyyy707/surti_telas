@@ -9,6 +9,7 @@ const include = {
   usuarioValidacion: true,
   comprobantePagoCargadoPor: true,
   items: true,
+  venta: true,
 } satisfies Prisma.OrderInclude;
 
 export class PrismaOrderRepository implements OrderRepository {
@@ -28,6 +29,14 @@ export class PrismaOrderRepository implements OrderRepository {
       } else {
         where.comprobantePagoUrl = null;
       }
+    }
+    if (filters.search && filters.search.trim()) {
+      const s = filters.search.trim();
+      where.OR = [
+        { numero: { contains: s, mode: 'insensitive' } },
+        { clienteNombre: { contains: s, mode: 'insensitive' } },
+        { asesorNombre: { contains: s, mode: 'insensitive' } },
+      ];
     }
     if (filters.desde || filters.hasta) {
       where.fecha = {};
@@ -272,6 +281,27 @@ export class PrismaOrderRepository implements OrderRepository {
     return new Order(toOrderData(updated));
   }
 
+  async cancelOrder(id: string, motivoAnulacion: string): Promise<Order> {
+    const existing = await this.prisma.order.findFirst({ where: { id, deletedAt: null }, include });
+    if (!existing) throw new NotFoundError('Pedido no encontrado');
+
+    const order = new Order(toOrderData(existing));
+    if (!order.canBeCanceled()) {
+      throw new BadRequestError('El pedido no puede ser cancelado en su estado actual');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        estado: orderStatusToDb('Cancelado'),
+        motivoAnulacion,
+        fechaAnulacion: new Date(),
+      },
+      include,
+    });
+    return new Order(toOrderData(updated));
+  }
+
   async updatePaymentProof(id: string, data: {
     url: string;
     nombreOriginal: string;
@@ -421,17 +451,21 @@ export class PrismaOrderRepository implements OrderRepository {
     const domiciliario = await this.prisma.user.findFirst({ where: { id: domiciliarioId, deletedAt: null, role: 'DOMICILIARIO' } });
     if (!domiciliario) throw new BadRequestError('Domiciliario no válido');
 
+    const customer = await this.prisma.customer.findFirst({ where: { id: existing.clienteId, deletedAt: null }, select: { direccion: true } });
+    const direccion = customer?.direccion || order.cliente || 'Dirección cliente';
+
     await this.prisma.delivery.upsert({
       where: { orderId: id },
       update: {
         domiciliarioId,
         estado: 'ASIGNADO',
+        direccion,
       },
       create: {
         orderId: id,
         domiciliarioId,
         estado: 'ASIGNADO',
-        direccion: order.cliente || 'Dirección cliente',
+        direccion,
       },
     });
 

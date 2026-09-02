@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, SlidersHorizontal, X, Sparkles, Heart, ShoppingBag, Star, RefreshCcw } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Sparkles, ShoppingBag, RefreshCcw } from 'lucide-react';
 import { FilterDrawer, type FilterState } from '@presentation/pages/components/FilterDrawer';
 import { ProductDetailModal } from '@presentation/components/ProductDetailModal';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ import { useServerPagination } from '@/hooks/useServerPagination';
 import type { Producto as ProductoCore } from '@/core/types';
 import ProductCard from './ProductCard';
 
-const formatPrice = (price: number) => `$${price.toLocaleString('es-CO')}`;
+const _formatPrice = (price: number) => `$${price.toLocaleString('es-CO')}`;
 
 const FAVORITES_STORAGE_KEY = 'surtitelas.favorites';
 
@@ -45,7 +45,7 @@ const CatalogPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<ProductoCore | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [heroConfig, setHeroConfig] = useState({ badge: 'Colección Premium', titulo: 'Bienvenido a', destacado: 'Surticamisetas', subtitulo: 'Explora una colección premium diseñada para quienes buscan estilo, calidad y exclusividad.' });
+  const [heroConfig, _setHeroConfig] = useState({ badge: 'Colección Premium', titulo: 'Bienvenido a', destacado: 'Surticamisetas', subtitulo: 'Explora una colección premium diseñada para quienes buscan estilo, calidad y exclusividad.' });
 
   const [brands, setBrands] = useState<string[]>([]);
   const pagination = useServerPagination(12);
@@ -134,7 +134,7 @@ const CatalogPage: React.FC = () => {
     if (cat && cat !== categoriaActiva) {
       setCategoriaActiva(cat);
     }
-  }, [searchParams]);
+  }, [searchParams, categoriaActiva]);
 
   useEffect(() => {
     const stored = readFavoriteIds();
@@ -165,7 +165,9 @@ const CatalogPage: React.FC = () => {
     setMarcaActiva('Todas');
     setFiltrosAvanzados({ tallas: [], marcas: [], categoriasEspeciales: [] });
     setSearchTerm('');
-  }, []);
+    setSearchParams({});
+    pagination.setPage(1);
+  }, [pagination, setSearchParams]);
   const handleLoadMore = useCallback(() => pagination.setPage(pagination.page + 1), [pagination]);
 
   const toggleFavorite = useCallback(async (producto: ProductoCore) => {
@@ -319,11 +321,6 @@ const CatalogPage: React.FC = () => {
                 className={`category-pill ${categoriaActiva === cat ? 'active' : ''}`}
                 onClick={() => {
                   setCategoriaActiva(cat);
-                  if (cat === 'Todas') {
-                    navigate('/catalogo');
-                  } else {
-                    navigate(`/catalogo?categoria=${encodeURIComponent(cat)}`);
-                  }
                 }}
                 type="button"
               >
@@ -340,6 +337,11 @@ const CatalogPage: React.FC = () => {
             <span className="results-count">
               {productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} encontrado{productosFiltrados.length !== 1 ? 's' : ''}
             </span>
+            {totalFiltrosActivos > 0 && (
+              <button className="btn-reset-filters" onClick={handleResetFilters} type="button">
+                <X size={14} /> Limpiar filtros
+              </button>
+            )}
           </div>
           <div className="controls-right">
             <Tooltip title="Ver carrito">

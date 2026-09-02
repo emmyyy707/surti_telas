@@ -246,8 +246,6 @@ export const AdminProductosTerminados: React.FC = () => {
         tallas,
       };
 
-      console.log('[ProductosTerminados] submit data', data);
-
       if (editingRef) {
         const updated = await catalogApi.update(editingRef, data);
         setProductos(prev => prev.map(p => p.ref === editingRef ? { ...p, ...updated } : p));

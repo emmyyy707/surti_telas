@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Settings2, Users, UserCog, Shield, ShoppingBag, Package, Boxes, FolderTree, AlertTriangle, Factory, Workflow, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, Store, DollarSign, KeyRound, MapPin, FileText, Tags, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, Settings2, Users, UserCog, Shield, ShoppingBag, Package, Boxes, FolderTree, AlertTriangle, Factory, ClipboardList, ShoppingCart, Receipt, UserSearch, BarChart3, TrendingUp, Users2, LineChart, DollarSign, KeyRound, MapPin, FileText, Tags, RotateCcw } from 'lucide-react';
 
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
@@ -16,6 +16,7 @@ import { tokenStorage } from '@/infrastructure/api/tokenStorage';
 import { reportsApi } from '@/infrastructure/api/reportsApi';
 import { adminContent } from '@/shared/config/adminContent';
 import { filterMenuByPermissions } from '@/shared/config/menuPermissions';
+import { useNotifications } from '@/shared/context';
 
 const adminMenu: SidebarItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard General', key: 'dashboard' },
@@ -59,9 +60,9 @@ const adminMenu: SidebarItem[] = [
     subItems: [
       { icon: TrendingUp, label: 'Gestión de Ventas', key: 'gestion-ventas' },
       { icon: DollarSign, label: 'Gestión de Pagos', key: 'pagos' },
-      { icon: RotateCcw, label: 'Gestión de Devoluciones', key: 'devoluciones' },
+      { icon: RotateCcw, label: 'Gestión de Devoluciones', key: 'StockDevuelto' },
       { icon: MapPin, label: 'Gestión de Domicilios', key: 'domicilios' },
-      { icon: Users2, label: 'Gestión de Domiciliarios', key: 'domiciliarios' },
+      { icon: MapPin, label: 'Gestión de Domiciliarios', key: 'ruta-del-dia' },
       { icon: ShoppingCart, label: 'Gestión de Pedidos', key: 'pedidos' },
       { icon: Users, label: 'Gestión de Clientes', key: 'clientes' },
       { icon: FileText, label: 'Gestión de Cotizaciones', key: 'pedidos-personalizados' },
@@ -106,7 +107,33 @@ export const AdminLayout: React.FC = () => {
   });
    const navigate = useNavigate();
    const { logout } = useAuth();
-   const filteredMenu = useMemo(() => filterMenuByPermissions(adminMenu, authUser), [authUser]);
+    const filteredMenu = useMemo(() => filterMenuByPermissions(adminMenu, authUser), [authUser]);
+    const { sidebarSummary } = useNotifications();
+
+   const badgeCounts = useMemo(() => {
+     const counts: Record<string, number> = {};
+     const moduleMap: Record<string, string> = {
+       pedidos: 'pedidos',
+       clientes: 'clientes',
+       'pedidos-personalizados': 'cotizaciones',
+       produccion: 'produccion',
+       inventario: 'existencias',
+       domicilios: 'domicilios',
+       pagos: 'pagos',
+       facturacion: 'facturacion',
+       StockDevuelto: 'devoluciones',
+       'gestion-usuarios': 'usuarios',
+       talleres: 'talleres',
+       productos: 'catalogo',
+     };
+     for (const [menuKey, moduleKey] of Object.entries(moduleMap)) {
+       const count = sidebarSummary[moduleKey];
+       if (count && count > 0) {
+         counts[menuKey] = count;
+       }
+     }
+     return counts;
+   }, [sidebarSummary]);
 
   useEffect(() => {
     window.localStorage.setItem('surtitelas.sidebarCollapsed', String(isCollapsed));
@@ -141,7 +168,13 @@ export const AdminLayout: React.FC = () => {
         return path.includes('/inventario') || path.includes('/catalogo');
       }
       if (itemKey === 'domicilios') {
-        return path.includes('/domicilios') || path.includes('/ruta-del-dia');
+        return path.includes('/domicilios');
+      }
+      if (itemKey === 'ruta-del-dia') {
+        return path.includes('/ruta-del-dia');
+      }
+      if (itemKey === 'StockDevuelto') {
+        return path.includes('/StockDevuelto') || path.includes('/stock-devuelto');
       }
       if (itemKey === 'configuracion') {
         return path.includes('/configuracion') || path.includes('/roles') || path.includes('/permisos') || path.includes('/webhooks');
@@ -226,6 +259,7 @@ export const AdminLayout: React.FC = () => {
         homeHref="/"
         onToggleCollapse={handleSidebarToggle}
         isActive={isActive}
+        badgeCounts={badgeCounts}
       />
 
       <div className={s.mainContent}>

@@ -5,9 +5,11 @@ import {
   CancelPurchase,
   CreatePurchase,
   DeletePurchase,
+  GetProveedorNombre,
   GetPurchaseById,
   GetPurchaseItems,
   GetPurchases,
+  GetUsuarioNombre,
   RemovePurchaseItem,
   UpdatePurchase,
 } from '../../application/use-cases/PurchaseUseCases';
@@ -24,4 +26,6 @@ export const purchaseUseCases = {
   getPurchaseItems: new GetPurchaseItems(repository),
   addPurchaseItem: new AddPurchaseItem(repository),
   removePurchaseItem: new RemovePurchaseItem(repository),
+  getProveedorNombre: new GetProveedorNombre(repository),
+  getUsuarioNombre: new GetUsuarioNombre(repository),
 };

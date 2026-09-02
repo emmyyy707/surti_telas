@@ -16,6 +16,7 @@ import { CreateSale } from '../../application/use-cases/CreateSale';
 import { CancelSale } from '../../application/use-cases/CancelSale';
 import { AddSaleItem } from '../../application/use-cases/AddSaleItem';
 import { RemoveSaleItem } from '../../application/use-cases/RemoveSaleItem';
+import { DeleteSale } from '../../application/use-cases/DeleteSale';
 import { GenerateSalePdf } from '../../application/use-cases/GenerateSalePdf';
 import { SaleCreationService } from '../../application/services/SaleCreationService';
 import { EmailService } from '../../infrastructure/services/EmailService';
@@ -54,6 +55,7 @@ export const salesOrderUseCases = {
   cancelSale: new CancelSale(saleRepository),
   addSaleItem: new AddSaleItem(saleRepository),
   removeSaleItem: new RemoveSaleItem(saleRepository),
+  deleteSale: new DeleteSale(saleRepository),
   generateSalePdf: new GenerateSalePdf(),
 };
 

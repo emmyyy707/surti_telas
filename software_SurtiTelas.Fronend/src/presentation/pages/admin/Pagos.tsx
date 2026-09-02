@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus, CheckCircle, AlertTriangle, Clock, FileText, CreditCard, Download, DollarSign, ChevronDown, X, Loader2, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, AlertTriangle, Clock, FileText, CreditCard, Download, DollarSign, ChevronDown, X, Loader2, AlertCircle, Edit, Trash2, Ban, Receipt, ArrowRight, Wallet } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Pagos.module.css';
 import f from '@/styles/Form.module.css';
@@ -9,17 +9,24 @@ import { Button } from '@/shared/ui/Button';
 import { DataTable } from '../../../shared/ui/DataTable';
 import { Modal } from '../../../shared/ui/Modal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
+import { ConfirmWithReasonModal } from '@/shared/ui/ConfirmWithReasonModal';
+import { Combobox } from '@/shared/ui/Combobox';
 import { paymentsApi, type Payment } from '@/infrastructure/api/paymentsApi';
 import { ordersApi } from '@/infrastructure/api/ordersApi';
 import { authApi } from '@/infrastructure/api/authApi';
+import { customersApi } from '@/infrastructure/api/customersApi';
 import { useAuthStore } from '@/core/stores/authStore';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Factura {
   id: string;
+  orderId: string;
   numeroFactura: string;
   cliente: string;
+  customerId: string;
+  vendedor: string;
+  asesorId: string;
   total: number;
   abonado: number;
   saldo: number;
@@ -27,9 +34,9 @@ interface Factura {
   cuotasPagadas: number;
   fechaProximaCuota: string;
   estado: 'Pendiente' | 'Parcial' | 'Pagado' | 'Vencido' | 'En Mora';
-  metodoPago: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Credito';
+  metodoPago: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro' | 'Credito';
   fechaCreacion: string;
-  vendedor: string;
+  status?: string;
 }
 
 interface Abono {
@@ -37,11 +44,13 @@ interface Abono {
   facturaId: string;
   numeroFactura: string;
   cliente: string;
+  customerId: string;
   valor: number;
   fecha: string;
   metodoPago: string;
   concepto: string;
   recibidoPor: string;
+  asesorId: string;
 }
 
 interface PaymentForm {
@@ -60,35 +69,39 @@ const facturasFromPayments = (payments: Payment[]): Factura[] => {
       return true;
     })
     .map((p) => {
-    const aprobado = p.status === 'Aprobado';
-    const rechazado = p.status === 'Rechazado';
-    const reembolsado = p.status === 'Reembolsado';
-    const total = p.amount;
-    const abonado = aprobado || reembolsado ? p.amount : 0;
-    const saldo = total - abonado;
-    const estado: Factura['estado'] = rechazado
-      ? 'Vencido'
-      : reembolsado
-        ? 'Pagado'
-        : aprobado
+      const aprobado = p.status === 'Aprobado';
+      const rechazado = p.status === 'Rechazado';
+      const reembolsado = p.status === 'Reembolsado';
+      const total = Number(p.orderTotal ?? p.amount) || 0;
+      const abonado = aprobado || reembolsado ? Number(p.amount) || 0 : 0;
+      const saldo = total - abonado;
+      const estado: Factura['estado'] = rechazado
+        ? 'Vencido'
+        : reembolsado
           ? 'Pagado'
-          : 'Pendiente';
-    return {
-      id: p.id,
-      numeroFactura: p.orderId,
-      cliente: p.customerId,
-      total,
-      abonado,
-      saldo,
-      cuotasTotales: 1,
-      cuotasPagadas: aprobado || reembolsado ? 1 : 0,
-      fechaProximaCuota: p.paidAt ?? '-',
-      estado,
-      metodoPago: p.method === 'Tarjeta' ? 'Tarjeta' : p.method === 'Efectivo' ? 'Efectivo' : 'Transferencia',
-      fechaCreacion: p.createdAt.split('T')[0],
-      vendedor: p.asesorId ?? 'Sin asesor',
-    };
-  });
+          : aprobado
+            ? 'Pagado'
+            : 'Pendiente';
+      return {
+        id: p.id,
+        orderId: p.orderId,
+        numeroFactura: p.orderNumero ?? p.orderId,
+        cliente: p.customerNombre ?? p.customerId,
+        customerId: p.customerId,
+        vendedor: p.asesorNombre ?? p.asesorId ?? 'Sin asesor',
+        asesorId: p.asesorId ?? '',
+        total,
+        abonado,
+        saldo,
+        cuotasTotales: 1,
+        cuotasPagadas: aprobado || reembolsado ? 1 : 0,
+        fechaProximaCuota: p.paidAt ?? '-',
+        estado,
+        metodoPago: p.method === 'Otro' ? 'Credito' : p.method,
+        fechaCreacion: p.createdAt.split('T')[0],
+        status: p.status,
+      };
+    });
 };
 
 const abonosFromPayments = (payments: Payment[]): Abono[] => {
@@ -103,13 +116,15 @@ const abonosFromPayments = (payments: Payment[]): Abono[] => {
     .map((p) => ({
       id: p.id,
       facturaId: p.orderId,
-      numeroFactura: p.orderId,
-      cliente: p.customerId,
+      numeroFactura: p.orderNumero ?? p.orderId,
+      cliente: p.customerNombre ?? p.customerId,
+      customerId: p.customerId,
       valor: p.amount,
       fecha: (p.paidAt ?? p.createdAt).split('T')[0],
-      metodoPago: p.method === 'Tarjeta' ? 'Tarjeta' : p.method === 'Efectivo' ? 'Efectivo' : 'Transferencia',
+      metodoPago: p.method,
       concepto: p.reference ?? p.notes ?? 'Pago de factura',
-      recibidoPor: p.asesorId ?? 'Sistema',
+      recibidoPor: p.asesorNombre ?? p.asesorId ?? 'Sistema',
+      asesorId: p.asesorId ?? '',
     }));
 };
 
@@ -120,13 +135,15 @@ export const AdminPagos: React.FC = () => {
   const [filtroMetodo, setFiltroMetodo] = useState<string>('Todos');
   const [modalAbonoOpen, setModalAbonoOpen] = useState(false);
   const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null);
-  const [nuevoAbono, setNuevoAbono] = useState({ valor: '', metodo: 'Transferencia', concepto: '', fecha: '' });
+  const [nuevoAbono, setNuevoAbono] = useState<{ valor: string; metodo: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro' | 'Credito'; concepto: string; fecha: string }>({ valor: '', metodo: 'Transferencia', concepto: '', fecha: '' });
   const [showFilters, setShowFilters] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<Payment | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Factura | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<Factura | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [paymentForm, setPaymentForm] = useState<PaymentForm>({
@@ -136,11 +153,17 @@ export const AdminPagos: React.FC = () => {
     notes: '',
   });
 
-  const [saldoClienteId, setSaldoClienteId] = useState('');
-  const [saldoQuoteId, setSaldoQuoteId] = useState('');
+  const [saldoClienteSearch, setSaldoClienteSearch] = useState('');
+  const [saldoClienteSelected, setSaldoClienteSelected] = useState<{ id: string; nombre: string } | null>(null);
   const [saldoCliente, setSaldoCliente] = useState<{ customerId: string; totalPaid: number; pending: number } | null>(null);
-  const [saldoQuote, setSaldoQuote] = useState<{ quoteId: string; total: number; totalPaid: number; saldo: number; porcentajeAnticipo: number; valorAnticipo: number } | null>(null);
+  const [saldoQuoteSearch, setSaldoQuoteSearch] = useState('');
+  const [saldoQuoteSelected, setSaldoQuoteSelected] = useState<{ id: string; nombre: string } | null>(null);
+  const [cotizacionesCliente, setCotizacionesCliente] = useState<{ quoteId: string; numero?: string; total: number; totalPaid: number; saldo: number; porcentajeAnticipo: number; valorAnticipo: number }[]>([]);
+  const [cotizacionSeleccionada, setCotizacionSeleccionada] = useState<{ quoteId: string; numero?: string; total: number; totalPaid: number; saldo: number; porcentajeAnticipo: number; valorAnticipo: number } | null>(null);
+  const [_saldoQuote, setSaldoQuote] = useState<{ quoteId: string; total: number; totalPaid: number; saldo: number; porcentajeAnticipo: number; valorAnticipo: number } | null>(null);
   const [loadingSaldo, setLoadingSaldo] = useState(false);
+  const [clientesOptions, setClientesOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingClientes, setLoadingClientes] = useState(false);
 
   const loadPayments = useCallback(async () => {
     setLoading(true);
@@ -156,8 +179,8 @@ export const AdminPagos: React.FC = () => {
       }
 
       const [paymentsData, ordersData] = await Promise.all([
-        paymentsApi.list(),
-        ordersApi.list(),
+        paymentsApi.list({ search: debouncedSearch || undefined }),
+        ordersApi.list({ search: debouncedSearch || undefined }),
       ]);
 
       const pagosFiltrados = isAdmin ? paymentsData : paymentsData.filter(p => clientesIds.has(p.customerId));
@@ -177,7 +200,7 @@ export const AdminPagos: React.FC = () => {
           orderId: o.id,
           customerId: o.clienteId ?? '',
           asesorId: o.asesorId,
-          amount: Number(o.total),
+          amount: Number(o.total) || 0,
           method: 'Transferencia',
           status: 'Pendiente',
           reference: o.observaciones ?? undefined,
@@ -185,13 +208,18 @@ export const AdminPagos: React.FC = () => {
           paidAt: undefined,
           createdAt: o.fecha,
           updatedAt: o.fecha,
+          orderNumero: o.numero,
+          customerNombre: o.cliente,
+          asesorNombre: o.asesor,
+          orderTotal: Number(o.total) || 0,
+          orderEstado: o.estado,
         })),
         ...deliveredSinPago.map((o): Payment => ({
           id: o.id,
           orderId: o.id,
           customerId: o.clienteId ?? '',
           asesorId: o.asesorId,
-          amount: Number(o.total),
+          amount: Number(o.total) || 0,
           method: 'Transferencia',
           status: 'Aprobado',
           reference: o.observaciones ?? undefined,
@@ -199,6 +227,11 @@ export const AdminPagos: React.FC = () => {
           paidAt: o.fecha,
           createdAt: o.fecha,
           updatedAt: o.fecha,
+          orderNumero: o.numero,
+          customerNombre: o.cliente,
+          asesorNombre: o.asesor,
+          orderTotal: Number(o.total) || 0,
+          orderEstado: o.estado,
         })),
         ...allOrders
           .filter(o => (o.estado === 'Aceptado' || o.estado === 'Entregado') && pagosPorPedido.has(o.id))
@@ -212,7 +245,7 @@ export const AdminPagos: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     void loadPayments();
@@ -230,14 +263,14 @@ export const AdminPagos: React.FC = () => {
   const abonos = useMemo(() => abonosFromPayments(payments), [payments]);
 
   const filteredFacturas = useMemo(() => {
-    return facturas.filter(f =>
-      (filtroEstado === 'Todos' || f.estado === filtroEstado) &&
-      (filtroMetodo === 'Todos' || f.metodoPago === filtroMetodo) &&
-      (f.numeroFactura.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        f.cliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        f.vendedor.toLowerCase().includes(debouncedSearch.toLowerCase()))
-    );
-  }, [debouncedSearch, filtroEstado, filtroMetodo, facturas]);
+    const q = debouncedSearch.trim().toLowerCase();
+    return facturas.filter(f => {
+      const matchEstado = filtroEstado === 'Todos' || f.estado === filtroEstado;
+      const matchMetodo = filtroMetodo === 'Todos' || f.metodoPago === filtroMetodo;
+      const matchSearch = !q || f.cliente.toLowerCase().includes(q) || f.numeroFactura.toLowerCase().includes(q) || f.vendedor.toLowerCase().includes(q);
+      return matchEstado && matchMetodo && matchSearch;
+    });
+  }, [filtroEstado, filtroMetodo, facturas, debouncedSearch]);
 
   const metodosUnicos = Array.from(new Set(facturas.map(f => f.metodoPago)));
 
@@ -267,9 +300,9 @@ export const AdminPagos: React.FC = () => {
   };
 
   const stats = {
-    totalFacturado: facturas.reduce((sum, f) => sum + f.total, 0),
-    totalAbonado: facturas.reduce((sum, f) => sum + f.abonado, 0),
-    totalSaldo: facturas.reduce((sum, f) => sum + f.saldo, 0),
+    totalFacturado: facturas.reduce((sum, f) => sum + (Number(f.total) || 0), 0),
+    totalAbonado: facturas.reduce((sum, f) => sum + (Number(f.abonado) || 0), 0),
+    totalSaldo: facturas.reduce((sum, f) => sum + (Number(f.saldo) || 0), 0),
     vencidas: facturas.filter(f => f.estado === 'Vencido' || f.estado === 'En Mora').length,
     porVencer: facturas.filter(f => f.estado === 'Parcial' || f.estado === 'Pendiente').length,
   };
@@ -293,11 +326,11 @@ export const AdminPagos: React.FC = () => {
     }
     try {
       await paymentsApi.create({
-        orderId: selectedFactura.id,
-        customerId: selectedFactura.cliente,
-        asesorId: selectedFactura.vendedor,
+        orderId: selectedFactura.orderId,
+        customerId: selectedFactura.customerId,
+        asesorId: selectedFactura.asesorId || undefined,
         amount: valor,
-        method: nuevoAbono.metodo === 'Efectivo' ? 'Efectivo' : nuevoAbono.metodo === 'Transferencia' ? 'Transferencia' : nuevoAbono.metodo === 'Tarjeta' ? 'Tarjeta' : 'Otro',
+        method: nuevoAbono.metodo,
         reference: nuevoAbono.concepto,
         notes: `Abono factura ${selectedFactura.numeroFactura}`,
       });
@@ -354,11 +387,26 @@ export const AdminPagos: React.FC = () => {
     }
   };
 
+  const handleCancelPayment = async (motivo: string) => {
+    if (!cancelConfirm) return;
+    setCancelling(true);
+    try {
+      await paymentsApi.cancel(cancelConfirm.id, motivo);
+      toast.success('Pago anulado correctamente');
+      setCancelConfirm(null);
+      await loadPayments();
+    } catch {
+      toast.error('No se pudo anular el pago');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const handleCalcularSaldoCliente = async () => {
-    if (!saldoClienteId.trim()) return;
+    if (!saldoClienteSelected?.id) return;
     setLoadingSaldo(true);
     try {
-      const data = await paymentsApi.getCustomerBalance(saldoClienteId.trim());
+      const data = await paymentsApi.getCustomerBalance(saldoClienteSelected.id);
       setSaldoCliente(data);
       toast.success('Saldo calculado');
     } catch {
@@ -369,18 +417,49 @@ export const AdminPagos: React.FC = () => {
   };
 
   const handleCalcularSaldoQuote = async () => {
-    if (!saldoQuoteId.trim()) return;
+    if (!saldoQuoteSelected?.id) return;
     setLoadingSaldo(true);
     try {
-      const data = await paymentsApi.getQuoteBalance(saldoQuoteId.trim());
-      setSaldoQuote(data);
-      toast.success('Saldo de cotización calculado');
+      const cotizaciones = await paymentsApi.listQuotesByCustomer(saldoQuoteSelected.id);
+      setCotizacionesCliente(cotizaciones);
+      if (cotizaciones.length === 0) {
+        toast.info('Este cliente no tiene cotizaciones pendientes.');
+      }
+      setCotizacionSeleccionada(null);
+      setSaldoQuote(null);
     } catch {
-      toast.error('No se pudo calcular el saldo de la cotización');
+      toast.error('No se pudieron cargar las cotizaciones');
     } finally {
       setLoadingSaldo(false);
     }
   };
+
+  const handleSeleccionarCotizacion = async (cotizacion: { quoteId: string; numero?: string; total: number; totalPaid: number; saldo: number; porcentajeAnticipo: number; valorAnticipo: number }) => {
+    setCotizacionSeleccionada(cotizacion);
+    setSaldoQuote(cotizacion);
+  };
+
+  useEffect(() => {
+    const term = saldoClienteSearch.trim();
+    if (term.length < 2) {
+      setClientesOptions([]);
+      return;
+    }
+    setLoadingClientes(true);
+    let cancelled = false;
+    customersApi.list({ search: term, limit: 10 }).then((result) => {
+      if (cancelled) return;
+      const options = (result.data ?? [])
+        .filter((c) => c.estado === 'Activo')
+        .map((c) => ({ value: c.id, label: [c.nombre, c.apellidos].filter(Boolean).join(' ') }));
+      setClientesOptions(options);
+    }).catch(() => {
+      if (!cancelled) setClientesOptions([]);
+    }).finally(() => {
+      if (!cancelled) setLoadingClientes(false);
+    });
+    return () => { cancelled = true; };
+  }, [saldoClienteSearch]);
 
   const handleExportPdf = async (payment: Payment) => {
     try {
@@ -483,7 +562,7 @@ export const AdminPagos: React.FC = () => {
 
           <div className={s.toolbar}>
             <SearchInput
-              placeholder="Buscar por factura, cliente o vendedor..."
+              placeholder="Buscar por pedido, cliente o vendedor..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onSearch={(value) => setSearch(value)}
@@ -525,34 +604,147 @@ export const AdminPagos: React.FC = () => {
             </div>
           )}
 
-          <div className={s.saldoSection}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>Lógica financiera</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div className={f.field}>
-                <label className={f.label}>Saldo restante por cliente (ID)</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input className={f.input} value={saldoClienteId} onChange={(e) => setSaldoClienteId(e.target.value)} placeholder="ID del cliente" />
-                  <Button type="button" onClick={handleCalcularSaldoCliente} disabled={loadingSaldo}>Calcular</Button>
+          <div className={s.financialCard}>
+            <div className={s.financialHeader}>
+              <h2 className={s.financialTitle}>Consulta de saldos y cotizaciones</h2>
+              <p className={s.financialDescription}>Consulta rápidamente los pagos realizados, saldos pendientes y cotizaciones de un cliente.</p>
+            </div>
+            <div className={s.financialGrid}>
+              <div className={s.financialBlock}>
+                <div className={s.financialBlockHeader}>
+                  <div className={s.financialBlockIcon}>
+                    <Wallet size={16} />
+                  </div>
+                  <div>
+                    <div className={s.financialBlockTitle}>Saldo del cliente</div>
+                    <div className={s.financialBlockDesc}>Selecciona un cliente para consultar sus pagos y saldo pendiente.</div>
+                  </div>
                 </div>
+                <Combobox
+                  label=""
+                  placeholder="Buscar cliente por nombre..."
+                  options={clientesOptions}
+                  value={saldoClienteSearch}
+                  onValueChange={(option) => {
+                    setSaldoClienteSearch(option.label);
+                    const found = clientesOptions.find((o) => o.value === option.value);
+                    if (found) {
+                      setSaldoClienteSelected({ id: found.value, nombre: found.label });
+                    } else {
+                      setSaldoClienteSelected(null);
+                    }
+                  }}
+                  loading={loadingClientes}
+                  allowCreate={false}
+                />
+                <div className={s.financialBlockActions}>
+                  <Button type="button" onClick={handleCalcularSaldoCliente} disabled={loadingSaldo || !saldoClienteSelected?.id}>Consultar saldo</Button>
+                </div>
+                {!saldoClienteSelected && !saldoCliente && (
+                  <div className={s.financialEmpty}>Selecciona un cliente para consultar su saldo.</div>
+                )}
+                {saldoClienteSelected && !saldoCliente && !loadingSaldo && (
+                  <div className={s.clientResult}>
+                    <div className={s.clientName}>{saldoClienteSelected.nombre}</div>
+                    <div className={s.financialEmpty}>Presiona "Consultar saldo" para ver el resumen financiero.</div>
+                  </div>
+                )}
+                {loadingSaldo && saldoClienteSelected && (
+                  <div className={s.clientResult}>
+                    <div className={s.clientName}>{saldoClienteSelected.nombre}</div>
+                    <div className={s.financialEmpty}>Cargando información financiera...</div>
+                  </div>
+                )}
                 {saldoCliente && (
-                  <div style={{ marginTop: 8, fontSize: '0.85rem' }}>
-                    <div>Total abonado: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoCliente.totalPaid)}</div>
-                    <div>Pendiente: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoCliente.pending)}</div>
+                  <div className={s.clientResult}>
+                    <div className={s.clientName}>{saldoClienteSelected?.nombre}</div>
+                    <div className={s.balanceGrid}>
+                      <div className={s.balanceCard}>
+                        <div className={s.balanceCardLabel}>Total abonado</div>
+                        <div className={s.balanceCardValue}>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(saldoCliente.totalPaid || 0)}</div>
+                      </div>
+                      <div className={`${s.balanceCard} ${s.balanceCardEmphasis}`}>
+                        <div className={s.balanceCardLabel}>Saldo pendiente</div>
+                        <div className={s.balanceCardValue}>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(saldoCliente.pending || 0)}</div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-              <div className={f.field}>
-                <label className={f.label}>Saldo restante de cotización (ID)</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input className={f.input} value={saldoQuoteId} onChange={(e) => setSaldoQuoteId(e.target.value)} placeholder="ID de la cotización" />
-                  <Button type="button" onClick={handleCalcularSaldoQuote} disabled={loadingSaldo}>Calcular</Button>
+              <div className={s.financialBlock}>
+                <div className={s.financialBlockHeader}>
+                  <div className={s.financialBlockIcon}>
+                    <Receipt size={16} />
+                  </div>
+                  <div>
+                    <div className={s.financialBlockTitle}>Cotizaciones del cliente</div>
+                    <div className={s.financialBlockDesc}>Selecciona una cotización para consultar su saldo.</div>
+                  </div>
                 </div>
-                {saldoQuote && (
-                  <div style={{ marginTop: 8, fontSize: '0.85rem' }}>
-                    <div>Total cotización: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.total)}</div>
-                    <div>Total pagado: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.totalPaid)}</div>
-                    <div>Saldo: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.saldo)}</div>
-                    <div>Anticipo {saldoQuote.porcentajeAnticipo}%: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(saldoQuote.valorAnticipo)}</div>
+                <Combobox
+                  label=""
+                  placeholder="Buscar cliente por nombre..."
+                  options={clientesOptions}
+                  value={saldoQuoteSearch}
+                  onValueChange={(option) => {
+                    setSaldoQuoteSearch(option.label);
+                    const found = clientesOptions.find((o) => o.value === option.value);
+                    if (found) {
+                      setSaldoQuoteSelected({ id: found.value, nombre: found.label });
+                    } else {
+                      setSaldoQuoteSelected(null);
+                    }
+                  }}
+                  loading={loadingClientes}
+                  allowCreate={false}
+                />
+                <div className={s.financialBlockActions}>
+                  <Button type="button" onClick={handleCalcularSaldoQuote} disabled={loadingSaldo || !saldoQuoteSelected?.id}>Buscar cotizaciones</Button>
+                </div>
+                {!saldoQuoteSelected && cotizacionesCliente.length === 0 && (
+                  <div className={s.financialEmpty}>Selecciona un cliente para ver sus cotizaciones.</div>
+                )}
+                {saldoQuoteSelected && cotizacionesCliente.length === 0 && !loadingSaldo && (
+                  <div className={s.financialEmpty}>Este cliente no tiene cotizaciones disponibles.</div>
+                )}
+                {loadingSaldo && saldoQuoteSelected && (
+                  <div className={s.financialEmpty}>Cargando cotizaciones...</div>
+                )}
+                {cotizacionesCliente.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                    {cotizacionesCliente.map((cotizacion) => (
+                      <button
+                        key={cotizacion.quoteId}
+                        type="button"
+                        onClick={() => handleSeleccionarCotizacion(cotizacion)}
+                        className={`${s.quoteCard} ${cotizacionSeleccionada?.quoteId === cotizacion.quoteId ? s.quoteCardSelected : ''}`}
+                      >
+                        <div className={s.quoteCardInfo}>
+                          <div className={s.quoteCardNumber}>{cotizacion.numero ?? `COT-${cotizacion.quoteId.slice(-4)}`}</div>
+                          <div className={s.quoteCardMeta}>{cotizacionSeleccionada?.quoteId === cotizacion.quoteId ? 'Seleccionada' : 'Toca para ver detalle'}</div>
+                        </div>
+                        <div className={s.quoteCardValues}>
+                          <div className={s.quoteCardValue}>
+                            <span className={s.quoteCardValueLabel}>Total</span>
+                            <span className={s.quoteCardValueAmount}>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(cotizacion.total || 0)}</span>
+                          </div>
+                          <div className={s.quoteCardValue}>
+                            <span className={s.quoteCardValueLabel}>Pagado</span>
+                            <span className={s.quoteCardValueAmount}>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(cotizacion.totalPaid || 0)}</span>
+                          </div>
+                          <div className={s.quoteCardValue}>
+                            <span className={s.quoteCardValueLabel}>Saldo</span>
+                            <span className={s.quoteCardValueAmount}>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(cotizacion.saldo || 0)}</span>
+                          </div>
+                        </div>
+                        <ArrowRight size={16} className={s.quoteCardArrow} />
+                      </button>
+                    ))}
+                    {cotizacionesCliente.length > 0 && (
+                      <div className={s.quoteCardFooter}>
+                        <span className={s.quoteCardAnticipo}>Anticipo: <strong>{cotizacionesCliente[0].porcentajeAnticipo || 0}%</strong></span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -592,11 +784,11 @@ export const AdminPagos: React.FC = () => {
                   </div>
                   <div className={s.detailSection}>
                     <h4 className={s.detailSectionTitle}>Historial de Abonos</h4>
-                    {abonosDeFactura(f.id).length === 0 ? (
+                    {abonosDeFactura(f.orderId).length === 0 ? (
                       <p className={s.noAbonos}>Sin abonos registrados</p>
                     ) : (
                       <div className={s.abonosList}>
-                        {abonosDeFactura(f.id).map(abono => (
+                        {abonosDeFactura(f.orderId).map(abono => (
                           <div key={abono.id} className={s.abonoRow}>
                             <div className={s.abonoInfo}>
                               <div className={s.abonoFecha}>{abono.fecha}</div>
@@ -618,14 +810,15 @@ export const AdminPagos: React.FC = () => {
               ...(f.estado === 'Pendiente' || f.estado === 'Parcial' ? [{ label: 'Rechazar', icon: <X size={14} />, onClick: async () => { await paymentsApi.updateStatus(f.id, 'Rechazado'); await loadPayments(); toast.success(`Pago ${f.numeroFactura} rechazado`); } }] : []),
               ...(f.estado === 'Pagado' ? [{ label: 'Reembolsar', icon: <Download size={14} />, onClick: async () => { await paymentsApi.updateStatus(f.id, 'Reembolsado'); await loadPayments(); toast.success(`Pago ${f.numeroFactura} reembolsado`); } }] : []),
                { label: 'Editar', icon: <Edit size={14} />, onClick: () => handleEditPayment(payments.find(p => p.id === f.id)!) },
-               { label: 'Anular', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(payments.find(p => p.id === f.id)!), danger: true },
+               ...(f.status !== 'ANULADO' ? [{ label: 'Anular', icon: <Ban size={14} />, onClick: () => setCancelConfirm(f), danger: true }] : []),
+               ...(f.status === 'ANULADO' ? [{ label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(f), danger: true }] : []),
                { label: 'PDF', icon: <FileText size={14} />, onClick: () => handleExportPdf(payments.find(p => p.id === f.id)!) },
-            ]}
+             ]}
             columns={[
-              { key: 'numeroFactura', header: 'N° Factura', width: '120px', sortable: true, filterable: true, filterPlaceholder: 'Filtrar factura...', render: (f) => <span className={s.tdPrimary}>{f.numeroFactura}</span> },
+              { key: 'numeroFactura', header: 'N° Pedido/Cotización', width: '140px', sortable: true, filterable: true, filterPlaceholder: 'Filtrar número...', render: (f) => <span className={s.tdPrimary}>{f.numeroFactura}</span> },
               { key: 'cliente', header: 'Cliente', sortable: true, filterable: true, render: (f) => f.cliente },
-              { key: 'vendedor', header: 'Vendedor', width: '130px', sortable: true, render: (f) => f.vendedor },
               { key: 'total', header: 'Total', width: '120px', sortable: true, align: 'right', render: (f) => <span className={`${s.tdRight} ${s.tdBold}`}>{formatCurrency(f.total)}</span> },
+              { key: 'saldo', header: 'Saldo', width: '120px', sortable: true, align: 'right', render: (f) => <span className={`${s.tdRight} ${f.saldo > 0 ? s.saldoNegative : ''}`}>{formatCurrency(f.saldo)}</span> },
               { key: 'estado', header: 'Estado', width: '110px', sortable: true, filterable: true, filterType: 'select', filterOptions: [
                 { value: 'Pendiente', label: 'Pendiente' },
                 { value: 'Parcial', label: 'Parcial' },
@@ -643,24 +836,45 @@ export const AdminPagos: React.FC = () => {
       <Modal
         open={modalAbonoOpen}
         onClose={() => setModalAbonoOpen(false)}
-        title={`Registrar abono - ${selectedFactura?.numeroFactura}`}
+        title="Registrar abono"
         size="md"
         variant="form"
       >
         <div className={f.form}>
-          <div className={f.formSection}>
-            <h3 className={f.sectionTitle}>Información de la factura</h3>
-            <div className={f.formRow}>
-              <div className={f.field}>
-                <label className={f.label}>Cliente</label>
-                <input type="text" className={f.input} value={selectedFactura?.cliente ?? ''} readOnly />
+          {selectedFactura && (
+            <div className={f.formSection}>
+              <h3 className={f.sectionTitle}>Información de la factura</h3>
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Cliente</label>
+                  <input type="text" className={f.input} value={selectedFactura.cliente} readOnly />
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Pedido / Cotización</label>
+                  <input type="text" className={f.input} value={selectedFactura.numeroFactura} readOnly />
+                </div>
               </div>
-              <div className={f.field}>
-                <label className={f.label}>Saldo pendiente</label>
-                <input type="text" className={f.input} value={selectedFactura ? formatCurrency(selectedFactura.saldo) : ''} readOnly />
+              <div className={f.formRow}>
+                <div className={f.field}>
+                  <label className={f.label}>Saldo pendiente</label>
+                  <input type="text" className={f.input} value={formatCurrency(selectedFactura.saldo)} readOnly />
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Método de pago</label>
+                  <select
+                    className={f.select}
+                    value={nuevoAbono.metodo}
+                    onChange={e => setNuevoAbono({ ...nuevoAbono, metodo: e.target.value as 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro' | 'Credito' })}
+                  >
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                    <option value="Credito">Crédito</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className={f.formSection}>
             <h3 className={f.sectionTitle}>Detalle del abono</h3>
@@ -678,21 +892,6 @@ export const AdminPagos: React.FC = () => {
                 />
               </div>
               <div className={f.field}>
-                <label className={f.label}>Método de pago</label>
-                <select
-                  className={f.select}
-                  value={nuevoAbono.metodo}
-                  onChange={e => setNuevoAbono({ ...nuevoAbono, metodo: e.target.value })}
-                >
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia">Transferencia</option>
-                  <option value="Tarjeta">Tarjeta</option>
-                  <option value="Credito">Crédito</option>
-                </select>
-              </div>
-            </div>
-            <div className={f.formRow}>
-              <div className={f.field}>
                 <label className={f.label}>Fecha</label>
                 <input
                   type="date"
@@ -701,6 +900,8 @@ export const AdminPagos: React.FC = () => {
                   onChange={e => setNuevoAbono({ ...nuevoAbono, fecha: e.target.value })}
                 />
               </div>
+            </div>
+            <div className={f.formRow}>
               <div className={f.field}>
                 <label className={f.label}>Concepto / Observación</label>
                 <input
@@ -763,13 +964,24 @@ export const AdminPagos: React.FC = () => {
         </form>
       </Modal>
 
+      <ConfirmWithReasonModal
+        open={!!cancelConfirm}
+        onClose={() => { setCancelConfirm(null); }}
+        onConfirm={handleCancelPayment}
+        title="Anular pago"
+        description={`¿Estás seguro de que deseas anular el pago "${cancelConfirm?.id}"? Esta acción no se puede deshacer.`}
+        referenceLabel={cancelConfirm ? `Pago: ${cancelConfirm.numeroFactura}` : undefined}
+        confirmLabel="Anular pago"
+        loading={cancelling}
+      />
+
       <ConfirmationModal
         open={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={handleDeletePayment}
-        title="Anular pago"
-        description={`¿Estás seguro de que deseas anular el pago "${deleteConfirm?.id}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Anular"
+        title="Eliminar pago"
+        description={`¿Estás seguro de que deseas eliminar el pago "${deleteConfirm?.id}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
         variant="danger"
       />
     </div>

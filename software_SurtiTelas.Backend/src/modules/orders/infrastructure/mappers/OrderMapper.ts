@@ -4,7 +4,7 @@ import type { OrderData, OrderItem, OrderPriority, OrderStatus, OrderFlow, Envio
 const STATUS_TO_DB: Record<OrderStatus, DbStatus> = {
   Pendiente: 'PENDIENTE',
   Aceptado: 'ACEPTADO',
-  'En proceso': 'EN_PRODUCCION',
+  Listo: 'LISTO',
   Enviado: 'DESPACHADO',
   Entregado: 'ENTREGADO',
   Rechazado: 'RECHAZADO',
@@ -16,10 +16,10 @@ const STATUS_TO_DB: Record<OrderStatus, DbStatus> = {
 
 const DB_TO_STATUS: Record<DbStatus, OrderStatus> = {
   NUEVO: 'Pendiente',
-  EN_PRODUCCION: 'En proceso',
-  LISTO: 'En proceso',
+  EN_PRODUCCION: 'Listo',
+  LISTO: 'Listo',
   DESPACHADO: 'Enviado',
-  EN_CAMINO: 'En proceso',
+  EN_CAMINO: 'Enviado',
   ENTREGADO: 'Entregado',
   CANCELADO: 'Cancelado',
   PENDIENTE: 'Pendiente',
@@ -75,10 +75,27 @@ export type OrderRow = {
   comprobantePagoEstado: string | null;
   comprobantePagoObservaciones: string | null;
   items: Array<{ productId: string | null; customOrderItemId: string | null; nombre: string; precio: { toNumber(): number }; cantidad: number }>;
+  venta: {
+    id: string;
+    orderId: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string;
+    asesorNombre: string;
+    fechaVenta: Date;
+    subtotal: { toNumber(): number };
+    impuestos: { toNumber(): number };
+    descuentos: { toNumber(): number };
+    total: { toNumber(): number };
+    estado: string;
+    medioPago: string | null;
+  } | null;
   diasCredito: number | null;
   descuentoEspecial: { toNumber(): number } | null;
   envioGratis: boolean | null;
   prioridadEnvio: string | null;
+  motivoAnulacion: string | null;
+  fechaAnulacion: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -99,7 +116,6 @@ export function toOrderData(row: OrderRow): OrderData {
     impuestos: row.impuestos ? Number(row.impuestos.toNumber()) : undefined,
     descuentos: row.descuentos ? Number(row.descuentos.toNumber()) : undefined,
     total: Number(row.total.toNumber()),
-    items: row.itemsCount,
     estado: DB_TO_STATUS[row.estado],
     prioridad: DB_TO_PRIORITY[row.prioridad],
     observaciones: row.observaciones ?? undefined,
@@ -122,6 +138,8 @@ export function toOrderData(row: OrderRow): OrderData {
     descuentoEspecial: row.descuentoEspecial ? Number(row.descuentoEspecial.toNumber()) : undefined,
     envioGratis: row.envioGratis ?? undefined,
     prioridadEnvio: (row.prioridadEnvio ?? undefined) as EnvioPrioridad | undefined,
+    motivoAnulacion: row.motivoAnulacion ?? undefined,
+    fechaAnulacion: row.fechaAnulacion?.toISOString(),
     itemsList: row.items.map(
       (i): OrderItem => ({
         productId: i.productId ?? undefined,
@@ -131,6 +149,24 @@ export function toOrderData(row: OrderRow): OrderData {
         cantidad: i.cantidad,
       })
     ),
+    items: row.items.reduce((sum, i) => sum + i.cantidad, 0),
+    venta: row.venta
+      ? {
+          id: row.venta.id,
+          orderId: row.venta.orderId,
+          clienteId: row.venta.clienteId,
+          clienteNombre: row.venta.clienteNombre,
+          asesorId: row.venta.asesorId,
+          asesorNombre: row.venta.asesorNombre,
+          fechaVenta: row.venta.fechaVenta.toISOString(),
+          subtotal: Number(row.venta.subtotal.toNumber()),
+          impuestos: Number(row.venta.impuestos.toNumber()),
+          descuentos: Number(row.venta.descuentos.toNumber()),
+          total: Number(row.venta.total.toNumber()),
+          estado: row.venta.estado,
+          medioPago: row.venta.medioPago ?? undefined,
+        }
+      : undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

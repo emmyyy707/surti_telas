@@ -8,7 +8,8 @@ import { Button } from '@/shared/ui/Button';
 import { DataTable, DataTableColumn, DataTableAction, DataTableDetailPanel } from '@/shared/ui/DataTable';
 import { stockApi, type RawMaterial } from '@/infrastructure/api/stockApi';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
-import { CATEGORIAS_INSUMO, UNIDADES_MEDIDA_INSUMO } from '@/shared/constants/options';
+import { UNIDADES_MEDIDA_INSUMO } from '@/shared/constants/options';
+import { rawMaterialCategoriesApi, type RawMaterialCategoryDTO } from '@/infrastructure/api/rawMaterialCategoriesApi';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 
 interface Insumo {
@@ -46,6 +47,9 @@ export const AdminInsumos: React.FC = () => {
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [items, setItems] = useState<Insumo[]>([]);
   const [proveedores, setProveedores] = useState<Array<{ id: string; nombre: string }>>([]);
+  const [categoriasInsumo, setCategoriasInsumo] = useState<RawMaterialCategoryDTO[]>([]);
+  const [categoriasLoading, setCategoriasLoading] = useState(true);
+  const [categoriasError, setCategoriasError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Insumo | null>(null);
@@ -97,6 +101,26 @@ export const AdminInsumos: React.FC = () => {
       }
     };
     void fetchProveedores();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchCategorias = async () => {
+      try {
+        const result = await rawMaterialCategoriesApi.list({ limit: 100 });
+        if (!active) return;
+        setCategoriasInsumo(result.items);
+      } catch {
+        if (active) {
+          setCategoriasError('No se pudieron cargar las categorías');
+          setCategoriasInsumo([]);
+        }
+      } finally {
+        if (active) setCategoriasLoading(false);
+      }
+    };
+    void fetchCategorias();
     return () => { active = false; };
   }, []);
 
@@ -313,9 +337,19 @@ export const AdminInsumos: React.FC = () => {
                     </div>
                     <div className={s.field}>
                       <label className={s.label}>Categoría</label>
-                      <select className={s.select} value={formCategoria} onChange={e => setFormCategoria(e.target.value)}>
-                        <option value="">Sin categoría</option>
-                        {CATEGORIAS_INSUMO.map((c, idx) => <option key={`${c}-${idx}`} value={c}>{c}</option>)}
+                      <select className={s.select} value={formCategoria} onChange={e => setFormCategoria(e.target.value)} disabled={categoriasLoading}>
+                        {categoriasLoading ? (
+                          <option value="">Cargando categorías...</option>
+                        ) : categoriasError ? (
+                          <option value="" disabled>No se pudieron cargar las categorías</option>
+                        ) : categoriasInsumo.length === 0 ? (
+                          <option value="" disabled>No hay categorías de insumos creadas</option>
+                        ) : (
+                          <option value="">Sin categoría</option>
+                        )}
+                        {!categoriasLoading && !categoriasError && categoriasInsumo.map(c => (
+                          <option key={c.id} value={c.nombre}>{c.nombre}</option>
+                        ))}
                       </select>
                     </div>
                   </div>

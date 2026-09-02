@@ -15,13 +15,17 @@ import type { ComponentType } from 'react';
 const STATUS_ICONS: Record<string, ComponentType<LucideProps>> = {
   Pendiente: Clock,
   Aceptado: Package,
-  'En proceso': Package,
+  'En validación': Clock,
+  'Recibo generado': Package,
+  'Recibo enviado': Package,
+  Listo: Package,
   Enviado: Truck,
   Entregado: CheckCircle,
   Rechazado: XCircle,
+  Cancelado: XCircle,
 };
 
-const ESTADOS_ORDEN = ['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado'] as const;
+const ESTADOS_ORDEN = ['Pendiente', 'Aceptado', 'Listo', 'Enviado', 'Entregado', 'Rechazado', 'En validación', 'Recibo generado', 'Recibo enviado', 'Cancelado'] as const;
 
 export const PortalCliente: React.FC = () => {
   const [orders, setOrders] = useState<Pedido[]>([]);

@@ -9,6 +9,7 @@ const mockRepo = {
   incrementFailedLoginAttempts: vi.fn(),
   resetFailedLoginAttempts: vi.fn(),
   findPermissionsByRole: vi.fn(),
+  findPermissionsByUser: vi.fn(),
   updateRefreshToken: vi.fn(),
   findById: vi.fn(),
 };
@@ -45,6 +46,7 @@ describe('LoginUser', () => {
     });
     mockHasher.compare.mockResolvedValue(true);
     mockRepo.findPermissionsByRole.mockResolvedValue(['catalog:read']);
+    mockRepo.findPermissionsByUser.mockResolvedValue(['customers:create']);
     mockTokens.signAccessToken.mockReturnValue('access-token');
     mockTokens.signRefreshToken.mockReturnValue('refresh-token');
     mockHasher.hash.mockResolvedValue('hashed-refresh');
@@ -54,6 +56,7 @@ describe('LoginUser', () => {
     expect(result).toHaveProperty('accessToken', 'access-token');
     expect(result).toHaveProperty('refreshToken', 'refresh-token');
     expect((result as any).user.id).toBe('user-1');
+    expect((result as any).user.permissions).toEqual(['catalog:read', 'customers:create']);
     expect(mockRepo.updateRefreshToken).toHaveBeenCalledWith('user-1', 'hashed-refresh');
   });
 
@@ -92,6 +95,7 @@ describe('LoginUser', () => {
     const useCase = new LoginUser(mockRepo as any, mockTokens as any, mockHasher as any);
     mockRepo.findByEmail.mockResolvedValue({
       id: 'user-1',
+      email: 'test@test.com',
       estado: 'ACTIVO',
       passwordHash: 'hashed',
       failedLoginAttempts: 0,
@@ -99,12 +103,15 @@ describe('LoginUser', () => {
       twoFactorEnabled: true,
     });
     mockHasher.compare.mockResolvedValue(true);
+    mockRepo.findPermissionsByRole.mockResolvedValue(['catalog:read']);
+    mockRepo.findPermissionsByUser.mockResolvedValue(['customers:create']);
     mockTokens.signTempToken.mockReturnValue('temp-token');
 
     const result = await useCase.execute({ email: 'test@test.com', password: 'password' }) as any;
 
     expect(result.requiresTwoFactor).toBe(true);
     expect(result.tempToken).toBe('temp-token');
+    expect(result.user.permissions).toEqual(['catalog:read', 'customers:create']);
   });
 });
 
@@ -119,6 +126,7 @@ describe('RefreshToken', () => {
     });
     mockHasher.compare.mockResolvedValue(true);
     mockRepo.findPermissionsByRole.mockResolvedValue(['catalog:read']);
+    mockRepo.findPermissionsByUser.mockResolvedValue(['customers:create']);
     mockTokens.signAccessToken.mockReturnValue('new-access');
     mockTokens.signRefreshToken.mockReturnValue('new-refresh');
     mockHasher.hash.mockResolvedValue('new-hashed-refresh');
@@ -127,6 +135,7 @@ describe('RefreshToken', () => {
 
     expect(result).toHaveProperty('accessToken', 'new-access');
     expect(result).toHaveProperty('refreshToken', 'new-refresh');
+    expect((result as any).user.permissions).toEqual(['catalog:read', 'customers:create']);
     expect(mockRepo.updateRefreshToken).toHaveBeenCalledWith('user-1', 'new-hashed-refresh');
   });
 

@@ -35,6 +35,7 @@ import { ChangePassword } from '../../application/use-cases/ChangePassword';
 import { GoogleAuth } from '../../application/use-cases/GoogleAuth';
 import { UpdateUserStatus, DeleteUser } from '../../application/use-cases/UserManagement';
 import { GetUserById } from '../../application/use-cases/GetUserById';
+import { UpdateUserPermissions } from '../../application/use-cases/UpdateUserPermissions';
 import { env } from '../../../../config/env';
 
 const passwordHasher = new BcryptPasswordHasher();
@@ -87,6 +88,7 @@ export const authUseCases = {
   updateUserStatus: new UpdateUserStatus(authRepository),
   deleteUser: new DeleteUser(authRepository, prisma),
   getUserById: new GetUserById(authRepository),
+  updateUserPermissions: new UpdateUserPermissions(authRepository),
 };
 
 export { tokenService };

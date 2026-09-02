@@ -23,6 +23,7 @@ export interface ProductionOrderDTO {
   pedidoTotal?: number;
   taller?: { id: string; nombre: string; capacidad?: number };
   operario?: { id: string; nombre: string; telefono?: string };
+  items?: ProductionItemDTO[];
 }
 
 export interface ProductionOrder {
@@ -47,6 +48,29 @@ export interface ProductionOrder {
   pedidoPrioridad?: string;
   pedidoItemNombre?: string;
   pedidoTotal?: number;
+  items?: ProductionItem[];
+}
+
+export interface ProductionItemDTO {
+  id: string;
+  produccionId: string;
+  nombre: string;
+  descripcion?: string;
+  cantidad: number;
+  unidad?: string;
+  precioUnitario?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductionItem {
+  id: string;
+  produccionId: string;
+  nombre: string;
+  descripcion?: string;
+  cantidad: number;
+  unidad?: string;
+  precioUnitario?: number;
 }
 
 export function toProductionOrder(dto: ProductionOrderDTO): ProductionOrder {
@@ -72,6 +96,19 @@ export function toProductionOrder(dto: ProductionOrderDTO): ProductionOrder {
     pedidoPrioridad: dto.pedidoPrioridad,
     pedidoItemNombre: dto.pedidoItemNombre,
     pedidoTotal: dto.pedidoTotal,
+    items: dto.items?.map(toProductionItem) ?? [],
+  };
+}
+
+export function toProductionItem(dto: ProductionItemDTO): ProductionItem {
+  return {
+    id: dto.id,
+    produccionId: dto.produccionId,
+    nombre: dto.nombre,
+    descripcion: dto.descripcion,
+    cantidad: dto.cantidad,
+    unidad: dto.unidad,
+    precioUnitario: dto.precioUnitario,
   };
 }
 
@@ -130,5 +167,47 @@ export const productionApi = {
   async complete(id: string): Promise<ProductionOrder> {
     const dto = await api.post<ProductionOrderDTO>(`/production/orders/${encodeURIComponent(id)}/complete`);
     return toProductionOrder(dto);
+  },
+
+  async getById(id: string): Promise<ProductionOrder | null> {
+    try {
+      const dto = await api.get<ProductionOrderDTO>(`/production/orders/${encodeURIComponent(id)}`);
+      return toProductionOrder(dto);
+    } catch {
+      return null;
+    }
+  },
+
+  async listItems(produccionId: string, query?: Record<string, string | number | boolean | undefined | null>): Promise<ProductionItem[]> {
+    const response = await api.get<{ items: ProductionItemDTO[]; meta: Record<string, unknown> }>(`/production/orders/${encodeURIComponent(produccionId)}/items`, { query });
+    const data = response?.items ?? [];
+    return data.map(toProductionItem);
+  },
+
+  async createItem(produccionId: string, data: Partial<ProductionItem>): Promise<ProductionItem> {
+    const body: Record<string, unknown> = {
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      cantidad: data.cantidad,
+      unidad: data.unidad,
+      precioUnitario: data.precioUnitario,
+    };
+    const dto = await api.post<ProductionItemDTO>(`/production/orders/${encodeURIComponent(produccionId)}/items`, body);
+    return toProductionItem(dto);
+  },
+
+  async updateItem(produccionId: string, itemId: string, changes: Partial<ProductionItem>): Promise<ProductionItem> {
+    const body: Record<string, unknown> = {};
+    if (changes.nombre !== undefined) body.nombre = changes.nombre;
+    if (changes.descripcion !== undefined) body.descripcion = changes.descripcion;
+    if (changes.cantidad !== undefined) body.cantidad = changes.cantidad;
+    if (changes.unidad !== undefined) body.unidad = changes.unidad;
+    if (changes.precioUnitario !== undefined) body.precioUnitario = changes.precioUnitario;
+    const dto = await api.patch<ProductionItemDTO>(`/production/orders/${encodeURIComponent(produccionId)}/items/${encodeURIComponent(itemId)}`, body);
+    return toProductionItem(dto);
+  },
+
+  async removeItem(produccionId: string, itemId: string): Promise<void> {
+    await api.delete(`/production/orders/${encodeURIComponent(produccionId)}/items/${encodeURIComponent(itemId)}`);
   },
 };

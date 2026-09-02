@@ -30,6 +30,7 @@ const mockReq = (overrides = {}) => ({
   query: {},
   params: {},
   cookies: {},
+  requestId: 'test-request-id',
   get: (_key: string) => 'test-agent',
   ...overrides,
 }) as unknown as Request;
@@ -221,7 +222,7 @@ describe('auth.controller', () => {
 
     await forgotPassword(req, res);
 
-    expect(authUseCases.forgotPassword.execute).toHaveBeenCalledWith('test@test.com');
+    expect(authUseCases.forgotPassword.execute).toHaveBeenCalledWith('test@test.com', expect.any(String));
     expect(res.json).toHaveBeenCalled();
   });
 
@@ -229,11 +230,11 @@ describe('auth.controller', () => {
     const req = mockReq({ body: { token: 'reset-token', newPassword: 'NewPass123!' } });
     const res = mockRes();
     const { authUseCases } = await import('@/modules/auth/infrastructure/container/authContainer');
-    (authUseCases.resetPassword.execute as any).mockResolvedValue(undefined);
+    (authUseCases.resetPassword.execute as any).mockResolvedValue({ user: { id: 'user-1', email: 'test@test.com' } });
 
     await resetPassword(req, res);
 
-    expect(authUseCases.resetPassword.execute).toHaveBeenCalledWith('reset-token', 'NewPass123!');
+    expect(authUseCases.resetPassword.execute).toHaveBeenCalledWith('reset-token', 'NewPass123!', expect.any(String));
     expect(res.json).toHaveBeenCalled();
   });
 

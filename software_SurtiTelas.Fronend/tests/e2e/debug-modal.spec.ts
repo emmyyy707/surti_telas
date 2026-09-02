@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:5173';
 
@@ -19,12 +19,12 @@ test('Debug: Verificar estado real de cotizaciones', async ({ page }) => {
   await loginAsAdmin(page);
 
   // Interceptar la respuesta de la API
-  let apiData: any = null;
+  let apiData: unknown = null;
   await page.route('**/custom-orders**', async (route) => {
     const response = await route.fetch();
     try {
       apiData = await response.json();
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
     await route.fulfill({ response });

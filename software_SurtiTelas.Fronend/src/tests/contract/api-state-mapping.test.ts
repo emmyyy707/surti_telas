@@ -47,13 +47,14 @@ describe('ordersApi contract: backend -> frontend estado mapping', () => {
 
   it('no pierde estados mapeados al actualizar', () => {
     expect(ORDER_STATUS_FRONTEND_MAP['NUEVO']).toBe('Pendiente');
-    expect(ORDER_STATUS_FRONTEND_MAP['EN_PRODUCCION']).toBe('En proceso');
-    expect(ORDER_STATUS_FRONTEND_MAP['LISTO']).toBe('Enviado');
+    expect(ORDER_STATUS_FRONTEND_MAP['EN_PRODUCCION']).toBe('Listo');
+    expect(ORDER_STATUS_FRONTEND_MAP['LISTO']).toBe('Listo');
     expect(ORDER_STATUS_FRONTEND_MAP['DESPACHADO']).toBe('Enviado');
     expect(ORDER_STATUS_FRONTEND_MAP['EN_CAMINO']).toBe('Enviado');
-    expect(ORDER_STATUS_FRONTEND_MAP['CANCELADO']).toBe('Rechazado');
-    expect(ORDER_STATUS_FRONTEND_MAP['RECIBO_GENERADO']).toBe('Entregado');
-    expect(ORDER_STATUS_FRONTEND_MAP['RECIBO_ENVIADO']).toBe('Entregado');
+    expect(ORDER_STATUS_FRONTEND_MAP['CANCELADO']).toBe('Cancelado');
+    expect(ORDER_STATUS_FRONTEND_MAP['EN_VALIDACION']).toBe('En validación');
+    expect(ORDER_STATUS_FRONTEND_MAP['RECIBO_GENERADO']).toBe('Recibo generado');
+    expect(ORDER_STATUS_FRONTEND_MAP['RECIBO_ENVIADO']).toBe('Recibo enviado');
   });
 });
 

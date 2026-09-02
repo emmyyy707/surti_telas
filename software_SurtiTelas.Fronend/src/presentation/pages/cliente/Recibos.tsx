@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Download, FileText, Calendar, CreditCard, DollarSign, CheckCircle2, Clock, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Download, FileText, Calendar, CreditCard, DollarSign, CheckCircle2, Clock, XCircle, Loader2, AlertCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -19,6 +19,7 @@ interface Recibo {
   monto: number;
   estado: ReciboStatus;
   cliente: string;
+  url?: string;
   detalle: {
     subtotal: number;
     envio: number;
@@ -72,6 +73,7 @@ const toRecibo = (dto: Receipt): Recibo => {
     monto: total,
     estado: estadoMap[dto.estado] || 'Pendiente',
     cliente: dto.customerId,
+    url: dto.url,
     detalle: { subtotal, envio: 0, impuestos, total },
   };
 };
@@ -81,7 +83,7 @@ export const Recibos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRecibo, setSelectedRecibo] = useState<Recibo | null>(null);
-  const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
+  const [_selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -228,15 +230,29 @@ export const Recibos: React.FC = () => {
                     </Badge>
                   </td>
                   <td>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={s.downloadButton}
-                      onClick={() => openRecibo(recibo)}
-                      leftIcon={<Download size={14} />}
-                    >
-                      Descargar Recibo
-                    </Button>
+                    <div className={s.actionCell}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={s.viewButton}
+                        onClick={() => openRecibo(recibo)}
+                        leftIcon={<Eye size={14} />}
+                      >
+                        Ver
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className={s.downloadButton}
+                        onClick={() => {
+                          openRecibo(recibo);
+                          setTimeout(() => handleDownload(), 0);
+                        }}
+                        leftIcon={<Download size={14} />}
+                      >
+                        Descargar
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -314,16 +330,20 @@ export const Recibos: React.FC = () => {
               </div>
             </div>
 
-            {selectedPedido?.comprobantePagoUrl && (
+            {selectedRecibo.url && (
               <div className={s.breakdown}>
                 <div>
-                  <span>Comprobante de pago</span>
-                  <a href={selectedPedido.comprobantePagoUrl} target="_blank" rel="noreferrer" className={s.proofLink}>
-                    Ver imagen del comprobante
-                  </a>
-                  <div className="mt-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
-                    <img src={selectedPedido.comprobantePagoUrl} alt="Comprobante de pago" className="max-h-64 w-full object-contain" />
-                  </div>
+                  <span>Recibo</span>
+                  {selectedRecibo.url.toLowerCase().endsWith('.pdf') ? (
+                    <iframe src={selectedRecibo.url} title="Recibo" className="w-full h-96 rounded-xl border border-[var(--color-border)]" />
+                  ) : (
+                    <>
+                      <a href={selectedRecibo.url} target="_blank" rel="noreferrer" className={s.proofLink}>Ver recibo</a>
+                      <div className="mt-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+                        <img src={selectedRecibo.url} alt="Recibo" className="max-h-64 w-full object-contain" />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}

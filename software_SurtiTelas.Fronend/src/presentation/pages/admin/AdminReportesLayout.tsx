@@ -1,11 +1,10 @@
 import React from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
-import { BarChart3, DollarSign, Users2, Factory, Package } from 'lucide-react';
+import { BarChart3, Users2, Factory, Package } from 'lucide-react';
 import s from './AdminReportesLayout.module.css';
 
 const tabs = [
   { path: '/admin/reportes/ventas', label: 'Ventas', icon: BarChart3, end: true },
-  { path: '/admin/reportes/finanzas', label: 'Finanzas', icon: DollarSign, end: true },
   { path: '/admin/reportes/usuarios', label: 'Usuarios', icon: Users2, end: true },
   { path: '/admin/reportes/produccion', label: 'Producción', icon: Factory, end: true },
   { path: '/admin/reportes/inventario', label: 'Inventario', icon: Package, end: true },
@@ -26,7 +25,7 @@ export const AdminReportesLayout: React.FC = () => {
       <div className={s.tabs}>
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = tab.end
+          const _isActive = tab.end
             ? location.pathname === tab.path
             : location.pathname.startsWith(tab.path);
           return (

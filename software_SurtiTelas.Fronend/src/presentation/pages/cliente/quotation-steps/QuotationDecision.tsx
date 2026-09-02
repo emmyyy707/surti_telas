@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Check, X, AlertCircle, Clock, Package, Hash, DollarSign, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import { Check, X, AlertCircle, Clock, Package, DollarSign, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';

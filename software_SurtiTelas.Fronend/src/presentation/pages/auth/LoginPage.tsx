@@ -83,6 +83,15 @@ const LoginPage: React.FC = () => {
       });
       clearReturnTo();
       toast.success('¡Autenticado con Google!');
+      const getDestination = (role: string | undefined): string => {
+        const state = location.state as { redirectTo?: string } | null;
+        const redirectTo = state?.redirectTo;
+        if (redirectTo) return redirectTo;
+        if (role === 'admin' || role === 'almacen' || role === 'produccion' || role === 'reportes') return '/admin/dashboard';
+        if (role === 'asesor') return '/asesor/dashboard';
+        if (role === 'domiciliario') return '/domiciliario/dashboard';
+        return '/cliente/inicio';
+      };
       const destination = getDestination(mapRole(result.user.role));
       setTimeout(() => navigate(destination, { replace: true }), 1000);
     } catch {

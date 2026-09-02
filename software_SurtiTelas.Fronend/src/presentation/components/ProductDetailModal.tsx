@@ -6,7 +6,6 @@ import {
   Check,
   Heart,
   Share2,
-  Star,
   ChevronLeft,
   ChevronRight,
   ShoppingBag
@@ -82,7 +81,7 @@ const productColors = useMemo(() => {
     })
   }
 
-  const [selectedSize, setSelectedSize] =
+  const [_selectedSize, setSelectedSize] =
     useState<string>(productSizes[0] || 'M')
 
   const [variantQuantities, setVariantQuantities] = useState<Record<string, number>>({})

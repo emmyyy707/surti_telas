@@ -17,7 +17,6 @@ class WebSocketService {
     this.socket.onopen = () => {
       this.connected = true;
       this.reconnectDelay = 1000;
-      console.log('[WebSocket] Connected');
     };
 
     this.socket.onmessage = (event) => {

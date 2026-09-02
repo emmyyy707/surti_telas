@@ -4,8 +4,8 @@ import { created, noContent, ok } from '../../../../shared/presentation/http/Htt
 import { buildApiPaginatedResponse } from '../../../../shared/presentation/http/PaginatedResponse';
 import { parseDto } from '../../../../shared/presentation/http/validate';
 import { authUseCases } from '../../infrastructure/container/authContainer';
-import { LoginSchema, RegisterSchema, UserFiltersSchema, VerifyTwoFactorSchema, ForgotPasswordSchema, ResetPasswordSchema, ChangePasswordSchema, UpdateProfileSchema, GoogleTokenSchema, CreateUserSchema, UpdateUserStatusSchema, UpdateRoleStatusSchema } from '../validators/auth.validators';
-import { AssignPermissionSchema, CreatePermissionSchema, PermissionFiltersSchema, RolePermissionFiltersSchema, RoleFiltersSchema, UpdatePermissionStatusSchema } from '../validators/permission.validators';
+import { LoginSchema, RegisterSchema, UserFiltersSchema, VerifyTwoFactorSchema, ForgotPasswordSchema, ResetPasswordSchema, ChangePasswordSchema, UpdateProfileSchema, GoogleTokenSchema, CreateUserSchema, UpdateUserSchema, UpdateUserStatusSchema, UpdateRoleStatusSchema } from '../validators/auth.validators';
+import { AssignPermissionSchema, CreatePermissionSchema, PermissionFiltersSchema, RolePermissionFiltersSchema, RoleFiltersSchema, UpdatePermissionStatusSchema, CreateRoleSchema, UpdateRoleSchema } from '../validators/permission.validators';
 import { ConflictError, UnauthorizedError } from '../../../../shared/domain/errors';
 import { eventBus } from '../../../../shared/infrastructure/eventBus';
 import {
@@ -246,14 +246,14 @@ export const getRole = async (req: Request, res: Response) => {
 };
 
 export const createRole = async (req: Request, res: Response) => {
-  const { nombre, descripcion, permisos } = req.body as { nombre: string; descripcion?: string; permisos?: string[] };
-  const role = await authUseCases.createRole.execute(nombre, descripcion, permisos);
+  const input = parseDto(CreateRoleSchema, req.body);
+  const role = await authUseCases.createRole.execute(input.nombre, input.descripcion, input.permisos);
   return created(res, role, 'Rol creado');
 };
 
 export const updateRole = async (req: Request, res: Response) => {
-  const { nombre, descripcion, permisos } = req.body as { nombre?: string; descripcion?: string; permisos?: string[] };
-  const role = await authUseCases.updateRole.execute(req.params.id, { nombre, descripcion, permisos });
+  const input = parseDto(UpdateRoleSchema, req.body);
+  const role = await authUseCases.updateRole.execute(req.params.id, { nombre: input.nombre, descripcion: input.descripcion, permisos: input.permisos });
   return ok(res, role, 'Rol actualizado');
 };
 
@@ -324,19 +324,27 @@ export const changePassword = async (req: Request, res: Response) => {
 export const createUser = async (req: Request, res: Response) => {
   const input = parseDto(CreateUserSchema, req.body);
   const result = await authUseCases.register.execute(input);
-  return created(res, { id: result.user.id, email: result.user.email, nombre: result.user.nombre, role: result.user.role }, 'Usuario creado');
+  return created(res, { id: result.user.id, email: result.user.email, nombre: result.user.nombre, role: result.user.role, permissions: result.user.permissions }, 'Usuario creado');
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+  const { nombre, email, telefono, permisos } = parseDto(UpdateUserSchema, req.body);
+  const profileData: { nombre?: string; email?: string; telefono?: string | null } = {};
+  if (nombre !== undefined) profileData.nombre = nombre;
+  if (email !== undefined) profileData.email = email;
+  if (telefono !== undefined) profileData.telefono = telefono;
+  await authUseCases.updateProfile.execute(req.params.id, profileData);
+  if (permisos !== undefined) {
+    await authUseCases.updateUserPermissions.execute(req.params.id, permisos);
+  }
+  const updatedUser = await authUseCases.getUserById.execute(req.params.id);
+  return ok(res, updatedUser, 'Usuario actualizado');
 };
 
 export const updateUserStatus = async (req: Request, res: Response) => {
   const { estado } = parseDto(UpdateUserStatusSchema, req.body);
-  const user = await authUseCases.updateUserStatus.execute(req.params.id, estado);
+  const user = await authUseCases.updateUserStatus.execute(req.params.id, estado as 'ACTIVO' | 'INACTIVO');
   return ok(res, user, estado === 'ACTIVO' ? 'Usuario activado' : 'Usuario desactivado');
-};
-
-export const updateUser = async (req: Request, res: Response) => {
-  const { nombre, email, telefono } = req.body as { nombre?: string; email?: string; telefono?: string | null };
-  const user = await authUseCases.updateProfile.execute(req.params.id, { nombre, email, telefono });
-  return ok(res, user, 'Usuario actualizado');
 };
 
 export const deleteUser = async (req: Request, res: Response) => {

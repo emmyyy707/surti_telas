@@ -31,7 +31,7 @@ const getTrackingState = (pedido: Pedido) => {
   const hasNovedad = /novedad|problema|reclamo|fall|daño|ausente|pendiente de revisión/i.test(pedido.observaciones || '');
   if (hasNovedad) return { status: 'Con Novedad' as TrackingStatus, hasNovedad: true };
   if (pedido.estado === 'Pendiente') return { status: 'Recibido / Pendiente' as TrackingStatus, hasNovedad: false };
-  if (pedido.estado === 'En proceso') return { status: 'En Taller' as TrackingStatus, hasNovedad: false };
+  if (['Aceptado', 'En validación', 'Recibo generado', 'Listo'].includes(pedido.estado)) return { status: 'En Taller' as TrackingStatus, hasNovedad: false };
   if (pedido.estado === 'Enviado') return { status: 'En Camino (Despachado)' as TrackingStatus, hasNovedad: false };
   if (pedido.estado === 'Entregado') return { status: 'Entregado' as TrackingStatus, hasNovedad: false };
   return { status: 'Recibido / Pendiente' as TrackingStatus, hasNovedad: false };
@@ -119,10 +119,10 @@ export const OrderTracking: React.FC = () => {
   };
 
   const resumenCards = useMemo(() => pedido ? [
-    { label: 'Número de orden', value: pedido.id, icon: <Hash size={18} /> },
-    { label: 'Fecha de compra', value: pedido.fecha, icon: <Calendar size={18} /> },
-    { label: 'Taller asignado', value: tallerNombre, icon: <Factory size={18} /> },
-    { label: 'Total prendas/unidades', value: String(totalPrendas), icon: <Package size={18} /> },
+    { label: 'Número de orden', value: pedido.id, icon: <Hash size={18} />, accent: 'var(--color-info)' },
+    { label: 'Fecha de compra', value: pedido.fecha, icon: <Calendar size={18} />, accent: 'var(--color-accent)' },
+    { label: 'Taller asignado', value: tallerNombre, icon: <Factory size={18} />, accent: 'var(--color-warning, #f59e0b)' },
+    { label: 'Total prendas/unidades', value: String(totalPrendas), icon: <Package size={18} />, accent: 'var(--color-success)' },
   ] : [], [pedido, totalPrendas, tallerNombre]);
 
   if (loading) {
@@ -180,7 +180,9 @@ export const OrderTracking: React.FC = () => {
       <div className={s.summaryGrid}>
         {resumenCards.map((card) => (
           <div key={card.label} className={s.summaryCard}>
-            <div className={s.summaryIcon}>{card.icon}</div>
+            <div className={s.summaryIcon} style={{ background: `${card.accent}14`, color: card.accent }}>
+              {card.icon}
+            </div>
             <div>
               <span className={s.summaryLabel}>{card.label}</span>
               <strong className={s.summaryValue}>{card.value}</strong>

@@ -42,6 +42,7 @@ export const UpdateEmployeeSchema = z.object({
   tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional().nullable(),
   numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional().nullable(),
   avatar: z.string().min(1, 'Avatar inválido').max(500000, 'Avatar demasiado grande').optional().or(z.literal('')),
+  estado: z.enum(['ACTIVO', 'INACTIVO', 'Activo', 'Inactivo']).transform((val) => val.toUpperCase() as 'ACTIVO' | 'INACTIVO').optional(),
   profile: z.object({
     cargo: z.string().max(100, 'Máximo 100 caracteres').optional(),
     fechaContratacion: z.coerce.date().optional().nullable(),
@@ -51,7 +52,7 @@ export const UpdateEmployeeSchema = z.object({
 });
 
 export const ChangeEmployeeStatusSchema = z.object({
-  estado: EmployeeEstadoSchema,
+  estado: z.enum(['ACTIVO', 'INACTIVO', 'Activo', 'Inactivo']).transform((val) => val.toUpperCase() as 'ACTIVO' | 'INACTIVO'),
 });
 
 export const EmployeeSearchSchema = z.object({

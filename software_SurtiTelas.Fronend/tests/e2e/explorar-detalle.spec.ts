@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import fs from 'fs';
 
 test('buscar selectores de detalle y editar', async ({ page }) => {

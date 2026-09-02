@@ -8,6 +8,7 @@ const mockPrisma = {
     findFirst: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
     count: vi.fn(),
   },
   $transaction: vi.fn(),
@@ -98,5 +99,15 @@ describe('PrismaNotificationRepository', () => {
   it('throws NotFound when deleting missing notification', async () => {
     mockPrisma.notification.findFirst.mockResolvedValue(null);
     await expect(repo.delete('n-1', 'u-1')).rejects.toThrow(NotFoundError);
+  });
+
+  it('deletes all notifications for user', async () => {
+    mockPrisma.notification.updateMany.mockResolvedValue({ count: 3 });
+    const result = await repo.deleteAllByUserId('u-1');
+    expect(result).toBe(3);
+    expect(mockPrisma.notification.updateMany).toHaveBeenCalledWith({
+      where: { usuarioId: 'u-1', deletedAt: null },
+      data: { deletedAt: expect.any(Date) },
+    });
   });
 });

@@ -7,12 +7,19 @@ export interface PaymentDTO {
   asesorId?: string;
   amount: number;
   method: 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER';
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUNDED' | 'ANULADO';
   reference?: string;
   notes?: string;
   paidAt?: string;
   createdAt: string;
   updatedAt: string;
+  orderNumero?: string;
+  customerNombre?: string;
+  asesorNombre?: string;
+  orderTotal?: number;
+  orderEstado?: string;
+  motivoAnulacion?: string;
+  fechaAnulacion?: string;
 }
 
 export interface Payment {
@@ -21,13 +28,20 @@ export interface Payment {
   customerId: string;
   asesorId?: string;
   amount: number;
-  method: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro';
-  status: 'Pendiente' | 'Aprobado' | 'Rechazado' | 'Reembolsado';
+  method: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro' | 'Credito';
+  status: 'Pendiente' | 'Aprobado' | 'Rechazado' | 'Reembolsado' | 'Anulado';
   reference?: string;
   notes?: string;
   paidAt?: string;
   createdAt: string;
   updatedAt: string;
+  orderNumero?: string;
+  customerNombre?: string;
+  asesorNombre?: string;
+  orderTotal?: number;
+  orderEstado?: string;
+  motivoAnulacion?: string;
+  fechaAnulacion?: string;
 }
 
 export function toPayment(dto: PaymentDTO): Payment {
@@ -38,12 +52,19 @@ export function toPayment(dto: PaymentDTO): Payment {
     asesorId: dto.asesorId,
     amount: Number(dto.amount),
     method: dto.method === 'CASH' ? 'Efectivo' : dto.method === 'TRANSFER' ? 'Transferencia' : dto.method === 'CARD' ? 'Tarjeta' : 'Otro',
-    status: dto.status === 'PENDING' ? 'Pendiente' : dto.status === 'APPROVED' ? 'Aprobado' : dto.status === 'REJECTED' ? 'Rechazado' : 'Reembolsado',
+    status: dto.status === 'PENDING' ? 'Pendiente' : dto.status === 'APPROVED' ? 'Aprobado' : dto.status === 'REJECTED' ? 'Rechazado' : dto.status === 'REFUNDED' ? 'Reembolsado' : 'Anulado',
     reference: dto.reference,
     notes: dto.notes,
     paidAt: dto.paidAt,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
+    orderNumero: dto.orderNumero,
+    customerNombre: dto.customerNombre,
+    asesorNombre: dto.asesorNombre,
+    orderTotal: dto.orderTotal,
+    orderEstado: dto.orderEstado,
+    motivoAnulacion: dto.motivoAnulacion,
+    fechaAnulacion: dto.fechaAnulacion,
   };
 }
 
@@ -55,6 +76,16 @@ export interface CustomerBalance {
 
 export interface QuoteBalance {
   quoteId: string;
+  total: number;
+  totalPaid: number;
+  saldo: number;
+  porcentajeAnticipo: number;
+  valorAnticipo: number;
+}
+
+export interface QuoteBalance {
+  quoteId: string;
+  numero?: string;
   total: number;
   totalPaid: number;
   saldo: number;
@@ -113,6 +144,11 @@ export const paymentsApi = {
     await api.delete(`/payments/${encodeURIComponent(id)}`);
   },
 
+  async cancel(id: string, motivoAnulacion: string): Promise<Payment> {
+    const dto = await api.patch<PaymentDTO>(`/payments/${encodeURIComponent(id)}/cancel`, { motivoAnulacion });
+    return toPayment(dto);
+  },
+
   async getCustomerBalance(customerId: string): Promise<CustomerBalance> {
     const data = await api.get<CustomerBalance>(`/payments/customers/${encodeURIComponent(customerId)}/balance`, { auth: true });
     return data;
@@ -123,15 +159,13 @@ export const paymentsApi = {
     return data;
   },
 
+  async listQuotesByCustomer(customerId: string): Promise<QuoteBalance[]> {
+    const data = await api.get<QuoteBalance[]>(`/payments/quotes/${encodeURIComponent(customerId)}/balance?customerId=${encodeURIComponent(customerId)}`, { auth: true });
+    return data;
+  },
+
   async exportPdf(id: string): Promise<Blob> {
-    const base = (import.meta.env.VITE_API_URL || '/api/v1').replace(/\/$/, '');
-    const response = await fetch(`${base}/payments/${encodeURIComponent(id)}/pdf`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}`,
-      },
-    });
-    if (!response.ok) throw new Error('No se pudo generar el PDF');
-    return response.blob();
+    const path = `/payments/${encodeURIComponent(id)}/pdf`;
+    return (api as { getBlob: (path: string, opts?: unknown) => Promise<Blob> }).getBlob(path);
   },
 };

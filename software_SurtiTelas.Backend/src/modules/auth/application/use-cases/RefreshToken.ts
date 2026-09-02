@@ -26,7 +26,10 @@ export class RefreshToken {
       throw new UnauthorizedError('Refresh token inválido');
     }
 
-    const permissions = await this.repo.findPermissionsByRole(user.role);
+    const rolePermissions = await this.repo.findPermissionsByRole(user.role);
+    const userSpecificPermissions = await this.repo.findPermissionsByUser(user.id);
+    // Permisos efectivos = permisos del rol + permisos específicos del usuario (sin duplicados).
+    const permissions = Array.from(new Set([...rolePermissions, ...userSpecificPermissions]));
     const authUser: AuthUser = {
       id: user.id,
       email: user.email,

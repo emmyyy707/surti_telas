@@ -13,7 +13,7 @@ vi.mock('@/modules/customers/infrastructure/container/customerContainer', () => 
   },
 }));
 
-const mockReq = (overrides = {}) => ({ user: { id: 'user-1', role: 'ADMIN' }, body: {}, params: {}, query: {}, ...overrides }) as unknown as Request;
+const mockReq = (overrides = {}) => ({ user: { id: 'user-1', role: 'ADMIN' }, body: {}, params: {}, query: {}, requestId: 'test-request-id', ...overrides }) as unknown as Request;
 const mockRes = () => {
   const res: Partial<Response> = {
     status: vi.fn().mockReturnThis(),
@@ -70,7 +70,7 @@ describe('customer.controller', () => {
 
     await updateCustomer(req, res);
 
-    expect(customerUseCases.updateCustomer.execute).toHaveBeenCalledWith('1', expect.objectContaining({ nombre: 'Updated' }));
+    expect(customerUseCases.updateCustomer.execute).toHaveBeenCalledWith('1', expect.objectContaining({ nombre: 'Updated' }), expect.any(String));
   });
 
   it('should assign asesor to customer', async () => {
@@ -81,7 +81,7 @@ describe('customer.controller', () => {
 
     await assignAsesor(req, res);
 
-    expect(customerUseCases.assignAsesor.execute).toHaveBeenCalledWith('1', 'asesor-1');
+    expect(customerUseCases.assignAsesor.execute).toHaveBeenCalledWith('1', 'asesor-1', expect.any(String));
     expect(res.json).toHaveBeenCalled();
   });
 });

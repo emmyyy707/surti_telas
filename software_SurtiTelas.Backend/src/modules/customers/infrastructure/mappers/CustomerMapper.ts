@@ -10,6 +10,7 @@ type CustomerRow = {
   asesorId: string | null;
   asesor: { nombre: string } | null;
   nit: string | null;
+  direccion: string | null;
   cupoTotal: { toNumber(): number };
   cupoUsado: { toNumber(): number };
   deudaVencida: { toNumber(): number };
@@ -29,6 +30,7 @@ export function toCustomerData(row: CustomerRow): CustomerData {
     asesorId: row.asesorId ?? undefined,
     asesor: row.asesor?.nombre ?? '',
     nit: row.nit ?? undefined,
+    direccion: row.direccion ?? undefined,
     cupoTotal: row.cupoTotal.toNumber(),
     cupoUsado: row.cupoUsado.toNumber(),
     deudaVencida: row.deudaVencida.toNumber(),

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Eye, CheckCircle2, MapPin, Clock, Package, Phone, MessageCircle, RefreshCw, X } from 'lucide-react';
+import { Eye, CheckCircle2, MapPin, Package, Phone, MessageCircle, RefreshCw, X } from 'lucide-react';
 import s from './MisEntregas.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';

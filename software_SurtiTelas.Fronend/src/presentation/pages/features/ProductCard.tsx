@@ -1,7 +1,6 @@
 import React, { memo, useState, useCallback } from 'react';
-import { Heart, ShoppingBag, Sparkles, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Sparkles } from 'lucide-react';
 import type { Producto as ProductoCore } from '@/core/types';
-import s from './ProductCard.module.css';
 import { resolveColor } from '@/shared/utils/colorUtils';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('es-CO')}`;
@@ -38,13 +37,13 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ producto, isFavorite, on
     if (disponible) {
       onOpenDetail(producto);
     }
-  }, [onOpenDetail, disponible]);
+  }, [onOpenDetail, disponible, producto]);
 
   const handleCardClick = useCallback(() => {
     if (disponible) {
       onOpenDetail(producto);
     }
-  }, [onOpenDetail, disponible]);
+  }, [onOpenDetail, disponible, producto]);
 
   return (
     <article

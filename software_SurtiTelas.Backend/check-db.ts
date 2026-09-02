@@ -1,17 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const p = new PrismaClient();
 
 async function main() {
-  const count = await prisma.permission.count();
-  console.log('Permission count:', count);
-  
-  const users = await prisma.user.findMany();
-  console.log('Users:', users.map(u => ({ email: u.email, role: u.role })));
+  const userCount = await p.user.count();
+  console.log('Users:', userCount);
+  const customerCount = await p.customer.count();
+  console.log('Customers:', customerCount);
+  const orderCount = await p.order.count();
+  console.log('Orders:', orderCount);
+  await p.$disconnect();
 }
 
-main()
-  .catch(console.error)
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

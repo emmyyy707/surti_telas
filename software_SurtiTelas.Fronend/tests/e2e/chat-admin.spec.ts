@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:5173';
 
-async function loginAsAdmin(page: any) {
+async function loginAsAdmin(page: Page) {
   await page.goto(`${BASE_URL}/login`);
   await page.fill('input[type="email"]', 'admin@surtitelas.com');
   await page.fill('input[type="password"]', 'SurtiTelas2025*');

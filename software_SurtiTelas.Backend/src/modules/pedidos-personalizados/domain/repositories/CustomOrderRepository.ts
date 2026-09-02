@@ -24,7 +24,7 @@ export interface CustomOrderRepository {
   create(data: any, tx?: any): Promise<any>;
   update(id: string, changes: any, tx?: any): Promise<any>;
   remove(id: string, tx?: any): Promise<void>;
-  nextNumero(): Promise<string>;
+  nextNumero(tx?: any): Promise<string>;
 }
 
 export interface QuotationRepository {

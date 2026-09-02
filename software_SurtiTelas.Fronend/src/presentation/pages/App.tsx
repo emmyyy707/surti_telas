@@ -6,6 +6,7 @@ import Layout from '@/presentation/pages/layouts/Layout';
 import ScrollToTop from '@/presentation/components/ScrollToTop';
 import { Spinner } from '@/shared/ui';
 import ErrorBoundary from '@/shared/components/ErrorBoundary';
+import { NotificationProvider } from '@/shared/context';
 
 const ProtectedLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-[var(--bg-canvas)]">
@@ -34,7 +35,7 @@ const AdminGestionEmpleados = React.lazy(() => import('@/presentation/pages/admi
 const AdminGestionVentas = React.lazy(() => import('@/presentation/pages/admin/GestionVentas').then(m => ({ default: m.AdminGestionVentas })));
 const AdminGestionRolesPermisos = React.lazy(() => import('@/presentation/pages/admin/GestionRolesPermisos').then(m => ({ default: m.AdminGestionRolesPermisos })));
 const AdminSeguridadUsuarios = React.lazy(() => import('@/presentation/pages/admin/SeguridadUsuarios').then(m => ({ default: m.AdminSeguridadUsuarios })));
-const AdminProductosTerminados = React.lazy(() => import('@/presentation/pages/admin/ProductosTerminados').then(m => ({ default: m.AdminProductosTerminados })));
+const _AdminProductosTerminados = React.lazy(() => import('@/presentation/pages/admin/ProductosTerminados').then(m => ({ default: m.AdminProductosTerminados })));
 const AdminInsumos = React.lazy(() => import('@/presentation/pages/admin/Insumos').then(m => ({ default: m.AdminInsumos })));
 const AdminProveedores = React.lazy(() => import('@/presentation/pages/admin/Proveedores').then(m => ({ default: m.AdminProveedores })));
 const AdminGestionAcceso = React.lazy(() => import('@/presentation/pages/admin/GestionAcceso').then(m => ({ default: m.AdminGestionAcceso })));
@@ -56,9 +57,8 @@ const AdminReportesProduccion = React.lazy(() => import('@/presentation/pages/ad
 const AdminReportesInventario = React.lazy(() => import('@/presentation/pages/admin/ReportesInventario').then(m => ({ default: m.AdminReportesInventario })));
 
 const AdminNotificaciones = React.lazy(() => import('@/presentation/pages/admin/AdminNotificaciones').then(m => ({ default: m.AdminNotificaciones })));
-const AdminFinanzas = React.lazy(() => import('@/presentation/pages/admin/AdminFinanzas').then(m => ({ default: m.AdminFinanzas })));
 const AdminPedidosPersonalizados = React.lazy(() => import('@/presentation/pages/admin/PedidosPersonalizados').then(m => ({ default: m.AdminPedidosPersonalizados })));
-const AdminDevoluciones = React.lazy(() => import('@/presentation/pages/admin/AdminDevoluciones').then(m => ({ default: m.AdminDevoluciones })));
+const _AdminDevoluciones = React.lazy(() => import('@/presentation/pages/admin/AdminDevoluciones').then(m => ({ default: m.AdminDevoluciones })));
 const AsesorLayout = React.lazy(() => import('@/presentation/pages/asesor/AsesorLayout').then(m => ({ default: m.AsesorLayout })));
 const AsesorDashboard = React.lazy(() => import('@/presentation/pages/asesor/Dashboard').then(m => ({ default: m.AsesorDashboard })));
 const AsesorClientes = React.lazy(() => import('@/presentation/pages/asesor/MisClientes').then(m => ({ default: m.AsesorClientes })));
@@ -100,7 +100,8 @@ const App: React.FC = () => {
     <ScrollToTop />
     <ErrorBoundary>
       <Suspense fallback={<ProtectedLoader />}>
-        <Routes>
+        <NotificationProvider>
+          <Routes>
 {/* PUBLIC */}
           <Route path="/" element={<Layout><HomePage /></Layout>} />
           <Route path="/catalogo" element={<Layout><CatalogPage /></Layout>} />
@@ -143,7 +144,6 @@ const App: React.FC = () => {
             <Route path="reportes" element={<AdminReportes />}>
               <Route index element={<Navigate to="ventas" replace />} />
               <Route path="ventas" element={<AdminReportesVentas />} />
-              <Route path="finanzas" element={<AdminFinanzas />} />
               <Route path="usuarios" element={<AdminReportesUsuarios />} />
               <Route path="produccion" element={<AdminReportesProduccion />} />
               <Route path="inventario" element={<AdminReportesInventario />} />
@@ -176,11 +176,10 @@ const App: React.FC = () => {
             <Route path="dashboard-analitico" element={<AdminDashboardAnalitico />} />
             <Route path="portal-cliente" element={<PortalCliente />} />
             <Route path="reportes-usuarios" element={<Navigate to="/admin/reportes/usuarios" replace />} />
-            <Route path="reportes-produccion" element={<Navigate to="/admin/reportes/produccion" replace />} />
-            <Route path="reportes-inventario" element={<Navigate to="/admin/reportes/inventario" replace />} />
-            <Route path="finanzas" element={<Navigate to="/admin/reportes/finanzas" replace />} />
-            <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
-            <Route path="devoluciones" element={<AdminDevoluciones />} />
+              <Route path="reportes-produccion" element={<Navigate to="/admin/reportes/produccion" replace />} />
+              <Route path="reportes-inventario" element={<Navigate to="/admin/reportes/inventario" replace />} />
+              <Route path="pedidos-personalizados" element={<AdminPedidosPersonalizados />} />
+            <Route path="StockDevuelto" element={<AdminStockDevuelto />} />
             <Route path="notificaciones" element={<AdminNotificaciones />} />
           </Route>
 
@@ -235,7 +234,8 @@ const App: React.FC = () => {
 
           {/* REDIRECT */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          </Routes>
+        </NotificationProvider>
       </Suspense>
     </ErrorBoundary>
     <Toaster position="top-right" richColors />

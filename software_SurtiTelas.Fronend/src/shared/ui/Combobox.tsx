@@ -15,7 +15,7 @@ export interface ComboboxProps {
   placeholder?: string;
   options: ComboboxOption[];
   value?: string;
-  onValueChange?: (value: string) => void;
+  onValueChange?: (value: ComboboxOption) => void;
   onCreateOption?: (value: string) => void;
   allowCreate?: boolean;
   createLabel?: string;
@@ -89,7 +89,7 @@ export const Combobox = ({
 
   const handleInputChange = (nextValue: string) => {
     setInputValue(nextValue);
-    onValueChange?.(nextValue);
+    onValueChange?.({ value: nextValue, label: nextValue });
     setIsOpen(true);
     setHighlightedIndex(-1);
     updateDropdownPosition();
@@ -97,7 +97,7 @@ export const Combobox = ({
 
   const handleSelectOption = (option: ComboboxOption) => {
     setInputValue(option.label);
-    onValueChange?.(option.label);
+    onValueChange?.(option);
     setIsOpen(false);
     setHighlightedIndex(-1);
     inputRef.current?.blur();
@@ -108,7 +108,7 @@ export const Combobox = ({
     if (!trimmed) return;
     onCreateOption?.(trimmed);
     setInputValue(trimmed);
-    onValueChange?.(trimmed);
+    onValueChange?.({ value: trimmed, label: trimmed });
     setIsOpen(false);
     setHighlightedIndex(-1);
     inputRef.current?.blur();
@@ -116,13 +116,13 @@ export const Combobox = ({
 
   const handleClear = () => {
     setInputValue('');
-    onValueChange?.('');
+    onValueChange?.({ value: '', label: '' });
     setIsOpen(false);
     setHighlightedIndex(-1);
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const _handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter') {
         setIsOpen(true);

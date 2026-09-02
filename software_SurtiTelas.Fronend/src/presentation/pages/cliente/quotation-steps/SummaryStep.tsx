@@ -10,7 +10,7 @@ export interface SummaryStepProps {
   onEditDelivery: () => void;
 }
 
-export const SummaryStep = ({ watch, styles, onEditClient, onEditProducts, onEditDelivery }: SummaryStepProps) => {
+export const SummaryStep = ({ watch, styles, onEditClient }: SummaryStepProps) => {
   const data: CustomOrderSummaryData = {
     clienteNombre: watch('clienteNombre'),
     clienteEmail: watch('clienteEmail'),
@@ -21,7 +21,7 @@ export const SummaryStep = ({ watch, styles, onEditClient, onEditProducts, onEdi
       productoNombre: item.productoNombre,
       descripcion: item.descripcion,
       tipoPersonalizacion: item.tipoPersonalizacion,
-      cantidad: Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0),
+      cantidad: Object.values(item.distribucionTallas || {}).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0),
       material: item.material,
       talla: item.talla,
       color: item.color,

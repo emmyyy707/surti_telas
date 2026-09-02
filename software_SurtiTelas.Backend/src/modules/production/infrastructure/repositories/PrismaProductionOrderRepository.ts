@@ -29,6 +29,7 @@ const include = {
       },
     },
   },
+  items: true,
 } satisfies Prisma.ProductionOrderInclude;
 
 export class PrismaProductionOrderRepository implements ProductionOrderRepository {
@@ -137,6 +138,7 @@ export class PrismaProductionOrderRepository implements ProductionOrderRepositor
     if (changes.referencia !== undefined) data.referencia = changes.referencia;
     if (changes.cantidad !== undefined) data.cantidad = changes.cantidad;
     if (changes.fechaEstimada !== undefined) data.fechaEstimada = new Date(changes.fechaEstimada);
+    if (changes.fechaInicio !== undefined) data.fechaInicio = new Date(changes.fechaInicio);
 
     const row = await this.prisma.productionOrder.update({
       where: { id },

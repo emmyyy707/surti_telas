@@ -148,7 +148,6 @@ async function main() {
   console.log('🌱 Sembrando base de datos SurtiTelas…');
 
   const adminPassword = process.env.ADMIN_PASSWORD || generatePassword();
-  const asesorPassword = process.env.ASESOR_PASSWORD || generatePassword();
   const domiciliarioPassword = process.env.DOMICILIARIO_PASSWORD || generatePassword();
   const clientePassword = process.env.CLIENTE_PASSWORD || generatePassword();
 

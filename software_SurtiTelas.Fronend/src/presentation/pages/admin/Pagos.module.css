@@ -520,3 +520,275 @@
   border: 1px solid var(--color-border);
   border-radius: 10px;
 }
+
+.financialCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.financialHeader {
+  margin-bottom: 20px;
+}
+
+.financialTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 6px 0;
+}
+
+.financialDescription {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.financialGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .financialGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.financialBlock {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.financialBlockHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.financialBlockIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.financialBlockTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.financialBlockDesc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 2px 0 0 0;
+}
+
+.financialBlockActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.clientResult {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.clientName {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.balanceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.balanceCard {
+  padding: 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.balanceCardLabel {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.balanceCardValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
+
+.balanceCardEmphasis {
+  border-color: var(--color-error-border);
+  background: var(--color-error-dim);
+}
+
+.balanceCardEmphasis .balanceCardValue {
+  color: var(--color-error);
+}
+
+.quoteCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.quoteCard:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-accent);
+}
+
+.quoteCardSelected {
+  border-color: var(--color-accent);
+  background: var(--color-accent-dim);
+}
+
+.quoteCardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quoteCardNumber {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.quoteCardMeta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.quoteCardValues {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.quoteCardValue {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.quoteCardValueLabel {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.quoteCardValueAmount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.quoteCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.quoteCardAnticipo {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.quoteCardAnticipo strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.quoteEmpty {
+  text-align: center;
+  padding: 18px;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+.financialEmpty {
+  text-align: center;
+  padding: 18px;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 640px) {
+  .balanceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quoteCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .quoteCardValues {
+    justify-content: space-between;
+  }
+
+.quoteCardValue {
+  align-items: flex-start;
+}
+
+.quoteCardArrow {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.quoteCard:hover .quoteCardArrow {
+  color: var(--color-accent);
+  transform: translateX(2px);
+}
+}

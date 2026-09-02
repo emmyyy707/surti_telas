@@ -1,7 +1,7 @@
 export type OrderStatus =
   | 'Pendiente'
   | 'Aceptado'
-  | 'En proceso'
+  | 'Listo'
   | 'Enviado'
   | 'Entregado'
   | 'Rechazado'
@@ -69,6 +69,23 @@ export interface OrderData {
   envioGratis?: boolean;
   prioridadEnvio?: EnvioPrioridad;
   itemsList?: OrderItem[];
+  motivoAnulacion?: string;
+  fechaAnulacion?: string;
+  venta?: {
+    id: string;
+    orderId: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string;
+    asesorNombre: string;
+    fechaVenta: string;
+    subtotal: number;
+    impuestos: number;
+    descuentos: number;
+    total: number;
+    estado: string;
+    medioPago?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -112,10 +129,29 @@ export class Order {
   readonly envioGratis?: boolean;
   readonly prioridadEnvio?: EnvioPrioridad;
   readonly itemsList?: OrderItem[];
+  readonly motivoAnulacion?: string;
+  readonly fechaAnulacion?: string;
+  readonly venta?: {
+    id: string;
+    orderId: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string;
+    asesorNombre: string;
+    fechaVenta: string;
+    subtotal: number;
+    impuestos: number;
+    descuentos: number;
+    total: number;
+    estado: string;
+    medioPago?: string;
+  };
   readonly createdAt?: string;
   readonly updatedAt?: string;
 
   constructor(data: OrderData) {
+    Order.validate(data);
+
     this.id = data.id;
     this.numero = data.numero;
     this.cliente = data.cliente;
@@ -154,6 +190,9 @@ export class Order {
     this.envioGratis = data.envioGratis;
     this.prioridadEnvio = data.prioridadEnvio;
     this.itemsList = data.itemsList;
+    this.motivoAnulacion = data.motivoAnulacion;
+    this.fechaAnulacion = data.fechaAnulacion;
+    this.venta = data.venta;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }
@@ -208,17 +247,22 @@ export class Order {
   canTransitionTo(nextStatus: OrderStatus): boolean {
     if (nextStatus === this.estado) return true;
 
+    const validStates: OrderStatus[] = ['Pendiente', 'Enviado', 'Entregado', 'Cancelado'];
+    if (!validStates.includes(this.estado) || !validStates.includes(nextStatus)) {
+      return false;
+    }
+
     const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-      Pendiente: ['En validación', 'Aceptado', 'Rechazado', 'Cancelado'],
-      'En validación': ['Aceptado', 'Recibo generado', 'Rechazado', 'Cancelado'],
-      Aceptado: ['Recibo generado', 'En proceso', 'Enviado', 'Entregado', 'Cancelado'],
-      'Recibo generado': ['Recibo enviado', 'En proceso', 'Enviado', 'Entregado', 'Cancelado'],
-      'Recibo enviado': ['Entregado', 'Cancelado'],
-      'En proceso': ['Enviado', 'Entregado', 'Cancelado'],
+      Pendiente: ['Enviado', 'Cancelado'],
       Enviado: ['Entregado', 'Cancelado'],
       Entregado: [],
       Cancelado: [],
+      Aceptado: [],
+      Listo: [],
       Rechazado: [],
+      'En validación': [],
+      'Recibo generado': [],
+      'Recibo enviado': [],
     };
     return allowedTransitions[this.estado].includes(nextStatus);
   }
@@ -252,11 +296,11 @@ export class Order {
   }
 
   canBeAssigned(): boolean {
-    return this.estado === 'Aceptado' || this.estado === 'En proceso' || this.estado === 'Enviado' || this.estado === 'Recibo generado';
+    return this.estado === 'Aceptado' || this.estado === 'Enviado' || this.estado === 'Recibo generado';
   }
 
   canBeDelivered(): boolean {
-    return this.estado === 'Enviado' || this.estado === 'En proceso' || this.estado === 'Recibo enviado';
+    return this.estado === 'Enviado' || this.estado === 'Recibo enviado';
   }
 
   canBeCanceled(): boolean {

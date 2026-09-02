@@ -49,6 +49,7 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
   const body = parseDto(DeliveryUpdateSchema, req.body);
   const order = await prisma.order.findUnique({
     where: { id: req.params.id, deletedAt: null },
+    include: { cliente: true },
   });
   if (!order) {
     return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
@@ -59,9 +60,9 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     create: {
       orderId: order.id,
       estado: body.estado ?? order.estado,
-      direccion: '',
-      ciudad: null,
-      telefono: null,
+      direccion: order.cliente?.direccion?.trim() || '',
+      ciudad: order.cliente?.ciudad?.trim() || null,
+      telefono: order.cliente?.telefono?.trim() || null,
       notas: body.observaciones ?? '',
       domiciliarioId: null,
       asignadoEn: new Date(),

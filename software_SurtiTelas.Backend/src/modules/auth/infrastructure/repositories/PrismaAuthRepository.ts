@@ -65,8 +65,10 @@ export class PrismaAuthRepository implements AuthRepository {
   async findById(id: string): Promise<UserRecord | null> {
     const user = await this.prisma.user.findFirst({ where: { id, deletedAt: null } });
     if (!user) return null;
-    const permissions = await this.findPermissionsByRole(user.role);
-    return { ...toRecord(user), permissions };
+    const rolePermissions = await this.findPermissionsByRole(user.role);
+    const userPermissions = await this.findPermissionsByUser(user.id);
+    const permissions = Array.from(new Set([...rolePermissions, ...userPermissions]));
+    return { ...toRecord(user), permissions, specificPermissions: userPermissions };
   }
 
   async create(input: CreateUserInput): Promise<UserRecord> {
@@ -83,6 +85,11 @@ export class PrismaAuthRepository implements AuthRepository {
         numeroDocumento: input.numeroDocumento,
       },
     });
+
+    if (input.permisos && input.permisos.length > 0) {
+      await this.setUserPermissions(user.id, input.permisos);
+    }
+
     return toRecord(user);
   }
 
@@ -158,8 +165,17 @@ export class PrismaAuthRepository implements AuthRepository {
       this.prisma.user.count({ where }),
     ]);
 
+    const usersWithPermissions = await Promise.all(
+      rows.map(async (u) => {
+        const record = toRecord(u);
+        const permissions = await this.findPermissionsByRole(u.role);
+        const userPermissions = await this.findPermissionsByUser(u.id);
+        return { ...record, permissions: Array.from(new Set([...permissions, ...userPermissions])), specificPermissions: userPermissions };
+      })
+    );
+
     return {
-      data: rows.map(toRecord),
+      data: usersWithPermissions,
       meta: { total, page, limit },
     };
   }
@@ -426,16 +442,18 @@ export class PrismaAuthRepository implements AuthRepository {
 
     if (permisos && permisos.length > 0) {
       await this.prisma.rolePermission.deleteMany({ where: { role: roleName } });
+
       const existingPermissions = await this.prisma.permission.findMany({
-        where: { id: { in: permisos } },
-        select: { id: true },
+        where: { code: { in: permisos } },
+        select: { id: true, code: true },
       });
-      const validIds = new Set(existingPermissions.map(p => p.id));
-      const validPermissions = permisos.filter(id => validIds.has(id));
+      const existingCodes = new Set(existingPermissions.map(p => p.code));
+      const validPermissions = permisos.filter(code => existingCodes.has(code));
 
       if (validPermissions.length > 0) {
+        const validIds = existingPermissions.filter(p => validPermissions.includes(p.code)).map(p => p.id);
         await this.prisma.rolePermission.createMany({
-          data: validPermissions.map(permissionId => ({ role: roleName, permissionId })),
+          data: validIds.map(permissionId => ({ role: roleName, permissionId })),
         });
       }
     }
@@ -469,6 +487,13 @@ export class PrismaAuthRepository implements AuthRepository {
         descripcion: descripcion ?? found.descripcion 
       },
     });
+
+    if (shouldRename) {
+      await this.prisma.rolePermission.updateMany({
+        where: { role: currentRoleName },
+        data: { role: targetRoleName },
+      });
+    }
     
     const finalRoleName = shouldRename ? targetRoleName : currentRoleName;
     const count = await this.prisma.user.count({ where: { role: finalRoleName , deletedAt: null } });
@@ -486,15 +511,16 @@ export class PrismaAuthRepository implements AuthRepository {
       await this.prisma.rolePermission.deleteMany({ where: { role: finalRoleName } });
       if (permisos.length > 0) {
         const existingPermissions = await this.prisma.permission.findMany({
-          where: { id: { in: permisos } },
-          select: { id: true },
+          where: { code: { in: permisos } },
+          select: { id: true, code: true },
         });
-        const validIds = new Set(existingPermissions.map(p => p.id));
-        const validPermissions = permisos.filter(id => validIds.has(id));
+        const existingCodes = new Set(existingPermissions.map(p => p.code));
+        const validPermissions = permisos.filter(code => existingCodes.has(code));
 
         if (validPermissions.length > 0) {
+          const validIds = existingPermissions.filter(p => validPermissions.includes(p.code)).map(p => p.id);
           await this.prisma.rolePermission.createMany({
-            data: validPermissions.map(permissionId => ({ role: finalRoleName, permissionId })),
+            data: validIds.map(permissionId => ({ role: finalRoleName, permissionId })),
           });
         }
       }
@@ -624,6 +650,46 @@ export class PrismaAuthRepository implements AuthRepository {
 
   async updateGoogleId(id: string, googleId: string): Promise<void> {
     await this.prisma.user.update({ where: { id }, data: { googleId } });
+  }
+
+  async findPermissionsByUser(userId: string): Promise<string[]> {
+    const rows = await this.prisma.userPermission.findMany({
+      where: { userId },
+      include: { permission: true },
+    });
+    return rows.map((r) => r.permission.code);
+  }
+
+  async setUserPermissions(userId: string, permissionCodes: string[]): Promise<void> {
+    // permissionCodes are functional codes (e.g. "customers:read"), not DB ids.
+    // Only valid, existing permission codes are linked (security: never create
+    // permissions for codes that do not exist in the catalog).
+    await this.prisma.userPermission.deleteMany({ where: { userId } });
+    if (permissionCodes.length > 0) {
+      const existingPermissions = await this.prisma.permission.findMany({
+        where: { code: { in: permissionCodes } },
+        select: { id: true },
+      });
+      const validIds = existingPermissions.map((p) => p.id);
+
+      if (validIds.length > 0) {
+        await this.prisma.userPermission.createMany({
+          data: validIds.map((permissionId) => ({ userId, permissionId })),
+        });
+      }
+    }
+  }
+
+  async createUserPermission(userId: string, permissionId: string): Promise<void> {
+    await this.prisma.userPermission.create({
+      data: { userId, permissionId },
+    });
+  }
+
+  async removeUserPermission(userId: string, permissionId: string): Promise<void> {
+    await this.prisma.userPermission.delete({
+      where: { userId_permissionId: { userId, permissionId } },
+    });
   }
 }
 

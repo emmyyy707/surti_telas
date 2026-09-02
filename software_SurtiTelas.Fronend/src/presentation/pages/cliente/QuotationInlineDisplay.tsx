@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, User, Mail, Phone, Calendar, Clock, CreditCard, MessageSquare, AlertCircle, CheckCircle, XCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, User, Mail, Phone, Clock, CreditCard, MessageSquare, AlertCircle, CheckCircle, XCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/shared/ui/Badge';
 import { CustomOrder } from '@/infrastructure/api/customOrdersApi';
 import s from './MisPedidosPersonalizados.module.css';

@@ -32,7 +32,7 @@ export const categoryService = {
     }
   },
 
-  async update(id: string, changes: { nombre?: string; slug?: string; parentId?: string | null }): Promise<CategoryDTO> {
+  async update(id: string, changes: { nombre?: string; slug?: string; parentId?: string | null; estado?: 'ACTIVO' | 'INACTIVO' }): Promise<CategoryDTO> {
     try {
       const body = { ...changes };
       if (!body.parentId) delete body.parentId;

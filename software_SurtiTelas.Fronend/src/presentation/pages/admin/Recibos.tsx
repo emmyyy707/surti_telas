@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { FileText, Printer, Clock, CheckCircle, AlertTriangle, Plus, Edit, Send, DollarSign, ChevronDown, Calendar, Save, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, Printer, Clock, CheckCircle, AlertTriangle, Plus, Edit, Send, DollarSign, ChevronDown, Calendar, Save, Trash2, Loader2, AlertCircle, Eye } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Recibos.module.css';
 import f from '@/styles/Form.module.css';
@@ -114,6 +114,11 @@ export const AdminRecibos: React.FC = () => {
   const [editingNumero, setEditingNumero] = useState<string>('');
   const [deleteConfirm, setDeleteConfirm] = useState<Recibo | null>(null);
   const [statusConfirm, setStatusConfirm] = useState<{ id: string; estado: Recibo['estado'] } | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedReceiptForViewer, setSelectedReceiptForViewer] = useState<Recibo | null>(null);
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerError, setViewerError] = useState<string | null>(null);
+  const viewerBlobUrlRef = useRef<string | null>(null);
 
   const hoy = new Date().toISOString().slice(0, 10);
 
@@ -294,58 +299,124 @@ export const AdminRecibos: React.FC = () => {
       toast.error('No se pudo abrir la ventana para generar el PDF');
       return;
     }
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Recibo ${recibo.numeroRecibo}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { margin: 0; color: #1a365d; }
-          .info { margin-bottom: 20px; }
-          .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-          .label { font-weight: bold; color: #666; }
-          .value { color: #333; }
-          .items { margin-top: 20px; border-top: 2px solid #1a365d; padding-top: 10px; }
-          .items table { width: 100%; border-collapse: collapse; }
-          .items th, .items td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-          .items th { background: #f7fafc; }
-          .total { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: bold; }
-          .footer { margin-top: 40px; text-align: center; color: #666; font-size: 0.9em; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>RECIBO</h1>
-          <p>N° ${recibo.numeroRecibo}</p>
-        </div>
-        <div class="info">
-          <div class="info-row"><span class="label">Cliente:</span><span class="value">${recibo.cliente}</span></div>
-          <div class="info-row"><span class="label">Fecha Emisión:</span><span class="value">${recibo.fechaEmision}</span></div>
-          <div class="info-row"><span class="label">Estado:</span><span class="value">${recibo.estado}</span></div>
-          <div class="info-row"><span class="label">Vendedor:</span><span class="value">${recibo.vendedor}</span></div>
-        </div>
-        <div class="items">
-          <table>
-            <thead>
-              <tr><th>Descripción</th><th>Cantidad</th><th>Precio Unit.</th><th>Total</th></tr>
-            </thead>
-            <tbody>
-              ${recibo.items.map(item => `<tr><td>${item.descripcion}</td><td>${item.cantidad}</td><td>$${item.precioUnitario.toLocaleString()}</td><td>$${item.total.toLocaleString()}</td></tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-        <div class="total">TOTAL: $${recibo.total.toLocaleString()}</div>
-        <div class="footer">
-          <p>Documento generado por SurtiTelas</p>
-        </div>
-      </body>
-      </html>
-    `);
+    printWindow.document.write(getReceiptHtml(recibo));
     printWindow.document.close();
     printWindow.print();
   };
+
+  const getReceiptHtml = (recibo: Recibo): string => {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Recibo ${recibo.numeroRecibo}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { margin: 0; color: #1a365d; }
+    .info { margin-bottom: 20px; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .label { font-weight: bold; color: #666; }
+    .value { color: #333; }
+    .items { margin-top: 20px; border-top: 2px solid #1a365d; padding-top: 10px; }
+    .items table { width: 100%; border-collapse: collapse; }
+    .items th, .items td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    .items th { background: #f7fafc; }
+    .total { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: bold; }
+    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>RECIBO</h1>
+    <p>N° ${recibo.numeroRecibo}</p>
+  </div>
+  <div class="info">
+    <div class="info-row"><span class="label">Cliente:</span><span class="value">${recibo.cliente}</span></div>
+    <div class="info-row"><span class="label">Fecha Emisión:</span><span class="value">${recibo.fechaEmision}</span></div>
+    <div class="info-row"><span class="label">Estado:</span><span class="value">${recibo.estado}</span></div>
+    <div class="info-row"><span class="label">Vendedor:</span><span class="value">${recibo.vendedor}</span></div>
+  </div>
+  <div class="items">
+    <table>
+      <thead>
+        <tr><th>Descripción</th><th>Cantidad</th><th>Precio Unit.</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        ${recibo.items.map(item => `<tr><td>${item.descripcion}</td><td>${item.cantidad}</td><td>$${item.precioUnitario.toLocaleString()}</td><td>$${item.total.toLocaleString()}</td></tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div class="total">TOTAL: $${recibo.total.toLocaleString()}</div>
+  <div class="footer">
+    <p>Documento generado por SurtiTelas</p>
+  </div>
+</body>
+</html>`;
+  };
+
+  const handleViewReceipt = (recibo: Recibo) => {
+    setViewerError(null);
+    setViewerLoading(true);
+    setSelectedReceiptForViewer(recibo);
+    setViewerOpen(true);
+  };
+
+  const handleCloseViewer = () => {
+    setViewerOpen(false);
+    setSelectedReceiptForViewer(null);
+    setViewerLoading(false);
+    setViewerError(null);
+    if (viewerBlobUrlRef.current) {
+      URL.revokeObjectURL(viewerBlobUrlRef.current);
+      viewerBlobUrlRef.current = null;
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    if (!selectedReceiptForViewer) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('No se pudo abrir la ventana de impresión');
+      return;
+    }
+    printWindow.document.write(getReceiptHtml(selectedReceiptForViewer));
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleDownloadReceipt = () => {
+    if (!selectedReceiptForViewer) return;
+    const html = getReceiptHtml(selectedReceiptForViewer);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recibo-${selectedReceiptForViewer.numeroRecibo}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  useEffect(() => {
+    if (!viewerOpen || !selectedReceiptForViewer) return;
+    const timer = setTimeout(() => {
+      try {
+        const html = getReceiptHtml(selectedReceiptForViewer);
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        if (viewerBlobUrlRef.current) {
+          URL.revokeObjectURL(viewerBlobUrlRef.current);
+        }
+        viewerBlobUrlRef.current = url;
+        setViewerLoading(false);
+      } catch {
+        setViewerError('No fue posible cargar el recibo.');
+        setViewerLoading(false);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [viewerOpen, selectedReceiptForViewer]);
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -501,8 +572,9 @@ export const AdminRecibos: React.FC = () => {
                 <Badge variant={getEstadoBadge(r.estado)}>{r.estado}</Badge>
               )},
             ]}
-            actions={(r) => [
-              ...(r.estado === 'Borrador' || r.estado === 'Enviado' ? [{ label: 'Editar', icon: <Edit size={14} />, onClick: () => openModal(r) }] : []),
+             actions={(r) => [
+               { label: 'Ver', icon: <Eye size={14} />, onClick: () => handleViewReceipt(r) },
+               ...(r.estado === 'Borrador' || r.estado === 'Enviado' ? [{ label: 'Editar', icon: <Edit size={14} />, onClick: () => openModal(r) }] : []),
               ...(r.estado === 'Borrador' ? [{
                 label: 'Enviar',
                 icon: <Send size={14} />,
@@ -696,6 +768,37 @@ export const AdminRecibos: React.FC = () => {
             actions={[{ label: 'Cancelar', variant: 'secondary', onClick: () => setStatusConfirm(null), disabled: saving }, { label: saving ? 'Guardando...' : 'Guardar cambios' , onClick: handleChangeStatus, disabled: saving }]} />
 
         </div>
+      </Modal>
+
+      <Modal open={viewerOpen} onClose={handleCloseViewer} title={`Ver recibo ${selectedReceiptForViewer?.numeroRecibo ?? ''}`} description="Visualización del recibo" size="full" variant="default" closeOnOverlay={false}>
+        <div style={{ height: '70vh', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {viewerLoading && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 8 }}>
+              <Loader2 size={24} className={s.spin} />
+              <span>Cargando recibo...</span>
+            </div>
+          )}
+          {viewerError && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 8, color: 'var(--color-danger)' }}>
+              <AlertCircle size={24} />
+              <span>{viewerError}</span>
+            </div>
+          )}
+          {!viewerLoading && !viewerError && viewerBlobUrlRef.current && (
+            <iframe
+              src={viewerBlobUrlRef.current}
+              title={`Recibo ${selectedReceiptForViewer?.numeroRecibo}`}
+              style={{ width: '100%', height: '100%', border: 'none', borderRadius: 8, background: '#fff' }}
+            />
+          )}
+        </div>
+        <ModalFooter
+          actions={[
+            { label: 'Imprimir', variant: 'secondary', onClick: handlePrintReceipt, leftIcon: <Printer size={16} /> },
+            { label: 'Descargar', variant: 'secondary', onClick: handleDownloadReceipt, leftIcon: <FileText size={16} /> },
+            { label: 'Cerrar', variant: 'primary', onClick: handleCloseViewer },
+          ]}
+        />
       </Modal>
     </div>
   );

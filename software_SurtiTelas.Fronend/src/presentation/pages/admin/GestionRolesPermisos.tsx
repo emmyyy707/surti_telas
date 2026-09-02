@@ -75,8 +75,16 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   const fetchAllPermissions = useCallback(async () => {
     setPermissionsLoading(true);
     try {
-      const result = await permissionsApi.list();
-      setAllPermissions(result.items);
+      let allItems: Permission[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const result = await permissionsApi.list({ page, limit: 100 });
+        allItems = allItems.concat(result.items);
+        totalPages = typeof result.meta?.totalPages === 'number' ? result.meta.totalPages : 1;
+        page++;
+      } while (page <= totalPages);
+      setAllPermissions(allItems);
     } catch {
       toast.error('No se pudieron cargar los permisos del sistema');
     } finally {
@@ -98,11 +106,14 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   }, [roles, debouncedRoleSearch]);
 
   // --- Permissions selection state ---
-  const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<string>>(new Set());
+  const [selectedPermissionCodes, setSelectedPermissionCodes] = useState<Set<string>>(new Set());
   const [permissionSearch, setPermissionSearch] = useState('');
   const [selectAllPermissions, setSelectAllPermissions] = useState(false);
 
-  // --- Build permission groups from SYSTEM_MODULES (single source of truth) ---
+  // --- Build permission groups from SYSTEM_MODULES, keeping only permissions
+  //     that actually exist in the permission catalog (codes must match the
+  //     backend / database). Placeholder/fabricated permissions are dropped so
+  //     we never assign codes that don't exist in the system. ---
   const permissionGroups = useMemo(() => {
     const apiPermsByCode = new Map<string, Permission>();
     for (const perm of allPermissions) {
@@ -110,24 +121,16 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     }
 
     return SYSTEM_MODULES.map((mod) => {
-      const permissions: Permission[] = mod.permissionCodes.map((code) => {
-        const existing = apiPermsByCode.get(code);
-        if (existing) return existing;
-        return {
-          id: `perm_${code}`,
-          code,
-          description: code.split(':').pop() || code,
-          module: mod.key,
-          estado: 'Activo' as const,
-        };
-      });
+      const permissions = mod.permissionCodes
+        .map((code) => apiPermsByCode.get(code))
+        .filter((p): p is Permission => Boolean(p));
 
       return {
         module: mod.key,
         moduleName: mod.name,
         permissions,
       };
-    }).filter(group => group.permissions.length > 0);
+    }).filter((group) => group.permissions.length > 0);
   }, [allPermissions]);
 
   // --- Filtered permission groups ---
@@ -152,15 +155,15 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   const toggleAllPermissions = () => {
     setSelectAllPermissions((prev) => {
       const next = !prev;
-      setSelectedPermissionIds(() => {
+      setSelectedPermissionCodes(() => {
         if (next) {
-          const allIds = new Set<string>();
+          const allCodes = new Set<string>();
           for (const group of permissionGroups) {
             for (const perm of group.permissions) {
-              allIds.add(perm.id);
+              allCodes.add(perm.code);
             }
           }
-          return allIds;
+          return allCodes;
         } else {
           return new Set();
         }
@@ -169,15 +172,10 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     });
   };
 
-  // --- Helpers: convert between permission codes and permission IDs ---
-  const rolePermisosToPermissionIds = useCallback(
+  // --- Helpers: convert between permission codes ---
+  const rolePermisosToCodes = useCallback(
     (permisoCodes: string[]): string[] => {
-      const idSet = new Set<string>();
-      for (const code of permisoCodes) {
-        const found = allPermissions.find((p) => p.code === code);
-        if (found) idSet.add(found.id);
-      }
-      return Array.from(idSet);
+      return permisoCodes.filter(code => allPermissions.some(p => p.code === code) || SYSTEM_MODULES.some(m => m.permissionCodes.includes(code)));
     },
     [allPermissions],
   );
@@ -191,9 +189,9 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   const handleOpenRolForm = (rol?: Rol | null) => {
     setEditingRol(rol ?? null);
     if (rol) {
-      setSelectedPermissionIds(new Set(rolePermisosToPermissionIds(rol.permisos)));
+      setSelectedPermissionCodes(new Set(rolePermisosToCodes(rol.permisos)));
     } else {
-      setSelectedPermissionIds(new Set());
+      setSelectedPermissionCodes(new Set());
     }
     setPermissionSearch('');
     setRolFormOpen(true);
@@ -202,7 +200,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   const handleCloseRolForm = () => {
     setRolFormOpen(false);
     setEditingRol(null);
-    setSelectedPermissionIds(new Set());
+    setSelectedPermissionCodes(new Set());
     setPermissionSearch('');
     rolFormRef.current?.reset();
   };
@@ -218,14 +216,14 @@ export const AdminGestionRolesPermisos: React.FC = () => {
       return;
     }
 
-    const permissionIds = Array.from(selectedPermissionIds);
+    const permissionCodes = Array.from(selectedPermissionCodes);
 
     try {
       if (editingRol) {
-        await rolesApi.update(editingRol.id, { nombre, descripcion, permisos: permissionIds });
+        await rolesApi.update(editingRol.id, { nombre, descripcion, permisos: permissionCodes });
         toast.success('Rol actualizado');
       } else {
-        await rolesApi.create({ nombre, descripcion, permisos: permissionIds });
+        await rolesApi.create({ nombre, descripcion, permisos: permissionCodes });
         toast.success('Rol creado');
       }
       void fetchRoles();
@@ -235,26 +233,26 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     }
   };
 
-  const togglePermissionSelection = (permissionId: string) => {
-    setSelectedPermissionIds((prev) => {
+  const togglePermissionSelection = (code: string) => {
+    setSelectedPermissionCodes((prev) => {
       const next = new Set(prev);
-      if (next.has(permissionId)) {
-        next.delete(permissionId);
+      if (next.has(code)) {
+        next.delete(code);
       } else {
-        next.add(permissionId);
+        next.add(code);
       }
       return next;
     });
   };
 
   const toggleModulePermissions = (modulePermissions: Permission[], selectAll: boolean) => {
-    setSelectedPermissionIds((prev) => {
+    setSelectedPermissionCodes((prev) => {
       const next = new Set(prev);
       for (const perm of modulePermissions) {
         if (selectAll) {
-          next.add(perm.id);
+          next.add(perm.code);
         } else {
-          next.delete(perm.id);
+          next.delete(perm.code);
         }
       }
       return next;
@@ -301,7 +299,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   // --- Module assignment drawer ---
   const openModuleAssignment = (rol: Rol) => {
     setAssignmentRol(rol);
-    setSelectedPermissionIds(new Set(rolePermisosToPermissionIds(rol.permisos)));
+    setSelectedPermissionCodes(new Set(rolePermisosToCodes(rol.permisos)));
     setPermissionSearch('');
     setModuleAssignmentOpen(true);
   };
@@ -309,10 +307,10 @@ export const AdminGestionRolesPermisos: React.FC = () => {
   const saveModuleAssignment = async () => {
     if (!assignmentRol) return;
 
-    const permissionIds = Array.from(selectedPermissionIds);
+    const permissionCodes = Array.from(selectedPermissionCodes);
 
     try {
-      await rolesApi.update(assignmentRol.id, { permisos: permissionIds });
+      await rolesApi.update(assignmentRol.id, { permisos: permissionCodes });
       toast.success('Permisos del rol actualizados');
       void fetchRoles();
     } catch {
@@ -320,7 +318,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
     } finally {
       setModuleAssignmentOpen(false);
       setAssignmentRol(null);
-      setSelectedPermissionIds(new Set());
+      setSelectedPermissionCodes(new Set());
     }
   };
 
@@ -753,7 +751,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <h3 className={f.sectionTitle} style={{ margin: 0 }}>Permisos del rol</h3>
                     <span style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                      {selectedPermissionIds.size} / {permissionGroups.reduce((acc, g) => acc + g.permissions.length, 0)} permisos seleccionados
+                       {selectedPermissionCodes.size} / {permissionGroups.reduce((acc, g) => acc + g.permissions.length, 0)} permisos seleccionados
                     </span>
                   </div>
 
@@ -785,8 +783,8 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                       </p>
                     ) : (
                       filteredPermissionGroups.map((group) => {
-                        const allSelected = group.permissions.every((p) => selectedPermissionIds.has(p.id));
-                        const someSelected = group.permissions.some((p) => selectedPermissionIds.has(p.id));
+                        const allSelected = group.permissions.every((p) => selectedPermissionCodes.has(p.code));
+                        const someSelected = group.permissions.some((p) => selectedPermissionCodes.has(p.code));
 
                         return (
                           <div key={group.module} style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -817,12 +815,12 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                             <table className={s.permissionsTable}>
                               <tbody>
                                 {group.permissions.map((perm) => (
-                                  <tr key={perm.id}>
+                                  <tr key={perm.code}>
                                     <td style={{ width: '30px' }}>
                                       <input
                                         type="checkbox"
-                                        checked={selectedPermissionIds.has(perm.id)}
-                                        onChange={() => togglePermissionSelection(perm.id)}
+                                        checked={selectedPermissionCodes.has(perm.code)}
+                                        onChange={() => togglePermissionSelection(perm.code)}
                                       />
                                     </td>
                                     <td style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--color-text-secondary)', width: '140px' }}>
@@ -974,7 +972,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                 >
                   {(() => {
                     const selectedCodes = allPermissions
-                      .filter((p) => selectedPermissionIds.has(p.id))
+                      .filter((p) => selectedPermissionCodes.has(p.code))
                       .map((p) => p.code);
                     const moduleKeys = getAssignmentFromPermissions(selectedCodes);
                     return moduleKeys.map((key) => {
@@ -986,7 +984,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                       );
                     });
                   })()}
-                  {selectedPermissionIds.size === 0 && (
+                  {selectedPermissionCodes.size === 0 && (
                     <p
                       style={{
                         color: 'var(--color-text-muted)',
@@ -1028,10 +1026,10 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                         {group.moduleName}
                       </h4>
                       {group.permissions.map((perm) => {
-                        const isSelected = selectedPermissionIds.has(perm.id);
+                        const isSelected = selectedPermissionCodes.has(perm.code);
                         return (
                           <label
-                            key={perm.id}
+                            key={perm.code}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -1048,7 +1046,7 @@ export const AdminGestionRolesPermisos: React.FC = () => {
                             <input
                               type="checkbox"
                               checked={isSelected}
-                              onChange={() => togglePermissionSelection(perm.id)}
+                               onChange={() => togglePermissionSelection(perm.code)}
                             />
                             <div style={{ flex: 1 }}>
                               <code

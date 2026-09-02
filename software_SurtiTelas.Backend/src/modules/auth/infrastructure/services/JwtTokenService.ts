@@ -33,7 +33,7 @@ export class JwtTokenService implements TokenService {
   verifyAccessToken(token: string): AuthUser {
     try {
       const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
-      return { id: decoded.id, email: decoded.email, nombre: decoded.nombre, role: decoded.role, permissions: decoded.permissions };
+      return { id: decoded.id, email: decoded.email, nombre: decoded.nombre, role: decoded.role, permissions: decoded.permissions ?? [] };
     } catch {
       throw new UnauthorizedError('Token de acceso inválido o expirado');
     }

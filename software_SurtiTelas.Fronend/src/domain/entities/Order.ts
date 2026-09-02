@@ -2,15 +2,14 @@ export type OrderStatus =
   | 'Nuevo'
   | 'Pendiente'
   | 'Aceptado'
-  | 'En proceso'
-  | 'En producción'
   | 'Listo'
-  | 'Despachado'
-  | 'En camino'
   | 'Enviado'
   | 'Entregado'
   | 'Rechazado'
-  | 'Cancelado';
+  | 'Cancelado'
+  | 'En validación'
+  | 'Recibo generado'
+  | 'Recibo enviado';
 
 export type OrderPriority = 'Estándar' | 'Prioritario';
 
@@ -134,14 +133,13 @@ export class Order {
 
     const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
       Nuevo: ['Pendiente', 'Aceptado', 'Cancelado'],
-      Pendiente: ['Aceptado', 'En proceso', 'Rechazado', 'Cancelado'],
-      Aceptado: ['En proceso', 'Listo', 'Enviado', 'Entregado', 'Rechazado'],
-      'En proceso': ['En producción', 'Listo', 'Entregado', 'Rechazado'],
-      'En producción': ['Listo', 'Despachado', 'Cancelado'],
-      Listo: ['Despachado', 'Entregado'],
-      Despachado: ['En camino', 'Entregado'],
-      'En camino': ['Entregado', 'Cancelado'],
-      Enviado: ['Entregado'],
+      Pendiente: ['Aceptado', 'Rechazado', 'Cancelado'],
+      Aceptado: ['Listo', 'Enviado', 'Entregado', 'Rechazado', 'Cancelado'],
+      'En validación': ['Aceptado', 'Recibo generado', 'Rechazado', 'Cancelado'],
+      'Recibo generado': ['Recibo enviado', 'Enviado', 'Entregado', 'Cancelado'],
+      'Recibo enviado': ['Entregado', 'Cancelado'],
+      Listo: ['Enviado', 'Entregado', 'Cancelado'],
+      Enviado: ['Entregado', 'Cancelado'],
       Entregado: [],
       Rechazado: [],
       Cancelado: [],

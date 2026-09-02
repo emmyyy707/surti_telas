@@ -15,6 +15,8 @@ const BaseCustomerSchema = z.object({
   deudaVencida: NonNegativeNumberSchema.optional(),
   isTrustedCustomer: z.boolean().optional(),
   estado: z.enum(['Activo', 'Inactivo']).optional(),
+  tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional().nullable().or(z.literal('')),
+  direccion: z.string().optional(),
 });
 
 export const CreateCustomerSchema = BaseCustomerSchema.transform((data) => ({
@@ -24,7 +26,7 @@ export const CreateCustomerSchema = BaseCustomerSchema.transform((data) => ({
   ciudad: data.ciudad?.trim() ?? '',
   email: data.email?.trim(),
   nit: data.nit?.trim(),
-  direccion: (data as Record<string, unknown>).direccion ? String((data as Record<string, unknown>).direccion).trim() : undefined,
+  direccion: data.direccion?.trim(),
 }));
 
 export const UpdateCustomerSchema = BaseCustomerSchema.partial()
@@ -32,11 +34,11 @@ export const UpdateCustomerSchema = BaseCustomerSchema.partial()
   .transform((data) => ({
     ...data,
     telefono: data.telefono ?? data.tel,
-    apellidos: (data.apellidos ?? '').trim(),
+    apellidos: data.apellidos?.trim() ?? '',
     ciudad: data.ciudad?.trim(),
     email: data.email?.trim(),
     nit: data.nit?.trim(),
-    direccion: (data as Record<string, unknown>).direccion ? String((data as Record<string, unknown>).direccion).trim() : undefined,
+    direccion: data.direccion?.trim(),
   }));
 
 export const AssignAsesorSchema = z.object({

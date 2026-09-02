@@ -9,6 +9,7 @@ export interface ReceiptDTO {
   concepto?: string;
   estado: string;
   estadoEnvio?: string;
+  url?: string;
   pagos?: Array<{ id: string; amount: number; method: string }>;
   emitidoPor?: string;
   createdAt: string;
@@ -23,6 +24,7 @@ export interface Receipt {
   concepto?: string;
   estado: string;
   estadoEnvio?: string;
+  url?: string;
   pagos?: Array<{ id: string; amount: number; method: string }>;
   emitidoPor?: string;
   createdAt: string;
@@ -38,6 +40,7 @@ export function toReceipt(dto: ReceiptDTO): Receipt {
     concepto: dto.concepto,
     estado: dto.estado,
     estadoEnvio: dto.estadoEnvio,
+    url: dto.url,
     pagos: dto.pagos,
     emitidoPor: dto.emitidoPor,
     createdAt: dto.createdAt,

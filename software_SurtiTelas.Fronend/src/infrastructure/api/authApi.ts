@@ -1,4 +1,4 @@
-import { api, ApiError, API_BASE_URL } from './httpClient';
+import { api } from './httpClient';
 import type { PaginatedResponse } from './pagination';
 
 /** Roles tal como los devuelve el backend (String, incluye roles personalizados). */
@@ -145,10 +145,13 @@ export const authApi = {
   deleteUser: (id: string) =>
     api.delete<void>(`/auth/users/${encodeURIComponent(id)}`),
 
-  listPermissions: () =>
-    api.get<{ items: PermissionDTO[]; meta: PaginatedResponse<PermissionDTO>['data']['meta'] } | undefined>('/auth/permissions').then((response) => {
+  listPermissions: (query?: Record<string, string | number | boolean | undefined | null>) =>
+    api.get<{ items: PermissionDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null } | undefined>('/auth/permissions', { query }).then((response) => {
       const items = response?.items ?? [];
-      return { data: items, meta: response?.meta };
+      // El backend devuelve la paginación en la raíz (totalPages, page, limit, totalRecords),
+      // no dentro de una clave "meta". Se pasa el objeto completo para que el consumidor
+      // pueda leer meta.totalPages y cargar TODAS las páginas.
+      return { data: items, meta: response ?? { totalRecords: 0, page: 1, limit: 10, totalPages: 1 } };
     }),
 
   createPermission: (data: { code: string; description?: string; module?: string }) =>

@@ -13,6 +13,7 @@ const mockPrisma = {
   },
   rolePermission: { findMany: vi.fn().mockResolvedValue([]), create: vi.fn(), delete: vi.fn(), count: vi.fn() },
   permission: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
+  userPermission: { findMany: vi.fn().mockResolvedValue([]), deleteMany: vi.fn(), createMany: vi.fn() },
   roleConfig: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), update: vi.fn() },
   $transaction: vi.fn(),
 } as any;
@@ -44,6 +45,7 @@ describe('PrismaAuthRepository', () => {
   it('finds user by id', async () => {
     mockPrisma.user.findFirst.mockResolvedValue(userRow());
     mockPrisma.rolePermission.findMany.mockResolvedValue([{ permission: { code: 'orders:read' } }]);
+    mockPrisma.userPermission.findMany.mockResolvedValue([]);
     expect((await repo.findById('u-1'))?.id).toBe('u-1');
   });
 
@@ -67,6 +69,8 @@ describe('PrismaAuthRepository', () => {
 
   it('lists users with filters', async () => {
     mockPrisma.$transaction.mockResolvedValue([[userRow()], 1]);
+    mockPrisma.rolePermission.findMany.mockResolvedValue([{ permission: { code: 'orders:read' } }]);
+    mockPrisma.userPermission.findMany.mockResolvedValue([]);
     const result = await repo.listUsers({ search: 'Ana', role: 'ADMIN', estado: 'ACTIVO' });
     expect(result.data).toHaveLength(1);
     const where = mockPrisma.user.findMany.mock.calls.at(-1)![0].where;
@@ -125,5 +129,45 @@ describe('PrismaAuthRepository', () => {
   it('throws NotFound when deleting missing user', async () => {
     mockPrisma.user.findFirst.mockResolvedValue(null);
     await expect(repo.delete('u-1')).rejects.toThrow(NotFoundError);
+  });
+
+  it('setUserPermissions removes previous user permissions and keeps only existing ones', async () => {
+    mockPrisma.permission.findMany.mockResolvedValue([
+      { id: 'p1', code: 'customers:read' },
+      { id: 'p2', code: 'customers:create' },
+    ]);
+    await repo.setUserPermissions('u-1', ['customers:read', 'customers:create']);
+    expect(mockPrisma.userPermission.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(mockPrisma.userPermission.createMany).toHaveBeenCalledWith({
+      data: [
+        { userId: 'u-1', permissionId: 'p1' },
+        { userId: 'u-1', permissionId: 'p2' },
+      ],
+    });
+  });
+
+  it('setUserPermissions ignores non-existent permission codes', async () => {
+    mockPrisma.permission.findMany.mockResolvedValue([{ id: 'p1', code: 'customers:read' }]);
+    await repo.setUserPermissions('u-1', ['customers:read', 'fake:permission']);
+    expect(mockPrisma.userPermission.createMany).toHaveBeenCalledWith({
+      data: [{ userId: 'u-1', permissionId: 'p1' }],
+    });
+  });
+
+  it('setUserPermissions removes permissions not included in the new list', async () => {
+    mockPrisma.permission.findMany.mockResolvedValue([{ id: 'p1', code: 'customers:read' }]);
+    await repo.setUserPermissions('u-1', ['customers:read']);
+    expect(mockPrisma.userPermission.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(mockPrisma.userPermission.createMany).toHaveBeenCalledWith({
+      data: [{ userId: 'u-1', permissionId: 'p1' }],
+    });
+  });
+
+  it('setUserPermissions does not create duplicates', async () => {
+    mockPrisma.permission.findMany.mockResolvedValue([{ id: 'p1', code: 'customers:read' }]);
+    await repo.setUserPermissions('u-1', ['customers:read', 'customers:read']);
+    expect(mockPrisma.userPermission.createMany).toHaveBeenCalledWith({
+      data: [{ userId: 'u-1', permissionId: 'p1' }],
+    });
   });
 });

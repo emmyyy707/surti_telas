@@ -62,7 +62,6 @@ export const AdminRegistroTalleres: React.FC = () => {
       setError(null);
       try {
         const data = await workshopsApi.list();
-        console.log('[RegistroTalleres] list data', data);
         setItems(data.map(toTaller));
       } catch {
         setError('No se pudieron cargar los talleres');
@@ -98,7 +97,6 @@ export const AdminRegistroTalleres: React.FC = () => {
       setEmail(taller.email ?? '');
       setDireccion(taller.direccion ?? '');
       setCiudad(taller.ciudad ?? '');
-      console.log('[RegistroTalleres] openModal taller', taller);
     } else {
       setSelectedTaller(null);
       setNombre('');
@@ -124,12 +122,10 @@ export const AdminRegistroTalleres: React.FC = () => {
       };
       if (selectedTaller) {
         const actualizado = await workshopsApi.update(selectedTaller.id, payload);
-        console.log('[RegistroTalleres] update response', actualizado);
         setItems(prev => prev.map(it => it.id === selectedTaller.id ? toTaller(actualizado) : it));
         toast.success('Taller actualizado');
       } else {
         const nuevo = await workshopsApi.create(payload);
-        console.log('[RegistroTalleres] create response', nuevo);
         setItems(prev => [toTaller(nuevo), ...prev]);
         toast.success('Taller creado');
       }

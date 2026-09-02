@@ -90,7 +90,15 @@ export interface Cotizacion {
   generadoPorNombre?: string | null;
   detalles: CotizacionDetalle[];
   negotiationCount?: number;
-  negotiationHistory?: any[];
+  negotiationHistory?: NegotiationMessage[];
+}
+
+export interface ProposalData {
+  subtotal: number;
+  total: number;
+  condicionesPago: string;
+  porcentajeAnticipo: number;
+  tiempoEstimadoDias: number;
 }
 
 export interface NegotiationMessage {
@@ -100,7 +108,7 @@ export interface NegotiationMessage {
   authorRole: string;
   message: string;
   round: number;
-  proposalData?: any;
+  proposalData?: ProposalData;
   status: string;
   created_at: string;
   updated_at: string;
@@ -157,6 +165,7 @@ export interface CustomOrderFilters {
   limit?: number;
   search?: string;
   estado?: string;
+  clienteId?: string;
 }
 
 export interface CustomOrderListResponse {
@@ -258,7 +267,7 @@ export interface CustomOrderHistoryItem {
   estadoAnterior: string;
   estadoNuevo: string;
   razon?: string;
-  informacion?: any;
+  informacion?: unknown;
   createdAt: string;
   updatedAt: string;
 }
@@ -289,7 +298,7 @@ export const customOrdersApi = {
     if (filters.limit) params.append('limit', String(filters.limit));
     if (filters.search) params.append('search', filters.search);
     if (filters.estado) params.append('estado', filters.estado);
-    const query = params.toString();
+    params.toString();
     return api.get<CustomOrderListResponse>('/custom-orders', { query: filters as Record<string, string | number | boolean | undefined | null> });
   },
 
@@ -396,11 +405,11 @@ export const customOrdersApi = {
     return api.get<CustomOrderMetrics>(`/admin/custom-orders/metrics`);
   },
 
-  async startNegotiation(id: string, message: string, proposalData?: any): Promise<CustomOrder> {
+  async startNegotiation(id: string, message: string, proposalData?: ProposalData): Promise<CustomOrder> {
     return api.post<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/negotiation/start`, { message, proposalData });
   },
 
-  async respondToNegotiation(id: string, message: string, proposalData?: any, parentId?: string): Promise<CustomOrder> {
+  async respondToNegotiation(id: string, message: string, proposalData?: ProposalData, parentId?: string): Promise<CustomOrder> {
     return api.post<CustomOrder>(`/custom-orders/${encodeURIComponent(id)}/negotiation/respond`, { message, proposalData, parentId });
   },
 

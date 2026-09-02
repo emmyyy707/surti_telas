@@ -233,8 +233,7 @@ export const AdminStockDevuelto: React.FC = () => {
     if (producto) {
       setForm({ prenda: producto.nombre });
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ordenEncontrada = ordenes.find(o => (o.itemsList ?? []).some((item) => (item as any).referencia === ref || (item as any).productId === ref || item.nombre === producto?.nombre));
+    const ordenEncontrada = ordenes.find(o => (o.itemsList ?? []).some((item) => item.referencia === ref || item.productId === ref || item.nombre === producto?.nombre));
     if (ordenEncontrada) {
       setForm({ numeroOrden: ordenEncontrada.numero });
     }

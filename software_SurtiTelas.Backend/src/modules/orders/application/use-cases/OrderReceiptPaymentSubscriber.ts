@@ -144,40 +144,68 @@ export class OrderReceiptPaymentSubscriber {
         });
 
         if (existingPayment) {
-          if (existingPayment.status === 'APPROVED') {
-            logger.info(`[OrderReceiptPaymentSubscriber] Pago ya aprobado para pedido ${payload.orderId}, no se actualiza.`);
-            return;
-          }
+          if (existingPayment.status !== 'APPROVED') {
+            await prisma.payment.update({
+              where: { id: existingPayment.id },
+              data: {
+                status: 'APPROVED',
+                amount: Number(payload.total),
+                paidAt: new Date(),
+              },
+            });
 
-          await prisma.payment.update({
-            where: { id: existingPayment.id },
+            logger.info(`[OrderReceiptPaymentSubscriber] Pago actualizado a APPROVED para pedido ${payload.orderId}: ${existingPayment.id}`);
+          } else {
+            logger.info(`[OrderReceiptPaymentSubscriber] Pago ya aprobado para pedido ${payload.orderId}, no se actualiza.`);
+          }
+        } else {
+          await prisma.payment.create({
             data: {
-              status: 'APPROVED',
+              orderId: payload.orderId,
+              customerId: payload.clienteId,
+              asesorId: payload.asesorId || undefined,
               amount: Number(payload.total),
+              method: 'OTHER',
+              status: 'APPROVED',
               paidAt: new Date(),
+              notes: 'Pago completado por entrega del pedido',
             },
           });
 
-          logger.info(`[OrderReceiptPaymentSubscriber] Pago actualizado a APPROVED para pedido ${payload.orderId}: ${existingPayment.id}`);
-          return;
+          logger.info(`[OrderReceiptPaymentSubscriber] Pago generado por entrega para pedido ${payload.orderId}`);
         }
 
-        const payment = await prisma.payment.create({
-          data: {
-            orderId: payload.orderId,
-            customerId: payload.clienteId,
-            asesorId: payload.asesorId || undefined,
-            amount: Number(payload.total),
-            method: 'OTHER',
-            status: 'APPROVED',
-            paidAt: new Date(),
-            notes: 'Pago completado por entrega del pedido',
-          },
+        const existingSale = await prisma.sale.findFirst({
+          where: { orderId: payload.orderId, deletedAt: null },
         });
 
-        logger.info(`[OrderReceiptPaymentSubscriber] Pago generado por entrega para pedido ${payload.orderId}: ${payment.id}`);
+        if (!existingSale) {
+          const order = await prisma.order.findFirst({
+            where: { id: payload.orderId, deletedAt: null },
+            select: { subtotal: true, impuestos: true, descuentos: true, total: true, medioPago: true },
+          });
+
+          await prisma.sale.create({
+            data: {
+              orderId: payload.orderId,
+              clienteId: payload.clienteId,
+              clienteNombre: payload.clienteNombre,
+              asesorId: payload.asesorId || '',
+              asesorNombre: payload.asesorNombre || '',
+              fechaVenta: new Date(),
+              subtotal: Number(order?.subtotal ?? payload.total),
+              impuestos: Number(order?.impuestos ?? 0),
+              descuentos: Number(order?.descuentos ?? 0),
+              total: Number(order?.total ?? payload.total),
+              estado: 'COMPLETADA',
+              medioPago: order?.medioPago ?? undefined,
+            },
+          });
+
+          logger.info(`[OrderReceiptPaymentSubscriber] Venta generada automáticamente por entrega para pedido ${payload.orderId}`);
+        }
       } catch (error) {
-        logger.error(`[OrderReceiptPaymentSubscriber] Error generando pago por entrega para pedido ${payload.orderId}`, { error: (error as Error).message });
+        logger.error(`[OrderReceiptPaymentSubscriber] Error generando pago/venta por entrega para pedido ${payload.orderId}`, { error: (error as Error).message });
       }
     });
   }

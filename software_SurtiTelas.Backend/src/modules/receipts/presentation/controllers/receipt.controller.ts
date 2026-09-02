@@ -267,11 +267,15 @@ export const listReceipts = async (req: Request, res: Response) => {
     filters.customerId = req.user.id;
   }
   const result = await receiptUseCases.listReceipts.execute(filters);
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 50;
+  const start = (page - 1) * limit;
+  const paginatedData = result.data.slice(start, start + limit);
   const response = buildApiPaginatedResponse(
-    result.data,
+    paginatedData,
     result.total,
-    1,
-    result.data.length,
+    page,
+    limit,
     null
   );
   return ok(res, response);
@@ -287,29 +291,38 @@ export const listMyReceipts = async (req: Request, res: Response) => {
 
   const where: Record<string, unknown> = { deletedAt: null, customerId: { in: customerIds } };
 
-  const rows = await prisma.receipt.findMany({
-    where,
-    select: {
-      id: true,
-      orderId: true,
-      customerId: true,
-      numero: true,
-      total: true,
-      concepto: true,
-      notas: true,
-      url: true,
-      emitidoPor: true,
-      emitidoAt: true,
-      estado: true,
-      estadoEnvio: true,
-      fechaEnvio: true,
-      intentosEnvio: true,
-      ultimoErrorEnvio: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    orderBy: { emitidoAt: 'desc' },
-  });
+  const page = req.query.page ? Number(req.query.page) : 1;
+  const limit = req.query.limit ? Number(req.query.limit) : 50;
+  const skip = (page - 1) * limit;
+
+  const [rows, total] = await prisma.$transaction([
+    prisma.receipt.findMany({
+      where,
+      select: {
+        id: true,
+        orderId: true,
+        customerId: true,
+        numero: true,
+        total: true,
+        concepto: true,
+        notas: true,
+        url: true,
+        emitidoPor: true,
+        emitidoAt: true,
+        estado: true,
+        estadoEnvio: true,
+        fechaEnvio: true,
+        intentosEnvio: true,
+        ultimoErrorEnvio: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { emitidoAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.receipt.count({ where }),
+  ]);
 
   const mapped = rows.map((row: any) => ({
     id: row.id,
@@ -337,9 +350,9 @@ export const listMyReceipts = async (req: Request, res: Response) => {
   }
   const response = buildApiPaginatedResponse(
     visible,
-    visible.length,
-    1,
-    visible.length,
+    total,
+    page,
+    limit,
     null
   );
   return ok(res, response);

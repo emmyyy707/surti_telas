@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { errorHandler } from '@/shared/presentation/http/errorHandler';
-import { AppError, NotFoundError, ForbiddenError, ValidationError, BadRequestError, TooManyRequestsError } from '@/shared/domain/errors';
+import { NotFoundError, ForbiddenError, ValidationError, BadRequestError, TooManyRequestsError } from '@/shared/domain/errors';
 
 const mockReq = {
   requestId: 'test-request-id',

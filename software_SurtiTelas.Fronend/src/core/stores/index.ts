@@ -11,7 +11,7 @@ import { tokenStorage } from '@/infrastructure/api/tokenStorage';
    productos, clientes y pedidos ahora vienen del backend.
    ────────────────────────────────────────────── */
 const seedProduccion: OrdenProduccion[] = [];
-const seedNotificaciones: Notificacion[] = [];
+const _seedNotificaciones: Notificacion[] = [];
 const seedProveedores: Proveedor[] = [];
 
 /* ──────────────────────────────────────────────
@@ -46,7 +46,7 @@ let _proveedores = loadFromStorage<Proveedor>(STORAGE_KEYS.proveedores, seedProv
 let _produccion = loadFromStorage<OrdenProduccion>(STORAGE_KEYS.produccion, seedProduccion);
 let _inventario = loadFromStorage<MovimientoInventario>(STORAGE_KEYS.inventario, []);
 
-/* Índice numero(pedido visible) → id(cuid) para mutaciones contra el backend. */
+/* Ýndice numero(pedido visible) → id(cuid) para mutaciones contra el backend. */
 let _orderIdByNumero: Record<string, string> = {};
 
 /* ──────────────────────────────────────────────

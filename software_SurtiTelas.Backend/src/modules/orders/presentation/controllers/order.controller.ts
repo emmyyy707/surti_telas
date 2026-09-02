@@ -6,7 +6,7 @@ import { parseDto } from '../../../../shared/presentation/http/validate';
 import { z } from 'zod';
 import { orderUseCases } from '../../infrastructure/container/orderContainer';
 import { canView, canUpdateStatus } from '../../application/policies/orderPolicy';
-import { AssignDomiciliarioSchema, CreateOrderSchema, OrderFiltersSchema, UpdateOrderFullSchema, UpdateOrderStatusSchema } from '../validators/order.validators';
+import { OrderFiltersSchema, CreateOrderSchema, UpdateOrderFullSchema, UpdateOrderStatusSchema, CancelOrderSchema, AssignDomiciliarioSchema } from '../validators/order.validators';
 import { prisma } from '../../../../config/database';
 
 const resolveCustomerIdFromUser = async (req: Request): Promise<string | undefined> => {
@@ -204,7 +204,8 @@ export const uploadPaymentProof = async (req: Request, res: Response) => {
 };
 
 export const cancelOrder = async (req: Request, res: Response) => {
-  const order = await orderUseCases.cancelOrder.execute(req.params.id, req.requestId);
+  const { motivoAnulacion } = parseDto(CancelOrderSchema, req.body);
+  const order = await orderUseCases.cancelOrder.execute(req.params.id, motivoAnulacion, req.requestId);
   return ok(res, order, 'Pedido cancelado');
 };
 

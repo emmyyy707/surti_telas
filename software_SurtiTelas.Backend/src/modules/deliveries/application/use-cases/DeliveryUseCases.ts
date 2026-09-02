@@ -1,4 +1,4 @@
-/* eslint-disable @typeScript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BadRequestError, NotFoundError } from '../../../../shared/domain/errors';
 import type { CreateDeliveryInput, DeliveryRepository, UpdateDeliveryInput } from '../../domain/repositories/DeliveryRepository';
 import { Delivery } from '../../domain/entities/Delivery';
@@ -43,6 +43,7 @@ export class ListRutaDelDia {
                   nombre: true,
                   telefono: true,
                   ciudad: true,
+                  direccion: true,
                 },
               },
             },
@@ -69,6 +70,7 @@ export class ListRutaDelDia {
               nombre: true,
               telefono: true,
               ciudad: true,
+              direccion: true,
             },
           },
         },
@@ -80,6 +82,9 @@ export class ListRutaDelDia {
     const mappedDeliveries = deliveries.map((delivery: any) => {
       const order = delivery.order;
       const cliente = order?.cliente;
+      const rawDireccion = (cliente?.direccion?.trim() || delivery.direccion?.trim()) || null;
+      const rawCiudad = (cliente?.ciudad?.trim() || delivery.ciudad?.trim()) || null;
+      const rawTelefono = (cliente?.telefono?.trim() || delivery.telefono?.trim()) || null;
       return {
         id: delivery.id,
         orderId: delivery.orderId,
@@ -87,18 +92,18 @@ export class ListRutaDelDia {
         domiciliarioId: delivery.domiciliarioId,
         domiciliarioNombre: delivery.domiciliario?.nombre ?? null,
         domiciliarioTelefono: delivery.domiciliario?.telefono ?? null,
-        direccion: cliente?.direccion || delivery.direccion || null,
-        ciudad: cliente?.ciudad || delivery.ciudad || null,
-        telefono: cliente?.telefono || delivery.telefono || null,
+        direccion: rawDireccion,
+        ciudad: rawCiudad,
+        telefono: rawTelefono,
         notas: delivery.notas,
         asignadoEn: delivery.asignadoEn,
         entregadoEn: delivery.entregadoEn,
         order: {
           numero: order?.numero ?? null,
           cliente: cliente?.nombre || order?.clienteNombre || null,
-          telefono: cliente?.telefono ?? null,
-          direccion: cliente?.direccion ?? null,
-          ciudad: cliente?.ciudad ?? null,
+          telefono: rawTelefono,
+          direccion: rawDireccion,
+          ciudad: rawCiudad,
           total: order?.total ? Number(order.total) : null,
           estado: order?.estado ?? null,
         },
@@ -109,28 +114,28 @@ export class ListRutaDelDia {
       .filter((order: any) => !deliveryMap.has(order.id))
       .map((order: any) => {
         const cliente = order.cliente;
-        return {
-          id: `orphan-${order.id}`,
-          orderId: order.id,
-          estado: 'ASIGNADO' as const,
-          domiciliarioId: filters?.domiciliarioId ?? null,
-          domiciliarioNombre: null,
-          domiciliarioTelefono: null,
-          direccion: null,
-          ciudad: cliente?.ciudad ?? null,
+      return {
+        id: `orphan-${order.id}`,
+        orderId: order.id,
+        estado: 'ASIGNADO' as const,
+        domiciliarioId: filters?.domiciliarioId ?? null,
+        domiciliarioNombre: null,
+        domiciliarioTelefono: null,
+        direccion: cliente?.direccion ?? null,
+        ciudad: cliente?.ciudad ?? null,
+        telefono: cliente?.telefono ?? null,
+        notas: null,
+        asignadoEn: null,
+        entregadoEn: null,
+        order: {
+          numero: order.numero,
+          cliente: cliente?.nombre || order.clienteNombre || null,
           telefono: cliente?.telefono ?? null,
-          notas: null,
-          asignadoEn: null,
-          entregadoEn: null,
-          order: {
-            numero: order.numero,
-            cliente: cliente?.nombre || order.clienteNombre || null,
-            telefono: cliente?.telefono ?? null,
-            direccion: null,
-            ciudad: cliente?.ciudad ?? null,
-            total: order.total ? Number(order.total) : null,
-          },
-        };
+          direccion: cliente?.direccion ?? null,
+          ciudad: cliente?.ciudad ?? null,
+          total: order.total ? Number(order.total) : null,
+        },
+      };
       });
 
     const orphanFiltered = filters?.domiciliarioId ? [] : orphanMapped;

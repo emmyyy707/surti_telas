@@ -5,12 +5,12 @@ import s from '../admin/Clientes.module.css';
 import f from '@/styles/Form.module.css';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
-import { DetailModal } from '@/shared/ui/DetailModal';
+import { DetailModal, type DetailSection } from '@/shared/ui/DetailModal';
 import { ConfirmationModal } from '@/shared/ui/ConfirmationModal';
 import { Tooltip } from '@/shared/components/Tooltip';
 import { useClientes, usePedidos } from '@/core/stores';
 import { useAuthStore } from '@/core/stores/authStore';
-import { authApi, type BackendAuthUser, type CreateUserRequest } from '@/infrastructure/api/authApi';
+import { authApi, type CreateUserRequest } from '@/infrastructure/api/authApi';
 import { customersApi } from '@/infrastructure/api/customersApi';
 import type { Cliente } from '@/core/types';
 
@@ -36,7 +36,7 @@ const emptyClienteForm: Omit<Cliente, 'id' | 'pedidos'> = {
 export const AsesorClientes: React.FC = () => {
   const user = useAuthStore((st) => st.user);
   const asesorActual = user?.name || '';
-  const { clientes, createCliente, updateCliente, deleteCliente } = useClientes();
+  const { clientes, deleteCliente } = useClientes();
   const { pedidos } = usePedidos();
   const [search, setSearch] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
@@ -458,7 +458,7 @@ export const AsesorClientes: React.FC = () => {
               </div>
             ),
           },
-        ].filter(Boolean) as any[]}
+        ].filter(Boolean) as DetailSection[]}
         footer={
           <div className={f.formActions}>
             <Button type="button" variant="secondary" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancelar</Button>

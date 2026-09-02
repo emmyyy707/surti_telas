@@ -10,6 +10,7 @@ const createMockRepo = (overrides: Partial<AuthRepository> = {}): AuthRepository
   create: vi.fn(),
   updateRefreshToken: vi.fn(),
   findPermissionsByRole: vi.fn().mockResolvedValue(['users:read']),
+  findPermissionsByUser: vi.fn().mockResolvedValue([]),
   listUsers: vi.fn(),
   findAllPermissions: vi.fn(),
   createPermission: vi.fn(),

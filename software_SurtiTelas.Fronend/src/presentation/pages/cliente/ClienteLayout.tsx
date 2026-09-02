@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, ShoppingBag, UserCircle, Route, ReceiptText, Heart, RotateCcw, FileText } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, UserCircle, Route, ReceiptText, Heart, RotateCcw, FileText } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
@@ -42,11 +42,11 @@ export const ClienteLayout: React.FC = () => {
         const profile = await authApi.me();
         if (!active) return;
         const initials = profile.nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-        setSidebarUser({ name: profile.nombre, role: 'cliente', initials, avatar: (profile as any).avatar ?? null });
+        setSidebarUser({ name: profile.nombre, role: 'cliente', initials, avatar: profile.avatar ?? '' });
       } catch {
         if (storeUser) {
           const initials = storeUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? '';
-          setSidebarUser({ name: storeUser.name ?? 'Cliente', role: 'cliente', initials, avatar: (storeUser as any).avatar ?? null });
+          setSidebarUser({ name: storeUser.name ?? 'Cliente', role: 'cliente', initials, avatar: storeUser.avatar ?? '' });
         }
       }
     };
@@ -103,6 +103,7 @@ export const ClienteLayout: React.FC = () => {
           onSearch={() => {}}
           onToggleTheme={toggleTheme}
           darkMode={darkMode}
+          notificationsPath="/cliente/inicio"
         />
         <main className={s.pageContent}><Outlet /></main>
       </div>

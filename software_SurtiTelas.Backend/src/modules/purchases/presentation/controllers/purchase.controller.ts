@@ -80,24 +80,47 @@ export const exportPurchasePdf = async (req: Request, res: Response) => {
   }
   const items = await purchaseUseCases.getPurchaseItems.execute(req.params.id);
 
+  const proveedor = await purchaseUseCases.getProveedorNombre.execute(purchase.proveedorId);
+  const usuario = await purchaseUseCases.getUsuarioNombre.execute(purchase.usuarioId);
+
+  const sanitize = (value: unknown): string => {
+    const str = value == null ? '' : String(value);
+    const map: Record<string, string> = {
+      '—': '-', '–': '-', '’': "'", '‘': "'", '“': '"', '”': '"', '•': '-', '…': '...', ' ': ' ', '​': '',
+    };
+    let out = '';
+    for (const ch of str) {
+      if (map[ch] !== undefined) { out += map[ch]; continue; }
+      const cp = ch.codePointAt(0) ?? 0;
+      if (cp === 0xfffd) continue;
+      if (cp <= 0xff) { out += ch; continue; }
+      out += '';
+    }
+    return out;
+  };
+  const t = (value: unknown): string => sanitize(value);
+
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  page.drawText('Registro de Compra', { x: 50, y: 800, size: 20, font: boldFont });
-  page.drawText(`Número: ${purchase.numero}`, { x: 50, y: 770, size: 12, font });
-  page.drawText(`Proveedor ID: ${purchase.proveedorId}`, { x: 50, y: 750, size: 12, font });
-  page.drawText(`Usuario ID: ${purchase.usuarioId}`, { x: 50, y: 730, size: 12, font });
-  page.drawText(`Fecha: ${new Date(purchase.fecha).toLocaleString()}`, { x: 50, y: 710, size: 12, font });
-  page.drawText(`Total: $${purchase.total.toFixed(2)}`, { x: 50, y: 690, size: 12, font });
-  page.drawText(`Estado: ${purchase.estado}`, { x: 50, y: 670, size: 12, font });
-  page.drawText(`Observaciones: ${purchase.observaciones ?? 'N/A'}`, { x: 50, y: 650, size: 12, font });
+  page.drawText(t('Registro de Compra'), { x: 50, y: 800, size: 20, font: boldFont });
+  page.drawText(t(`Número: ${purchase.numero}`), { x: 50, y: 770, size: 12, font });
+  page.drawText(t(`Proveedor: ${proveedor}`), { x: 50, y: 750, size: 12, font });
+  page.drawText(t(`Usuario: ${usuario}`), { x: 50, y: 730, size: 12, font });
+  page.drawText(t(`Fecha: ${new Date(purchase.fecha).toLocaleString()}`), { x: 50, y: 710, size: 12, font });
+  page.drawText(t(`Total: $${purchase.total.toFixed(2)}`), { x: 50, y: 690, size: 12, font });
+  page.drawText(t(`Estado: ${purchase.estado}`), { x: 50, y: 670, size: 12, font });
+  page.drawText(t(`Observaciones: ${purchase.observaciones ?? 'N/A'}`), { x: 50, y: 650, size: 12, font });
 
-  page.drawText('Ítems:', { x: 50, y: 620, size: 14, font: boldFont });
+  page.drawText(t('Ítems:'), { x: 50, y: 620, size: 14, font: boldFont });
   let y = 600;
   for (const item of items) {
-    page.drawText(`- ${item.nombre} | Cant: ${item.cantidad} | Precio: $${item.precioUnitario.toFixed(2)} | Subtotal: $${item.subtotal.toFixed(2)}`, { x: 50, y, size: 11, font });
+    page.drawText(
+      t(`- ${item.nombre} | Cant: ${item.cantidad} | Precio: $${item.precioUnitario.toFixed(2)} | Subtotal: $${item.subtotal.toFixed(2)}`),
+      { x: 50, y, size: 11, font },
+    );
     y -= 20;
   }
 

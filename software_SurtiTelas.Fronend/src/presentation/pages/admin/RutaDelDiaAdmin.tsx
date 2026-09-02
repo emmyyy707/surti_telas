@@ -182,58 +182,63 @@ export const RutaDelDiaAdmin: React.FC = () => {
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.order?.numero || item.orderId}</td>
-                  <td>{item.order?.cliente || item.domiciliarioNombre || '-'}</td>
-                  <td>{item.order?.direccion || item.direccion || '-'}</td>
-                  <td>{item.order?.telefono || item.telefono || '-'}</td>
-                  <td>
-                    {item.domiciliarioNombre ? (
-                      <div className={s.domiciliarioCell}>
-                        <User size={14} />
-                        <span>{item.domiciliarioNombre}</span>
-                        {item.domiciliarioTelefono && (
-                          <a href={`tel:${item.domiciliarioTelefono}`} className={s.domiciliarioLink}>
-                            <Phone size={14} />
-                          </a>
+              <tbody>
+                {items.map((item) => {
+                  const direccion = (item.order?.direccion?.trim() || item.direccion?.trim()) || '-';
+                  const telefono = item.order?.telefono?.trim() || item.telefono?.trim() || '-';
+                  const cliente = item.order?.cliente?.trim() || item.domiciliarioNombre?.trim() || '-';
+                  return (
+                    <tr key={item.id}>
+                      <td>{item.order?.numero || item.orderId}</td>
+                      <td>{cliente}</td>
+                      <td>{direccion}</td>
+                      <td>{telefono}</td>
+                      <td>
+                        {item.domiciliarioNombre ? (
+                          <div className={s.domiciliarioCell}>
+                            <User size={14} />
+                            <span>{item.domiciliarioNombre}</span>
+                            {item.domiciliarioTelefono && (
+                              <a href={`tel:${item.domiciliarioTelefono}`} className={s.domiciliarioLink}>
+                                <Phone size={14} />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[var(--color-text-muted)]">Sin asignar</span>
                         )}
-                      </div>
-                    ) : (
-                      <span className="text-[var(--color-text-muted)]">Sin asignar</span>
-                    )}
-                  </td>
-                  <td>
-                    <select
-                      className={s.toolbarSelect}
-                      value={item.estado}
-                      onChange={(e) => changeStatus(item.id, e.target.value as DeliveryRutaItem['estado'])}
-                      disabled={statusUpdatingId === item.id}
-                    >
-                      <option value="ASIGNADO">Pendiente</option>
-                      <option value="EN_RUTA">En camino</option>
-                      <option value="ENTREGADO">Entregado</option>
-                      <option value="FALLIDO">Fallido</option>
-                    </select>
-                  </td>
-                  <td>{item.asignadoEn ? new Date(item.asignadoEn).toLocaleString('es-CO') : '-'}</td>
-                  <td>
-                    <select
-                      className={s.toolbarSelect}
-                      value={item.domiciliarioId || ''}
-                      onChange={(e) => assignDriver(item.id, e.target.value || undefined)}
-                      disabled={assigningId === item.id || loadingDomiciliarios}
-                    >
-                      <option value="">Sin asignar</option>
-                      {domiciliarios.map((d) => (
-                        <option key={d.id} value={d.id}>{d.nombre}</option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                      </td>
+                      <td>
+                        <select
+                          className={s.toolbarSelect}
+                          value={item.estado}
+                          onChange={(e) => changeStatus(item.id, e.target.value as DeliveryRutaItem['estado'])}
+                          disabled={statusUpdatingId === item.id}
+                        >
+                          <option value="ASIGNADO">Pendiente</option>
+                          <option value="EN_RUTA">En camino</option>
+                          <option value="ENTREGADO">Entregado</option>
+                          <option value="FALLIDO">Fallido</option>
+                        </select>
+                      </td>
+                      <td>{item.asignadoEn ? new Date(item.asignadoEn).toLocaleString('es-CO') : '-'}</td>
+                      <td>
+                        <select
+                          className={s.toolbarSelect}
+                          value={item.domiciliarioId || ''}
+                          onChange={(e) => assignDriver(item.id, e.target.value || undefined)}
+                          disabled={assigningId === item.id || loadingDomiciliarios}
+                        >
+                          <option value="">Sin asignar</option>
+                          {domiciliarios.map((d) => (
+                            <option key={d.id} value={d.id}>{d.nombre}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
           </table>
         </div>
       )}

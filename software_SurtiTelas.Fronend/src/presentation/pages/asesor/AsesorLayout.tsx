@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, ShoppingBag, BadgeDollarSign, Users, UserCircle, Store } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, BadgeDollarSign, Users, UserCircle, Store } from 'lucide-react';
 import s from '../../../styles/admin/AdminLayout.module.css';
 import { Sidebar, SidebarItem } from '@/shared/layouts/Sidebar';
 import { useAuth } from '@/app/providers/AppProviders';
@@ -40,11 +40,11 @@ export const AsesorLayout: React.FC = () => {
         const profile = await authApi.me();
         if (!active) return;
         const initials = profile.nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-        setSidebarUser({ name: profile.nombre, role: 'asesor', initials, avatar: (profile as any).avatar });
+        setSidebarUser({ name: profile.nombre, role: 'asesor', initials, avatar: profile.avatar ?? '' });
       } catch {
         if (storeUser) {
           const initials = storeUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? '';
-          setSidebarUser({ name: storeUser.name ?? 'Asesor', role: 'asesor', initials, avatar: (storeUser as any).avatar });
+          setSidebarUser({ name: storeUser.name ?? 'Asesor', role: 'asesor', initials, avatar: storeUser.avatar ?? '' });
         }
       }
     };

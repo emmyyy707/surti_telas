@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { PositiveIntegerSchema, PositiveNumberSchema } from '../../../../shared/presentation/validators';
 
 export const CreatePurchaseSchema = z.object({
-  numero: z.string().min(1, 'El número es obligatorio'),
+  numero: z.string().trim().min(1, 'El número de la compra es obligatorio').max(50, 'El número no puede exceder 50 caracteres'),
   proveedorId: z.string().min(1, 'El proveedor es obligatorio'),
   usuarioId: z.string().min(1, 'El usuario es obligatorio'),
   total: z.number().nonnegative('El total no puede ser negativo'),

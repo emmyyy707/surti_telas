@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Eye, Edit3, Trash2, CheckCircle, FileText, RefreshCcw, User, Package, Paintbrush, Image, X, PlusCircle, Check } from 'lucide-react';
+import { Plus, Eye, Edit3, Trash2, CheckCircle, FileText, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, type FieldError, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Badge } from '@/shared/ui/Badge';
@@ -21,7 +21,7 @@ import { ClientStep, DeliveryStep, ProductStep, SummaryStep } from './quotation-
 import { CustomOrderSummary, type CustomOrderSummaryData } from './quotation-steps/CustomOrderSummary';
 import { QuotationDecision, type QuotationItemDecision } from './quotation-steps/QuotationDecision';
 import { QuotationInlineDisplay } from './QuotationInlineDisplay';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import s from './MisPedidosPersonalizados.module.css';
 
 const customOrderItemSchema = z.object({
@@ -75,7 +75,7 @@ const formSchema = z.object({
     });
   }
   for (const [idx, item] of data.items.entries()) {
-    const distribucionTotal = Object.values(item.distribucionTallas || {}).reduce((acc: number, val: any) => acc + (Number(val) || 0), 0);
+    const distribucionTotal = Object.values(item.distribucionTallas || {}).reduce((acc: number, val: number | string | null | undefined) => acc + (Number(val) || 0), 0);
     if (distribucionTotal <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -87,6 +87,23 @@ const formSchema = z.object({
 });
 
 export type FormValues = z.infer<typeof formSchema>;
+
+export interface Personalizacion {
+  id?: string;
+  tipo?: string;
+  tecnica?: string;
+  ubicacion?: string[];
+  descripcion?: string;
+  archivos?: string[];
+  variantes?: Variante[];
+}
+
+export interface Variante {
+  id?: string;
+  talla?: string;
+  color?: string;
+  cantidad?: number | string;
+}
 
 const emptyForm: FormValues = {
   clienteNombre: '',
@@ -195,7 +212,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const [itemReferenceImages, setItemReferenceImages] = useState<Record<number, { files: File[]; urls: string[] }>>({});
   const [personalizacionFiles, setPersonalizacionFiles] = useState<Record<string, { file: File; blobUrl: string }[]>>({});
   const [stepperStep, setStepperStep] = useState(1);
-  const [colorRows, setColorRows] = useState<{ id: number; color: string; cantidad: string }[]>([{ id: Date.now(), color: '', cantidad: '' }]);
+  const [_colorRows, setColorRows] = useState<{ id: number; color: string; cantidad: string }[]>([{ id: Date.now(), color: '', cantidad: '' }]);
   const [activeItemIndex, setActiveItemIndex] = useState(0);
   const [editingPersonalizacionIndex, setEditingPersonalizacionIndex] = useState<number | null>(null);
   const [showPersonalizacionForm, setShowPersonalizacionForm] = useState(false);
@@ -213,8 +230,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const productionOrders = orders.filter(o => o.estado === 'EN_PRODUCCION').length;
 
   const { register, handleSubmit, reset, setValue, watch, control, formState: { errors: formErrorsHook }, getValues } = useForm<FormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema),
     defaultValues: emptyForm,
     shouldUnregister: false,
   });
@@ -268,7 +284,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
           tipoPersonalizacion: typeof item.tipoPersonalizacion === 'string' ? item.tipoPersonalizacion : '',
           especificaciones: typeof item.especificaciones === 'string' ? item.especificaciones : '',
           cantidad: Object.values(normalizedDistribucionTallas).length > 0
-            ? Object.values(normalizedDistribucionTallas).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
+            ? Object.values(normalizedDistribucionTallas).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0)
             : (typeof item.cantidad === 'number' ? item.cantidad : Number(item.cantidad ?? 0)),
           talla: typeof item.talla === 'string' ? item.talla : '',
           color: typeof item.color === 'string' ? item.color : '',
@@ -287,7 +303,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
     await onSubmit(e);
   };
 
-  const ubicacionValues = watch(`items.${activeItemIndex}.ubicacion`) as string[] | undefined;
+  const _ubicacionValues = watch(`items.${activeItemIndex}.ubicacion`) as string[] | undefined;
 
   const agregarProducto = () => {
     const current = watch(`items.${activeItemIndex}`);
@@ -324,7 +340,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
   };
 
   const agregarPersonalizacion = () => {
-    const current = watch(`items.${activeItemIndex}.personalizaciones`) as any[] || [];
+    const current = watch(`items.${activeItemIndex}.personalizaciones`) as Personalizacion[] || [];
     const newPers = {
       tipo: 'ESTAMPADO',
       tecnica: '',
@@ -337,18 +353,18 @@ export const MisPedidosPersonalizados: React.FC = () => {
   };
 
   const eliminarPersonalizacion = (persIndex: number) => {
-    const current = watch(`items.${activeItemIndex}.personalizaciones`) as any[] || [];
+    const current = watch(`items.${activeItemIndex}.personalizaciones`) as Personalizacion[] || [];
     setValue(`items.${activeItemIndex}.personalizaciones`, current.filter((_, i) => i !== persIndex));
   };
 
-  const actualizarPersonalizacion = (persIndex: number, field: string, value: any) => {
-    const current = watch(`items.${activeItemIndex}.personalizaciones`) as any[] || [];
+  const actualizarPersonalizacion = (persIndex: number, field: string, value: string | string[]) => {
+    const current = watch(`items.${activeItemIndex}.personalizaciones`) as Personalizacion[] || [];
     const updated = current.map((p, i) => i === persIndex ? { ...p, [field]: value } : p);
     setValue(`items.${activeItemIndex}.personalizaciones`, updated);
   };
 
   const agregarVariante = (persIndex: number) => {
-    const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as any[] || [];
+    const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as Variante[] || [];
     const distribucion = watch(`items.${activeItemIndex}.distribucionTallas`) || {};
     const tallasDisponibles = Object.entries(distribucion)
       .filter(([, cantidad]) => Number(cantidad) > 0)
@@ -360,12 +376,12 @@ export const MisPedidosPersonalizados: React.FC = () => {
   };
 
   const eliminarVariante = (persIndex: number, varIndex: number) => {
-    const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as any[] || [];
+    const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as Variante[] || [];
     setValue(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`, current.filter((_, i) => i !== varIndex));
   };
 
-  const actualizarVariante = (persIndex: number, varIndex: number, field: string, value: any) => {
-    const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as any[] || [];
+  const actualizarVariante = (persIndex: number, varIndex: number, field: string, value: string | number) => {
+    const current = watch(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`) as Variante[] || [];
     const updated = current.map((v, i) => i === varIndex ? { ...v, [field]: value } : v);
     setValue(`items.${activeItemIndex}.personalizaciones.${persIndex}.variantes`, updated);
 
@@ -388,16 +404,16 @@ export const MisPedidosPersonalizados: React.FC = () => {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await customOrdersApi.list({ page, limit: pageSize, search: search || undefined });
+      const result = await customOrdersApi.list({ page, limit: pageSize, search: search || undefined, clienteId: currentUser?.uid });
       setOrders(result.items ?? []);
       setTotalPages(result.totalPages ?? 1);
       setTotalItems(result.totalRecords ?? 0);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Error al cargar tus pedidos personalizados');
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, currentUser?.uid]);
 
   useEffect(() => {
     void loadOrders();
@@ -416,7 +432,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
       tipoPersonalizacion: item.tipoPersonalizacion,
       especificaciones: item.especificaciones ?? '',
       cantidad: item.distribucionTallas
-        ? Object.values(item.distribucionTallas).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
+        ? Object.values(item.distribucionTallas).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0)
         : item.cantidad ?? 0,
       talla: item.talla ?? '',
       color: item.color ?? '',
@@ -424,13 +440,13 @@ export const MisPedidosPersonalizados: React.FC = () => {
       ubicacion: toUbicacionArray(item.ubicacion),
       distribucionTallas: item.distribucionTallas ?? {},
       imagenesReferencia: item.imagenesReferencia || [],
-      personalizaciones: (item.personalizaciones || []).map((pers: any) => ({
+      personalizaciones: (item.personalizaciones || []).map((pers) => ({
         tipo: pers.tipo || '',
         tecnica: pers.tecnica ?? '',
         ubicacion: toUbicacionArray(pers.ubicacion),
         descripcion: pers.descripcion || '',
         archivos: pers.archivos || [],
-        variantes: (pers.variantes || []).map((v: any) => ({
+        variantes: (pers.variantes || []).map((v) => ({
           talla: v.talla || '',
           color: v.color || '',
           cantidad: typeof v.cantidad === 'number' ? v.cantidad : Number(v.cantidad ?? 0),
@@ -441,8 +457,8 @@ export const MisPedidosPersonalizados: React.FC = () => {
     const imagenUrls = nextItems.reduce<Record<number, { files: File[]; urls: string[] }>>((acc, item, idx) => {
       const itemUrls = item.imagenesReferencia || [];
       const persUrls = (item.personalizaciones || [])
-        .flatMap((pers: any) => (Array.isArray(pers.archivos) ? pers.archivos : []))
-        .filter((url: any): url is string => typeof url === 'string' && !!url);
+        .flatMap((pers) => (Array.isArray(pers.archivos) ? pers.archivos : []))
+        .filter((url): url is string => typeof url === 'string' && !!url);
       const allUrls = [...itemUrls, ...persUrls];
       if (allUrls.length > 0) acc[idx] = { files: [], urls: allUrls };
       return acc;
@@ -468,15 +484,15 @@ export const MisPedidosPersonalizados: React.FC = () => {
       setValue(`items.${idx}.imagenesReferencia`, item.imagenesReferencia || []);
       setValue(`items.${idx}.ubicacion`, item.ubicacion || []);
       Object.entries(item.distribucionTallas || {}).forEach(([talla, cantidad]) => {
-        setValue(`items.${idx}.distribucionTallas.${talla}` as any, cantidad as any);
+        setValue(`items.${idx}.distribucionTallas.${talla}` as Path<FormValues>, cantidad);
       });
-      (item.personalizaciones || []).forEach((pers: any, pIdx: number) => {
+      (item.personalizaciones || []).forEach((pers: Personalizacion, pIdx: number) => {
         setValue(`items.${idx}.personalizaciones.${pIdx}.tipo`, pers.tipo || 'ESTAMPADO');
         setValue(`items.${idx}.personalizaciones.${pIdx}.tecnica`, pers.tecnica || '');
         setValue(`items.${idx}.personalizaciones.${pIdx}.ubicacion`, pers.ubicacion || []);
         setValue(`items.${idx}.personalizaciones.${pIdx}.descripcion`, pers.descripcion || '');
         setValue(`items.${idx}.personalizaciones.${pIdx}.archivos`, pers.archivos || []);
-        (pers.variantes || []).forEach((v: any, vIdx: number) => {
+        (pers.variantes || []).forEach((v: Variante, vIdx: number) => {
           setValue(`items.${idx}.personalizaciones.${pIdx}.variantes.${vIdx}.talla`, v.talla || '');
           setValue(`items.${idx}.personalizaciones.${pIdx}.variantes.${vIdx}.color`, v.color || '');
           setValue(`items.${idx}.personalizaciones.${pIdx}.variantes.${vIdx}.cantidad`, Number(v.cantidad) || 0);
@@ -634,17 +650,17 @@ export const MisPedidosPersonalizados: React.FC = () => {
         orden: index,
         imagenesReferencia: item.imagenesReferencia || [],
         personalizaciones: (item.personalizaciones || [])
-          .filter((pers: any) => {
+          .filter((pers) => {
             const hasTipo = !!pers.tipo;
             const hasDescripcion = !!pers.descripcion && pers.descripcion.trim() !== '';
             const hasUbicacion = Array.isArray(pers.ubicacion) && pers.ubicacion.length > 0;
-            const hasVariantes = (pers.variantes || []).some((v: any) => Number(v.cantidad) > 0);
+            const hasVariantes = (pers.variantes || []).some((v) => Number(v.cantidad) > 0);
             return hasTipo && (hasDescripcion || hasUbicacion || hasVariantes);
           })
-          .map((pers: any, pIndex: number) => ({
+          .map((pers: Personalizacion, pIndex: number) => ({
             ...pers,
             orden: pIndex,
-            variantes: (pers.variantes || []).map((variante: any) => ({
+            variantes: (pers.variantes || []).map((variante: Variante) => ({
               talla: variante.talla,
               color: variante.color,
               cantidad: Number(variante.cantidad),
@@ -656,7 +672,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
       const validationDetails: string[] = [];
 
       for (const item of onSubmitPayload.items) {
-        const distribucionTotal = Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+        const distribucionTotal = Object.values(item.distribucionTallas || {}).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0);
 
         if (!item.descripcion || !item.descripcion.trim()) {
           validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la descripción del producto es obligatoria.`);
@@ -671,7 +687,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
           validationDetails.push(`distribucionTotal=${distribucionTotal}`);
         }
 
-        const totalPersonalizado = (item.personalizaciones || []).reduce((sum: number, pers: any) => sum + (pers.variantes || []).reduce((s: number, v: any) => s + (Number(v.cantidad) || 0), 0), 0);
+        const totalPersonalizado = (item.personalizaciones || []).reduce((sum: number, pers: Personalizacion) => sum + (pers.variantes || []).reduce((s: number, v: Variante) => s + (Number(v.cantidad) || 0), 0), 0);
         if (totalPersonalizado > distribucionTotal && distribucionTotal > 0) {
           validationErrors.push(`Producto "${item.productoNombre || 'sin nombre'}": la cantidad personalizada (${totalPersonalizado}) supera la cantidad total (${distribucionTotal}).`);
           validationDetails.push(`totalPersonalizado=${totalPersonalizado}, distribucionTotal=${distribucionTotal}`);
@@ -738,7 +754,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
           descripcion: item.descripcion || '',
            tipoPersonalizacion: item.tipoPersonalizacion || '',
            especificaciones: item.especificaciones || undefined,
-           cantidad: Object.values(item.distribucionTallas || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0),
+           cantidad: Object.values(item.distribucionTallas || {}).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0),
           talla: item.talla || undefined,
           color: item.color || undefined,
           material: item.material || undefined,
@@ -748,14 +764,14 @@ export const MisPedidosPersonalizados: React.FC = () => {
           ) as Record<string, number> | undefined,
           imagenesReferencia: (item.imagenesReferencia || []).filter((url) => !isBlobUrl(url)),
           orden: index,
-          personalizaciones: (item.personalizaciones || []).map((pers: any, pIndex: number) => ({
+          personalizaciones: (item.personalizaciones || []).map((pers: Personalizacion, pIndex: number) => ({
             tipo: pers.tipo || '',
             tecnica: pers.tecnica || undefined,
             ubicacion: pers.ubicacion || undefined,
             descripcion: pers.descripcion || '',
             archivos: (pers.archivos || []).filter((url: string) => !isBlobUrl(url)),
             orden: pIndex,
-            variantes: (pers.variantes || []).map((variante: any) => ({
+            variantes: (pers.variantes || []).map((variante: Variante) => ({
               talla: variante.talla || '',
               color: variante.color || '',
               cantidad: Number(variante.cantidad),
@@ -824,7 +840,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
               }
             });
 
-            const publicPers = (item.personalizaciones || []).map((pers, persIdx) => {
+            const publicPers = (item.personalizaciones || []).map((pers, _persIdx) => {
               const publicArchivos: string[] = [];
               (pers.archivos || []).forEach((url) => {
                 if (isBlobUrl(url) && blobUrlToUploaded.has(url)) {
@@ -838,7 +854,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
                 tipo: pers.tipo || '',
                 descripcion: pers.descripcion || '',
                 archivos: publicArchivos,
-                variantes: (pers.variantes || []).map((variante: any) => ({
+                variantes: (pers.variantes || []).map((variante: Variante) => ({
                   talla: variante.talla || '',
                   color: variante.color || '',
                   cantidad: Number(variante.cantidad),
@@ -892,13 +908,13 @@ export const MisPedidosPersonalizados: React.FC = () => {
       }
     },
     (errors) => {
-      const values = getValues();
+      const _values = getValues();
       toast.error('Errores de validación', {
         description: Object.entries(errors)
           .map(([key, value]) => {
-            const val = value as any;
-            if (val?.message) return `${key}: ${val.message}`;
-            if (Array.isArray(val)) return `${key}: ${val.map((v: any) => v?.message || 'Campo inválido').join(', ')}`;
+            const val = value as FieldError | FieldError[] | undefined;
+            if (val && !Array.isArray(val) && val.message) return `${key}: ${val.message}`;
+            if (Array.isArray(val)) return `${key}: ${val.map((v) => v?.message || 'Campo inválido').join(', ')}`;
             return `${key}: Campo inválido`;
           })
           .join('\n')
@@ -929,7 +945,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
     }
   };
 
-  const acceptQuotation = async (order: CustomOrder) => {
+  const _acceptQuotation = async (order: CustomOrder) => {
     try {
       await customOrdersApi.acceptQuotation(order.id);
       toast.success('Cotización aceptada. Ahora puedes realizar el pago del anticipo.');
@@ -939,7 +955,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
     }
   };
 
-  const rejectQuotation = async (order: CustomOrder) => {
+  const _rejectQuotation = async (order: CustomOrder) => {
     setRejectConfirm(order);
     setRejectReason('');
   };
@@ -983,7 +999,7 @@ export const MisPedidosPersonalizados: React.FC = () => {
         toast.success('Cotización rechazada');
       } else {
         const acceptedIds = acceptedItems.map(i => i.detalleId);
-        const rejectedInfo = rejectedItems
+        const _rejectedInfo = rejectedItems
           .map(item => `${item.descripcion} (motivo: ${item.rejectReason ?? 'Sin motivo'})`)
           .join(', ');
         await customOrdersApi.acceptQuotationWithDecisions(quotationDecisionOrder.id, {
@@ -1254,9 +1270,9 @@ export const MisPedidosPersonalizados: React.FC = () => {
                   productoNombre: item.productoNombre,
                   descripcion: item.descripcion,
                   tipoPersonalizacion: item.tipoPersonalizacion,
-      cantidad: item.distribucionTallas
-        ? Object.values(item.distribucionTallas).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
-        : item.cantidad ?? 0,
+                  cantidad: item.distribucionTallas
+                    ? Object.values(item.distribucionTallas).reduce((sum: number, val: number | string | null | undefined) => sum + (Number(val) || 0), 0)
+                    : item.cantidad ?? 0,
                   material: item.material,
                   talla: item.talla,
                   color: item.color,
@@ -1863,3 +1879,4 @@ export const MisPedidosPersonalizados: React.FC = () => {
     </div>
   );
 };
+

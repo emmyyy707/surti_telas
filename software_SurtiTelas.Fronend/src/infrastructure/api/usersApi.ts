@@ -17,6 +17,7 @@ export interface Usuario {
   numeroDocumento?: string | null;
   apellidos?: string | null;
   permisos?: string[];
+  permisosEspecificos?: string[];
 }
 
 function mapBackendRole(role: string | undefined): UserRole {
@@ -32,7 +33,7 @@ function mapBackendRole(role: string | undefined): UserRole {
   }
 }
 
-function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pedidosRealizados?: number; permisos?: string[] }): Usuario {
+function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pedidosRealizados?: number; permisos?: string[]; permisosEspecificos?: string[]; specificPermissions?: string[] }): Usuario {
   const estadoStr = dto.estado as string | undefined;
   const estado = estadoStr === 'INACTIVO' ? 'Inactivo' : estadoStr === 'PENDIENTE' ? 'Pendiente' : 'Activo';
   return {
@@ -48,7 +49,8 @@ function toUser(dto: BackendAuthUser & { estado?: string; createdAt?: string; pe
     tipoDocumento: dto.tipoDocumento ?? null,
     numeroDocumento: dto.numeroDocumento ?? null,
     apellidos: dto.apellidos ?? null,
-    permisos: dto.permisos ?? [],
+    permisos: dto.permisos ?? dto.permissions ?? [],
+    permisosEspecificos: dto.permisosEspecificos ?? dto.specificPermissions ?? [],
   };
 }
 

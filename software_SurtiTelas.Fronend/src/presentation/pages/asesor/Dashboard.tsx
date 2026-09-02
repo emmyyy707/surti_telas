@@ -11,10 +11,14 @@ import type { Pedido, Cliente } from '@/core/types';
 const orderStatuses: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default' | null> = {
   'Pendiente': 'warning',
   'Aceptado': 'info',
-  'En proceso': 'info',
+  'En validación': 'warning',
+  'Recibo generado': 'info',
+  'Recibo enviado': 'info',
+  'Listo': 'success',
   'Enviado': 'default',
   'Entregado': 'success',
   'Rechazado': 'danger',
+  'Cancelado': 'danger',
 };
 
 export const AsesorDashboard: React.FC = () => {

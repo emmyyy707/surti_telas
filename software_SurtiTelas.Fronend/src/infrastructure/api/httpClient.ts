@@ -140,9 +140,6 @@ async function doFetch<T>(path: string, options: RequestOptions, retrying = fals
   let res: Response;
   try {
     const finalUrl = buildUrl(path, query);
-    if (import.meta.env.DEV) {
-      console.debug('[httpClient]', method, finalUrl);
-    }
     res = await fetch(finalUrl, {
       method,
       headers,
@@ -150,14 +147,8 @@ async function doFetch<T>(path: string, options: RequestOptions, retrying = fals
       credentials: 'include',
       cache: 'no-store',
     });
-    if (import.meta.env.DEV) {
-      console.debug('[httpClient] response', method, finalUrl, res.status, res.statusText);
-    }
-  } catch (e) {
+  } catch {
     const url = buildUrl(path, query);
-    if (import.meta.env.DEV) {
-      console.debug('[httpClient] network error', method, url, e);
-    }
     throw new ApiError(
       `No se pudo conectar con el servidor (${url}). Verifica que el backend esté en ejecución y que accedas desde http://localhost:5173`,
       0,
@@ -274,6 +265,27 @@ export const api = {
       credentials: 'include',
       cache: 'no-store',
     });
+
+    if (res.status === 401 && auth) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        const newToken = tokenStorage.getAccessToken();
+        if (newToken) headers.Authorization = `Bearer ${newToken}`;
+        const retryRes = await fetch(finalUrl, {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (!retryRes.ok) {
+          throw new ApiError(`Error ${retryRes.status} al obtener recurso`, retryRes.status);
+        }
+        return retryRes.blob();
+      }
+      tokenStorage.clear();
+      onUnauthorized?.();
+    }
+
     if (!res.ok) {
       throw new ApiError(`Error ${res.status} al obtener recurso`, res.status);
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, XCircle, Clock, Package, Truck, CheckCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Package, Truck, CheckCircle, FileText } from 'lucide-react';
 import { Badge } from '@/shared/ui/Badge';
 import { ORDER_STATUS_COLORS, ESTADOS_PEDIDO_PERMITIDOS, type EstadoPedido } from '@/shared/constants/options';
 import styles from './OrderStatusSelector.module.css';
@@ -22,10 +22,25 @@ const STATUS_CONFIG: Record<EstadoPedido, { icon: React.ReactNode; label: string
     label: 'Aceptado',
     description: 'El pedido ha sido aprobado y está listo para procesar'
   },
-  'En proceso': {
+  'En validación': {
+    icon: <Clock size={18} />,
+    label: 'En validación',
+    description: 'El comprobante de pago está en validación'
+  },
+  'Recibo generado': {
+    icon: <FileText size={18} />,
+    label: 'Recibo generado',
+    description: 'El recibo ha sido generado'
+  },
+  'Recibo enviado': {
+    icon: <FileText size={18} />,
+    label: 'Recibo enviado',
+    description: 'El recibo ha sido enviado al cliente'
+  },
+  Listo: {
     icon: <Package size={18} />,
-    label: 'En proceso',
-    description: 'El pedido está siendo preparado'
+    label: 'Listo',
+    description: 'El pedido está listo para enviar'
   },
   Enviado: {
     icon: <Truck size={18} />,
@@ -42,6 +57,11 @@ const STATUS_CONFIG: Record<EstadoPedido, { icon: React.ReactNode; label: string
     label: 'Rechazado',
     description: 'El pedido fue rechazado'
   },
+  Cancelado: {
+    icon: <XCircle size={18} />,
+    label: 'Cancelado',
+    description: 'El pedido ha sido cancelado'
+  },
 };
 
 export const OrderStatusSelector: React.FC<OrderStatusSelectorProps> = ({
@@ -54,9 +74,6 @@ export const OrderStatusSelector: React.FC<OrderStatusSelectorProps> = ({
   const currentConfig = STATUS_CONFIG[currentStatus];
 
   if (allowedTransitions.length === 0) {
-    if (import.meta.env.DEV) {
-      console.warn('[OrderStatusSelector] No transitions allowed', { currentStatus, allowedTransitions });
-    }
     return (
       <div className={styles.container}>
         <div className={styles.currentStatus}>

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('explorar selectores de pedidos personalizados', async ({ page }) => {
   await page.goto('/login');

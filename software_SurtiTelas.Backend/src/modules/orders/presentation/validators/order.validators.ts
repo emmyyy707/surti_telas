@@ -33,7 +33,7 @@ export const UpdateOrderStatusSchema = z.object({
   estado: z.enum([
     'Pendiente',
     'Aceptado',
-    'En proceso',
+    'Listo',
     'Enviado',
     'Entregado',
     'Rechazado',
@@ -66,7 +66,7 @@ export const UpdateOrderFullSchema = z.object({
 });
 
 export const OrderFiltersSchema = z.object({
-  estado: z.enum(['Pendiente', 'Aceptado', 'En proceso', 'Enviado', 'Entregado', 'Rechazado']).optional(),
+  estado: z.enum(['Pendiente', 'Aceptado', 'Listo', 'Enviado', 'Entregado', 'Rechazado', 'En validación', 'Recibo generado', 'Recibo enviado', 'Cancelado']).optional(),
   clienteId: z.string().optional(),
   asesorId: z.string().optional(),
   domiciliarioId: z.string().optional(),
@@ -80,5 +80,10 @@ export const OrderFiltersSchema = z.object({
   order: z.enum(['asc', 'desc']).optional(),
   tieneComprobante: z.boolean().optional(),
   numero: z.string().optional(),
+  search: z.string().optional(),
   _t: z.string().optional(),
+});
+
+export const CancelOrderSchema = z.object({
+  motivoAnulacion: z.string().min(3, 'El motivo de anulación es obligatorio (mínimo 3 caracteres)').max(500, 'El motivo de anulación no debe exceder 500 caracteres'),
 });

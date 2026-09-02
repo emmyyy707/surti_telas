@@ -1,4 +1,4 @@
-﻿import { test, expect, Locator, Page } from '@playwright/test';
+﻿import { test, expect, Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:5173';
 
@@ -153,7 +153,7 @@ test.describe('Gestion de Cotizaciones - Flujo E2E', () => {
   });
 
   test('verifica que no haya modal stacking', async ({ page }) => {
-    let targetNumero = await findOrderForCotization(page);
+    const targetNumero = await findOrderForCotization(page);
 
     if (!targetNumero) {
       test.skip(true, 'No se encontraron pedidos para probar');

@@ -72,7 +72,13 @@ export async function ensureChatTestData() {
 
   const client = await prisma.user.upsert({
     where: { email: 'chat-client@surtitelas.com' },
-    update: {},
+    update: {
+      passwordHash: await bcrypt.hash('cliente123', 10),
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      estado: 'ACTIVO',
+      deletedAt: null,
+    },
     create: {
       email: 'chat-client@surtitelas.com',
       nombre: 'Cliente Chat',
@@ -84,7 +90,13 @@ export async function ensureChatTestData() {
 
   const advisor = await prisma.user.upsert({
     where: { email: 'chat-advisor@surtitelas.com' },
-    update: {},
+    update: {
+      passwordHash: await bcrypt.hash('asesor123', 10),
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      estado: 'ACTIVO',
+      deletedAt: null,
+    },
     create: {
       email: 'chat-advisor@surtitelas.com',
       nombre: 'Asesor Chat',

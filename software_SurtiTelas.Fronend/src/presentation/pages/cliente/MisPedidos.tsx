@@ -14,8 +14,8 @@ import type { Pedido } from '@/core/types';
 
 const statusVariant = (estado: Pedido['estado']) => {
   if (estado === 'Entregado') return 'success';
-  if (estado === 'En proceso' || estado === 'Enviado') return 'info';
-  if (estado === 'Rechazado') return 'danger';
+  if (estado === 'Listo' || estado === 'Enviado') return 'info';
+  if (estado === 'Rechazado' || estado === 'Cancelado') return 'danger';
   return 'default';
 };
 
@@ -56,10 +56,12 @@ export const MisPedidos: React.FC = () => {
   const filtrosEstado = [
     { label: 'Todos', key: 'todos', count: pedidos.length },
     { label: 'Pendiente', key: 'Pendiente', count: pedidos.filter((p) => p.estado === 'Pendiente').length },
-    { label: 'En proceso', key: 'En proceso', count: pedidos.filter((p) => p.estado === 'En proceso').length },
+    { label: 'Aceptado', key: 'Aceptado', count: pedidos.filter((p) => p.estado === 'Aceptado').length },
+    { label: 'Listo', key: 'Listo', count: pedidos.filter((p) => p.estado === 'Listo').length },
     { label: 'Enviado', key: 'Enviado', count: pedidos.filter((p) => p.estado === 'Enviado').length },
     { label: 'Entregado', key: 'Entregado', count: pedidos.filter((p) => p.estado === 'Entregado').length },
     { label: 'Rechazado', key: 'Rechazado', count: pedidos.filter((p) => p.estado === 'Rechazado').length },
+    { label: 'Cancelado', key: 'Cancelado', count: pedidos.filter((p) => p.estado === 'Cancelado').length },
   ];
 
   const contactarAsesor = () => {

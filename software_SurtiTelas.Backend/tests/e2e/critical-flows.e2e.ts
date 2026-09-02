@@ -30,6 +30,7 @@ test.beforeAll(async ({ request }) => {
     headers: { Authorization: `Bearer ${adminToken}` },
       data: {
         nombre: 'Cliente E2E',
+        apellidos: 'Prueba',
         telefono: '3000000000',
         nit: '9001234567',
         cupoTotal: 500000,
@@ -72,12 +73,12 @@ test('E2E API - create order and update status', async ({ request }) => {
 
   const statusRes = await request.patch(`${BASE}/api/v1/orders/${encodeURIComponent(orderId)}/status`, {
     headers: { Authorization: `Bearer ${adminToken}` },
-    data: { estado: 'En producción' },
+    data: { estado: 'Aceptado' },
   });
   expect(statusRes.status()).toBe(200);
   const statusJson = await statusRes.json();
   expect(statusJson.success).toBe(true);
-  expect(statusJson.data?.estado).toBe('En producción');
+  expect(statusJson.data?.estado).toBe('Aceptado');
 });
 
 test('E2E API - create payment and receipt', async ({ request }) => {

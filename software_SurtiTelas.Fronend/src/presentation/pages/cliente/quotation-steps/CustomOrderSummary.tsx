@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import { type NegotiationMessage } from '@/infrastructure/api/customOrdersApi';
 
 export interface CustomOrderSummaryData {
   clienteNombre?: string;
@@ -60,7 +61,7 @@ export interface CotizacionResumen {
   }>;
   negotiationCount?: number | null;
   motivoRechazo?: string | null;
-  negotiationHistory?: any[];
+  negotiationHistory?: NegotiationMessage[];
 }
 
 export interface CustomOrderSummaryProps {
@@ -324,7 +325,7 @@ export const CustomOrderSummary = ({ data, styles, title, extraHeader, cotizacio
       {cotizacion?.negotiationHistory && cotizacion.negotiationHistory.length > 0 && (
         <div className={styles.summarySection}>
           <div className={styles.summaryTitle}>Historial de negociaciones</div>
-          {cotizacion.negotiationHistory.map((entry: any, idx: number) => (
+          {cotizacion.negotiationHistory.map((entry: NegotiationMessage, idx: number) => (
             <div key={entry.id || idx} className={styles.quotationRow} style={{ borderBottom: '1px solid var(--color-border-subtle)', padding: '10px 0' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Negociación {entry.round ?? idx + 1} - {entry.authorRole === 'cliente' ? 'Cliente' : entry.authorRole === 'asesor' ? 'Asesor' : entry.authorRole === 'admin' ? 'Administrador' : entry.authorRole}</div>
