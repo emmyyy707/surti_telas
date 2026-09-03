@@ -18,6 +18,15 @@ type SaleRow = {
   medioPago: string | null;
   createdAt: Date;
   updatedAt: Date;
+  paymentId?: string | null;
+  tipoPago?: string | null;
+  numeroCuota?: number | null;
+  totalCuotas?: number | null;
+  esAnticipo?: boolean | null;
+  esSaldo?: boolean | null;
+  paymentStatus?: string | null;
+  comprobantePagoUrl?: string | null;
+  registradoPorId?: string | null;
 };
 
 export function toSaleData(row: SaleRow): SaleData {
@@ -38,6 +47,15 @@ export function toSaleData(row: SaleRow): SaleData {
     medioPago: row.medioPago ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    paymentId: row.paymentId ?? null,
+    tipoPago: row.tipoPago ?? null,
+    numeroCuota: row.numeroCuota ?? null,
+    totalCuotas: row.totalCuotas ?? null,
+    esAnticipo: row.esAnticipo ?? null,
+    esSaldo: row.esSaldo ?? null,
+    paymentStatus: row.paymentStatus ?? null,
+    comprobantePagoUrl: row.comprobantePagoUrl ?? null,
+    registradoPorId: row.registradoPorId ?? null,
   };
 }
 

@@ -164,7 +164,7 @@ export interface Venta {
   impuestos: number;
   descuentos: number;
   total: number;
-  estado: 'COMPLETADA' | 'ANULADA';
+  estado: 'COMPLETADA' | 'ANULADA' | string;
   motivoAnulacion?: string;
   medioPago?: string;
   itemsCount: number;
@@ -175,6 +175,24 @@ export interface Venta {
   customOrder?: { id: string; numero: string; estado: string } | null;
   createdAt: string;
   updatedAt: string;
+  /** ID del pago que originó esta venta (1 venta por pago). Puede ser null en ventas legacy. */
+  paymentId?: string | null;
+  /** Tipo de pago: PAGO_INMEDIATO | ABONO_INICIAL | CUOTA | PAGO_SALDO. */
+  tipoPago?: string | null;
+  /** Número de cuota (1..N) si la venta corresponde a una cuota. */
+  numeroCuota?: number | null;
+  /** Total de cuotas pactadas. */
+  totalCuotas?: number | null;
+  /** Indica si esta venta fue registrada como anticipo. */
+  esAnticipo?: boolean | null;
+  /** Indica si esta venta fue el pago del saldo. */
+  esSaldo?: boolean | null;
+  /** Estado del pago asociado: APPROVED | REFUNDED | ANULADO | PENDING. */
+  paymentStatus?: string | null;
+  /** URL del comprobante de pago. */
+  comprobantePagoUrl?: string | null;
+  /** ID del usuario que registró la venta. */
+  registradoPorId?: string | null;
 }
 
 export interface Proveedor {

@@ -75,7 +75,7 @@ export type OrderRow = {
   comprobantePagoEstado: string | null;
   comprobantePagoObservaciones: string | null;
   items: Array<{ productId: string | null; customOrderItemId: string | null; nombre: string; precio: { toNumber(): number }; cantidad: number }>;
-  venta: {
+  venta?: {
     id: string;
     orderId: string;
     clienteId: string;
@@ -90,6 +90,21 @@ export type OrderRow = {
     estado: string;
     medioPago: string | null;
   } | null;
+  ventas: Array<{
+    id: string;
+    orderId: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string;
+    asesorNombre: string;
+    fechaVenta: Date;
+    subtotal: { toNumber(): number };
+    impuestos: { toNumber(): number };
+    descuentos: { toNumber(): number };
+    total: { toNumber(): number };
+    estado: string;
+    medioPago: string | null;
+  }> | null;
   diasCredito: number | null;
   descuentoEspecial: { toNumber(): number } | null;
   envioGratis: boolean | null;
@@ -150,21 +165,38 @@ export function toOrderData(row: OrderRow): OrderData {
       })
     ),
     items: row.items.reduce((sum, i) => sum + i.cantidad, 0),
-    venta: row.venta
+    ventas: row.ventas
+      ? row.ventas.map((v) => ({
+          id: v.id,
+          orderId: v.orderId,
+          clienteId: v.clienteId,
+          clienteNombre: v.clienteNombre,
+          asesorId: v.asesorId,
+          asesorNombre: v.asesorNombre,
+          fechaVenta: v.fechaVenta.toISOString(),
+          subtotal: Number(v.subtotal.toNumber()),
+          impuestos: Number(v.impuestos.toNumber()),
+          descuentos: Number(v.descuentos.toNumber()),
+          total: Number(v.total.toNumber()),
+          estado: v.estado,
+          medioPago: v.medioPago ?? undefined,
+        }))
+      : undefined,
+    venta: row.ventas && row.ventas[0]
       ? {
-          id: row.venta.id,
-          orderId: row.venta.orderId,
-          clienteId: row.venta.clienteId,
-          clienteNombre: row.venta.clienteNombre,
-          asesorId: row.venta.asesorId,
-          asesorNombre: row.venta.asesorNombre,
-          fechaVenta: row.venta.fechaVenta.toISOString(),
-          subtotal: Number(row.venta.subtotal.toNumber()),
-          impuestos: Number(row.venta.impuestos.toNumber()),
-          descuentos: Number(row.venta.descuentos.toNumber()),
-          total: Number(row.venta.total.toNumber()),
-          estado: row.venta.estado,
-          medioPago: row.venta.medioPago ?? undefined,
+          id: row.ventas[0].id,
+          orderId: row.ventas[0].orderId,
+          clienteId: row.ventas[0].clienteId,
+          clienteNombre: row.ventas[0].clienteNombre,
+          asesorId: row.ventas[0].asesorId,
+          asesorNombre: row.ventas[0].asesorNombre,
+          fechaVenta: row.ventas[0].fechaVenta.toISOString(),
+          subtotal: Number(row.ventas[0].subtotal.toNumber()),
+          impuestos: Number(row.ventas[0].impuestos.toNumber()),
+          descuentos: Number(row.ventas[0].descuentos.toNumber()),
+          total: Number(row.ventas[0].total.toNumber()),
+          estado: row.ventas[0].estado,
+          medioPago: row.ventas[0].medioPago ?? undefined,
         }
       : undefined,
     createdAt: row.createdAt.toISOString(),

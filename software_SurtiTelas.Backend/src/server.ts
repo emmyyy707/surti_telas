@@ -18,6 +18,7 @@ const app = createApp();
 import { eventBus } from './shared/infrastructure/eventBus';
 import { notificationSubscriber } from './modules/notifications/infrastructure/container/notificationContainer';
 import { OrderReceiptPaymentSubscriber } from './modules/orders/application/use-cases/OrderReceiptPaymentSubscriber';
+import { PaymentApprovedSubscriber } from './modules/sales-orders/application/subscribers/PaymentApprovedSubscriber';
 import { ReceiptSendSubscriber } from './modules/sales-orders/application/use-cases/ReceiptSendSubscriber';
 import { PrismaOrderRepository } from './modules/orders/infrastructure/repositories/PrismaOrderRepository';
 import { PrismaSaleRepository } from './modules/sales-orders/infrastructure/repositories/PrismaSaleRepository';
@@ -30,6 +31,7 @@ import { WebhookSubscriber } from './modules/webhooks/infrastructure/subscribers
 
 notificationSubscriber.register(eventBus);
 new OrderReceiptPaymentSubscriber(eventBus);
+new PaymentApprovedSubscriber(eventBus);
 new ReceiptPaymentSubscriber(eventBus);
 new OrderDeliverySubscriber(eventBus);
 

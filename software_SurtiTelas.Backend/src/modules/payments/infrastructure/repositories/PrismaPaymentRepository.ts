@@ -42,7 +42,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
     return row ? PaymentMapper.toDomain(row) : null;
   }
 
-  async create(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: string; reference?: string; notes?: string }): Promise<Payment> {
+  async create(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: string; reference?: string; notes?: string; comprobantePagoUrl?: string; status?: PaymentStatus; paidAt?: string }): Promise<Payment> {
     const row = await this.prisma.payment.create({
       data: {
         orderId: input.orderId,
@@ -50,8 +50,11 @@ export class PrismaPaymentRepository implements PaymentRepository {
         asesorId: input.asesorId,
         amount: input.amount,
         method: input.method as PaymentMethod,
+        status: (input.status ?? 'PENDING') as PaymentStatus,
         reference: input.reference,
         notes: input.notes,
+        comprobantePagoUrl: input.comprobantePagoUrl,
+        paidAt: input.paidAt ? new Date(input.paidAt) : undefined,
       },
     });
     return PaymentMapper.toDomain(row);
@@ -65,7 +68,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
     return PaymentMapper.toDomain(row);
   }
 
-  async update(id: string, changes: { amount?: number; method?: PaymentMethod; reference?: string; notes?: string }): Promise<Payment> {
+  async update(id: string, changes: { amount?: number; method?: PaymentMethod; reference?: string; notes?: string; comprobantePagoUrl?: string }): Promise<Payment> {
     const row = await this.prisma.payment.update({
       where: { id },
       data: {
@@ -73,6 +76,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
         ...(changes.method !== undefined ? { method: changes.method } : {}),
         ...(changes.reference !== undefined ? { reference: changes.reference } : {}),
         ...(changes.notes !== undefined ? { notes: changes.notes } : {}),
+        ...(changes.comprobantePagoUrl !== undefined ? { comprobantePagoUrl: changes.comprobantePagoUrl } : {}),
       },
     });
     return PaymentMapper.toDomain(row);
@@ -131,6 +135,7 @@ export const PaymentMapper = {
     updatedAt: row.updatedAt.toISOString(),
     motivoAnulacion: row.motivoAnulacion ?? undefined,
     fechaAnulacion: row.fechaAnulacion?.toISOString(),
+    comprobantePagoUrl: row.comprobantePagoUrl ?? undefined,
   });
   },
   toDomainWithRelations(row: any): Payment {
@@ -154,6 +159,7 @@ export const PaymentMapper = {
       orderEstado: row.order?.estado,
       motivoAnulacion: row.motivoAnulacion ?? undefined,
       fechaAnulacion: row.fechaAnulacion?.toISOString(),
+      comprobantePagoUrl: row.comprobantePagoUrl ?? undefined,
     });
   },
 };

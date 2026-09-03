@@ -138,74 +138,19 @@ export class OrderReceiptPaymentSubscriber {
 
       logger.info(`[OrderReceiptPaymentSubscriber] Evento order.delivered recibido para pedido ${payload.orderId}`, { payload });
 
+      // Regla: 1 VENTA = 1 PAGO CONFIRMADO. Este subscriber NO crea pagos ni
+      // ventas. Solo deja traza. La venta es responsabilidad del
+      // PaymentApprovedSubscriber cuando un pago real es APPROVED.
       try {
-        const existingPayment = await prisma.payment.findFirst({
+        const existingPayments = await prisma.payment.findMany({
           where: { orderId: payload.orderId, deletedAt: null },
+          orderBy: { createdAt: 'asc' },
         });
-
-        if (existingPayment) {
-          if (existingPayment.status !== 'APPROVED') {
-            await prisma.payment.update({
-              where: { id: existingPayment.id },
-              data: {
-                status: 'APPROVED',
-                amount: Number(payload.total),
-                paidAt: new Date(),
-              },
-            });
-
-            logger.info(`[OrderReceiptPaymentSubscriber] Pago actualizado a APPROVED para pedido ${payload.orderId}: ${existingPayment.id}`);
-          } else {
-            logger.info(`[OrderReceiptPaymentSubscriber] Pago ya aprobado para pedido ${payload.orderId}, no se actualiza.`);
-          }
-        } else {
-          await prisma.payment.create({
-            data: {
-              orderId: payload.orderId,
-              customerId: payload.clienteId,
-              asesorId: payload.asesorId || undefined,
-              amount: Number(payload.total),
-              method: 'OTHER',
-              status: 'APPROVED',
-              paidAt: new Date(),
-              notes: 'Pago completado por entrega del pedido',
-            },
-          });
-
-          logger.info(`[OrderReceiptPaymentSubscriber] Pago generado por entrega para pedido ${payload.orderId}`);
-        }
-
-        const existingSale = await prisma.sale.findFirst({
-          where: { orderId: payload.orderId, deletedAt: null },
+        logger.info(`[OrderReceiptPaymentSubscriber] Pedido ${payload.orderId} entregado. Pagos existentes: ${existingPayments.length}`, {
+          paymentIds: existingPayments.map((p) => p.id),
         });
-
-        if (!existingSale) {
-          const order = await prisma.order.findFirst({
-            where: { id: payload.orderId, deletedAt: null },
-            select: { subtotal: true, impuestos: true, descuentos: true, total: true, medioPago: true },
-          });
-
-          await prisma.sale.create({
-            data: {
-              orderId: payload.orderId,
-              clienteId: payload.clienteId,
-              clienteNombre: payload.clienteNombre,
-              asesorId: payload.asesorId || '',
-              asesorNombre: payload.asesorNombre || '',
-              fechaVenta: new Date(),
-              subtotal: Number(order?.subtotal ?? payload.total),
-              impuestos: Number(order?.impuestos ?? 0),
-              descuentos: Number(order?.descuentos ?? 0),
-              total: Number(order?.total ?? payload.total),
-              estado: 'COMPLETADA',
-              medioPago: order?.medioPago ?? undefined,
-            },
-          });
-
-          logger.info(`[OrderReceiptPaymentSubscriber] Venta generada automáticamente por entrega para pedido ${payload.orderId}`);
-        }
       } catch (error) {
-        logger.error(`[OrderReceiptPaymentSubscriber] Error generando pago/venta por entrega para pedido ${payload.orderId}`, { error: (error as Error).message });
+        logger.error(`[OrderReceiptPaymentSubscriber] Error registrando entrega para pedido ${payload.orderId}`, { error: (error as Error).message });
       }
     });
   }

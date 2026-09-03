@@ -118,7 +118,10 @@ export const AdminGestionUsuarios: React.FC = () => {
       try {
         let allItems: PermissionDTO[] = [];
         let page = 1;
-        const limit = 200;
+        // El backend limita `limit` a max 100 (PaginationSchema).
+        // 100 es suficiente para traer todos los permisos actuales (≈70)
+        // en una sola petición. El bucle se mantiene por si crece el catálogo.
+        const limit = 100;
         let total = 0;
         do {
           const result = await authApi.listPermissions({ page, limit });

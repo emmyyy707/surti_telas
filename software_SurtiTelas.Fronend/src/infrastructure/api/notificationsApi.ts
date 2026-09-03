@@ -1,4 +1,4 @@
-import { api, ApiError } from './httpClient';
+import { api } from './httpClient';
 
 export interface NotificationDTO {
   id: string;
@@ -62,28 +62,17 @@ export function toNotification(dto: NotificationDTO): Notification {
 
 export const notificationsApi = {
   async list(): Promise<Notification[]> {
-    try {
-      const response = await api.get<{ items: NotificationDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/notifications');
-      const data = response?.items ?? [];
-      return data.map(toNotification);
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-        return [];
-      }
-      throw error;
-    }
+    // No ocultamos el 401/403: useRealtimeNotifications y httpClient lo necesitan
+    // para limpiar tokens, intentar refresh y detener el polling.
+    const response = await api.get<{ items: NotificationDTO[]; totalRecords: number; page: number; limit: number; totalPages: number; nextCursor: string | null }>('/notifications');
+    const data = response?.items ?? [];
+    return data.map(toNotification);
   },
 
   async getUnreadCount(): Promise<number> {
-    try {
-      const response = await api.get<{ count: number }>('/notifications/unread-count');
-      return response?.count ?? 0;
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-        return 0;
-      }
-      throw error;
-    }
+    // No ocultamos el 401/403 por la misma razón que list().
+    const response = await api.get<{ count: number }>('/notifications/unread-count');
+    return response?.count ?? 0;
   },
 
   async create(data: { titulo: string; mensaje: string; tipo?: NotificationDTO['tipo'] }): Promise<Notification> {
@@ -137,11 +126,8 @@ export const notificationsApi = {
   },
 
   async getSidebarSummary(): Promise<Record<string, number>> {
-    try {
-      const response = await api.get<Record<string, number>>('/notifications/sidebar-summary');
-      return response ?? {};
-    } catch {
-      return {};
-    }
+    // No ocultamos el 401/403: useRealtimeNotifications lo necesita para detener el polling.
+    const response = await api.get<Record<string, number>>('/notifications/sidebar-summary');
+    return response ?? {};
   },
 };

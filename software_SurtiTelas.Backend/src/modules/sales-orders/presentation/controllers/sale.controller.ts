@@ -29,6 +29,11 @@ export const listSales = async (req: Request, res: Response) => {
     hasta: filters.hasta,
     page: filters.page,
     limit: filters.limit,
+    orderId: (req.query.orderId as string | undefined) ?? undefined,
+    paymentStatus: (req.query.paymentStatus as string | undefined) ?? undefined,
+    tipoPago: (req.query.tipoPago as string | undefined) ?? undefined,
+    numeroCuota: req.query.numeroCuota ? Number(req.query.numeroCuota) : undefined,
+    medioPago: (req.query.medioPago as string | undefined) ?? undefined,
   });
 
   return ok(res, buildApiPaginatedResponse(result.items, result.total, result.page, result.limit));
@@ -43,6 +48,7 @@ export const createSale = async (req: Request, res: Response) => {
   const input = parseDto(CreateSaleSchema, req.body);
   const result = await salesOrderUseCases.createSale.execute({
     orderId: input.orderId,
+    paymentId: input.paymentId,
     medioPago: input.medioPago ?? 'CASH',
     observaciones: input.observaciones,
   });

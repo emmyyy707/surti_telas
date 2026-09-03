@@ -10,6 +10,16 @@ export interface SalesListFilter {
   hasta?: string;
   page?: number;
   limit?: number;
+  /** Filtra ventas de un pedido específico. */
+  orderId?: string;
+  /** Filtra por estado del pago (APPROVED, REFUNDED, ANULADO, etc.). */
+  paymentStatus?: string;
+  /** Filtra por tipo de pago (PAGO_INMEDIATO, ABONO_INICIAL, CUOTA, PAGO_SALDO). */
+  tipoPago?: string;
+  /** Filtra por número de cuota. */
+  numeroCuota?: number;
+  /** Filtra por medio de pago. */
+  medioPago?: string;
 }
 
 export interface SalesListResult {
@@ -23,7 +33,21 @@ export class GetSales {
   constructor(private readonly prismaClient: typeof prisma) {}
 
   async execute(filters: SalesListFilter = {}): Promise<SalesListResult> {
-    const { search, estado, clienteId, asesorId, desde, hasta, page = 1, limit = 50 } = filters;
+    const {
+      search,
+      estado,
+      clienteId,
+      asesorId,
+      desde,
+      hasta,
+      page = 1,
+      limit = 50,
+      orderId,
+      paymentStatus,
+      tipoPago,
+      numeroCuota,
+      medioPago,
+    } = filters;
 
     const where: Record<string, unknown> = { deletedAt: null };
 
@@ -32,6 +56,21 @@ export class GetSales {
     }
     if (asesorId) {
       where.asesorId = asesorId;
+    }
+    if (orderId) {
+      where.orderId = orderId;
+    }
+    if (paymentStatus) {
+      where.paymentStatus = paymentStatus;
+    }
+    if (tipoPago) {
+      where.tipoPago = tipoPago;
+    }
+    if (typeof numeroCuota === 'number') {
+      where.numeroCuota = numeroCuota;
+    }
+    if (medioPago) {
+      where.medioPago = medioPago;
     }
     if (desde || hasta) {
       where.fechaVenta = {};
@@ -108,6 +147,15 @@ export class GetSales {
     medioPago: string | null;
     createdAt: Date;
     updatedAt: Date;
+    paymentId: string | null;
+    tipoPago: string | null;
+    numeroCuota: number | null;
+    totalCuotas: number | null;
+    esAnticipo: boolean | null;
+    esSaldo: boolean | null;
+    paymentStatus: string | null;
+    comprobantePagoUrl: string | null;
+    registradoPorId: string | null;
     order: {
       id: string;
       numero: string;
@@ -120,7 +168,7 @@ export class GetSales {
        receipts: Array<{ id: string; numero: string; estado: string; estadoEnvio: string | null }>;
        custom_orders?: { id: string; numero: string; estado: string } | null;
      } | null;
-  } | null): SaleWithOrder {
+   } | null): SaleWithOrder {
     return {
       id: row!.id,
       orderId: row!.orderId,
@@ -138,6 +186,15 @@ export class GetSales {
       medioPago: row!.medioPago ?? undefined,
       createdAt: row!.createdAt.toISOString(),
       updatedAt: row!.updatedAt.toISOString(),
+      paymentId: row!.paymentId ?? null,
+      tipoPago: row!.tipoPago ?? null,
+      numeroCuota: row!.numeroCuota ?? null,
+      totalCuotas: row!.totalCuotas ?? null,
+      esAnticipo: row!.esAnticipo ?? null,
+      esSaldo: row!.esSaldo ?? null,
+      paymentStatus: row!.paymentStatus ?? null,
+      comprobantePagoUrl: row!.comprobantePagoUrl ?? null,
+      registradoPorId: row!.registradoPorId ?? null,
       order: row!.order
         ? {
             id: row!.order.id,
@@ -178,7 +235,7 @@ export class GetSales {
                 }
               : null,
           }
-        : true as unknown as SaleWithOrder['order'],
+        : (true as unknown as SaleWithOrder['order']),
     };
   }
 }

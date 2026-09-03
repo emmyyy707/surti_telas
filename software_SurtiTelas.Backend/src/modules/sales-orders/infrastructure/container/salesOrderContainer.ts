@@ -18,7 +18,6 @@ import { AddSaleItem } from '../../application/use-cases/AddSaleItem';
 import { RemoveSaleItem } from '../../application/use-cases/RemoveSaleItem';
 import { DeleteSale } from '../../application/use-cases/DeleteSale';
 import { GenerateSalePdf } from '../../application/use-cases/GenerateSalePdf';
-import { SaleCreationService } from '../../application/services/SaleCreationService';
 import { EmailService } from '../../infrastructure/services/EmailService';
 import { ReceiptSender } from '../../infrastructure/services/ReceiptSender';
 
@@ -26,7 +25,6 @@ const orderRepository = new PrismaOrderRepository(prisma);
 const saleRepository = new PrismaSaleRepository(prisma);
 const historyRepository = new PrismaOrderHistoryRepository(prisma);
 const receiptRepository = new PrismaReceiptRepository(prisma);
-const saleCreationService = new SaleCreationService(saleRepository, receiptRepository);
 
 const emailConfig = {
   host: process.env.SMTP_HOST || 'localhost',
@@ -44,14 +42,14 @@ const receiptSender = new ReceiptSender(emailService);
 export const salesOrderUseCases = {
   uploadPaymentProof: new UploadPaymentProof(orderRepository, historyRepository, eventBus),
   startValidation: new StartValidation(orderRepository, historyRepository, eventBus),
-  acceptOrder: new AcceptOrder(orderRepository, historyRepository, saleRepository, receiptRepository, eventBus, saleCreationService),
+  acceptOrder: new AcceptOrder(orderRepository, historyRepository, receiptRepository, eventBus),
   rejectOrder: new RejectOrder(orderRepository, historyRepository, eventBus),
   retryReceiptDelivery: new RetryReceiptDelivery(orderRepository, historyRepository, receiptRepository, eventBus),
   getSalesReport: new GetSalesReport(saleRepository),
   getOrderById: orderRepository.getById.bind(orderRepository),
   getSales: new GetSales(prisma),
   getSaleById: new GetSaleById(prisma, saleRepository),
-  createSale: new CreateSale(orderRepository, saleRepository, receiptRepository, historyRepository, eventBus, saleCreationService),
+  createSale: new CreateSale(orderRepository, saleRepository, receiptRepository, historyRepository, eventBus),
   cancelSale: new CancelSale(saleRepository),
   addSaleItem: new AddSaleItem(saleRepository),
   removeSaleItem: new RemoveSaleItem(saleRepository),

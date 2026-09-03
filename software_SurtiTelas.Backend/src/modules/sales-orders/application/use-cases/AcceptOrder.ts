@@ -1,26 +1,23 @@
 import { NotFoundError, BadRequestError } from '../../../../shared/domain/errors';
 import type { OrderRepository } from '../../../orders/domain/repositories/OrderRepository';
 import type { OrderHistoryRepository } from '../../domain/repositories/OrderHistoryRepository';
-import type { SaleRepository } from '../../domain/repositories/SaleRepository';
 import type { ReceiptRepository } from '../../../receipts/domain/repositories/ReceiptRepository';
 import type { EventBus } from '../../../../shared/application/events';
-import { Order } from '../../../orders/domain/entities/Order';
-import { toOrderData } from '../../../orders/infrastructure/mappers/OrderMapper';
-import { SaleCreationService } from '../services/SaleCreationService';
 
+/**
+ * Regla de negocio: 1 VENTA = 1 PAGO CONFIRMADO.
+ *
+ * Por lo tanto, AcceptOrder NO crea la venta al aceptar el pedido.
+ * Solo emite el recibo y notifica. La venta será creada por
+ * PaymentApprovedSubscriber cuando el pago sea confirmado.
+ */
 export class AcceptOrder {
   constructor(
     private readonly orderRepo: OrderRepository,
     private readonly historyRepo: OrderHistoryRepository,
-    saleRepo: SaleRepository,
-    receiptRepo: ReceiptRepository,
+    private readonly receiptRepo: ReceiptRepository,
     private readonly eventBus?: EventBus,
-    private readonly saleCreationService?: SaleCreationService,
-  ) {
-    if (!this.saleCreationService) {
-      this.saleCreationService = new SaleCreationService(saleRepo, receiptRepo);
-    }
-  }
+  ) {}
 
   async execute(id: string, data: {
     usuarioId: string;
@@ -59,7 +56,16 @@ export class AcceptOrder {
       informacion: { medioPago },
     });
 
-    const result = await this.saleCreationService!.createSaleAndReceipt(updatedOrder, data.usuarioId, medioPago, requestId);
+    // Generar el recibo (NO la venta — la venta nace del pago confirmado).
+    const receiptNumero = `REC-${updatedOrder.numero?.replace('PED-', '') ?? updatedOrder.id}`;
+    const receipt = await this.receiptRepo.create({
+      orderId: updatedOrder.id,
+      customerId: updatedOrder.clienteId,
+      numero: receiptNumero,
+      total: updatedOrder.total,
+      concepto: `Pedido ${updatedOrder.numero ?? updatedOrder.id} - ${updatedOrder.items} ítems`,
+      emitidoPor: updatedOrder.asesor,
+    });
 
     if (this.eventBus) {
       this.eventBus.publish({
@@ -72,14 +78,13 @@ export class AcceptOrder {
           clienteNombre: updatedOrder.cliente,
           asesorId: updatedOrder.asesorId,
           asesorNombre: updatedOrder.asesor,
-          saleId: result.saleId,
-          receiptId: result.receiptId,
+          receiptId: receipt.id,
           total: updatedOrder.total,
         },
         requestId,
       });
     }
 
-    return new Order(toOrderData(result.orderRow));
+    return updatedOrder;
   }
 }

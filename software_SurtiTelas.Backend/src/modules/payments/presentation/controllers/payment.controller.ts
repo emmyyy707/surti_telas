@@ -57,9 +57,7 @@ export const createPayment = async (req: Request, res: Response) => {
     req.requestId
   );
   return created(res, payment, 'Pago creado');
-};
-
-export const updatePaymentStatus = async (req: Request, res: Response) => {
+};export const updatePaymentStatus = async (req: Request, res: Response) => {
   const { status } = parseDto(UpdatePaymentStatusSchema, req.body);
   const previous = await paymentUseCases.getPaymentById.execute(req.params.id);
   const payment = await paymentUseCases.updatePaymentStatus.execute(req.params.id, status);

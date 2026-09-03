@@ -305,7 +305,7 @@ model Order {
   production                   ProductionOrder?
   receipts                     Receipt[]
   returns                      Return[]
-  venta                        Sale?
+  ventas                       Sale[]              @relation("OrderSales")
 
   @@index([clienteId, deletedAt])
   @@index([asesorId])
@@ -561,6 +561,7 @@ model Payment {
   reference  String?
   notes      String?
   paidAt     DateTime?
+  comprobantePagoUrl String? @map("comprobante_pago_url")
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
   deletedAt  DateTime?     @map("deleted_at")
@@ -607,7 +608,7 @@ model Receipt {
 
 model Sale {
   id              String    @id @default(cuid())
-  orderId         String    @unique @map("order_id")
+  orderId         String    @map("order_id")
   clienteId       String    @map("cliente_id")
   clienteNombre   String    @map("cliente_nombre")
   asesorId        String    @map("asesor_id")
@@ -623,12 +624,27 @@ model Sale {
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime? @map("deleted_at")
   motivoAnulacion String?   @map("motivo_anulacion")
-  order           Order     @relation(fields: [orderId], references: [id])
+  // ---- Nuevos campos para el modelo "1 venta por pago confirmado" ----
+  // paymentId es único cuando existe: garantiza idempotencia.
+  // Las ventas legacy (sin paymentId) se mantienen y conservan el orderId.
+  paymentId       String?   @unique @map("payment_id")
+  tipoPago        String?   @map("tipo_pago")        // INMEDIATO | ABONO_INICIAL | CUOTA | PAGO_SALDO
+  numeroCuota     Int?      @map("numero_cuota")
+  totalCuotas     Int?      @map("total_cuotas")
+  esAnticipo      Boolean?  @default(false) @map("es_anticipo")
+  esSaldo         Boolean?  @default(false) @map("es_saldo")
+  paymentStatus   String?   @map("payment_status")    // APPROVED | REFUNDED | ANULADO
+  comprobantePagoUrl String? @map("comprobante_pago_url")
+  registradoPorId String?   @map("registrado_por_id")
+  // ---------------------------------------------------------------------
+  order           Order     @relation("OrderSales", fields: [orderId], references: [id])
 
   @@index([clienteId])
   @@index([asesorId])
   @@index([fechaVenta])
   @@index([deletedAt])
+  @@index([orderId])
+  @@index([paymentStatus])
   @@map("sales")
 }
 

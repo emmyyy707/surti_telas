@@ -21,8 +21,50 @@ export class GetPaymentById {
 
 export class CreatePayment {
   constructor(private repo: PaymentRepository) {}
-  async execute(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: PaymentMethod; reference?: string; notes?: string }) {
-    return this.repo.create(input);
+  async execute(input: {
+    orderId: string;
+    customerId: string;
+    asesorId?: string;
+    amount: number;
+    method: PaymentMethod;
+    reference?: string;
+    notes?: string;
+    comprobantePagoUrl?: string;
+    status?: PaymentStatus;
+    paidAt?: string;
+    tipoPago?: string;
+    numeroCuota?: number;
+    totalCuotas?: number;
+    esAnticipo?: boolean;
+    esSaldo?: boolean;
+  }) {
+    // Si vienen metadatos del pago, los serializamos en `notes` como JSON para
+    // que el PaymentApprovedSubscriber los use al crear la venta. Si `notes`
+    // ya trae contenido (texto del usuario), respetamos la prioridad del JSON.
+    let notesToPersist = input.notes ?? null;
+    const meta: Record<string, unknown> = {};
+    if (input.tipoPago) meta.tipoPago = input.tipoPago;
+    if (typeof input.numeroCuota === 'number') meta.numeroCuota = input.numeroCuota;
+    if (typeof input.totalCuotas === 'number') meta.totalCuotas = input.totalCuotas;
+    if (typeof input.esAnticipo === 'boolean') meta.esAnticipo = input.esAnticipo;
+    if (typeof input.esSaldo === 'boolean') meta.esSaldo = input.esSaldo;
+    if (Object.keys(meta).length > 0) {
+      const json = JSON.stringify(meta);
+      notesToPersist = notesToPersist ? `${notesToPersist} | ${json}` : json;
+    }
+
+    return this.repo.create({
+      orderId: input.orderId,
+      customerId: input.customerId,
+      asesorId: input.asesorId,
+      amount: input.amount,
+      method: input.method,
+      reference: input.reference,
+      notes: notesToPersist ?? undefined,
+      comprobantePagoUrl: input.comprobantePagoUrl,
+      status: input.status,
+      paidAt: input.paidAt,
+    });
   }
 }
 

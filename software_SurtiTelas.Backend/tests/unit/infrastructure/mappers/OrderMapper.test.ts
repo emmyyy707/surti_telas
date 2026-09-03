@@ -110,46 +110,50 @@ describe('OrderMapper.toOrderData', () => {
     ]);
   });
 
-  it('maps venta when present (BUG-2)', () => {
+  it('maps ventas when present (BUG-2)', () => {
     const rowWithSale = {
       ...row,
-      venta: {
+      ventas: [
+        {
+          id: 'sale-1',
+          orderId: 'order-1',
+          clienteId: 'cli-1',
+          clienteNombre: 'Cliente Snapshot',
+          asesorId: 'ase-1',
+          asesorNombre: 'Asesor Snapshot',
+          fechaVenta: new Date('2026-01-02T00:00:00.000Z'),
+          subtotal: dec(5000),
+          impuestos: dec(950),
+          descuentos: dec(0),
+          total: dec(5950),
+          estado: 'COMPLETADA',
+          medioPago: 'TRANSFER',
+        },
+      ],
+    };
+    const data = toOrderData(rowWithSale);
+    expect(data.ventas).toEqual([
+      {
         id: 'sale-1',
         orderId: 'order-1',
         clienteId: 'cli-1',
         clienteNombre: 'Cliente Snapshot',
         asesorId: 'ase-1',
         asesorNombre: 'Asesor Snapshot',
-        fechaVenta: new Date('2026-01-02T00:00:00.000Z'),
-        subtotal: dec(5000),
-        impuestos: dec(950),
-        descuentos: dec(0),
-        total: dec(5950),
+        fechaVenta: '2026-01-02T00:00:00.000Z',
+        subtotal: 5000,
+        impuestos: 950,
+        descuentos: 0,
+        total: 5950,
         estado: 'COMPLETADA',
         medioPago: 'TRANSFER',
       },
-    };
-    const data = toOrderData(rowWithSale);
-    expect(data.venta).toEqual({
-      id: 'sale-1',
-      orderId: 'order-1',
-      clienteId: 'cli-1',
-      clienteNombre: 'Cliente Snapshot',
-      asesorId: 'ase-1',
-      asesorNombre: 'Asesor Snapshot',
-      fechaVenta: '2026-01-02T00:00:00.000Z',
-      subtotal: 5000,
-      impuestos: 950,
-      descuentos: 0,
-      total: 5950,
-      estado: 'COMPLETADA',
-      medioPago: 'TRANSFER',
-    });
+    ]);
   });
 
-  it('returns undefined venta when not present', () => {
+  it('returns undefined ventas when not present', () => {
     const data = toOrderData(row);
-    expect(data.venta).toBeUndefined();
+    expect(data.ventas).toBeUndefined();
   });
 });
 

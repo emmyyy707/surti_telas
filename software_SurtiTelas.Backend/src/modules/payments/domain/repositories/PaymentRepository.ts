@@ -6,9 +6,20 @@ export type PaymentMethod = 'CASH' | 'TRANSFER' | 'CARD' | 'OTHER';
 export interface PaymentRepository {
   list(filters: { customerId?: string; asesorId?: string; status?: PaymentStatus; search?: string }): Promise<{ data: Payment[]; total: number }>;
   getById(id: string): Promise<Payment | null>;
-  create(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: PaymentMethod; reference?: string; notes?: string }): Promise<Payment>;
+  create(input: {
+    orderId: string;
+    customerId: string;
+    asesorId?: string;
+    amount: number;
+    method: PaymentMethod;
+    reference?: string;
+    notes?: string;
+    comprobantePagoUrl?: string;
+    status?: PaymentStatus;
+    paidAt?: string;
+  }): Promise<Payment>;
   updateStatus(id: string, status: PaymentStatus, paidAt?: string): Promise<Payment>;
-  update(id: string, changes: { amount?: number; method?: PaymentMethod; reference?: string; notes?: string }): Promise<Payment>;
+  update(id: string, changes: { amount?: number; method?: PaymentMethod; reference?: string; notes?: string; comprobantePagoUrl?: string }): Promise<Payment>;
   delete(id: string): Promise<void>;
   cancel(id: string, motivoAnulacion: string): Promise<Payment>;
   getCustomerBalance(customerId: string): Promise<{ totalPaid: number; pending: number; customerId: string }>;

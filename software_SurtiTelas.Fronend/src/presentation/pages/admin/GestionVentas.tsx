@@ -21,6 +21,21 @@ const ESTADOS_VENTA_LABELS: Record<string, string> = {
   ANULADA: 'Anulada',
 };
 
+const TIPO_PAGO_LABELS: Record<string, string> = {
+  PAGO_INMEDIATO: 'Pago inmediato',
+  ABONO_INICIAL: 'Anticipo',
+  CUOTA: 'Cuota',
+  PAGO_SALDO: 'Pago de saldo',
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Pendiente',
+  APPROVED: 'Aprobado',
+  REJECTED: 'Rechazado',
+  REFUNDED: 'Reembolsado',
+  ANULADO: 'Anulado',
+};
+
 const MEDIOS_PAGO: { value: string; label: string }[] = [
   { value: 'CASH', label: 'Efectivo' },
   { value: 'TRANSFER', label: 'Transferencia' },
@@ -52,6 +67,14 @@ export const AdminGestionVentas: React.FC = () => {
   const [createObservaciones, setCreateObservaciones] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Filtros adicionales para el listado de ventas
+  const [filterOrderId, setFilterOrderId] = useState('');
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState('');
+  const [filterTipoPago, setFilterTipoPago] = useState('');
+  const [filterMedioPago, setFilterMedioPago] = useState('');
+  const [filterDesde, setFilterDesde] = useState('');
+  const [filterHasta, setFilterHasta] = useState('');
+
   const formRef = useRef<HTMLFormElement>(null);
   const orderDebouncedSearch = useDebouncedValue(orderSearch, 300);
   const pagination = useServerPagination(20);
@@ -61,9 +84,15 @@ export const AdminGestionVentas: React.FC = () => {
     setError(null);
     try {
       const result = await salesApi.list({
-        search: debouncedSearch,
+        search: debouncedSearch || undefined,
         page: pagination.page,
         limit: pagination.limit,
+        orderId: filterOrderId || undefined,
+        paymentStatus: filterPaymentStatus || undefined,
+        tipoPago: filterTipoPago || undefined,
+        medioPago: filterMedioPago || undefined,
+        desde: filterDesde || undefined,
+        hasta: filterHasta || undefined,
       });
       setItems(result.data);
       pagination.setTotalRecords(result.meta.totalRecords);
@@ -73,7 +102,16 @@ export const AdminGestionVentas: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, pagination]);
+  }, [
+    debouncedSearch,
+    pagination,
+    filterOrderId,
+    filterPaymentStatus,
+    filterTipoPago,
+    filterMedioPago,
+    filterDesde,
+    filterHasta,
+  ]);
 
   const fetchAvailableOrders = useCallback(async () => {
     try {
@@ -102,11 +140,30 @@ export const AdminGestionVentas: React.FC = () => {
 
   const getEstadoPago = (venta: Venta): string => {
     if (venta.estado === 'ANULADA') return 'Anulada';
+    if (venta.paymentStatus === 'REFUNDED') return 'Reembolsado';
+    if (venta.paymentStatus === 'ANULADO') return 'Anulado';
+    if (venta.paymentStatus === 'REJECTED') return 'Rechazado';
     if (venta.payment) {
       if (venta.payment.status === 'PAGADO' || venta.payment.paidAt) return 'Pagada';
       return 'Pendiente pago';
     }
+    if (venta.paymentStatus === 'APPROVED' || venta.paymentId) return 'Pagada';
     return 'Sin pago';
+  };
+
+  const getTipoPago = (venta: Venta): string => {
+    if (!venta.tipoPago) return '—';
+    return TIPO_PAGO_LABELS[venta.tipoPago] ?? venta.tipoPago;
+  };
+
+  const getCuotaLabel = (venta: Venta): string => {
+    if (typeof venta.numeroCuota === 'number' && typeof venta.totalCuotas === 'number') {
+      return `${venta.numeroCuota}/${venta.totalCuotas}`;
+    }
+    if (typeof venta.numeroCuota === 'number') {
+      return `${venta.numeroCuota}`;
+    }
+    return '—';
   };
 
   const handleCloseDetail = () => {
@@ -193,14 +250,14 @@ export const AdminGestionVentas: React.FC = () => {
   };
 
   const columns: DataTableColumn<Venta>[] = [
-    { key: 'numero', header: 'Número', sortable: true, render: (v) => <span className="font-mono text-sm">{v.numero}</span> },
+    { key: 'numero', header: 'Nº Venta', sortable: true, render: (v) => <span className="font-mono text-sm">{v.numero}</span> },
+    { key: 'orderId', header: 'Pedido', sortable: true, render: (v) => <span className="font-mono text-xs">{v.orderId?.slice(0, 8) ?? '—'}</span> },
     { key: 'cliente', header: 'Cliente', sortable: true, render: (v) => v.cliente || '—' },
     { key: 'fechaVenta', header: 'Fecha', sortable: true, render: (v) => new Date(v.fechaVenta).toLocaleDateString('es-CO') },
-    { key: 'itemsCount', header: 'Productos', sortable: true, render: (v) => v.itemsCount ?? v.items.length },
-    { key: 'subtotal', header: 'Subtotal', sortable: true, render: (v) => `$${(v.subtotal ?? 0).toLocaleString('es-CO')}` },
-    { key: 'descuentos', header: 'Descuento', sortable: true, render: (v) => `-$${(v.descuentos ?? 0).toLocaleString('es-CO')}` },
-    { key: 'impuestos', header: 'Impuestos', sortable: true, render: (v) => `$${(v.impuestos ?? 0).toLocaleString('es-CO')}` },
-    { key: 'total', header: 'Total', sortable: true, render: (v) => <strong className="font-semibold">$${v.total.toLocaleString('es-CO')}</strong> },
+    { key: 'tipoPago', header: 'Tipo', sortable: true, render: (v) => <span className="text-xs">{getTipoPago(v)}</span> },
+    { key: 'cuota', header: 'Cuota', sortable: false, render: (v) => <span className="text-xs">{getCuotaLabel(v)}</span> },
+    { key: 'medioPago', header: 'Medio', sortable: true, render: (v) => v.medioPago ?? '—' },
+    { key: 'total', header: 'Total', sortable: true, render: (v) => <strong className="font-semibold">${v.total.toLocaleString('es-CO')}</strong> },
     {
       key: 'estado',
       header: 'Estado',
@@ -216,7 +273,7 @@ export const AdminGestionVentas: React.FC = () => {
       sortable: true,
       render: (v) => {
         const estadoPago = getEstadoPago(v);
-        const variant = estadoPago === 'Pagada' ? 'success' : estadoPago === 'Anulada' ? 'danger' : 'warning';
+        const variant = estadoPago === 'Pagada' ? 'success' : estadoPago === 'Anulada' || estadoPago === 'Anulado' ? 'danger' : 'warning';
         return <span className={`badge badge-${variant}`}>{estadoPago}</span>;
       },
     },
@@ -284,6 +341,8 @@ export const AdminGestionVentas: React.FC = () => {
       { label: 'Impuestos', value: `$${(item.impuestos ?? 0).toLocaleString('es-CO')}`, icon: <Package size={16} aria-hidden="true" focusable="false" />, tone: 'default' },
       { label: 'Descuentos', value: `-$${(item.descuentos ?? 0).toLocaleString('es-CO')}`, icon: <Package size={16} aria-hidden="true" focusable="false" />, tone: 'default' },
       { label: 'Productos', value: String(item.itemsCount ?? item.items.length), icon: <Package size={16} aria-hidden="true" focusable="false" />, tone: 'default' },
+      { label: 'Tipo de pago', value: getTipoPago(item), icon: <Package size={16} aria-hidden="true" focusable="false" />, tone: 'default' },
+      { label: 'Cuota', value: getCuotaLabel(item), icon: <Package size={16} aria-hidden="true" focusable="false" />, tone: 'default' },
       { label: 'Estado pago', value: getEstadoPago(item), icon: <Package size={16} aria-hidden="true" focusable="false" />, tone: 'default' },
     ],
     render: (item) => (
@@ -291,6 +350,18 @@ export const AdminGestionVentas: React.FC = () => {
         <div className={s.detailRow}><span>Pedido relacionado:</span> {item.orderId}</div>
         <div className={s.detailRow}><span>Estado del pedido:</span> {item.orderEstado ?? '—'}</div>
         <div className={s.detailRow}><span>Medio de pago:</span> {item.medioPago ?? '—'}</div>
+        <div className={s.detailRow}><span>Tipo de pago:</span> {getTipoPago(item)}</div>
+        {getCuotaLabel(item) !== '—' && (
+          <div className={s.detailRow}><span>Cuota:</span> {getCuotaLabel(item)}</div>
+        )}
+        <div className={s.detailRow}><span>Estado del pago:</span> {PAYMENT_STATUS_LABELS[item.paymentStatus ?? ''] ?? item.paymentStatus ?? '—'}</div>
+        {item.paymentId && <div className={s.detailRow}><span>ID de pago:</span> <span className="font-mono text-xs">{item.paymentId}</span></div>}
+        {item.comprobantePagoUrl && (
+          <div className={s.detailRow}>
+            <span>Comprobante:</span>{' '}
+            <a href={item.comprobantePagoUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline">Ver archivo</a>
+          </div>
+        )}
         {item.receipt && <div className={s.detailRow}><span>Recibo:</span> {item.receipt.numero} ({item.receipt.estado})</div>}
         {item.customOrder && <div className={s.detailRow}><span>Cotización:</span> {item.customOrder.numero} ({item.customOrder.estado})</div>}
         {item.motivoAnulacion && <div className={s.detailRow}><span>Motivo de anulación:</span> {item.motivoAnulacion}</div>}
@@ -339,6 +410,81 @@ export const AdminGestionVentas: React.FC = () => {
         />
       </div>
 
+      <div className={s.toolbar} style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+        <input
+          type="text"
+          placeholder="ID de pedido"
+          className={f.input}
+          value={filterOrderId}
+          onChange={(e) => { setFilterOrderId(e.target.value); pagination.setPage(1); }}
+          style={{ maxWidth: 220 }}
+        />
+        <select
+          className={f.select}
+          value={filterTipoPago}
+          onChange={(e) => { setFilterTipoPago(e.target.value); pagination.setPage(1); }}
+          style={{ maxWidth: 200 }}
+        >
+          <option value="">Tipo de pago (todos)</option>
+          <option value="PAGO_INMEDIATO">Pago inmediato</option>
+          <option value="ABONO_INICIAL">Anticipo</option>
+          <option value="CUOTA">Cuota</option>
+          <option value="PAGO_SALDO">Pago de saldo</option>
+        </select>
+        <select
+          className={f.select}
+          value={filterPaymentStatus}
+          onChange={(e) => { setFilterPaymentStatus(e.target.value); pagination.setPage(1); }}
+          style={{ maxWidth: 200 }}
+        >
+          <option value="">Estado pago (todos)</option>
+          <option value="APPROVED">Aprobado</option>
+          <option value="PENDING">Pendiente</option>
+          <option value="REFUNDED">Reembolsado</option>
+          <option value="ANULADO">Anulado</option>
+        </select>
+        <select
+          className={f.select}
+          value={filterMedioPago}
+          onChange={(e) => { setFilterMedioPago(e.target.value); pagination.setPage(1); }}
+          style={{ maxWidth: 180 }}
+        >
+          <option value="">Medio (todos)</option>
+          <option value="CASH">Efectivo</option>
+          <option value="TRANSFER">Transferencia</option>
+          <option value="CARD">Tarjeta</option>
+          <option value="OTHER">Otro</option>
+        </select>
+        <input
+          type="date"
+          className={f.input}
+          value={filterDesde}
+          onChange={(e) => { setFilterDesde(e.target.value); pagination.setPage(1); }}
+        />
+        <input
+          type="date"
+          className={f.input}
+          value={filterHasta}
+          onChange={(e) => { setFilterHasta(e.target.value); pagination.setPage(1); }}
+        />
+        {(filterOrderId || filterTipoPago || filterPaymentStatus || filterMedioPago || filterDesde || filterHasta) && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setFilterOrderId('');
+              setFilterTipoPago('');
+              setFilterPaymentStatus('');
+              setFilterMedioPago('');
+              setFilterDesde('');
+              setFilterHasta('');
+              pagination.setPage(1);
+            }}
+          >
+            Limpiar filtros
+          </Button>
+        )}
+      </div>
+
       <div className={s.tableWrapper}>
         <DataTable
           data={items}
@@ -374,6 +520,19 @@ export const AdminGestionVentas: React.FC = () => {
             <div className={s.detailRow}><span>Estado:</span> {ESTADOS_VENTA_LABELS[selectedVenta.estado] ?? selectedVenta.estado}</div>
             <div className={s.detailRow}><span>Estado de pago:</span> {getEstadoPago(selectedVenta)}</div>
             <div className={s.detailRow}><span>Medio de pago:</span> {selectedVenta.medioPago ?? '—'}</div>
+            <div className={s.detailRow}><span>Tipo de pago:</span> {getTipoPago(selectedVenta)}</div>
+            {getCuotaLabel(selectedVenta) !== '—' && (
+              <div className={s.detailRow}><span>Cuota:</span> {getCuotaLabel(selectedVenta)}</div>
+            )}
+            {selectedVenta.paymentId && (
+              <div className={s.detailRow}><span>ID de pago:</span> <span className="font-mono text-xs">{selectedVenta.paymentId}</span></div>
+            )}
+            {selectedVenta.comprobantePagoUrl && (
+              <div className={s.detailRow}>
+                <span>Comprobante:</span>{' '}
+                <a href={selectedVenta.comprobantePagoUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline">Ver archivo</a>
+              </div>
+            )}
             {selectedVenta.receipt && <div className={s.detailRow}><span>Recibo:</span> {selectedVenta.receipt.numero}</div>}
             {selectedVenta.customOrder && <div className={s.detailRow}><span>Cotización:</span> {selectedVenta.customOrder.numero}</div>}
             {selectedVenta.motivoAnulacion && <div className={s.detailRow}><span>Motivo de anulación:</span> {selectedVenta.motivoAnulacion}</div>}

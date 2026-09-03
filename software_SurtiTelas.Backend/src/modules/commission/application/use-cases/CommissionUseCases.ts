@@ -5,6 +5,9 @@ export class CalculateCommission {
     const sales = await prisma.sale.findMany({
       where: {
         asesorId,
+        deletedAt: null,
+        estado: { not: 'ANULADA' },
+        paymentStatus: { notIn: ['ANULADO', 'REFUNDED', 'REJECTED'] },
         fechaVenta: { gte: new Date(fechaInicio), lte: new Date(fechaFin) },
       },
       select: { total: true },
@@ -21,7 +24,12 @@ export class CalculateCommission {
 
   async calculateForPeriod(fechaInicio: string, fechaFin: string) {
     const allSales = await prisma.sale.findMany({
-      where: { fechaVenta: { gte: new Date(fechaInicio), lte: new Date(fechaFin) } },
+      where: {
+        deletedAt: null,
+        estado: { not: 'ANULADA' },
+        paymentStatus: { notIn: ['ANULADO', 'REFUNDED', 'REJECTED'] },
+        fechaVenta: { gte: new Date(fechaInicio), lte: new Date(fechaFin) },
+      },
       select: { asesorId: true, asesorNombre: true, total: true },
     });
     const asesorMap = new Map<string, { asesorNombre: string; totalVentas: number; comision: number }>();

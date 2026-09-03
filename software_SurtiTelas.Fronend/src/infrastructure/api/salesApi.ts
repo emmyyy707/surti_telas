@@ -20,6 +20,15 @@ interface SaleDTO {
   medioPago?: string | null;
   createdAt: string;
   updatedAt: string;
+  paymentId?: string | null;
+  tipoPago?: string | null;
+  numeroCuota?: number | null;
+  totalCuotas?: number | null;
+  esAnticipo?: boolean | null;
+  esSaldo?: boolean | null;
+  paymentStatus?: string | null;
+  comprobantePagoUrl?: string | null;
+  registradoPorId?: string | null;
   order?: {
     id: string;
     numero: string;
@@ -49,7 +58,7 @@ function toVenta(dto: SaleDTO): Venta {
     impuestos: dto.impuestos,
     descuentos: dto.descuentos,
     total: dto.total,
-    estado: (dto.estado === 'ANULADA' ? 'ANULADA' : 'COMPLETADA') as Venta['estado'],
+    estado: (dto.estado as Venta['estado']) ?? 'COMPLETADA',
     motivoAnulacion: dto.motivoAnulacion ?? undefined,
     medioPago: dto.medioPago ?? undefined,
     itemsCount: order?.items?.length ?? 0,
@@ -66,6 +75,15 @@ function toVenta(dto: SaleDTO): Venta {
     customOrder: order?.customOrder ?? null,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
+    paymentId: dto.paymentId ?? null,
+    tipoPago: dto.tipoPago ?? null,
+    numeroCuota: dto.numeroCuota ?? null,
+    totalCuotas: dto.totalCuotas ?? null,
+    esAnticipo: dto.esAnticipo ?? null,
+    esSaldo: dto.esSaldo ?? null,
+    paymentStatus: dto.paymentStatus ?? null,
+    comprobantePagoUrl: dto.comprobantePagoUrl ?? null,
+    registradoPorId: dto.registradoPorId ?? null,
   };
 }
 

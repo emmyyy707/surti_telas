@@ -12,6 +12,9 @@ import { Order } from '@/modules/orders/domain/entities/Order';
 
 vi.mock('@/config/database', () => ({
   prisma: {
+    order: {
+      findUnique: vi.fn().mockResolvedValue({ estado: 'ACEPTADO' }),
+    },
     $transaction: vi.fn(async (cb: any) => {
       const tx = {
         order: {
@@ -162,22 +165,20 @@ function createMocks() {
     subscribe: vi.fn(),
   };
 
-  return { mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus };
+  return { mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus };
 }
 
 describe('AcceptOrder', () => {
-  it('should create sale and receipt and return order in Recibo generado state', async () => {
-    const { mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus } = createMocks();
+  it('Regla 1 VENTA = 1 PAGO CONFIRMADO: AcceptOrder NO crea venta, solo el recibo', async () => {
+    const { mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus } = createMocks();
     const orderPendiente = createMockOrder('Pendiente');
     const orderAceptado = createMockOrder('Aceptado', { usuarioValidacionId: 'user-1', fechaValidacion: new Date().toISOString(), medioPago: 'TRANSFER' });
-    const orderReciboGenerado = createMockOrder('Recibo generado', { usuarioValidacionId: 'user-1', fechaValidacion: new Date().toISOString(), medioPago: 'TRANSFER' });
 
-    mockOrderRepo.getById.mockResolvedValueOnce(orderPendiente).mockResolvedValueOnce(orderAceptado).mockResolvedValueOnce(orderReciboGenerado);
+    mockOrderRepo.getById.mockResolvedValueOnce(orderPendiente).mockResolvedValueOnce(orderAceptado);
     mockOrderRepo.updateToAccepted.mockResolvedValue(orderAceptado);
-    mockSaleRepo.create.mockResolvedValue(mockSale as any);
     mockReceiptRepo.create.mockResolvedValue(mockReceipt as any);
 
-    const useCase = new AcceptOrder(mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus);
+    const useCase = new AcceptOrder(mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus);
     const result = await useCase.execute('order-1', { usuarioId: 'user-1', medioPago: 'TRANSFER' });
 
     expect(mockOrderRepo.updateToAccepted).toHaveBeenCalledWith('order-1', {
@@ -185,15 +186,15 @@ describe('AcceptOrder', () => {
       fechaValidacion: expect.any(Date),
       medioPago: 'TRANSFER',
     });
-    expect(mockSaleRepo.create).toHaveBeenCalled();
+    // Regla: AcceptOrder NO debe crear una venta. Lo crea el PaymentApprovedSubscriber.
+    // El recibo sí se crea.
     expect(mockReceiptRepo.create).toHaveBeenCalled();
-    expect(result.estado).toBe('Recibo generado');
+    expect(result.estado).toBe('Aceptado');
     expect(mockEventBus.publish).toHaveBeenCalledWith({
       type: 'order.accepted',
       occurredAt: expect.any(Date),
       payload: expect.objectContaining({
         orderId: 'order-1',
-        saleId: 'sale-1',
         receiptId: 'receipt-1',
       }),
       requestId: undefined,
@@ -201,20 +202,20 @@ describe('AcceptOrder', () => {
   });
 
   it('should throw if order is not found', async () => {
-    const { mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus } = createMocks();
+    const { mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus } = createMocks();
     mockOrderRepo.getById.mockResolvedValue(null);
 
-    const useCase = new AcceptOrder(mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus);
+    const useCase = new AcceptOrder(mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus);
 
     await expect(useCase.execute('order-1', { usuarioId: 'user-1' })).rejects.toThrow('Pedido no encontrado');
   });
 
   it('should throw if order has no payment proof', async () => {
-    const { mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus } = createMocks();
+    const { mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus } = createMocks();
     const orderSinComprobante = createMockOrder('Pendiente', { comprobantePagoUrl: undefined, comprobantePagoEstado: undefined });
     mockOrderRepo.getById.mockResolvedValue(orderSinComprobante);
 
-    const useCase = new AcceptOrder(mockOrderRepo, mockHistoryRepo, mockSaleRepo, mockReceiptRepo, mockEventBus);
+    const useCase = new AcceptOrder(mockOrderRepo, mockHistoryRepo, mockReceiptRepo, mockEventBus);
 
     await expect(useCase.execute('order-1', { usuarioId: 'user-1' })).rejects.toThrow('comprobante de pago válido');
   });

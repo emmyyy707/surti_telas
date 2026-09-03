@@ -71,6 +71,22 @@ export interface OrderData {
   itemsList?: OrderItem[];
   motivoAnulacion?: string;
   fechaAnulacion?: string;
+  ventas?: Array<{
+    id: string;
+    orderId: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string;
+    asesorNombre: string;
+    fechaVenta: string;
+    subtotal: number;
+    impuestos: number;
+    descuentos: number;
+    total: number;
+    estado: string;
+    medioPago?: string;
+  }>;
+  /** @deprecated Use `ventas` (plural). Mantenido para compat. */
   venta?: {
     id: string;
     orderId: string;
@@ -131,6 +147,22 @@ export class Order {
   readonly itemsList?: OrderItem[];
   readonly motivoAnulacion?: string;
   readonly fechaAnulacion?: string;
+  readonly ventas?: Array<{
+    id: string;
+    orderId: string;
+    clienteId: string;
+    clienteNombre: string;
+    asesorId: string;
+    asesorNombre: string;
+    fechaVenta: string;
+    subtotal: number;
+    impuestos: number;
+    descuentos: number;
+    total: number;
+    estado: string;
+    medioPago?: string;
+  }>;
+  /** @deprecated Use `ventas` (plural). */
   readonly venta?: {
     id: string;
     orderId: string;
@@ -192,7 +224,8 @@ export class Order {
     this.itemsList = data.itemsList;
     this.motivoAnulacion = data.motivoAnulacion;
     this.fechaAnulacion = data.fechaAnulacion;
-    this.venta = data.venta;
+    this.ventas = data.ventas;
+    this.venta = data.venta ?? (data.ventas && data.ventas[0]);
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }

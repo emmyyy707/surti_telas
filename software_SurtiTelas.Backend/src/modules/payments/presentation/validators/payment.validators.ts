@@ -17,6 +17,15 @@ export const CreatePaymentSchema = z.object({
   method: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER']),
   reference: z.string().optional(),
   notes: z.string().optional(),
+  comprobantePagoUrl: z.string().optional(),
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'REFUNDED', 'ANULADO']).optional(),
+  paidAt: z.string().optional(),
+  // Metadatos que el PaymentApprovedSubscriber usa para crear la venta.
+  tipoPago: z.enum(['PAGO_INMEDIATO', 'ABONO_INICIAL', 'CUOTA', 'PAGO_SALDO']).optional(),
+  numeroCuota: z.coerce.number().int().positive().optional(),
+  totalCuotas: z.coerce.number().int().positive().max(60).optional(),
+  esAnticipo: z.coerce.boolean().optional(),
+  esSaldo: z.coerce.boolean().optional(),
 });
 
 export const UpdatePaymentStatusSchema = z.object({
@@ -28,6 +37,7 @@ export const UpdatePaymentSchema = z.object({
   method: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER']).optional(),
   reference: z.string().optional(),
   notes: z.string().optional(),
+  comprobantePagoUrl: z.string().optional(),
 });
 
 export const CancelPaymentSchema = z.object({

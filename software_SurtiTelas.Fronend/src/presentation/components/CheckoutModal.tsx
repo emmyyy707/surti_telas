@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useCart, useAuth } from '@/app/providers/AppProviders'
 import { useClientes } from '@/core/stores'
 import { ordersApi } from '@/infrastructure/api/ordersApi'
+import { paymentsApi } from '@/infrastructure/api/paymentsApi'
 import { customersApi } from '@/infrastructure/api/customersApi'
 import { AuthRequiredModal } from './AuthRequiredModal'
 import { BankingQrCode } from './BankingQrCode'
@@ -208,6 +209,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
         ? installments
         : undefined;
 
+      let createdOrderId: string;
       if (shouldSendProof && proofFile) {
         const form = new FormData();
         if (clienteActual?.id) form.append('clienteId', clienteActual.id);
@@ -221,9 +223,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
           form.append('diasCredito', '0');
         }
         form.append('comprobantePago', proofFile);
-        await ordersApi.createForm(form);
+        const created = await ordersApi.createForm(form);
+        createdOrderId = created.id;
       } else {
-        await ordersApi.create({
+        const created = await ordersApi.create({
           clienteId: clienteActual?.id,
           asesorId: clienteActual?.asesorId,
           itemsList: validItemsList,
@@ -232,6 +235,55 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
           paymentMethod: backendPaymentMethod,
           installments: backendInstallments,
         });
+        createdOrderId = created.id;
+      }
+
+      // Regla 1 VENTA = 1 PAGO CONFIRMADO:
+      // Tras crear el pedido, registramos un Payment explícito que será
+      // confirmado por el asesor/admin. El PaymentApprovedSubscriber creará
+      // la venta en cuanto el pago pase a APPROVED.
+      //
+      // - Pago inmediato + pagoAhora: monto = total, tipoPago=PAGO_INMEDIATO.
+      // - Pago por abono + pagoAhora: monto = abonoInicial, tipoPago=ABONO_INICIAL.
+      // - Pago por abono + "pagar después": no creamos Payment aquí; el cliente
+      //   pagará después y cada cuota generará su propio Payment.
+      const shouldCreateInitialPayment = pagoAhora
+        && (paymentMode === 'immediate' || (paymentMode === 'installments' && isAbonoValid));
+
+      if (shouldCreateInitialPayment && clienteActual?.id) {
+        const initialAmount = paymentMode === 'immediate'
+          ? total
+          : Math.max(0, Math.min(abonoInicial, total));
+        const tipoPago: 'PAGO_INMEDIATO' | 'ABONO_INICIAL' = paymentMode === 'immediate'
+          ? 'PAGO_INMEDIATO'
+          : 'ABONO_INICIAL';
+        const totalCuotas = paymentMode === 'installments' && saldoPendiente > 0 ? installments : 1;
+
+        try {
+          const payment = await paymentsApi.create({
+            orderId: createdOrderId,
+            customerId: clienteActual.id,
+            asesorId: clienteActual.asesorId,
+            amount: initialAmount,
+            method: 'Transferencia',
+            reference: referencia.trim() || undefined,
+            notes: observaciones,
+            // Metadatos que el PaymentApprovedSubscriber usa al crear la venta.
+            tipoPago,
+            numeroCuota: 1,
+            totalCuotas,
+            esAnticipo: paymentMode === 'installments',
+            esSaldo: false,
+          } as unknown as Parameters<typeof paymentsApi.create>[0]);
+          if (payment?.id) {
+            toast.success('Pedido y pago inicial registrados. Un asesor confirmará tu pago.');
+          }
+        } catch (payErr) {
+          // No fallamos el flujo principal si el pago no se registra;
+          // el admin puede registrarlo manualmente desde Gestión de Pagos.
+          console.error('No se pudo registrar el pago inicial:', payErr);
+          toast.warning('Pedido registrado. El pago inicial deberá ser confirmado por un asesor.');
+        }
       }
 
       clearCart();

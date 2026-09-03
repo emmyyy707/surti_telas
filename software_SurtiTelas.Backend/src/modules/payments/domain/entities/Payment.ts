@@ -21,6 +21,7 @@ export interface PaymentData {
   orderEstado?: string;
   motivoAnulacion?: string;
   fechaAnulacion?: string;
+  comprobantePagoUrl?: string;
 }
 
 export class Payment {
@@ -43,6 +44,7 @@ export class Payment {
   readonly orderEstado?: string;
   readonly motivoAnulacion?: string;
   readonly fechaAnulacion?: string;
+  readonly comprobantePagoUrl?: string;
 
   constructor(data: PaymentData) {
     this.id = data.id;
@@ -64,12 +66,13 @@ export class Payment {
     this.orderEstado = data.orderEstado;
     this.motivoAnulacion = data.motivoAnulacion;
     this.fechaAnulacion = data.fechaAnulacion;
+    this.comprobantePagoUrl = data.comprobantePagoUrl;
   }
 }
 
 export interface PaymentRepository {
   list(filters: { customerId?: string; asesorId?: string; status?: PaymentStatus }): Promise<{ data: Payment[]; total: number }>;
   getById(id: string): Promise<Payment | null>;
-  create(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: PaymentMethod; reference?: string; notes?: string }): Promise<Payment>;
+  create(input: { orderId: string; customerId: string; asesorId?: string; amount: number; method: PaymentMethod; reference?: string; notes?: string; comprobantePagoUrl?: string; status?: PaymentStatus; paidAt?: string }): Promise<Payment>;
   updateStatus(id: string, status: PaymentStatus, paidAt?: string): Promise<Payment>;
 }

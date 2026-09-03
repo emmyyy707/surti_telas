@@ -27,6 +27,15 @@ export interface SaleWithOrder {
   medioPago?: string;
   createdAt: string;
   updatedAt: string;
+  paymentId?: string | null;
+  tipoPago?: string | null;
+  numeroCuota?: number | null;
+  totalCuotas?: number | null;
+  esAnticipo?: boolean | null;
+  esSaldo?: boolean | null;
+  paymentStatus?: string | null;
+  comprobantePagoUrl?: string | null;
+  registradoPorId?: string | null;
   order: {
     id: string;
     numero: string;
@@ -45,6 +54,7 @@ export interface SaleRepository {
   create(sale: Omit<Sale, 'id' | 'createdAt' | 'updatedAt'>): Promise<Sale>;
   findByOrderId(orderId: string): Promise<Sale | null>;
   findById(id: string): Promise<Sale | null>;
+  findByPaymentId(paymentId: string): Promise<Sale | null>;
   list(filters?: { clienteId?: string; asesorId?: string; desde?: string; hasta?: string }): Promise<Sale[]>;
   cancel(id: string, motivoAnulacion: string): Promise<Sale>;
   updateTotals(id: string, totals: { subtotal: number; impuestos: number; descuentos: number; total: number }): Promise<Sale>;

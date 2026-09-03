@@ -21,9 +21,25 @@ export class PrismaSaleRepository implements SaleRepository {
         estado: sale.estado,
         motivoAnulacion: sale.motivoAnulacion,
         medioPago: sale.medioPago,
+        paymentId: sale.paymentId ?? null,
+        tipoPago: sale.tipoPago ?? null,
+        numeroCuota: sale.numeroCuota ?? null,
+        totalCuotas: sale.totalCuotas ?? null,
+        esAnticipo: sale.esAnticipo ?? null,
+        esSaldo: sale.esSaldo ?? null,
+        paymentStatus: sale.paymentStatus ?? null,
+        comprobantePagoUrl: sale.comprobantePagoUrl ?? null,
+        registradoPorId: sale.registradoPorId ?? null,
       },
     });
     return toSale(row);
+  }
+
+  async findByPaymentId(paymentId: string): Promise<Sale | null> {
+    const row = await this.prisma.sale.findFirst({
+      where: { paymentId, deletedAt: null },
+    });
+    return row ? toSale(row) : null;
   }
 
   async findByOrderId(orderId: string): Promise<Sale | null> {
@@ -140,6 +156,15 @@ export class PrismaSaleRepository implements SaleRepository {
       medioPago: row.medioPago ?? undefined,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
+      paymentId: row.paymentId ?? null,
+      tipoPago: row.tipoPago ?? null,
+      numeroCuota: row.numeroCuota ?? null,
+      totalCuotas: row.totalCuotas ?? null,
+      esAnticipo: row.esAnticipo ?? null,
+      esSaldo: row.esSaldo ?? null,
+      paymentStatus: row.paymentStatus ?? null,
+      comprobantePagoUrl: row.comprobantePagoUrl ?? null,
+      registradoPorId: row.registradoPorId ?? null,
       order: {
         id: orderRow?.id ?? '',
         numero: orderRow?.numero ?? '',

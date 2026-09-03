@@ -3,6 +3,14 @@ import { PositiveNumberSchema, PositiveIntegerSchema } from '../../../../shared/
 
 export const CreateSaleSchema = z.object({
   orderId: z.string().min(1, 'orderId es obligatorio'),
+  // paymentId es OBLIGATORIO: una venta solo puede existir si hay un pago
+  // confirmado. El flujo correcto es:
+  //   1) POST /payments (crea Payment PENDING)
+  //   2) PATCH /payments/:id/status con status=APPROVED
+  //      (el PaymentApprovedSubscriber crea la venta)
+  //   3) GET /sales para listarla.
+  // Este endpoint queda para uso admin/manual con pago ya creado.
+  paymentId: z.string().min(1, 'paymentId es obligatorio para crear una venta'),
   medioPago: z.enum(['CASH', 'TRANSFER', 'CARD', 'OTHER', 'INSTALLMENTS']).optional(),
   observaciones: z.string().optional(),
 });

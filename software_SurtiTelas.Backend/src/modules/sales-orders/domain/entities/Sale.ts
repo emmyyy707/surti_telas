@@ -16,6 +16,15 @@ export interface SaleData {
   medioPago?: string;
   createdAt?: string;
   updatedAt?: string;
+  paymentId?: string | null;
+  tipoPago?: string | null;
+  numeroCuota?: number | null;
+  totalCuotas?: number | null;
+  esAnticipo?: boolean | null;
+  esSaldo?: boolean | null;
+  paymentStatus?: string | null;
+  comprobantePagoUrl?: string | null;
+  registradoPorId?: string | null;
 }
 
 export class Sale {
@@ -35,6 +44,15 @@ export class Sale {
   readonly medioPago?: string;
   readonly createdAt?: string;
   readonly updatedAt?: string;
+  readonly paymentId?: string | null;
+  readonly tipoPago?: string | null;
+  readonly numeroCuota?: number | null;
+  readonly totalCuotas?: number | null;
+  readonly esAnticipo?: boolean | null;
+  readonly esSaldo?: boolean | null;
+  readonly paymentStatus?: string | null;
+  readonly comprobantePagoUrl?: string | null;
+  readonly registradoPorId?: string | null;
 
   constructor(data: SaleData) {
     Sale.validate(data);
@@ -55,6 +73,15 @@ export class Sale {
     this.medioPago = data.medioPago;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
+    this.paymentId = data.paymentId ?? null;
+    this.tipoPago = data.tipoPago ?? null;
+    this.numeroCuota = data.numeroCuota ?? null;
+    this.totalCuotas = data.totalCuotas ?? null;
+    this.esAnticipo = data.esAnticipo ?? null;
+    this.esSaldo = data.esSaldo ?? null;
+    this.paymentStatus = data.paymentStatus ?? null;
+    this.comprobantePagoUrl = data.comprobantePagoUrl ?? null;
+    this.registradoPorId = data.registradoPorId ?? null;
   }
 
   static validate(data: SaleData): void {

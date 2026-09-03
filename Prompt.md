@@ -155,15 +155,8 @@ e
 
 
 
-Arreglar orden del modulo de ventas para mallor coerencia.
-mejora el diceño del modal de antes de comprar iniciar sesion
-hacer que el stok inicie en 1
-Pagos por abonos por balidacion para que el cliente pueda decir si abonar ya o  abonar despus si dice que si  el usuario escribe cunato desea abonar tambien el saldo restante separa por abonos de cuota 
-Si el cliente te pago algo aparece en ventas, tiene que decir fecha de la venta y total pagado, cada abono que se haga es una venta y se hace de manera individual.
+  
 
-logica de vetas una venta se refleja cunado se realiza un pago como asi cuando el pago de un abono o el pago todal de un pedido o cotizacion aparesca en ventas 
-
-crar un  md de todo el todo lo que hace el panel del admin 
 
 quitar modulo de recibos 
 

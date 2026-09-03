@@ -18,6 +18,9 @@ export const getCommissionReport = async (req: Request, res: Response) => {
   const sales = await prisma.sale.findMany({
     where: {
       ...where,
+      deletedAt: null,
+      estado: { not: 'ANULADA' },
+      paymentStatus: { notIn: ['ANULADO', 'REFUNDED', 'REJECTED'] },
       fechaVenta: {
         gte: (filters as { desde?: string }).desde ? new Date((filters as { desde?: string }).desde!) : undefined,
         lte: (filters as { hasta?: string }).hasta ? new Date((filters as { hasta?: string }).hasta!) : undefined,
