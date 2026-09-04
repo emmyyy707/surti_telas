@@ -1,4 +1,4 @@
-import type { Pedido, PedidoItem } from '@/core/types';
+import type { Pedido, PedidoItem, Venta } from '@/core/types';
 import { api } from './httpClient';
 import type { PaginatedResponse } from './pagination';
 import { ORDER_STATUS_BACKEND_MAP, ORDER_STATUS_FRONTEND_MAP, type EstadoPedido } from '@/shared/constants/options';
@@ -27,6 +27,10 @@ export interface OrderDTO {
   descuentoEspecial?: number;
   envioGratis?: boolean;
   prioridadEnvio?: 'Normal' | 'Express' | 'Urgente';
+  /** Ventas generadas a partir de pagos confirmados (1 pago = 1 venta). */
+  ventas?: Venta[];
+  /** @deprecated Singular legacy. */
+  venta?: Venta | null;
 }
 
 export interface CreateOrderInput {
@@ -88,6 +92,8 @@ export function toPedido(dto: OrderDTO): Pedido {
     descuentoEspecial: dto.descuentoEspecial,
     envioGratis: dto.envioGratis,
     prioridadEnvio: dto.prioridadEnvio,
+    ventas: dto.ventas ?? [],
+    venta: dto.venta ?? null,
   };
 }
 

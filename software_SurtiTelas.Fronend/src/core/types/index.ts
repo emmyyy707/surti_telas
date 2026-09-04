@@ -95,6 +95,14 @@ export interface Pedido {
   descuentoEspecial?: number;
   envioGratis?: boolean;
   prioridadEnvio?: 'Normal' | 'Express' | 'Urgente';
+  /**
+   * Ventas generadas a partir de pagos confirmados (regla 1 pago = 1 venta).
+   * Una venta representa 1 pago APPROVED. Un pedido puede tener 0, 1 o N ventas.
+   * La venta legacy `venta` (singular) se conserva por compatibilidad.
+   */
+  ventas?: Venta[];
+  /** @deprecated Usar `ventas` (plural). Conservado para compatibilidad con backend legacy. */
+  venta?: Venta | null;
 }
 
 export interface OrdenProduccion {

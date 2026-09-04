@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Save, Trash2, Eye, Ban } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, Save, Trash2, Eye, Ban, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Pedidos.module.css';
@@ -19,6 +19,12 @@ import { useServerPagination } from '@/hooks/useServerPagination';
 import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { OrderStatusSelector } from '@/shared/ui/OrderStatusSelector';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import {
+  calculatePaymentSummary,
+  getPaymentStatusMeta,
+  PAYMENT_STATUS_META,
+  type PaymentStatusKey,
+} from '@/shared/utils/orderPayment';
 
 type PedidoFormItem = {
   id: string;
@@ -64,6 +70,25 @@ export const AdminPedidos: React.FC = () => {
 
   const pagination = useServerPagination(10);
   const [reloadToken, setReloadToken] = useState(0);
+
+  // ---- Filtros nuevos (cliente, asesor, estado, estado de pago) ----
+  const [filtroClienteId, setFiltroClienteId] = useState('');
+  const [filtroAsesorId, setFiltroAsesorId] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<string>('');
+  const [filtroEstadoPago, setFiltroEstadoPago] = useState<string>('');
+  const [filtroDesde, setFiltroDesde] = useState('');
+  const [filtroHasta, setFiltroHasta] = useState('');
+
+  const limpiarFiltros = () => {
+    setFiltroClienteId('');
+    setFiltroAsesorId('');
+    setFiltroEstado('');
+    setFiltroEstadoPago('');
+    setFiltroDesde('');
+    setFiltroHasta('');
+    setSearch('');
+    pagination.setPage(1);
+  };
 
   const reload = useCallback(() => setReloadToken(t => t + 1), []);
 
@@ -111,6 +136,49 @@ export const AdminPedidos: React.FC = () => {
     void load();
     return () => { cancelled = true; };
   }, [asesorId, pagination, debouncedSearch, reloadToken]);
+
+  // ---- Filtros client-side (estado, estado de pago, cliente, asesor, fecha) ----
+  const pedidosFiltrados = useMemo(() => {
+    return pageData.filter((p) => {
+      if (filtroEstado && p.estado !== filtroEstado) return false;
+      if (filtroClienteId && p.clienteId !== filtroClienteId) return false;
+      if (filtroAsesorId && p.asesorId !== filtroAsesorId) return false;
+      if (filtroDesde || filtroHasta) {
+        const d = new Date(p.createdAt ?? p.fecha);
+        if (filtroDesde && d < new Date(filtroDesde)) return false;
+        if (filtroHasta && d > new Date(`${filtroHasta}T23:59:59`)) return false;
+      }
+      if (filtroEstadoPago) {
+        const { estado } = calculatePaymentSummary(p);
+        if (estado !== filtroEstadoPago) return false;
+      }
+      return true;
+    });
+  }, [pageData, filtroEstado, filtroClienteId, filtroAsesorId, filtroEstadoPago, filtroDesde, filtroHasta]);
+
+  // ---- Resumen superior (calculado a partir de los datos cargados) ----
+  const resumen = useMemo(() => {
+    let total = 0;
+    let pendientes = 0;
+    let enProduccion = 0;
+    let pagoPendiente = 0;
+    let valorTotal = 0;
+    let totalRecibido = 0;
+    let saldoPendiente = 0;
+    for (const p of pageData) {
+      total += 1;
+      if (p.estado === 'Pendiente' || p.estado === 'En validación') pendientes += 1;
+      if (p.estado === 'Aceptado' || p.estado === 'Listo') enProduccion += 1;
+      const { estado, pagado, saldo, total: totalPedido } = calculatePaymentSummary(p);
+      if (estado === 'PENDIENTE' || estado === 'SIN_PAGOS' || estado === 'PAGO_PARCIAL') {
+        pagoPendiente += 1;
+      }
+      valorTotal += totalPedido;
+      totalRecibido += pagado;
+      saldoPendiente += saldo;
+    }
+    return { total, pendientes, enProduccion, pagoPendiente, valorTotal, totalRecibido, saldoPendiente };
+  }, [pageData]);
 
   const handlePageChange = useCallback((newPage: number) => {
     pagination.setPage(newPage);
@@ -275,27 +343,136 @@ export const AdminPedidos: React.FC = () => {
   const detailPedido = detailId ? pageData.find(p => p.id === detailId) : null;
 
   return (
-    <div>
+    <div className={s.pageRoot}>
+      {/* ============== Header ============== */}
       <div className={s.header}>
         <div>
           <h1 className={s.pageTitle}>Pedidos</h1>
-          <p className={s.pageSubtitle}>Gestión de pedidos del sistema</p>
+          <p className={s.pageSubtitle}>Centro de control y seguimiento de pedidos</p>
         </div>
         <div className={s.headerActions}>
-          <Button leftIcon={<Plus size={16} />} onClick={openNew}>Nuevo Pedido</Button>
-          <Button variant="secondary" onClick={reload}>Actualizar</Button>
+          <Button variant="secondary" size="sm" onClick={reload}>Actualizar</Button>
+          <Button size="sm" leftIcon={<Plus size={14} />} onClick={openNew}>Nuevo pedido</Button>
         </div>
       </div>
 
+      {/* ============== Filtros compactos ============== */}
       <div className={s.toolbar}>
-        <SearchInput
-          placeholder="Buscar pedidos..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onSearch={(value) => { setSearch(value); pagination.setPage(1); }}
-          debounceMs={100}
-          minChars={0}
+        <div className={s.searchBox}>
+          <SearchInput
+            placeholder="Buscar pedido..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onSearch={(value) => { setSearch(value); pagination.setPage(1); }}
+            debounceMs={100}
+            minChars={0}
+          />
+        </div>
+
+        <select
+          className={s.filterSelect}
+          value={filtroEstado}
+          onChange={(e) => { setFiltroEstado(e.target.value); pagination.setPage(1); }}
+          aria-label="Estado del pedido"
+          title="Estado del pedido"
+        >
+          <option value="">Estado</option>
+          {ESTADOS_PEDIDO.map((es) => (
+            <option key={es} value={es}>{es}</option>
+          ))}
+        </select>
+
+        <select
+          className={s.filterSelect}
+          value={filtroEstadoPago}
+          onChange={(e) => { setFiltroEstadoPago(e.target.value); pagination.setPage(1); }}
+          aria-label="Estado de pago"
+          title="Estado de pago"
+        >
+          <option value="">Pago</option>
+          {(Object.keys(PAYMENT_STATUS_META) as PaymentStatusKey[]).map((k) => (
+            <option key={k} value={k}>{PAYMENT_STATUS_META[k].label}</option>
+          ))}
+        </select>
+
+        <select
+          className={s.filterSelect}
+          value={filtroAsesorId}
+          onChange={(e) => { setFiltroAsesorId(e.target.value); pagination.setPage(1); }}
+          aria-label="Asesor"
+          title="Asesor"
+        >
+          <option value="">Asesor</option>
+          {asesores.map((a) => (
+            <option key={a.id} value={a.id}>{a.nombre}</option>
+          ))}
+        </select>
+
+        <select
+          className={s.filterSelect}
+          value={filtroClienteId}
+          onChange={(e) => { setFiltroClienteId(e.target.value); pagination.setPage(1); }}
+          aria-label="Cliente"
+          title="Cliente"
+        >
+          <option value="">Cliente</option>
+          {clientes.map((c) => (
+            <option key={c.id} value={c.id}>{c.nombre}</option>
+          ))}
+        </select>
+
+        <input
+          className={s.filterDate}
+          type="date"
+          value={filtroDesde}
+          onChange={(e) => { setFiltroDesde(e.target.value); pagination.setPage(1); }}
+          aria-label="Desde"
+          title="Desde"
         />
+        <input
+          className={s.filterDate}
+          type="date"
+          value={filtroHasta}
+          onChange={(e) => { setFiltroHasta(e.target.value); pagination.setPage(1); }}
+          aria-label="Hasta"
+          title="Hasta"
+        />
+
+        <Button variant="ghost" size="sm" onClick={limpiarFiltros} leftIcon={<X size={13} />}>
+          Limpiar
+        </Button>
+      </div>
+
+      {/* ============== Resumen ============== */}
+      <div className={s.summaryGrid}>
+        <div className={`${s.summaryCard} ${s.summaryNeutral}`}>
+          <span className={s.summaryLabel}>Total pedidos</span>
+          <span className={s.summaryValue}>{resumen.total}</span>
+        </div>
+        <div className={`${s.summaryCard} ${s.summaryWarning}`}>
+          <span className={s.summaryLabel}>Pendientes</span>
+          <span className={s.summaryValue}>{resumen.pendientes}</span>
+        </div>
+        <div className={`${s.summaryCard} ${s.summaryInfo}`}>
+          <span className={s.summaryLabel}>En producción</span>
+          <span className={s.summaryValue}>{resumen.enProduccion}</span>
+        </div>
+        <div className={`${s.summaryCard} ${s.summaryDanger}`}>
+          <span className={s.summaryLabel}>Pago pendiente</span>
+          <span className={s.summaryValue}>{resumen.pagoPendiente}</span>
+        </div>
+        <div className={`${s.summaryCard} ${s.summarySuccess}`}>
+          <span className={s.summaryLabel}>Valor total</span>
+          <span className={`${s.summaryValue} ${s.summaryValueCurrency}`}>{formatoCOP(resumen.valorTotal)}</span>
+        </div>
+        <div className={`${s.summaryCard} ${s.summaryInfo}`}>
+          <span className={s.summaryLabel}>Total recibido</span>
+          <span className={`${s.summaryValue} ${s.summaryValueCurrency}`}>{formatoCOP(resumen.totalRecibido)}</span>
+        </div>
+        <div className={`${s.summaryCard} ${s.summaryDanger}`}>
+          <span className={s.summaryLabel}>Saldo pendiente</span>
+          <span className={`${s.summaryValue} ${s.summaryValueCurrency}`}>{formatoCOP(resumen.saldoPendiente)}</span>
+        </div>
       </div>
 
       <div className={s.tableWrapper}>
@@ -306,105 +483,228 @@ export const AdminPedidos: React.FC = () => {
         )}
         {!loading && (
           <DataTable<Pedido>
-            data={pageData}
+            data={pedidosFiltrados}
             pageSize={pagination.limit}
-            emptyMessage="Sin resultados"
+            emptyMessage="Sin pedidos con los filtros actuales"
             enableSorting
-            enableColumnFilters
-            enableRowSelection
+            enableColumnFilters={false}
+            enableRowSelection={false}
             enableExport
             exportFileName="pedidos"
-            maxVisibleColumns={5}
+            maxVisibleColumns={8}
             serverMode
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
-            totalItems={pagination.totalRecords}
+            totalItems={pedidosFiltrados.length}
             onPageChange={handlePageChange}
             columns={[
-              { key: 'id', header: 'ID Pedido', width: '130px', sortable: true, filterable: true, render: (p) => <span className={s.tdMono}>{p.numero ?? p.id}</span> },
-              { key: 'cliente', header: 'Cliente', sortable: true, filterable: true, render: (p) => <span className={s.tdPrimary}>{p.cliente}</span> },
-              { key: 'asesor', header: 'Asesor', render: (p) => p.asesor },
-              { key: 'fecha', header: 'Fecha', width: '110px', render: (p) => p.fecha },
-              { key: 'total', header: 'Total', width: '120px', render: (p) => p.total },
-              { key: 'estado', header: 'Estado', width: '130px', sortable: true, filterable: true, filterType: 'select', filterOptions: ['Pendiente', 'Enviado', 'Entregado', 'Cancelado'].map(es => ({ value: es, label: es })), render: (p) => (
-                <Badge variant={orderStatuses[p.estado]}>{p.estado}</Badge>
-              )},
+              {
+                key: 'id',
+                header: 'Pedido',
+                width: '128px',
+                render: (p) => <span className={s.tdMono}>{p.numero ?? p.id}</span>,
+              },
+              {
+                key: 'cliente',
+                header: 'Cliente',
+                render: (p) => (
+                  <div className={s.cellClient}>
+                    <span className={s.cellClientName}>{p.cliente}</span>
+                    {p.asesor ? (
+                      <span className={s.cellClientMeta}>{p.asesor}</span>
+                    ) : null}
+                  </div>
+                ),
+              },
+              {
+                key: 'fecha',
+                header: 'Fecha',
+                width: '108px',
+                render: (p) => <span className={s.cellDate}>{p.fecha}</span>,
+              },
+              {
+                key: 'estado',
+                header: 'Estado',
+                width: '120px',
+                render: (p) => <Badge variant={orderStatuses[p.estado] ?? 'default'} dot>{p.estado}</Badge>,
+              },
+              {
+                key: 'estadoPago',
+                header: 'Pago',
+                width: '120px',
+                render: (p) => {
+                  const { estado } = calculatePaymentSummary(p);
+                  const meta = getPaymentStatusMeta(estado);
+                  return <Badge variant={meta.variant} dot>{meta.label}</Badge>;
+                },
+              },
+              {
+                key: 'total',
+                header: 'Total',
+                width: '108px',
+                render: (p) => {
+                  const { total } = calculatePaymentSummary(p);
+                  return <span className={s.tdMoney}>{formatoCOP(total)}</span>;
+                },
+              },
+              {
+                key: 'pagado',
+                header: 'Pagado',
+                width: '108px',
+                render: (p) => {
+                  const { pagado } = calculatePaymentSummary(p);
+                  return <span className={s.tdMoney}>{formatoCOP(pagado)}</span>;
+                },
+              },
+              {
+                key: 'saldo',
+                header: 'Saldo',
+                width: '108px',
+                render: (p) => {
+                  const { saldo, estado } = calculatePaymentSummary(p);
+                  const isPagado = estado === 'PAGADO' || saldo <= 0.5;
+                  return (
+                    <span className={`${s.tdMoney} ${isPagado ? s.tdMoneyOk : s.tdMoneyDanger}`}>
+                      {formatoCOP(saldo)}
+                    </span>
+                  );
+                },
+              },
             ]}
             actions={(p) => [
-              { label: 'Ver detalle', icon: <Eye size={14} />, onClick: () => setDetailId(p.id) },
+              { label: 'Ver más', icon: <Eye size={14} />, onClick: () => setDetailId(p.id) },
               { label: 'Editar', icon: <Save size={14} />, onClick: () => openEdit(p) },
               { label: 'Cambiar estado', onClick: () => { setStatusConfirm({ id: p.id, estado: p.estado }); setSelectedStatus(null); } },
-               ...(p.estado !== 'Cancelado' ? [{ label: 'Anular', icon: <Ban size={14} />, onClick: () => setCancelConfirm(p), danger: true }] : []),
+              ...(p.estado !== 'Cancelado' ? [{ label: 'Anular', icon: <Ban size={14} />, onClick: () => setCancelConfirm(p), danger: true }] : []),
               ...(p.estado === 'Cancelado' ? [{ label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(p), danger: true }] : []),
             ]}
             detailPanel={{
               title: (p) => `Pedido ${p.numero ?? p.id}`,
-              render: (p, onClose) => (
-                <div className={s.detailModalContent}>
-                  <div className={s.detailSection}>
-                    <h4 className={s.detailSectionTitle}>Resumen</h4>
-                    <table className={s.detailTable}>
-                      <tbody>
-                        <tr>
-                          <td className={s.detailCellLabel}>ID</td>
-                          <td className={s.detailCellValue}>{p.numero ?? p.id}</td>
-                        </tr>
-                        <tr>
-                          <td className={s.detailCellLabel}>Cliente</td>
-                          <td className={s.detailCellValue}>{p.cliente}</td>
-                        </tr>
-                        <tr>
-                          <td className={s.detailCellLabel}>Asesor</td>
-                          <td className={s.detailCellValue}>{p.asesor}</td>
-                        </tr>
-                        <tr>
-                          <td className={s.detailCellLabel}>Fecha</td>
-                          <td className={s.detailCellValue}>{p.fecha}</td>
-                        </tr>
-                        <tr>
-                          <td className={s.detailCellLabel}>Estado</td>
-                          <td className={s.detailCellValue}><Badge variant={orderStatuses[p.estado]}>{p.estado}</Badge></td>
-                        </tr>
-                        <tr>
-                          <td className={s.detailCellLabel}>Total</td>
-                          <td className={s.detailCellValue}>{p.total}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {p.itemsList && p.itemsList.length > 0 && (
-                    <div className={s.detailSection}>
-                      <h4 className={s.detailSectionTitle}>Productos</h4>
-                      <div className={s.tableScroll}>
-                        <table className={s.detailTable}>
-                          <thead>
-                            <tr>
-                              <th>Producto</th>
-                              <th className={s.rightAlign}>Cantidad</th>
-                              <th className={s.rightAlign}>Precio</th>
-                              <th className={s.rightAlign}>Subtotal</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {p.itemsList.map((item, idx) => (
-                              <tr key={idx}>
-                                <td>{item.nombre}</td>
-                                <td className={s.rightAlign}>{item.cantidad}</td>
-                                <td className={s.rightAlign}>{formatoCOP(item.precio)}</td>
-                                <td className={s.rightAlign}>{formatoCOP(item.precio * item.cantidad)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+              render: (p, onClose) => {
+                const summary = calculatePaymentSummary(p);
+                const paymentMeta = getPaymentStatusMeta(summary.estado);
+                const ventas = p.ventas ?? [];
+                return (
+                  <div className={s.detailModalContent}>
+                    <div className={s.detailHero}>
+                      <div className={s.detailHeroItem}>
+                        <span className={s.detailHeroLabel}>Cliente</span>
+                        <span className={s.detailHeroValue}>{p.cliente}</span>
+                      </div>
+                      <div className={s.detailHeroItem}>
+                        <span className={s.detailHeroLabel}>Asesor</span>
+                        <span className={s.detailHeroValue}>{p.asesor || 'Sistema'}</span>
+                      </div>
+                      <div className={s.detailHeroItem}>
+                        <span className={s.detailHeroLabel}>Fecha</span>
+                        <span className={s.detailHeroValue}>{p.fecha}</span>
+                      </div>
+                      <div className={s.detailHeroItem}>
+                        <span className={s.detailHeroLabel}>Estado</span>
+                        <span><Badge variant={orderStatuses[p.estado] ?? 'default'} dot>{p.estado}</Badge></span>
+                      </div>
+                      <div className={s.detailHeroItem}>
+                        <span className={s.detailHeroLabel}>Pago</span>
+                        <span><Badge variant={paymentMeta.variant} dot>{paymentMeta.label}</Badge></span>
                       </div>
                     </div>
-                  )}
 
-                  <ModalFooter
-                    actions={[{ label: 'Cerrar', variant: 'secondary', onClick: onClose }]} />
-                </div>
-              ),
+                    <div className={s.detailSection}>
+                      <h4 className={s.detailSectionTitle}>Resumen financiero</h4>
+                      <div className={s.financialGrid}>
+                        <div className={`${s.financialCard} ${s.financialCardAccent}`}>
+                          <span className={s.financialLabel}>Total</span>
+                          <span className={s.financialValue}>{formatoCOP(summary.total)}</span>
+                        </div>
+                        <div className={`${s.financialCard} ${s.financialCardOk}`}>
+                          <span className={s.financialLabel}>Pagado</span>
+                          <span className={`${s.financialValue} ${s.financialValueOk}`}>{formatoCOP(summary.pagado)}</span>
+                        </div>
+                        <div className={`${s.financialCard} ${summary.saldo > 0 ? s.financialCardDanger : s.financialCardOk}`}>
+                          <span className={s.financialLabel}>Saldo</span>
+                          <span className={`${s.financialValue} ${summary.saldo > 0 ? s.financialValueDanger : s.financialValueOk}`}>
+                            {formatoCOP(summary.saldo)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {ventas.length > 0 && (
+                      <div className={s.detailSection}>
+                        <h4 className={s.detailSectionTitle}>Historial de pagos</h4>
+                        <div className={s.tableScroll}>
+                          <table className={s.detailTable}>
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Tipo</th>
+                                <th>Medio</th>
+                                <th>Estado</th>
+                                <th className={s.rightAlign}>Monto</th>
+                                <th>Fecha</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {ventas.map((v, idx) => {
+                                const tipo = v.tipoPago ?? (v.esAnticipo ? 'Anticipo' : v.esSaldo ? 'Saldo' : 'Pago');
+                                const cuotaLabel = v.numeroCuota && v.totalCuotas ? ` · Cuota ${v.numeroCuota}/${v.totalCuotas}` : '';
+                                const fecha = v.fechaVenta ? new Date(v.fechaVenta).toLocaleDateString('es-CO') : '—';
+                                return (
+                                  <tr key={v.id ?? idx}>
+                                    <td>{idx + 1}</td>
+                                    <td>{tipo}{cuotaLabel}</td>
+                                    <td>{v.medioPago ?? '—'}</td>
+                                    <td>
+                                      <Badge
+                                        variant={v.estado === 'COMPLETADA' ? 'success' : v.estado === 'ANULADA' ? 'danger' : 'default'}
+                                        dot
+                                      >
+                                        {v.estado === 'COMPLETADA' ? 'Aprobado' : v.estado === 'ANULADA' ? 'Anulado' : v.estado}
+                                      </Badge>
+                                    </td>
+                                    <td className={s.rightAlign}>{formatoCOP(Number(v.total) || 0)}</td>
+                                    <td>{fecha}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {p.itemsList && p.itemsList.length > 0 && (
+                      <div className={s.detailSection}>
+                        <h4 className={s.detailSectionTitle}>Productos</h4>
+                        <div className={s.tableScroll}>
+                          <table className={s.detailTable}>
+                            <thead>
+                              <tr>
+                                <th>Producto</th>
+                                <th className={s.rightAlign}>Cantidad</th>
+                                <th className={s.rightAlign}>Precio</th>
+                                <th className={s.rightAlign}>Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {p.itemsList.map((item, idx) => (
+                                <tr key={idx}>
+                                  <td>{item.nombre}</td>
+                                  <td className={s.rightAlign}>{item.cantidad}</td>
+                                  <td className={s.rightAlign}>{formatoCOP(item.precio)}</td>
+                                  <td className={s.rightAlign}>{formatoCOP(item.precio * item.cantidad)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    <ModalFooter actions={[{ label: 'Cerrar', variant: 'secondary', onClick: onClose }]} />
+                  </div>
+                );
+              },
             }}
           />
         )}
