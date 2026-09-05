@@ -63,10 +63,8 @@ const adminMenu: SidebarItem[] = [
       { icon: ShoppingCart, label: 'Gestión de Pedidos', key: 'pedidos' },
       { icon: DollarSign, label: 'Gestión de Pagos', key: 'pagos' },
       { icon: TrendingUp, label: 'Gestión de Ventas', key: 'gestion-ventas' },
-      { icon: Receipt, label: 'Gestión de Recibos', key: 'facturacion' },
       { icon: RotateCcw, label: 'Gestión de Devoluciones', key: 'StockDevuelto' },
-      { icon: MapPin, label: 'Gestión de Domicilios', key: 'domicilios' },
-      { icon: MapPin, label: 'Gestión de Domiciliarios', key: 'ruta-del-dia' },
+      { icon: MapPin, label: 'Gestión de Domicilios', key: 'ruta-del-dia' },
     ],
   },
 

@@ -12,6 +12,7 @@ import { ModalFooter } from '@/shared/ui/ModalFooter';
 import { EMPLEADO_ESTADOS } from '@/shared/constants/options';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { employeesApi, type Empleado, type EmployeeRole } from '@/infrastructure/api/employeesApi';
+import { domiciliariosApi } from '@/infrastructure/api/domiciliariosApi';
 
 const ROLE_LABELS: Record<EmployeeRole, string> = {
   ASESOR: 'Asesor',
@@ -19,11 +20,6 @@ const ROLE_LABELS: Record<EmployeeRole, string> = {
 };
 
 const ROLE_OPTIONS: { value: EmployeeRole; label: string }[] = [
-  { value: 'ASESOR', label: 'Asesor' },
-  { value: 'DOMICILIARIO', label: 'Domiciliario' },
-];
-
-const EMPLEADO_TIPOS = [
   { value: 'ASESOR', label: 'Asesor' },
   { value: 'DOMICILIARIO', label: 'Domiciliario' },
 ];
@@ -39,6 +35,11 @@ export const GestionEmpleados: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Empleado | null>(null);
+  const [formRole, setFormRole] = useState<EmployeeRole>('ASESOR');
+
+  const [domicilioZona, setDomicilioZona] = useState('');
+  const [domicilioVehiculo, setDomicilioVehiculo] = useState('');
+  const [domicilioCapacidad, setDomicilioCapacidad] = useState('');
 
   const formRef = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -61,6 +62,13 @@ export const GestionEmpleados: React.FC = () => {
     if (!direccion || direccion.length < 5) newErrors.direccion = 'La dirección debe tener al menos 5 caracteres';
     if (tipoDocumento && !numeroDocumento) newErrors.numeroDocumento = 'Número de documento es obligatorio';
     if (!role) newErrors.role = 'Selecciona un rol';
+
+    if (role === 'DOMICILIARIO') {
+      if (!domicilioZona.trim()) newErrors.domicilioZona = 'La zona es obligatoria';
+      if (!domicilioVehiculo.trim()) newErrors.domicilioVehiculo = 'El vehículo es obligatorio';
+      const capacidadNum = Number(domicilioCapacidad);
+      if (!domicilioCapacidad || Number.isNaN(capacidadNum) || capacidadNum <= 0) newErrors.domicilioCapacidad = 'La capacidad debe ser mayor a 0';
+    }
 
     if (!selectedEmpleado) {
       if (!tipoDocumento) newErrors.tipoDocumento = 'Selecciona un tipo de documento';
@@ -111,6 +119,9 @@ export const GestionEmpleados: React.FC = () => {
     setModalOpen(false);
     setSelectedEmpleado(null);
     setErrors({});
+    setDomicilioZona('');
+    setDomicilioVehiculo('');
+    setDomicilioCapacidad('');
   };
 
   const handleSubmitEmpleado = async () => {
@@ -135,19 +146,29 @@ export const GestionEmpleados: React.FC = () => {
       toast.error('Corrige los errores en el formulario');
       return;
     }
+
+    const profile = {
+      cargo: cargo || undefined,
+      fechaContratacion: fechaContratacion || undefined,
+      salario: salario ? parseFloat(salario) : undefined,
+      tipoEmpleado: tipoEmpleado || role || undefined,
+    };
+
+    const domiciliaryData = role === 'DOMICILIARIO'
+      ? {
+          zona: domicilioZona || undefined,
+          vehiculo: domicilioVehiculo || undefined,
+          capacidad: domicilioCapacidad ? Number(domicilioCapacidad) : undefined,
+        }
+      : undefined;
+
     setSaving(true);
     try {
-      const profile = {
-        cargo: cargo || undefined,
-        fechaContratacion: fechaContratacion || undefined,
-        salario: salario ? parseFloat(salario) : undefined,
-        tipoEmpleado: tipoEmpleado || role || undefined,
-      };
-
       if (selectedEmpleado) {
         const actualizado = await employeesApi.update(selectedEmpleado.id, {
           nombre, apellidos, email, telefono, direccion, tipoDocumento, numeroDocumento,
           profile,
+          domiciliaryData,
         });
         setItems(prev => prev.map(it => it.id === selectedEmpleado.id ? actualizado : it));
         if (actualizado.estado !== estado) {
@@ -160,6 +181,7 @@ export const GestionEmpleados: React.FC = () => {
           telefono: telefono || undefined, direccion: direccion || undefined,
           tipoDocumento: tipoDocumento || undefined, numeroDocumento: numeroDocumento || undefined,
           profile,
+          domiciliaryData,
         });
         setItems(prev => [creado, ...prev]);
         toast.success('Empleado creado');
@@ -220,7 +242,26 @@ export const GestionEmpleados: React.FC = () => {
   };
 
   const actions: DataTableAction<Empleado>[] = [
-    { label: 'Editar', icon: <Edit size={14} aria-hidden="true" focusable="false" />, onClick: (i) => { setSelectedEmpleado(i); setModalOpen(true); } },
+    { label: 'Editar', icon: <Edit size={14} aria-hidden="true" focusable="false" />, onClick: async (i) => {
+      setSelectedEmpleado(i);
+      setFormRole(i.role);
+      setDomicilioZona('');
+      setDomicilioVehiculo('');
+      setDomicilioCapacidad('');
+      if (i.role === 'DOMICILIARIO') {
+        try {
+          const dom = await domiciliariosApi.getByUserId(i.id);
+          if (dom) {
+            setDomicilioZona(dom.zona ?? '');
+            setDomicilioVehiculo(dom.vehiculo ?? '');
+            setDomicilioCapacidad(dom.capacidad != null ? String(dom.capacidad) : '');
+          }
+        } catch {
+          // silent
+        }
+      }
+      setModalOpen(true);
+    } },
     {
       label: (item: Empleado) => item.estado === 'ACTIVO' ? 'Desactivar' : 'Activar',
       icon: <ToggleLeft size={14} aria-hidden="true" focusable="false" />,
@@ -338,23 +379,39 @@ export const GestionEmpleados: React.FC = () => {
             <div className={f.formRow}>
               <div className={f.field}>
                 <label className={f.label}>Rol</label>
-                <select className={`${f.select} ${errors.role ? f.inputError : ''}`} name="role" defaultValue={selectedEmpleado?.role ?? 'ASESOR'}>
+                <select className={`${f.select} ${errors.role ? f.inputError : ''}`} name="role" defaultValue={selectedEmpleado?.role ?? 'ASESOR'} onChange={(e) => setFormRole(e.target.value as EmployeeRole)}>
                   {ROLE_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
                 {errors.role && <span className={f.errorText}>{errors.role}</span>}
               </div>
-              <div className={f.field}>
-                <label className={f.label}>Tipo de empleado</label>
-                <select className={f.select} name="tipoEmpleado" defaultValue={selectedEmpleado?.profile?.tipoEmpleado ?? 'ASESOR'}>
-                  <option value="" disabled>Selecciona...</option>
-                  {EMPLEADO_TIPOS.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
             </div>
+
+            {formRole === 'DOMICILIARIO' && (
+              <div className={f.formSection} style={{ marginTop: 12 }}>
+                <h3 className={f.sectionTitle}>Información del domiciliario</h3>
+                <p className={s.hint} style={{ marginBottom: 12 }}>Completa estos datos operativos del empleado como domiciliario.</p>
+                <div className={f.formRow}>
+                  <div className={f.field}>
+                    <label className={f.label}>Zona</label>
+                    <input type="text" className={`${f.input} ${errors.domicilioZona ? f.inputError : ''}`} value={domicilioZona} onChange={(e) => setDomicilioZona(e.target.value)} placeholder="Ej: Norte" />
+                    {errors.domicilioZona && <span className={f.errorText}>{errors.domicilioZona}</span>}
+                  </div>
+                  <div className={f.field}>
+                    <label className={f.label}>Vehículo</label>
+                    <input type="text" className={`${f.input} ${errors.domicilioVehiculo ? f.inputError : ''}`} value={domicilioVehiculo} onChange={(e) => setDomicilioVehiculo(e.target.value)} placeholder="Ej: Moto, Camioneta" />
+                    {errors.domicilioVehiculo && <span className={f.errorText}>{errors.domicilioVehiculo}</span>}
+                  </div>
+                </div>
+                <div className={f.field}>
+                  <label className={f.label}>Capacidad</label>
+                  <input type="number" className={`${f.input} ${errors.domicilioCapacidad ? f.inputError : ''}`} value={domicilioCapacidad} onChange={(e) => setDomicilioCapacidad(e.target.value)} placeholder="Ej: 20 pedidos" min={1} />
+                  {errors.domicilioCapacidad && <span className={f.errorText}>{errors.domicilioCapacidad}</span>}
+                </div>
+              </div>
+            )}
+
             <div className={f.formRow}>
               <div className={f.field}>
                 <label className={f.label}>Cargo</label>

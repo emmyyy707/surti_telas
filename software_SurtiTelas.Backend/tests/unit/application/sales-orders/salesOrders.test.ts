@@ -90,7 +90,7 @@ const createMockOrder = (estado: Order['estado'], overrides = {}): Order =>
     ...overrides,
   });
 
-const mockSale = {
+const _mockSale = {
   id: 'sale-1',
   orderId: 'order-1',
   clienteId: 'client-1',
@@ -146,7 +146,7 @@ function createMocks() {
     findByPedidoId: vi.fn(),
   };
 
-  const mockSaleRepo: jest.Mocked<SaleRepository> = {
+  const _mockSaleRepo: jest.Mocked<SaleRepository> = {
     create: vi.fn(),
     findByOrderId: vi.fn(),
     list: vi.fn(),

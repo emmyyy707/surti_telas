@@ -824,7 +824,9 @@ model Delivery {
   ciudad         String?
   telefono       String?
   notas          String?
+  motivo         String?
   asignadoEn     DateTime?
+  inicioRutaEn   DateTime? @map("inicio_ruta_en")
   entregadoEn    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

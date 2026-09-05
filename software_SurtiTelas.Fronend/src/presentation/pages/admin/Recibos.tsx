@@ -575,28 +575,29 @@ export const AdminRecibos: React.FC = () => {
              actions={(r) => [
                { label: 'Ver', icon: <Eye size={14} />, onClick: () => handleViewReceipt(r) },
                ...(r.estado === 'Borrador' || r.estado === 'Enviado' ? [{ label: 'Editar', icon: <Edit size={14} />, onClick: () => openModal(r) }] : []),
-              ...(r.estado === 'Borrador' ? [{
-                label: 'Enviar',
-                icon: <Send size={14} />,
-                onClick: async () => {
-                  try {
-                    await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Enviado']);
-                    await loadRecibos();
-                    if (r.orderId) {
-                      try {
-                        await api.post(`/sales-orders/${encodeURIComponent(r.orderId)}/retry-receipt`, {});
-                        toast.success(`Recibo ${r.numeroRecibo} enviado`);
-                      } catch {
-                        toast.error(`Recibo ${r.numeroRecibo} enviado, pero no tienes permiso para reintentar el envío`);
-                      }
-                    } else {
-                      toast.success(`Recibo ${r.numeroRecibo} enviado`);
-                    }
-                  } catch {
-                    toast.error('No se pudo enviar el recibo');
-                  }
-                }
-              }] : []),
+               ...(r.estado === 'Borrador' ? [{
+                 label: 'Enviar',
+                 icon: <Send size={14} />,
+                 onClick: async () => {
+                   try {
+                     await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Enviado']);
+                     await loadRecibos();
+                     if (r.orderId) {
+                       try {
+                         await api.post(`/sales-orders/${encodeURIComponent(r.orderId)}/retry-receipt`, {});
+                         toast.success(`Recibo ${r.numeroRecibo} enviado`);
+                       } catch {
+                         toast.error(`Recibo ${r.numeroRecibo} enviado, pero no tienes permiso para reintentar el envío`);
+                       }
+                     } else {
+                       toast.success(`Recibo ${r.numeroRecibo} enviado`);
+                     }
+                     window.dispatchEvent(new CustomEvent('receipt:sent', { detail: { receiptId: r.id } }));
+                   } catch {
+                     toast.error('No se pudo enviar el recibo');
+                   }
+                 }
+               }] : []),
                ...(r.estado === 'Enviado' ? [{ label: 'Marcar pagado', icon: <CheckCircle size={14} />, onClick: async () => { await receiptsApi.updateStatus(r.id, FRONTEND_TO_BACKEND_ESTADO['Pagado']); await loadRecibos(); toast.success(`Recibo ${r.numeroRecibo} marcado como pagado`); } }] : []),
                { label: 'PDF', icon: <FileText size={14} />, onClick: () => handleExportPdf(r) },
                { label: 'Eliminar', icon: <Trash2 size={14} />, onClick: () => setDeleteConfirm(r), danger: true },

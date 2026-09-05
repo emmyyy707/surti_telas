@@ -10,6 +10,7 @@ export const CreateDeliverySchema = z.object({
   ciudad: z.string().optional(),
   telefono: OptionalPhoneSchema,
   notas: z.string().optional(),
+  motivo: z.string().optional(),
 });
 
 export const UpdateDeliverySchema = z.object({
@@ -18,6 +19,7 @@ export const UpdateDeliverySchema = z.object({
   ciudad: z.string().optional(),
   telefono: OptionalPhoneSchema,
   notas: z.string().optional(),
+  motivo: z.string().optional(),
   estado: DeliveryStatusEnum.optional(),
 });
 

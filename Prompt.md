@@ -160,13 +160,3 @@ e
 
 quitar modulo de recibos 
 
-Redundancia en domicilio cuando cree un empleado hacer que cualdo el selecione el rol de domiciliario me aparesca este formulario Información del domiciliario
-Usuario *
-
-Selecciona un usuario...
-Zona
-Ej: Norte
-Vehículo
-Ej: Moto, Camioneta
-Capacidad
- ose el mismo formulario que hay  en la pagina de http://localhost:5173/admin/domicilios el modal de  Nuevo domiciliario y quitar ese mismo modal de

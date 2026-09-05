@@ -32,7 +32,7 @@ export class ListRutaDelDia {
       ];
     }
 
-    const [deliveriesRaw, orphanOrders] = await Promise.all([
+    const [deliveriesRaw, orphanOrders, domiciliariosRaw] = await Promise.all([
       this.prisma.delivery.findMany({
         where: deliveriesWhere,
         include: {
@@ -75,8 +75,16 @@ export class ListRutaDelDia {
           },
         },
       }),
+      this.prisma.domiciliario.findMany({
+        where: { activo: true },
+        select: {
+          userId: true,
+          zona: true,
+        },
+      }),
     ]);
 
+    const domiciliarioZonaMap = new Map((domiciliariosRaw as any[]).map((d: any) => [d.userId, d.zona]));
     const deliveries = deliveriesRaw as any[];
     const deliveryMap = new Map<string, (typeof deliveries)[number]>([...deliveries].map((d: any) => [d.orderId, d]));
     const mappedDeliveries = deliveries.map((delivery: any) => {
@@ -92,11 +100,14 @@ export class ListRutaDelDia {
         domiciliarioId: delivery.domiciliarioId,
         domiciliarioNombre: delivery.domiciliario?.nombre ?? null,
         domiciliarioTelefono: delivery.domiciliario?.telefono ?? null,
+        domiciliarioZona: domiciliarioZonaMap.get(delivery.domiciliarioId ?? '') ?? null,
         direccion: rawDireccion,
         ciudad: rawCiudad,
         telefono: rawTelefono,
         notas: delivery.notas,
+        motivo: delivery.motivo,
         asignadoEn: delivery.asignadoEn,
+        inicioRutaEn: delivery.inicioRutaEn,
         entregadoEn: delivery.entregadoEn,
         order: {
           numero: order?.numero ?? null,
@@ -121,11 +132,14 @@ export class ListRutaDelDia {
         domiciliarioId: filters?.domiciliarioId ?? null,
         domiciliarioNombre: null,
         domiciliarioTelefono: null,
+        domiciliarioZona: null,
         direccion: cliente?.direccion ?? null,
         ciudad: cliente?.ciudad ?? null,
         telefono: cliente?.telefono ?? null,
         notas: null,
+        motivo: null,
         asignadoEn: null,
+        inicioRutaEn: null,
         entregadoEn: null,
         order: {
           numero: order.numero,
@@ -215,20 +229,39 @@ export class ChangeDeliveryStatus {
     private readonly orderRepo?: { updateStatus(id: string, estado: string): Promise<any> },
     private readonly eventBus?: EventBus,
   ) {}
-  async execute(id: string, estado: Delivery['estado'], role?: string, requestId?: string) {
+
+  private readonly allowedTransitions: Record<Delivery['estado'], Delivery['estado'][]> = {
+    ASIGNADO: ['EN_RUTA', 'FALLIDO'],
+    EN_RUTA: ['ENTREGADO', 'FALLIDO'],
+    ENTREGADO: [],
+    FALLIDO: [],
+  };
+
+  async execute(id: string, estado: Delivery['estado'], role?: string, requestId?: string, motivo?: string | null) {
     const existing = await this.repo.getById(id);
     if (!existing) throw new NotFoundError('Entrega no encontrada');
+
+    const previousStatus = existing.estado;
+    const allowed = this.allowedTransitions[previousStatus] ?? [];
+    if (!allowed.includes(estado)) {
+      throw new BadRequestError(`Transición de estado no permitida: ${previousStatus} → ${estado}`);
+    }
 
     if (role && role !== 'DOMICILIARIO' && (estado === 'ENTREGADO' || estado === 'FALLIDO')) {
       throw new BadRequestError('Solo el domiciliario puede marcar ENTREGADO o FALLIDO');
     }
 
-    const previousStatus = existing.estado;
-    const updated = new Delivery({ ...existing.toDTO(), estado });
+    const updated = new Delivery({ ...existing.toDTO(), estado, motivo: motivo ?? existing.motivo });
     if (estado === 'ENTREGADO') updated.marcarEntregado();
     if (estado === 'EN_RUTA') updated.marcarEnRuta();
     if (estado === 'FALLIDO') updated.marcarFallido();
-    const result = await this.repo.update(id, { estado: updated.estado, entregadoEn: updated.entregadoEn });
+
+    const result = await this.repo.update(id, {
+      estado: updated.estado,
+      entregadoEn: updated.entregadoEn,
+      inicioRutaEn: updated.inicioRutaEn,
+      motivo: updated.motivo,
+    });
 
     if (this.eventBus && previousStatus !== estado) {
       this.eventBus.publish(

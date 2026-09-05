@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Save, Trash2, Eye, Ban, X } from 'lucide-react';
+import { Plus, Save, Trash2, Eye, Ban, X, Package, Clock, Factory, AlertCircle, Wallet, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import s from './Pedidos.module.css';
@@ -346,17 +346,87 @@ export const AdminPedidos: React.FC = () => {
     <div className={s.pageRoot}>
       {/* ============== Header ============== */}
       <div className={s.header}>
-        <div>
+        <div className={s.headerText}>
           <h1 className={s.pageTitle}>Pedidos</h1>
-          <p className={s.pageSubtitle}>Centro de control y seguimiento de pedidos</p>
+          <p className={s.pageSubtitle}>
+            Centro de control y seguimiento · {pagination.totalRecords} pedido{pagination.totalRecords === 1 ? '' : 's'} registrado{pagination.totalRecords === 1 ? '' : 's'}
+          </p>
         </div>
         <div className={s.headerActions}>
-          <Button variant="secondary" size="sm" onClick={reload}>Actualizar</Button>
-          <Button size="sm" leftIcon={<Plus size={14} />} onClick={openNew}>Nuevo pedido</Button>
+          <Button variant="secondary" leftIcon={<RefreshCw size={15} />} onClick={reload}>
+            Actualizar
+          </Button>
+          <Button leftIcon={<Plus size={16} />} onClick={openNew}>
+            Nuevo pedido
+          </Button>
         </div>
       </div>
 
-      {/* ============== Filtros compactos ============== */}
+      {/* ============== Indicadores ============== */}
+      <div className={s.statsSection}>
+        <div className={s.statsGroup}>
+          <div className={s.statsGroupTitle}>Operación</div>
+          <div className={s.statsRow}>
+            <div className={s.statCard}>
+              <Package size={20} className={s.statIcon} />
+              <div>
+                <div className={s.statValue}>{resumen.total}</div>
+                <div className={s.statLabel}>Total pedidos</div>
+              </div>
+            </div>
+            <div className={`${s.statCard} ${s.statCardWarning}`}>
+              <Clock size={20} className={s.statIconWarning} />
+              <div>
+                <div className={s.statValue}>{resumen.pendientes}</div>
+                <div className={s.statLabel}>Pendientes</div>
+              </div>
+            </div>
+            <div className={`${s.statCard} ${s.statCardInfo}`}>
+              <Factory size={20} className={s.statIconInfo} />
+              <div>
+                <div className={s.statValue}>{resumen.enProduccion}</div>
+                <div className={s.statLabel}>En producción</div>
+              </div>
+            </div>
+            <div className={`${s.statCard} ${s.statCardDanger}`}>
+              <AlertCircle size={20} className={s.statIconDanger} />
+              <div>
+                <div className={s.statValue}>{resumen.pagoPendiente}</div>
+                <div className={s.statLabel}>Pago pendiente</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className={s.statsGroup}>
+          <div className={s.statsGroupTitle}>Finanzas</div>
+          <div className={s.statsRow}>
+            <div className={`${s.statCard} ${s.statCardAccent}`}>
+              <Wallet size={20} className={s.statIconAccent} />
+              <div>
+                <div className={s.statValue}>{formatoCOP(resumen.valorTotal)}</div>
+                <div className={s.statLabel}>Valor total</div>
+              </div>
+            </div>
+            <div className={`${s.statCard} ${s.statCardSuccess}`}>
+              <CheckCircle2 size={20} className={s.statIconSuccess} />
+              <div>
+                <div className={s.statValue}>{formatoCOP(resumen.totalRecibido)}</div>
+                <div className={s.statLabel}>Total recibido</div>
+              </div>
+            </div>
+            <div className={`${s.statCard} ${s.statCardDanger}`}>
+              <AlertTriangle size={20} className={s.statIconDanger} />
+              <div>
+                <div className={s.statValue}>{formatoCOP(resumen.saldoPendiente)}</div>
+                <div className={s.statLabel}>Saldo pendiente</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============== Toolbar / Filtros ============== */}
       <div className={s.toolbar}>
         <div className={s.searchBox}>
           <SearchInput
@@ -421,68 +491,46 @@ export const AdminPedidos: React.FC = () => {
           ))}
         </select>
 
-        <input
-          className={s.filterDate}
-          type="date"
-          value={filtroDesde}
-          onChange={(e) => { setFiltroDesde(e.target.value); pagination.setPage(1); }}
-          aria-label="Desde"
-          title="Desde"
-        />
-        <input
-          className={s.filterDate}
-          type="date"
-          value={filtroHasta}
-          onChange={(e) => { setFiltroHasta(e.target.value); pagination.setPage(1); }}
-          aria-label="Hasta"
-          title="Hasta"
-        />
+        <div className={s.dateRange}>
+          <span className={s.dateRangeLabel}>Rango de fechas</span>
+          <input
+            className={s.dateRangeInput}
+            type="date"
+            value={filtroDesde}
+            onChange={(e) => { setFiltroDesde(e.target.value); pagination.setPage(1); }}
+            aria-label="Desde"
+            title="Desde"
+            placeholder="dd/mm/aaaa"
+          />
+          <span className={s.dateRangeSeparator}>—</span>
+          <input
+            className={s.dateRangeInput}
+            type="date"
+            value={filtroHasta}
+            onChange={(e) => { setFiltroHasta(e.target.value); pagination.setPage(1); }}
+            aria-label="Hasta"
+            title="Hasta"
+            placeholder="dd/mm/aaaa"
+          />
+        </div>
 
-        <Button variant="ghost" size="sm" onClick={limpiarFiltros} leftIcon={<X size={13} />}>
-          Limpiar
-        </Button>
+        <button type="button" className={s.filterClear} onClick={limpiarFiltros}>
+          <X size={14} />
+          Limpiar filtros
+        </button>
       </div>
 
-      {/* ============== Resumen ============== */}
-      <div className={s.summaryGrid}>
-        <div className={`${s.summaryCard} ${s.summaryNeutral}`}>
-          <span className={s.summaryLabel}>Total pedidos</span>
-          <span className={s.summaryValue}>{resumen.total}</span>
-        </div>
-        <div className={`${s.summaryCard} ${s.summaryWarning}`}>
-          <span className={s.summaryLabel}>Pendientes</span>
-          <span className={s.summaryValue}>{resumen.pendientes}</span>
-        </div>
-        <div className={`${s.summaryCard} ${s.summaryInfo}`}>
-          <span className={s.summaryLabel}>En producción</span>
-          <span className={s.summaryValue}>{resumen.enProduccion}</span>
-        </div>
-        <div className={`${s.summaryCard} ${s.summaryDanger}`}>
-          <span className={s.summaryLabel}>Pago pendiente</span>
-          <span className={s.summaryValue}>{resumen.pagoPendiente}</span>
-        </div>
-        <div className={`${s.summaryCard} ${s.summarySuccess}`}>
-          <span className={s.summaryLabel}>Valor total</span>
-          <span className={`${s.summaryValue} ${s.summaryValueCurrency}`}>{formatoCOP(resumen.valorTotal)}</span>
-        </div>
-        <div className={`${s.summaryCard} ${s.summaryInfo}`}>
-          <span className={s.summaryLabel}>Total recibido</span>
-          <span className={`${s.summaryValue} ${s.summaryValueCurrency}`}>{formatoCOP(resumen.totalRecibido)}</span>
-        </div>
-        <div className={`${s.summaryCard} ${s.summaryDanger}`}>
-          <span className={s.summaryLabel}>Saldo pendiente</span>
-          <span className={`${s.summaryValue} ${s.summaryValueCurrency}`}>{formatoCOP(resumen.saldoPendiente)}</span>
-        </div>
-      </div>
-
-      <div className={s.tableWrapper}>
+      <div className={s.tableCard}>
         {loading && (
           <div className={s.loadingRow}>
             <span>Cargando pedidos...</span>
           </div>
         )}
         {!loading && (
+          <div className={s.tableScroll}>
           <DataTable<Pedido>
+            title="Pedidos"
+            subtitle="Listado completo de pedidos"
             data={pedidosFiltrados}
             pageSize={pagination.limit}
             emptyMessage="Sin pedidos con los filtros actuales"
@@ -511,7 +559,10 @@ export const AdminPedidos: React.FC = () => {
                   <div className={s.cellClient}>
                     <span className={s.cellClientName}>{p.cliente}</span>
                     {p.asesor ? (
-                      <span className={s.cellClientMeta}>{p.asesor}</span>
+                      <span className={s.cellClientMeta}>
+                        <span className={s.cellClientMetaPrefix}>Asesor:</span>
+                        {p.asesor}
+                      </span>
                     ) : null}
                   </div>
                 ),
@@ -632,7 +683,7 @@ export const AdminPedidos: React.FC = () => {
                     {ventas.length > 0 && (
                       <div className={s.detailSection}>
                         <h4 className={s.detailSectionTitle}>Historial de pagos</h4>
-                        <div className={s.tableScroll}>
+                        <div className={s.tableScrollInner}>
                           <table className={s.detailTable}>
                             <thead>
                               <tr>
@@ -676,7 +727,7 @@ export const AdminPedidos: React.FC = () => {
                     {p.itemsList && p.itemsList.length > 0 && (
                       <div className={s.detailSection}>
                         <h4 className={s.detailSectionTitle}>Productos</h4>
-                        <div className={s.tableScroll}>
+                        <div className={s.tableScrollInner}>
                           <table className={s.detailTable}>
                             <thead>
                               <tr>
@@ -707,6 +758,7 @@ export const AdminPedidos: React.FC = () => {
               },
             }}
           />
+          </div>
         )}
       </div>
 

@@ -68,8 +68,8 @@ export const updateDelivery = async (req: Request, res: Response) => {
 };
 
 export const changeDeliveryStatus = async (req: Request, res: Response) => {
-  const { estado } = parseDto(z.object({ estado: DeliveryStatusEnum }), req.body);
-  const delivery = await deliveriesUseCases.changeDeliveryStatus.execute(req.params.id, estado, req.user?.role, req.requestId);
+  const { estado, motivo } = parseDto(z.object({ estado: DeliveryStatusEnum, motivo: z.string().optional() }), req.body);
+  const delivery = await deliveriesUseCases.changeDeliveryStatus.execute(req.params.id, estado, req.user?.role, req.requestId, motivo);
   clearCache('/api/v1/deliveries');
   return ok(res, delivery.toDTO(), 'Estado de entrega actualizado');
 };

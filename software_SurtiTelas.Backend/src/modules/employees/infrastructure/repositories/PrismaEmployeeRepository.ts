@@ -116,27 +116,42 @@ export class PrismaEmployeeRepository implements EmployeeRepository {
     const role = data.role;
     const tipoEmpleado = data.profile?.tipoEmpleado ?? (role === 'DOMICILIARIO' ? 'DOMICILIARIO' : 'ASESOR');
 
-    const row = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        nombre: data.nombre,
-        apellidos: data.apellidos,
-        passwordHash,
-        role,
-        telefono: data.telefono,
-        direccion: data.direccion,
-        tipoDocumento: data.tipoDocumento,
-        numeroDocumento: data.numeroDocumento,
-        employeeProfile: {
-          create: {
-            cargo: data.profile?.cargo,
-            fechaContratacion: data.profile?.fechaContratacion,
-            salario: data.profile?.salario ? new Prisma.Decimal(data.profile.salario) : undefined,
-            tipoEmpleado: tipoEmpleado as TipoEmpleado,
+    const row = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: data.email,
+          nombre: data.nombre,
+          apellidos: data.apellidos,
+          passwordHash,
+          role,
+          telefono: data.telefono,
+          direccion: data.direccion,
+          tipoDocumento: data.tipoDocumento,
+          numeroDocumento: data.numeroDocumento,
+          employeeProfile: {
+            create: {
+              cargo: data.profile?.cargo,
+              fechaContratacion: data.profile?.fechaContratacion,
+              salario: data.profile?.salario ? new Prisma.Decimal(data.profile.salario) : undefined,
+              tipoEmpleado: tipoEmpleado as TipoEmpleado,
+            },
           },
         },
-      },
-      include: { employeeProfile: true },
+        include: { employeeProfile: true },
+      });
+
+      if (role === 'DOMICILIARIO' && data.domiciliaryData) {
+        await tx.domiciliario.create({
+          data: {
+            userId: user.id,
+            zona: data.domiciliaryData.zona,
+            vehiculo: data.domiciliaryData.vehiculo,
+            capacidad: data.domiciliaryData.capacidad,
+          },
+        });
+      }
+
+      return user;
     });
 
     return toEmployee(row);
@@ -162,6 +177,7 @@ export class PrismaEmployeeRepository implements EmployeeRepository {
         tipoDocumento: changes.tipoDocumento,
         numeroDocumento: changes.numeroDocumento,
         ...(changes.avatar !== undefined && { avatar: changes.avatar }),
+        ...(changes.role !== undefined && { role: changes.role as any }),
         employeeProfile: changes.profile
           ? {
               upsert: {
@@ -183,6 +199,39 @@ export class PrismaEmployeeRepository implements EmployeeRepository {
       },
       include: { employeeProfile: true },
     });
+
+    if (changes.domiciliaryData) {
+      const shouldBeDomiciliary = (row.role as string) === 'DOMICILIARIO';
+      if (shouldBeDomiciliary) {
+        const existingDomiciliario = await this.prisma.domiciliario.findFirst({ where: { userId: id } });
+        if (existingDomiciliario) {
+          await this.prisma.domiciliario.update({
+            where: { id: existingDomiciliario.id },
+            data: {
+              ...(changes.domiciliaryData.zona !== undefined && { zona: changes.domiciliaryData.zona }),
+              ...(changes.domiciliaryData.vehiculo !== undefined && { vehiculo: changes.domiciliaryData.vehiculo }),
+              ...(changes.domiciliaryData.capacidad !== undefined && { capacidad: changes.domiciliaryData.capacidad }),
+              ...(changes.domiciliaryData.activo !== undefined && { activo: changes.domiciliaryData.activo }),
+            },
+          });
+        } else {
+          await this.prisma.domiciliario.create({
+            data: {
+              userId: id,
+              zona: changes.domiciliaryData.zona,
+              vehiculo: changes.domiciliaryData.vehiculo,
+              capacidad: changes.domiciliaryData.capacidad,
+              activo: changes.domiciliaryData.activo ?? true,
+            },
+          });
+        }
+      }
+    } else if (existing.role === 'DOMICILIARIO' && row.role !== 'DOMICILIARIO') {
+      await this.prisma.domiciliario.updateMany({
+        where: { userId: id },
+        data: { activo: false },
+      });
+    }
 
     return toEmployee(row);
   }

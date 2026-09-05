@@ -9,6 +9,9 @@ const mockPrisma = {
   order: {
     findMany: vi.fn(),
   },
+  domiciliario: {
+    findMany: vi.fn(),
+  },
 } as unknown as PrismaClient;
 
 describe('ListRutaDelDia', () => {
@@ -55,6 +58,7 @@ describe('ListRutaDelDia', () => {
       },
     ]);
     (mockPrisma.order.findMany as any).mockResolvedValue([]);
+    (mockPrisma.domiciliario.findMany as any).mockResolvedValue([]);
 
     const useCase = new ListRutaDelDia(mockPrisma as any);
     const result = await useCase.execute();
@@ -103,6 +107,7 @@ describe('ListRutaDelDia', () => {
       },
     ]);
     (mockPrisma.order.findMany as any).mockResolvedValue([]);
+    (mockPrisma.domiciliario.findMany as any).mockResolvedValue([]);
 
     const useCase = new ListRutaDelDia(mockPrisma as any);
     const result = await useCase.execute();
@@ -151,6 +156,7 @@ describe('ListRutaDelDia', () => {
       },
     ]);
     (mockPrisma.order.findMany as any).mockResolvedValue([]);
+    (mockPrisma.domiciliario.findMany as any).mockResolvedValue([]);
 
     const useCase = new ListRutaDelDia(mockPrisma as any);
     const result = await useCase.execute();

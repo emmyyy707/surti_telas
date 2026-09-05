@@ -9,7 +9,9 @@ export interface DeliveryData {
   ciudad?: string | null;
   telefono?: string | null;
   notas?: string | null;
+  motivo?: string | null;
   asignadoEn?: Date | null;
+  inicioRutaEn?: Date | null;
   entregadoEn?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -44,7 +46,9 @@ export class Delivery {
   ciudad?: string | null;
   telefono?: string | null;
   notas?: string | null;
+  motivo?: string | null;
   asignadoEn?: Date | null;
+  inicioRutaEn?: Date | null;
   entregadoEn?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -61,7 +65,9 @@ export class Delivery {
     this.ciudad = data.ciudad ?? null;
     this.telefono = data.telefono ?? null;
     this.notas = data.notas ?? null;
+    this.motivo = data.motivo ?? null;
     this.asignadoEn = data.asignadoEn ?? null;
+    this.inicioRutaEn = data.inicioRutaEn ?? null;
     this.entregadoEn = data.entregadoEn ?? null;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
@@ -77,6 +83,7 @@ export class Delivery {
 
   marcarEnRuta() {
     this.estado = 'EN_RUTA';
+    this.inicioRutaEn = new Date();
   }
 
   marcarEntregado() {
@@ -98,7 +105,9 @@ export class Delivery {
       ciudad: this.ciudad,
       telefono: this.telefono,
       notas: this.notas,
+      motivo: this.motivo,
       asignadoEn: this.asignadoEn,
+      inicioRutaEn: this.inicioRutaEn,
       entregadoEn: this.entregadoEn,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

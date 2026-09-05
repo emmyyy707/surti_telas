@@ -11,7 +11,9 @@ export function toDeliveryData(row: any): DeliveryData {
     ciudad: row.ciudad,
     telefono: row.telefono,
     notas: row.notas,
+    motivo: row.motivo,
     asignadoEn: row.asignadoEn,
+    inicioRutaEn: row.inicioRutaEn,
     entregadoEn: row.entregadoEn,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -31,7 +33,9 @@ export function toCreateInput(d: Delivery) {
     ciudad: d.ciudad,
     telefono: d.telefono,
     notas: d.notas,
+    motivo: d.motivo,
     asignadoEn: d.asignadoEn,
+    inicioRutaEn: d.inicioRutaEn,
     entregadoEn: d.entregadoEn,
   };
 }
@@ -44,7 +48,9 @@ export function toUpdateInput(changes: Partial<DeliveryData>) {
   if (changes.ciudad !== undefined) data.ciudad = changes.ciudad;
   if (changes.telefono !== undefined) data.telefono = changes.telefono;
   if (changes.notas !== undefined) data.notas = changes.notas;
+  if (changes.motivo !== undefined) data.motivo = changes.motivo;
   if (changes.asignadoEn !== undefined) data.asignadoEn = changes.asignadoEn;
+  if (changes.inicioRutaEn !== undefined) data.inicioRutaEn = changes.inicioRutaEn;
   if (changes.entregadoEn !== undefined) data.entregadoEn = changes.entregadoEn;
   return data;
 }

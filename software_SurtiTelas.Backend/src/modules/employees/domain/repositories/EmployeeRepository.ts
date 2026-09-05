@@ -21,6 +21,11 @@ export interface CreateEmployeeInput {
   tipoDocumento?: string;
   numeroDocumento?: string;
   profile?: EmployeeProfileData;
+  domiciliaryData?: {
+    zona?: string;
+    vehiculo?: string;
+    capacidad?: number;
+  };
 }
 
 export interface UpdateEmployeeInput {
@@ -32,7 +37,14 @@ export interface UpdateEmployeeInput {
   tipoDocumento?: string | null;
   numeroDocumento?: string | null;
   avatar?: string | null;
+  role?: EmployeeRole;
   profile?: EmployeeProfileData;
+  domiciliaryData?: {
+    zona?: string;
+    vehiculo?: string;
+    capacidad?: number;
+    activo?: boolean;
+  };
 }
 
 export interface EmployeeRepository {

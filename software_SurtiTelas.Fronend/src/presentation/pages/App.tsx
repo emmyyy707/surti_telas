@@ -27,7 +27,6 @@ const AdminDashboardAnalitico = React.lazy(() => import('@/presentation/pages/ad
 const PortalCliente = React.lazy(() => import('@/presentation/pages/admin/PortalCliente').then(m => ({ default: m.PortalCliente })));
 
 const AdminConfiguracion = React.lazy(() => import('@/presentation/pages/admin/AdminConfiguracion').then(m => ({ default: m.AdminConfiguracion })));
-const AdminDomicilios = React.lazy(() => import('@/presentation/pages/admin/AdminDomicilios').then(m => ({ default: m.AdminDomicilios })));
 const AdminDomiciliosLayout = React.lazy(() => import('@/presentation/pages/admin/AdminDomiciliosLayout').then(m => ({ default: m.AdminDomiciliosLayout })));
 const AdminRutaDelDia = React.lazy(() => import('@/presentation/pages/admin/RutaDelDiaAdmin').then(m => ({ default: m.RutaDelDiaAdmin })));
 const AdminGestionUsuarios = React.lazy(() => import('@/presentation/pages/admin/GestionUsuarios').then(m => ({ default: m.AdminGestionUsuarios })));
@@ -133,9 +132,6 @@ const App: React.FC = () => {
             <Route path="produccion" element={<AdminProduccion />} />
             <Route path="inventario" element={<AdminInventario />} />
             <Route path="categorias" element={<AdminCategorias />} />
-            <Route path="domicilios" element={<AdminDomiciliosLayout />}>
-              <Route index element={<AdminDomicilios />} />
-            </Route>
             <Route path="ruta-del-dia" element={<AdminDomiciliosLayout />}>
               <Route index element={<AdminRutaDelDia />} />
             </Route>

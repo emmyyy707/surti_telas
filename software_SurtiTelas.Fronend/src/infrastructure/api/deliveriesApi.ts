@@ -10,7 +10,9 @@ export interface DeliveryDTO {
   ciudad?: string;
   telefono?: string;
   notas?: string;
+  motivo?: string;
   asignadoEn?: string;
+  inicioRutaEn?: string;
   entregadoEn?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -24,7 +26,6 @@ export interface DeliveryDTO {
     direccion?: string;
     ciudad?: string;
     total?: number;
-    estado?: string;
   };
 }
 
@@ -112,11 +113,14 @@ export interface DeliveryRutaItem {
   domiciliarioId?: string;
   domiciliarioNombre?: string;
   domiciliarioTelefono?: string;
+  domiciliarioZona?: string;
   direccion?: string;
   ciudad?: string;
   telefono?: string;
   notas?: string;
+  motivo?: string;
   asignadoEn?: string;
+  inicioRutaEn?: string;
   entregadoEn?: string;
   order?: {
     numero?: string;
@@ -143,8 +147,8 @@ export const deliveriesApi = {
     return items ?? [];
   },
 
-  async updateStatus(id: string, estado: DeliveryDTO['estado']): Promise<DeliveryDTO> {
-    const dto = await api.patch<DeliveryDTO>(`/deliveries/${encodeURIComponent(id)}/status`, { estado });
+  async updateStatus(id: string, estado: DeliveryDTO['estado'], motivo?: string): Promise<DeliveryDTO> {
+    const dto = await api.patch<DeliveryDTO>(`/deliveries/${encodeURIComponent(id)}/status`, { estado, motivo });
     return dto;
   },
 

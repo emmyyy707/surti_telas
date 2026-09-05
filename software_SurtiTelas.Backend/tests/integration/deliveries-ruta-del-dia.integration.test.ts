@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import { createApp } from '@/config/app';
 import { getAuthToken } from './helpers/auth';
+import { prisma } from '@/config/database';
 
 describe('Deliveries Ruta del Día Integration', () => {
   let app: Express;
@@ -43,6 +44,11 @@ describe('Deliveries Ruta del Día Integration', () => {
 
     expect(orderResponse.status).toBe(201);
     const orderId = orderResponse.body.data.id;
+
+    const existingDelivery = await prisma.delivery.findFirst({ where: { orderId } });
+    if (existingDelivery) {
+      await prisma.delivery.delete({ where: { id: existingDelivery.id } });
+    }
 
     const deliveryResponse = await request(app)
       .post('/api/v1/deliveries')

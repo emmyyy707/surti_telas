@@ -1,10 +1,9 @@
 import React from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
-import { Users2, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import s from './AdminDomiciliosLayout.module.css';
 
 const tabs = [
-  { path: '/admin/domicilios', label: 'Domiciliarios', icon: Users2, end: true },
   { path: '/admin/ruta-del-dia', label: 'Ruta del Día', icon: MapPin, end: true },
 ];
 
@@ -15,8 +14,8 @@ export const AdminDomiciliosLayout: React.FC = () => {
     <div className={s.container}>
       <div className={s.header}>
         <div>
-          <h1 className={s.pageTitle}>Domicilios</h1>
-          <p className={s.pageSubtitle}>Gestión de domiciliarios y rutas de entrega</p>
+          <h1 className={s.pageTitle}>Ruta del Día</h1>
+          <p className={s.pageSubtitle}>Gestión de rutas de entrega</p>
         </div>
       </div>
 

@@ -20,6 +20,12 @@ export const EmployeeProfileSchema = z.object({
   tipoEmpleado: EmployeeRoleSchema.optional(),
 });
 
+export const DomiciliaryDataSchema = z.object({
+  zona: z.string().optional(),
+  vehiculo: z.string().optional(),
+  capacidad: z.coerce.number().int().positive('La capacidad debe ser mayor a 0').optional(),
+});
+
 export const CreateEmployeeSchema = z.object({
   email: z.string().email('Correo inválido'),
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
@@ -31,6 +37,7 @@ export const CreateEmployeeSchema = z.object({
   tipoDocumento: z.enum(['CC', 'NIE', 'PASSPORT', 'CE', 'OTHER']).optional(),
   numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional(),
   profile: EmployeeProfileSchema.optional(),
+  domiciliaryData: DomiciliaryDataSchema.optional(),
 });
 
 export const UpdateEmployeeSchema = z.object({
@@ -43,12 +50,14 @@ export const UpdateEmployeeSchema = z.object({
   numeroDocumento: z.string().max(50, 'Máximo 50 caracteres').optional().nullable(),
   avatar: z.string().min(1, 'Avatar inválido').max(500000, 'Avatar demasiado grande').optional().or(z.literal('')),
   estado: z.enum(['ACTIVO', 'INACTIVO', 'Activo', 'Inactivo']).transform((val) => val.toUpperCase() as 'ACTIVO' | 'INACTIVO').optional(),
+  role: EmployeeRoleSchema.optional(),
   profile: z.object({
     cargo: z.string().max(100, 'Máximo 100 caracteres').optional(),
     fechaContratacion: z.coerce.date().optional().nullable(),
     salario: z.coerce.number().nonnegative('El salario no puede ser negativo').optional().nullable(),
     tipoEmpleado: EmployeeRoleSchema.optional().nullable(),
   }).optional(),
+  domiciliaryData: DomiciliaryDataSchema.optional(),
 });
 
 export const ChangeEmployeeStatusSchema = z.object({

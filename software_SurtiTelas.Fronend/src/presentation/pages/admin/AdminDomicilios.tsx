@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Edit, Trash2, UserPlus, Package, CheckCircle2, Clock, XCircle, User, MapPin } from 'lucide-react';
+import { Edit, Trash2, Package, CheckCircle2, Clock, XCircle, User, MapPin } from 'lucide-react';
 import { SearchInput } from '@/shared/ui/SearchInput';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
@@ -20,12 +20,10 @@ export const AdminDomicilios: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [formUserId, setFormUserId] = useState('');
   const [formZona, setFormZona] = useState('');
   const [formVehiculo, setFormVehiculo] = useState('');
   const [formCapacidad, setFormCapacidad] = useState('');
@@ -59,46 +57,12 @@ export const AdminDomicilios: React.FC = () => {
     void fetchUsuarios();
   }, [fetchDomiciliarios, fetchUsuarios]);
 
-  const openCreate = () => {
-    setEditingId(null);
-    setFormUserId('');
-    setFormZona('');
-    setFormVehiculo('');
-    setFormCapacidad('');
-    setCreateOpen(true);
-  };
-
   const openEdit = (item: Domiciliario) => {
     setEditingId(item.id);
-    setFormUserId(item.userId);
     setFormZona(item.zona ?? '');
     setFormVehiculo(item.vehiculo ?? '');
     setFormCapacidad(item.capacidad?.toString() ?? '');
     setEditOpen(true);
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formUserId) {
-      toast.error('Selecciona un usuario');
-      return;
-    }
-    setSaving(true);
-    try {
-      const created = await domiciliariosApi.create({
-        userId: formUserId,
-        zona: formZona || undefined,
-        vehiculo: formVehiculo || undefined,
-        capacidad: formCapacidad ? Number(formCapacidad) : undefined,
-      });
-      setDomiciliarios(prev => [...prev, created]);
-      toast.success('Domiciliario creado');
-      setCreateOpen(false);
-    } catch {
-      toast.error('No se pudo crear el domiciliario');
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -250,10 +214,6 @@ export const AdminDomicilios: React.FC = () => {
           <h1 className={s.pageTitle}>Domiciliarios</h1>
           <p className={s.pageSubtitle}>Gestión del equipo de entregas</p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <UserPlus size={16} />
-          Nuevo domiciliario
-        </Button>
       </div>
 
       <div className={s.toolbar}>
@@ -303,48 +263,13 @@ export const AdminDomicilios: React.FC = () => {
         />
       </div>
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo domiciliario" description="Asocia un usuario existente como domiciliario." size="lg" variant="form">
-        <form id="createDomiciliarioForm" className={f.form} onSubmit={handleCreate}>
-          <div className={f.formSection}>
-            <h3 className={f.sectionTitle}>Información del domiciliario</h3>
-            <div className={f.field}>
-              <label className={f.label}>Usuario *</label>
-              <select className={f.select} value={formUserId} onChange={e => setFormUserId(e.target.value)} required>
-                <option value="">Selecciona un usuario...</option>
-                {usuarios.filter(u => u.rol === 'domiciliario').map(u => (
-                  <option key={u.id} value={u.id}>{u.nombre} ({u.email})</option>
-                ))}
-              </select>
-            </div>
-            <div className={f.formRow}>
-              <div className={f.field}>
-                <label className={f.label}>Zona</label>
-                <input type="text" className={f.input} value={formZona} onChange={e => setFormZona(e.target.value)} placeholder="Ej: Norte" />
-              </div>
-              <div className={f.field}>
-                <label className={f.label}>Vehículo</label>
-                <input type="text" className={f.input} value={formVehiculo} onChange={e => setFormVehiculo(e.target.value)} placeholder="Ej: Moto, Camioneta" />
-              </div>
-            </div>
-            <div className={f.field}>
-              <label className={f.label}>Capacidad</label>
-              <input type="number" className={f.input} value={formCapacidad} onChange={e => setFormCapacidad(e.target.value)} placeholder="Ej: 50" min={1} />
-            </div>
-          </div>
-          <div className={f.formActions}>
-            <Button variant="secondary" type="button" onClick={() => setCreateOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Creando...' : 'Crear domiciliario'}</Button>
-          </div>
-        </form>
-      </Modal>
-
       <Modal open={editOpen} onClose={() => { setEditOpen(false); setEditingId(null); }} title="Editar domiciliario" description="Modifica los datos del domiciliario." size="lg" variant="form">
         <form id="editDomiciliarioForm" className={f.form} onSubmit={handleUpdate}>
           <div className={f.formSection}>
             <h3 className={f.sectionTitle}>Información del domiciliario</h3>
             <div className={f.field}>
               <label className={f.label}>Usuario</label>
-              <input type="text" className={f.input} value={usuarios.find(u => u.id === formUserId)?.nombre ?? ''} disabled />
+              <input type="text" className={f.input} value={editingId ? (usuarios.find(u => u.id === domiciliarios.find(d => d.id === editingId)?.userId)?.nombre ?? '') : ''} disabled />
             </div>
             <div className={f.formRow}>
               <div className={f.field}>
